@@ -7,6 +7,7 @@ import { MOCK_USERS } from '@/lib/mock-data'
 
 interface AuthContextValue {
   user: User | null
+  role: Role | null
   loading: boolean
   login: (role: Role) => void
   logout: () => void
@@ -45,7 +46,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router])
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, role: user?.role ?? null, loading, login, logout }}>
+      {children}
+    </AuthContext.Provider>
   )
 }
 

@@ -225,7 +225,7 @@ export default function StudentsPage() {
           <Select
             value={attendanceFilter}
             onValueChange={(v) => {
-              setAttendanceFilter(v)
+              setAttendanceFilter(v ?? 'all')
               setPage(1)
             }}
           >

@@ -102,7 +102,7 @@ export default function CreateExamPage() {
 
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="course">Course</Label>
-                <Select value={courseId} onValueChange={setCourseId}>
+                <Select value={courseId} onValueChange={(v) => setCourseId(v ?? '')}>
                   <SelectTrigger id="course" className="w-full">
                     <SelectValue />
                   </SelectTrigger>

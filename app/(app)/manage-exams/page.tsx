@@ -174,7 +174,7 @@ export default function ManageExamsPage() {
         </InputGroup>
 
         <div className="flex items-center gap-2">
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v ?? 'all')}>
             <SelectTrigger className="w-36">
               <SelectValue />
             </SelectTrigger>
@@ -186,7 +186,7 @@ export default function ManageExamsPage() {
             </SelectContent>
           </Select>
 
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? 'all')}>
             <SelectTrigger className="w-36">
               <SelectValue />
             </SelectTrigger>

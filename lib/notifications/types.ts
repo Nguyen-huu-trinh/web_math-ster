@@ -1,0 +1,19 @@
+export enum NotificationType{
+
+GENERAL="GENERAL",
+
+COURSE="COURSE",
+
+LESSON="LESSON",
+
+EXAM="EXAM",
+
+GRADE="GRADE",
+
+SYSTEM="SYSTEM",
+
+WARNING="WARNING",
+
+SUCCESS="SUCCESS"
+
+}

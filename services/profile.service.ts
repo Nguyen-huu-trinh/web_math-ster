@@ -1,40 +1,29 @@
 import { profileRepository } from "@/repositories/profile.repository";
+import { Profile } from "@/types/profile";
 
 export class ProfileService {
-  getCurrentProfile() {
+  getCurrentProfile(): Promise<Profile | null> {
     return profileRepository.getCurrentProfile();
   }
 
-  getById(id: string) {
+  getById(id: string): Promise<Profile> {
     return profileRepository.getById(id);
-  }
-
-  getByStudentCode(studentCode: string) {
-    return profileRepository.getByStudentCode(studentCode);
-  }
-
-  getStudents() {
-    return profileRepository.getAllStudents();
-  }
-
-  getTeachers() {
-    return profileRepository.getAllTeachers();
   }
 
   update(
     id: string,
-    values: {
-      full_name?: string;
-      avatar_url?: string | null;
-      must_change_password?: boolean;
-      is_active?: boolean;
-    }
+    values: Partial<
+      Pick<
+        Profile,
+        | "full_name"
+        | "avatar_url"
+        | "phone"
+        | "must_change_password"
+        | "is_active"
+      >
+    >
   ) {
     return profileRepository.updateProfile(id, values);
-  }
-
-  deactivate(id: string) {
-    return profileRepository.deleteProfile(id);
   }
 }
 

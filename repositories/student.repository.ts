@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
 
 export interface CreateStudentDto {
   student_code: string;
@@ -61,10 +61,7 @@ export class StudentRepository {
     return data;
   }
 
-  async update(
-    id: string,
-    values: UpdateStudentDto
-  ) {
+  async update(id: string, values: UpdateStudentDto) {
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -163,7 +160,7 @@ export class StudentRepository {
     const [
       attempts,
       progress,
-      studyTime,
+      enrollments,
     ] = await Promise.all([
       supabase
         .from("exam_attempts")
@@ -171,15 +168,44 @@ export class StudentRepository {
         .eq("student_id", id),
 
       supabase
-        .from("learning_progress")
-        .select("completed")
+        .from("lesson_progress")
+        .select("is_completed")
         .eq("student_id", id),
 
       supabase
-        .from("study_time_logs")
-        .select("total_seconds")
+        .from("course_enrollments")
+        .select("course_id")
         .eq("student_id", id),
     ]);
+
+    let totalLessons = 0;
+
+    const courseIds =
+      enrollments.data?.map(
+        (e) => e.course_id
+      ) ?? [];
+
+    if (courseIds.length > 0) {
+      const { data: chapters } = await supabase
+        .from("chapters")
+        .select(`
+          id,
+          lessons(id)
+        `)
+        .in("course_id", courseIds);
+
+      totalLessons =
+        chapters?.reduce(
+          (sum: number, chapter: any) =>
+            sum + (chapter.lessons?.length ?? 0),
+          0
+        ) ?? 0;
+    }
+
+    const completedLessons =
+      progress.data?.filter(
+        (p) => p.is_completed
+      ).length ?? 0;
 
     return {
       examCount:
@@ -193,16 +219,9 @@ export class StudentRepository {
             ) / attempts.data.length
           : 0,
 
-      completedLessons:
-        progress.data?.filter(
-          p => p.completed
-        ).length ?? 0,
+      completedLessons,
 
-      studySeconds:
-        studyTime.data?.reduce(
-          (s, t) => s + t.total_seconds,
-          0
-        ) ?? 0,
+      totalLessons,
     };
   }
 }

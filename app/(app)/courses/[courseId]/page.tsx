@@ -1,174 +1,589 @@
 'use client'
-
-import { use } from 'react'
+import { DeleteLessonDialog } from "@/components/lessons/delete-lesson-dialog";
+import { toast } from "sonner";
+import { use, useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { BookOpen, CircleCheckBig, Circle, Play, ClipboardList, Plus, ChevronLeft } from 'lucide-react'
-import { COURSES } from '@/lib/mock-data'
+import { ChapterDialog } from "@/components/chapters/chapter-dialog";
+import {
+  BookOpen,
+  CircleCheckBig,
+  Circle,
+  Play,
+  Plus,
+  Pencil,
+  Trash2,
+  ChevronLeft,
+} from 'lucide-react'
+import { getCourseDetail } from "@/services/course-detail.service";
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent } from '@/components/ui/card'
+
+import { LessonDialog } from "@/components/lessons/lesson-dialog";
+import { lessonService } from "@/services/lesson.service";
+
 import {
   Accordion,
+  AccordionContent,
   AccordionItem,
   AccordionTrigger,
-  AccordionContent,
 } from '@/components/ui/accordion'
+import { DeleteChapterDialog } from "@/components/chapters/delete-chapter-dialog";
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/providers/auth-provider'
 
+import { courseDetailService } from '@/services/course-detail.service'
+
+
+import {
+  ChapterCard,
+} from "@/components/chapters/chapter-card";
+
+import {
+  chapterService,
+} from "@/services/chapter.service";
 export default function CourseDetailPage({
   params,
 }: {
-  params: Promise<{ courseId: string }>
+  params: Promise<{
+    courseId: string
+  }>
 }) {
+  const [chapters, setChapters] =
+  useState<any[]>([]);
+  const [chapterDialogOpen, setChapterDialogOpen] =
+  useState(false);
+
+  const [selectedChapter, setSelectedChapter] =
+  useState<any>(null);
+
+  const [deleteOpen, setDeleteOpen] =
+  useState(false);
+  const [lessonDialogOpen, setLessonDialogOpen] =
+  useState(false);
+
+const [selectedLesson, setSelectedLesson] =
+  useState<any>(null);
+
+const [selectedChapterForLesson, setSelectedChapterForLesson] =
+  useState<any>(null);
+
   const { courseId } = use(params)
-  const { role } = useAuth()
-  const course = COURSES.find((c) => c.id === courseId)
 
-  if (!course) notFound()
+  const { profile } = useAuth()
 
-  const completedCount = course.chapters
-    .flatMap((ch) => ch.lessons)
-    .filter((l) => l.completed).length
-  const totalCount = course.chapters.flatMap((ch) => ch.lessons).length
+  const role = profile?.role
+
+  const [course, setCourse] = useState<any>(null)
+
+  const [loading, setLoading] =
+    useState(true)
+  const [deleteLessonOpen, setDeleteLessonOpen] =
+useState(false);
+useEffect(() => {
+    if (!profile) return;
+
+    loadCourse();
+}, [courseId, profile]);
+
+  async function loadCourse() {
+    try {
+      const data =
+  await courseDetailService.getCourseDetail(
+    courseId,
+    profile?.id
+  );
+
+setCourse(data);
+
+setChapters(data.chapters ?? []);
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function createChapter(values: {
+  title: string;
+  order_index: number;
+}) {
+  try {
+    await chapterService.create({
+      course_id: courseId,
+      title: values.title,
+      order_index: values.order_index,
+    });
+
+    toast.success("Chapter created");
+
+    setChapterDialogOpen(false);
+
+    loadCourse();
+    setSelectedChapterForLesson(null);
+
+  } catch (error) {
+
+    console.error(error);
+
+    toast.error("Create chapter failed");
+
+  }
+}
+async function deleteLesson() {
+
+    if (!selectedLesson) return;
+
+    try {
+
+        await lessonService.delete(
+            selectedLesson.id
+        );
+
+        toast.success("Lesson deleted");
+
+        setDeleteLessonOpen(false);
+
+        setSelectedLesson(null);
+        setSelectedChapterForLesson(null);
+
+        loadCourse();
+
+    } catch (e) {
+
+        console.error(e);
+
+        toast.error("Delete lesson failed");
+
+    }
+
+}
+async function updateChapter(values: {
+  title: string;
+  order_index: number;
+}) {
+  if (!selectedChapter) return;
+
+  try {
+    await chapterService.update(
+      selectedChapter.id,
+      values
+    );
+
+    toast.success("Chapter updated");
+
+    setChapterDialogOpen(false);
+
+    setSelectedChapter(null);
+
+    loadCourse();
+
+  } catch (error) {
+
+    console.error(error);
+
+    toast.error("Update chapter failed");
+
+  }
+}
+
+async function deleteChapter() {
+  if (!selectedChapter) return;
+
+  try {
+    await chapterService.delete(
+      selectedChapter.id
+    );
+
+    toast.success("Chapter deleted");
+
+    setDeleteOpen(false);
+
+    setSelectedChapter(null);
+
+    loadCourse();
+
+  } catch (error) {
+
+    console.error(error);
+
+    toast.error("Delete chapter failed");
+
+  }
+}
+interface LessonFormValues {
+  title: string;
+  order_index: number;
+  is_active: boolean;
+}
+async function createLesson(values: LessonFormValues) {
+  if (!selectedChapterForLesson) return;
+
+  try {
+    await lessonService.create({
+    chapter_id: selectedChapterForLesson.id,
+    title: values.title,
+    order_index: values.order_index,
+    is_active: values.is_active,
+});
+
+    toast.success("Lesson created");
+
+    setLessonDialogOpen(false);
+    setSelectedLesson(null);
+    setSelectedChapterForLesson(null);
+
+    loadCourse();
+  } catch (error) {
+    console.error(error);
+    toast.error("Create lesson failed");
+  }
+}
+
+async function updateLesson(values: LessonFormValues) {
+  if (!selectedLesson) return;
+
+  try {
+    await lessonService.update(selectedLesson.id, {
+    title: values.title,
+    order_index: values.order_index,
+    is_active: values.is_active,
+});
+
+    toast.success("Lesson updated");
+
+    setLessonDialogOpen(false);
+    setSelectedLesson(null);
+    setSelectedChapterForLesson(null);
+
+    loadCourse();
+  } catch (error) {
+    console.error(error);
+    toast.error("Update lesson failed");
+  }
+}
+
+  if (loading) {
+    return (
+      <div className="py-10 text-center">
+        Loading...
+      </div>
+    )
+  }
+
+  if (!course) {
+    notFound()
+  }
+
+  const allLessons =
+  chapters.flatMap(
+    (chapter: any) => chapter.lessons ?? []
+  );
+
+  const completedCount =
+    allLessons.filter(
+      (lesson: any) => lesson.progress?.completed ??lesson.completed ??false
+    ).length
 
   return (
     <div className="flex flex-col gap-6">
+
       <Link
         href="/courses"
-        className="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ChevronLeft className="size-4" />
         Back to courses
       </Link>
 
-      {/* Hero */}
       <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
-        <div className="relative aspect-video overflow-hidden rounded-xl border bg-muted">
+
+        <div className="relative aspect-video rounded-xl overflow-hidden border bg-muted">
+
           <Image
-            src={course.thumbnail || "/placeholder.svg"}
-            alt={course.title}
+            src={
+                course.thumbnail_url ??
+                "/placeholder.svg"
+            }
+            alt={course.name}
             fill
             className="object-cover"
-            sizes="(max-width: 1024px) 100vw, 60vw"
-            priority
-          />
+        />
+
         </div>
+
         <div className="flex flex-col justify-center gap-4">
-          <div className="flex flex-col gap-2">
-            <Badge variant="secondary" className="w-fit">
-              {course.category}
+
+          <div>
+
+            <Badge>
+
+              {course.is_active
+                ? "Active"
+                : "Inactive"}
+
             </Badge>
-            <h1 className="font-serif text-2xl font-semibold tracking-tight text-balance lg:text-3xl">
-              {course.title}
+
+            <h1 className="mt-3 text-3xl font-bold">
+
+              {course.name}
+
             </h1>
-            <p className="text-sm leading-relaxed text-muted-foreground text-pretty">
+
+            <p className="mt-2 text-muted-foreground">
+
               {course.description}
+
             </p>
+
           </div>
 
-          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+
             <BookOpen className="size-4" />
-            {course.totalLessons} lessons · {course.teacher}
+
+            {course.totalLessons} Lessons
+
           </div>
 
-          {role === 'student' ? (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {completedCount} of {totalCount} lessons completed
+          {role === "STUDENT" ? (
+
+            <div>
+
+              <div className="flex justify-between text-sm mb-2">
+
+                <span>
+
+                  {completedCount}/
+                  {course.totalLessons}
+
                 </span>
-                <span className="font-medium tabular-nums">{course.progress}%</span>
+
+                <span>
+
+                  {course.progress}%
+
+                </span>
+
               </div>
-              <Progress value={course.progress} />
+
+              <Progress
+                value={course.progress}
+              />
+
             </div>
+
           ) : (
-            <div className="flex flex-wrap gap-2">
-              <Button>
-                <Plus data-icon="inline-start" />
-                Add chapter
+
+            <div className="flex gap-2">
+
+              <Button
+              onClick={() => {
+                setSelectedChapter(null);
+                setChapterDialogOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Chapter
+            </Button>
+
+              <Button
+                variant="outline"
+              >
+
+                Edit Course
+
               </Button>
-              <Button variant="outline">Edit course</Button>
+
             </div>
+
           )}
+
         </div>
+
       </div>
 
-      {/* Curriculum */}
       <Card>
-        <CardContent className="flex flex-col gap-4 py-2">
-          <div className="flex items-center justify-between">
-            <h2 className="font-serif text-lg font-semibold">Curriculum</h2>
-            <span className="text-sm text-muted-foreground">
-              {course.chapters.length} chapters
-            </span>
+
+  <CardContent className="pt-6">
+
+    <Accordion
+      defaultValue={chapters.map(
+        (c) => c.id
+      )}
+    >
+
+      {chapters.map((chapter) => (
+
+        <ChapterCard
+          key={chapter.id}
+          chapter={chapter}
+          onAddLesson={(chapter) => {
+            setSelectedChapterForLesson(chapter);
+            setSelectedLesson(null);
+            setLessonDialogOpen(true);
+        }}
+          onEdit={(chapter) => {
+
+            setSelectedChapter(chapter);
+
+            setChapterDialogOpen(true);
+
+          }}
+          onDelete={(chapter) => {
+
+            setSelectedChapter(chapter);
+
+            setDeleteOpen(true);
+
+          }}
+        >
+          <div className="space-y-2">
+
+           {(chapter.lessons ?? []).map((lesson: any) => (
+
+<div
+    key={lesson.id}
+    className="flex items-center gap-2 rounded-lg p-2 hover:bg-muted"
+>
+
+    <Link
+        href={`/courses/${course.id}/lessons/${lesson.id}`}
+        className="flex flex-1 items-center gap-3"
+    >
+
+        {lesson.completed ? (
+            <CircleCheckBig
+                className="text-primary"
+                size={18}
+            />
+        ) : (
+            <Circle size={18} />
+        )}
+
+        <div className="flex-1">
+
+            <div>{lesson.title}</div>
+
+            {/* <div className="flex gap-2 text-xs text-muted-foreground">
+                <Play size={12} />
+                {lesson.contents?.length ?? 0} resources
+            </div> */}
+
+        </div>
+
+    </Link>
+
+    {role === "TEACHER" && (
+
+        <div className="flex gap-1">
+
+            <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => {
+                    setSelectedLesson(lesson);
+                    setSelectedChapterForLesson(chapter);
+                    setLessonDialogOpen(true);
+                }}
+            >
+                <Pencil className="h-4 w-4" />
+            </Button>
+
+            <Button
+                size="icon"
+                variant="ghost"
+                className="text-red-500"
+                onClick={() => {
+                    setSelectedLesson(lesson);
+                     setSelectedChapterForLesson(chapter);
+                    setDeleteLessonOpen(true);
+                }}
+            >
+                <Trash2 className="h-4 w-4" />
+            </Button>
+
+        </div>
+
+    )}
+
+</div>
+
+))}
+
           </div>
 
-          <Accordion defaultValue={[course.chapters[0]?.id]} className="w-full">
-            {course.chapters.map((chapter) => (
-              <AccordionItem key={chapter.id} value={chapter.id}>
-                <AccordionTrigger>
-                  <span className="flex flex-1 items-center justify-between pr-2 text-left">
-                    <span className="font-medium">{chapter.title}</span>
-                    <span className="text-xs font-normal text-muted-foreground">
-                      {chapter.lessons.length} lessons
-                    </span>
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <ul className="flex flex-col gap-1 pt-1">
-                    {chapter.lessons.map((lesson) => (
-                      <li key={lesson.id}>
-                        <Link
-                          href={`/courses/${course.id}/lessons/${lesson.id}`}
-                          className="flex items-center gap-3 rounded-lg px-2 py-2.5 transition-colors hover:bg-accent"
-                        >
-                          {role === 'student' && lesson.completed ? (
-                            <CircleCheckBig className="size-5 shrink-0 text-primary" />
-                          ) : (
-                            <Circle className="size-5 shrink-0 text-muted-foreground/50" />
-                          )}
-                          <div className="flex min-w-0 flex-1 flex-col">
-                            <span className="truncate text-sm font-medium">{lesson.title}</span>
-                            <span className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <Play className="size-3" />
-                              {lesson.duration}
-                              {lesson.assignmentId ? (
-                                <>
-                                  <span aria-hidden>·</span>
-                                  <ClipboardList className="size-3" />
-                                  Assignment
-                                </>
-                              ) : null}
-                            </span>
-                          </div>
-                          <span
-                            className={cn(
-                              'shrink-0 text-xs font-medium',
-                              role === 'student' && lesson.completed
-                                ? 'text-primary'
-                                : 'text-muted-foreground',
-                            )}
-                          >
-                            {role === 'student'
-                              ? lesson.completed
-                                ? 'Done'
-                                : 'Start'
-                              : 'Edit'}
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </CardContent>
-      </Card>
+        </ChapterCard>
+
+      ))}
+
+    </Accordion>
+
+  </CardContent>
+
+</Card>
+
+<ChapterDialog
+  open={chapterDialogOpen}
+  chapter={selectedChapter}
+  onClose={() => {
+    setChapterDialogOpen(false);
+    setSelectedChapter(null);
+  }}
+  onSubmit={
+    selectedChapter
+      ? updateChapter
+      : createChapter
+  }
+/>
+<DeleteChapterDialog
+    open={deleteOpen}
+    chapter={selectedChapter}
+    onClose={()=>{
+        setDeleteOpen(false);
+        setSelectedChapter(null);
+    }}
+    onDelete={deleteChapter}
+/>
+<LessonDialog
+  open={lessonDialogOpen}
+  lesson={selectedLesson}
+  onClose={() => {
+
+    setLessonDialogOpen(false);
+
+    setSelectedLesson(null);
+
+    setSelectedChapterForLesson(null);
+
+  }}
+  onSubmit={
+    selectedLesson
+      ? updateLesson
+      : createLesson
+  }
+/>
+
+<DeleteLessonDialog
+
+open={deleteLessonOpen}
+
+lesson={selectedLesson}
+
+onClose={()=>{
+
+setDeleteLessonOpen(false);
+
+setSelectedLesson(null);
+
+}}
+
+onDelete={deleteLesson}
+
+/>
     </div>
   )
 }

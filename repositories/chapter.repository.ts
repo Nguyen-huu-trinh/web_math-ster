@@ -1,68 +1,50 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
 
 export interface CreateChapterDto {
   course_id: string;
   title: string;
-  description?: string;
-  chapter_order: number;
+  order_index: number;
 }
 
-export class ChapterRepository {
-  async getByCourse(courseId: string) {
-    const supabase = await createClient();
+class ChapterRepository {
+  private supabase = createClient();
 
-    const { data, error } = await supabase
+  async getByCourse(courseId: string) {
+    const { data, error } = await this.supabase
       .from("chapters")
       .select("*")
       .eq("course_id", courseId)
-      .is("deleted_at", null)
-      .order("chapter_order");
+      .order("order_index");
 
     if (error) throw error;
 
     return data;
   }
 
-  async getById(id: string) {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from("chapters")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (error) throw error;
-
-    return data;
-  }
-
-  async create(values: CreateChapterDto) {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from("chapters")
-      .insert(values)
-      .select()
-      .single();
+  async create(data: CreateChapterDto) {
+    const { data: chapter, error } =
+      await this.supabase
+        .from("chapters")
+        .insert(data)
+        .select()
+        .single();
 
     if (error) throw error;
 
-    return data;
+    return chapter;
   }
 
   async update(
     id: string,
     values: Partial<CreateChapterDto>
   ) {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from("chapters")
-      .update(values)
-      .eq("id", id)
-      .select()
-      .single();
+    const { data, error } =
+      await this.supabase
+        .from("chapters")
+        .update(values)
+        .eq("id", id)
+        .select()
+        .single();
 
     if (error) throw error;
 
@@ -70,53 +52,13 @@ export class ChapterRepository {
   }
 
   async delete(id: string) {
-    const supabase = await createClient();
-
-    const { error } = await supabase
-      .from("chapters")
-      .update({
-        deleted_at: new Date().toISOString(),
-      })
-      .eq("id", id);
+    const { error } =
+      await this.supabase
+        .from("chapters")
+        .delete()
+        .eq("id", id);
 
     if (error) throw error;
-  }
-
-  async restore(id: string) {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from("chapters")
-      .update({
-        deleted_at: null,
-      })
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return data;
-  }
-
-  async reorder(
-    id: string,
-    chapter_order: number
-  ) {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from("chapters")
-      .update({
-        chapter_order,
-      })
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return data;
   }
 }
 

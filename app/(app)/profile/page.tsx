@@ -1,171 +1,404 @@
 'use client'
 
-import { useState } from 'react'
-import { Camera, Save, KeyRound, Mail, Phone, IdCard, ShieldCheck } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import {
+  Camera,
+  Save,
+  KeyRound,
+  Mail,
+  Phone,
+  IdCard,
+  ShieldCheck,
+} from 'lucide-react'
 import { toast } from 'sonner'
+
 import { useAuth } from '@/providers/auth-provider'
+import { profileClientService } from '@/services/profile-client.service'
+
 import { PageHeader } from '@/components/layout/page-header'
+
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 
-function initials(name: string) {
-  return name.split(' ').slice(-2).map((n) => n[0]).join('')
+function initials(name?: string) {
+  if (!name) return '?'
+
+  return name
+    .trim()
+    .split(' ')
+    .slice(-2)
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
 }
 
 export default function ProfilePage() {
-  const { user } = useAuth()
-  const [name, setName] = useState(user?.name ?? '')
-  const [phone, setPhone] = useState('+84 912 345 678')
+  const {
+    user,
+    profile,
+    refresh,
+  } = useAuth()
 
-  if (!user) return null
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
 
-  function saveProfile(e: React.FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    if (!profile) return
+
+    setName(profile.full_name)
+    setPhone(profile.phone ?? '')
+  }, [profile])
+
+  if (!user || !profile) return null
+
+  async function saveProfile(
+    e: React.FormEvent<HTMLFormElement>
+  ) {
     e.preventDefault()
-    toast.success('Profile updated')
+
+    try {
+      await profileClientService.update({
+        full_name: name,
+        phone,
+      })
+
+      await refresh()
+
+      toast.success('Profile updated successfully')
+    } catch (error) {
+      console.error(error)
+
+      toast.error('Failed to update profile')
+    }
   }
 
-  function changePassword(e: React.FormEvent<HTMLFormElement>) {
+  function changePassword(
+    e: React.FormEvent<HTMLFormElement>
+  ) {
     e.preventDefault()
+
     const form = new FormData(e.currentTarget)
+
     if (form.get('new') !== form.get('confirm')) {
       toast.error('New passwords do not match')
       return
     }
+
     toast.success('Password changed')
+
     e.currentTarget.reset()
   }
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Profile" description="Manage your personal information and password." />
+      <PageHeader
+        title="Profile"
+        description="Manage your personal information and password."
+      />
 
       <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
-        {/* Avatar card */}
+
         <Card className="h-fit">
-          <CardContent className="flex flex-col items-center gap-4 py-2 text-center">
+          <CardContent className="flex flex-col items-center gap-4 py-6 text-center">
+
             <div className="relative">
+
               <Avatar className="size-24">
-                <AvatarImage src={user.avatar || '/placeholder.svg'} alt={user.name} />
-                <AvatarFallback className="text-2xl">{initials(user.name)}</AvatarFallback>
+
+                <AvatarImage
+                  src={
+                    profile.avatar_url ??
+                    '/placeholder.svg'
+                  }
+                  alt={profile.full_name}
+                />
+
+                <AvatarFallback className="text-2xl">
+                  {initials(profile.full_name)}
+                </AvatarFallback>
+
               </Avatar>
+
               <button
                 type="button"
-                onClick={() => toast.info('Avatar picker (mock)')}
-                aria-label="Change avatar"
-                className="absolute bottom-0 right-0 flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground ring-2 ring-card transition-transform hover:scale-105"
+                onClick={() =>
+                  toast.info(
+                    'Avatar upload coming soon'
+                  )
+                }
+                className="absolute bottom-0 right-0 flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground ring-2 ring-card"
               >
                 <Camera className="size-4" />
               </button>
+
             </div>
-            <div className="flex flex-col gap-1">
-              <h2 className="font-serif text-lg font-semibold">{user.name}</h2>
-              <p className="text-sm text-muted-foreground">{user.email}</p>
+
+            <div>
+
+              <h2 className="font-serif text-lg font-semibold">
+                {profile.full_name}
+              </h2>
+
+              <p className="text-sm text-muted-foreground">
+                {user.email}
+              </p>
+
             </div>
-            <Badge variant="secondary" className="gap-1 capitalize">
+
+            <Badge
+              variant="secondary"
+              className="gap-1 capitalize"
+            >
               <ShieldCheck className="size-3" />
-              {user.role}
+              {profile.role}
             </Badge>
+
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => toast.info('Avatar picker (mock)')}
+              onClick={() =>
+                toast.info(
+                  'Avatar upload coming soon'
+                )
+              }
             >
-              <Camera data-icon="inline-start" />
+              <Camera className="mr-2 size-4" />
               Change avatar
             </Button>
+
           </CardContent>
         </Card>
 
         <div className="flex flex-col gap-6">
-          {/* Personal info */}
+
           <Card>
+
             <CardHeader>
-              <CardTitle className="text-base">Personal information</CardTitle>
-              <CardDescription>Update your account details.</CardDescription>
+              <CardTitle>
+                Personal information
+              </CardTitle>
+
+              <CardDescription>
+                Update your account details.
+              </CardDescription>
             </CardHeader>
+
             <CardContent>
-              <form onSubmit={saveProfile} className="flex flex-col gap-4">
+
+              <form
+                onSubmit={saveProfile}
+                className="flex flex-col gap-4"
+              >
+
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="name">Full name</Label>
-                    <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+
+                  <div>
+
+                    <Label htmlFor="name">
+                      Full name
+                    </Label>
+
+                    <Input
+                      id="name"
+                      value={name}
+                      onChange={(e) =>
+                        setName(e.target.value)
+                      }
+                    />
+
                   </div>
-                  <div className="flex flex-col gap-1.5">
+
+                  <div>
+
                     <Label htmlFor="email">
-                      <Mail className="size-3.5" />
+                      <Mail className="mr-1 inline size-3" />
                       Email
                     </Label>
-                    <Input id="email" type="email" defaultValue={user.email} />
+
+                    <Input
+                      id="email"
+                      type="email"
+                      value={user.email ?? ''}
+                      disabled
+                    />
+
                   </div>
-                  <div className="flex flex-col gap-1.5">
+
+                  <div>
+
                     <Label htmlFor="phone">
-                      <Phone className="size-3.5" />
+                      <Phone className="mr-1 inline size-3" />
                       Phone
                     </Label>
-                    <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+
+                    <Input
+                      id="phone"
+                      value={phone}
+                      onChange={(e) =>
+                        setPhone(e.target.value)
+                      }
+                    />
+
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="role">Role</Label>
-                    <Input id="role" defaultValue={user.role} disabled className="capitalize" />
+
+                  <div>
+
+                    <Label htmlFor="role">
+                      Role
+                    </Label>
+
+                    <Input
+                      id="role"
+                      value={profile.role}
+                      disabled
+                    />
+
                   </div>
-                  {user.studentCode ? (
-                    <div className="flex flex-col gap-1.5">
+
+                  {profile.student_code && (
+
+                    <div>
+
                       <Label htmlFor="code">
-                        <IdCard className="size-3.5" />
-                        Student code
+                        <IdCard className="mr-1 inline size-3" />
+                        Student Code
                       </Label>
-                      <Input id="code" defaultValue={user.studentCode} disabled className="font-mono" />
+
+                      <Input
+                        id="code"
+                        value={profile.student_code}
+                        disabled
+                        className="font-mono"
+                      />
+
                     </div>
-                  ) : null}
+
+                  )}
+
                 </div>
+
                 <div className="flex justify-end">
+
                   <Button type="submit">
-                    <Save data-icon="inline-start" />
-                    Save changes
+                    <Save className="mr-2 size-4" />
+                    Save Changes
                   </Button>
+
                 </div>
+
               </form>
+
             </CardContent>
+
           </Card>
 
-          {/* Change password */}
           <Card>
+
             <CardHeader>
-              <CardTitle className="text-base">Change password</CardTitle>
-              <CardDescription>Use a strong password you don&apos;t reuse elsewhere.</CardDescription>
+
+              <CardTitle>
+                Change password
+              </CardTitle>
+
+              <CardDescription>
+                Use a strong password you don't reuse elsewhere.
+              </CardDescription>
+
             </CardHeader>
+
             <CardContent>
-              <form onSubmit={changePassword} className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="current">Current password</Label>
-                  <Input id="current" name="current" type="password" placeholder="••••••••" required />
+
+              <form
+                onSubmit={changePassword}
+                className="flex flex-col gap-4"
+              >
+
+                <div>
+
+                  <Label htmlFor="current">
+                    Current password
+                  </Label>
+
+                  <Input
+                    id="current"
+                    name="current"
+                    type="password"
+                    required
+                  />
+
                 </div>
+
                 <Separator />
+
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="new">New password</Label>
-                    <Input id="new" name="new" type="password" placeholder="••••••••" required />
+
+                  <div>
+
+                    <Label htmlFor="new">
+                      New password
+                    </Label>
+
+                    <Input
+                      id="new"
+                      name="new"
+                      type="password"
+                      required
+                    />
+
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="confirm">Confirm new password</Label>
-                    <Input id="confirm" name="confirm" type="password" placeholder="••••••••" required />
+
+                  <div>
+
+                    <Label htmlFor="confirm">
+                      Confirm password
+                    </Label>
+
+                    <Input
+                      id="confirm"
+                      name="confirm"
+                      type="password"
+                      required
+                    />
+
                   </div>
+
                 </div>
+
                 <div className="flex justify-end">
-                  <Button type="submit" variant="outline">
-                    <KeyRound data-icon="inline-start" />
-                    Update password
+
+                  <Button
+                    type="submit"
+                    variant="outline"
+                  >
+                    <KeyRound className="mr-2 size-4" />
+                    Update Password
                   </Button>
+
                 </div>
+
               </form>
+
             </CardContent>
+
           </Card>
+
         </div>
+
       </div>
     </div>
   )

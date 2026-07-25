@@ -1,83 +1,222 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Search } from 'lucide-react'
-import { EXAMS } from '@/lib/mock-data'
-import { PageHeader } from '@/components/layout/page-header'
-import { StudentExamCard } from '@/components/exams/student-exam-card'
-import { InputGroup, InputGroupInput, InputGroupAddon } from '@/components/ui/input-group'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty'
+import { useMemo, useState } from "react";
+import { Search } from "lucide-react";
 
-const FILTERS = [
-  { value: 'all', label: 'All' },
-  { value: 'not-started', label: 'Not started' },
-  { value: 'passed', label: 'Passed' },
-  { value: 'failed', label: 'Failed' },
-]
+import { PageHeader } from "@/components/layout/page-header";
+import { StudentExamCard } from "@/components/exams/student-exam-card";
+
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@/components/ui/toggle-group";
+
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+
+import { useStudentExams } from "@/hooks/use-student-exams";
+
+const STATUS_FILTERS = [
+  { value: "all", label: "Tất cả" },
+  { value: "NOT_STARTED", label: "Chưa làm" },
+  { value: "DONE", label: "Đã làm" },
+  { value: "PASSED", label: "Đạt" },
+  { value: "FAILED", label: "Chưa đạt" },
+];
+
+const CATEGORY_FILTERS = [
+  { value: "all", label: "Tất cả loại đề" },
+  { value: "ATTENDANCE", label: "Điểm danh" },
+  { value: "PERIODIC", label: "Định kỳ" },
+];
 
 export default function StudentExamsPage() {
-  const [query, setQuery] = useState('')
-  const [filter, setFilter] = useState('all')
 
-  // Students only see published exams (not drafts)
-  const visible = EXAMS.filter((e) => e.status !== 'draft')
+  const { data, isLoading } =
+    useStudentExams();
 
-  const filtered = visible.filter((e) => {
-    const matchesQuery = e.title.toLowerCase().includes(query.toLowerCase())
-    const matchesFilter = filter === 'all' || (e.studentStatus ?? 'not-started') === filter
-    return matchesQuery && matchesFilter
-  })
+  const [query, setQuery] =
+    useState("");
+
+  const [status, setStatus] =
+    useState("all");
+
+  const [category, setCategory] =
+    useState("all");
+
+  const exams = useMemo(() => {
+
+    if (!data) return [];
+
+    return data.filter((exam) => {
+
+      const matchTitle =
+        exam.title
+          .toLowerCase()
+          .includes(query.toLowerCase());
+
+      const matchStatus =
+        status === "all" ||
+        exam.status === status;
+
+      const matchCategory =
+        category === "all" ||
+        exam.category === category;
+
+      return (
+        matchTitle &&
+        matchStatus &&
+        matchCategory
+      );
+
+    });
+
+  }, [
+    data,
+    query,
+    status,
+    category,
+  ]);
+
+  if (isLoading) {
+
+    return (
+      <div className="p-10">
+        Đang tải...
+      </div>
+    );
+
+  }
 
   return (
-    <div className="flex flex-col gap-6">
+
+    <div className="space-y-6">
+
       <PageHeader
-        title="My Exams"
-        description="Take assigned exams and review your results."
+        title="Bài tập của tôi"
+        description="Danh sách các bài tập và đề thi trong khóa học."
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <InputGroup className="sm:max-w-xs">
+      <div className="space-y-4">
+
+        <InputGroup className="max-w-md">
+
           <InputGroupInput
-            placeholder="Search exams..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) =>
+              setQuery(e.target.value)
+            }
+            placeholder="Tìm kiếm đề..."
           />
+
           <InputGroupAddon>
+
             <Search />
+
           </InputGroupAddon>
+
         </InputGroup>
 
-        <ToggleGroup
-          value={[filter]}
-          onValueChange={(v) => setFilter((v[0] as string) ?? 'all')}
-          className="w-fit"
-        >
-          {FILTERS.map((f) => (
-            <ToggleGroupItem key={f.value} value={f.value}>
-              {f.label}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+        <div className="flex flex-wrap gap-4">
+
+          <ToggleGroup
+            value={[status]}
+            onValueChange={(v) =>
+              setStatus(v[0] ?? "all")
+            }
+          >
+
+            {STATUS_FILTERS.map((item) => (
+
+              <ToggleGroupItem
+                key={item.value}
+                value={item.value}
+              >
+                {item.label}
+              </ToggleGroupItem>
+
+            ))}
+
+          </ToggleGroup>
+
+          <ToggleGroup
+            value={[category]}
+            onValueChange={(v) =>
+              setCategory(v[0] ?? "all")
+            }
+          >
+
+            {CATEGORY_FILTERS.map((item) => (
+
+              <ToggleGroupItem
+                key={item.value}
+                value={item.value}
+              >
+                {item.label}
+              </ToggleGroupItem>
+
+            ))}
+
+          </ToggleGroup>
+
+        </div>
+
       </div>
 
-      {filtered.length === 0 ? (
+      {exams.length === 0 ? (
+
         <Empty>
+
           <EmptyHeader>
-            <EmptyMedia variant="icon">
+
+            <EmptyMedia>
+
               <Search />
+
             </EmptyMedia>
-            <EmptyTitle>No exams found</EmptyTitle>
-            <EmptyDescription>Try a different search or filter.</EmptyDescription>
+
+            <EmptyTitle>
+              Không có bài tập
+            </EmptyTitle>
+
+            <EmptyDescription>
+              Không tìm thấy bài tập phù hợp.
+            </EmptyDescription>
+
           </EmptyHeader>
+
         </Empty>
+
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((exam) => (
-            <StudentExamCard key={exam.id} exam={exam} />
+
+        <div className="space-y-4">
+
+          {exams.map((exam) => (
+
+            <StudentExamCard
+              key={exam.id}
+              exam={exam}
+            />
+
           ))}
+
         </div>
+
       )}
+
     </div>
-  )
+
+  );
+
 }

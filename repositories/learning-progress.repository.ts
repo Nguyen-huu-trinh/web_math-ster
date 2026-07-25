@@ -1,24 +1,16 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
 
 export interface UpdateLearningProgressDto {
-  student_id: string;
-  lesson_id: string;
-
-  progress_percent: number;
-
-  watched_seconds?: number;
-
-  study_seconds?: number;
-
-  completed?: boolean;
+    student_id: string;
+    lesson_id: string;
+    is_completed: boolean;
 }
-
 export class LearningProgressRepository {
   async getStudentProgress(studentId: string) {
     const supabase = await createClient();
 
     const { data, error } = await supabase
-        .from("learning_progress")
+       .from("lesson_progress")
         .select(`
             *,
             lessons(
@@ -41,7 +33,7 @@ export class LearningProgressRepository {
       const supabase = await createClient();
 
       const { data, error } = await supabase
-          .from("learning_progress")
+          .from("lesson_progress")
           .select("*")
           .eq("student_id", studentId)
           .eq("lesson_id", lessonId)
@@ -53,66 +45,72 @@ export class LearningProgressRepository {
   }
 
   async save(values: UpdateLearningProgressDto) {
-      const supabase = await createClient();
 
-      const current = await this.getLessonProgress(
-          values.student_id,
-          values.lesson_id
-      );
+    const supabase = await createClient();
 
-      if (current) {
+    const current =
+        await this.getLessonProgress(
+            values.student_id,
+            values.lesson_id
+        );
 
-          const { data, error } = await supabase
-              .from("learning_progress")
-              .update({
-                  progress_percent: values.progress_percent,
-                  watched_seconds: values.watched_seconds,
-                  study_seconds: values.study_seconds,
-                  completed: values.completed,
-                  last_studied_at: new Date().toISOString(),
-              })
-              .eq("id", current.id)
-              .select()
-              .single();
+    if (current) {
 
-          if (error) throw error;
+        const { data, error } =
+            await supabase
+                .from("lesson_progress")
+                .update({
+                    is_completed: values.is_completed,
+                    completed_at: values.is_completed
+                        ? new Date().toISOString()
+                        : null,
+                })
+                .eq("id", current.id)
+                .select()
+                .single();
 
-          return data;
-      }
+        if (error) throw error;
 
-      const { data, error } = await supabase
-          .from("learning_progress")
-          .insert({
-              ...values,
-              last_studied_at: new Date().toISOString(),
-          })
-          .select()
-          .single();
+        return data;
+    }
 
-      if (error) throw error;
+    const { data, error } =
+        await supabase
+            .from("lesson_progress")
+            .insert({
+                student_id: values.student_id,
+                lesson_id: values.lesson_id,
+                is_completed: values.is_completed,
+                completed_at: values.is_completed
+                    ? new Date().toISOString()
+                    : null,
+            })
+            .select()
+            .single();
 
-      return data;
-  }
+    if (error) throw error;
+
+    return data;
+}
 
   async complete(id: string) {
 
-      const supabase = await createClient();
+    const supabase = await createClient();
 
-      const { data, error } = await supabase
-          .from("learning_progress")
-          .update({
-              completed: true,
-              progress_percent: 100,
-              completed_at: new Date().toISOString(),
-          })
-          .eq("id", id)
-          .select()
-          .single();
+    const { data, error } = await supabase
+        .from("lesson_progress")
+        .update({
+            is_completed: true,
+            completed_at: new Date().toISOString(),
+        })
+        .eq("id", id)
+        .select()
+        .single();
 
-      if (error) throw error;
+    if (error) throw error;
 
-      return data;
-  }
+    return data;
+}
 }
 
 export const learningProgressRepository =

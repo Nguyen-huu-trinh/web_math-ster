@@ -1,50 +1,35 @@
 import {
   courseRepository,
-  CreateCourseDto,
+  type CreateCourseDto,
 } from "@/repositories/course.repository";
 
-export class CourseService {
+class CourseService {
   async getAll() {
-    return courseRepository.getAll();
+    return await courseRepository.getAll();
   }
 
   async getById(id: string) {
-    const course = await courseRepository.getById(id);
-
-    if (!course) {
-      throw new Error("Course not found");
-    }
-
-    return course;
+    return await courseRepository.getById(id);
   }
 
-  async create(values: CreateCourseDto) {
-    if (!values.name.trim()) {
-      throw new Error("Course name is required");
-    }
-
-    return courseRepository.create(values);
+  async create(data: CreateCourseDto) {
+    return await courseRepository.create(data);
   }
 
   async update(
     id: string,
-    values: Partial<CreateCourseDto>
+    data: Partial<CreateCourseDto>
   ) {
-    await this.getById(id);
-
-    return courseRepository.update(id, values);
+    return await courseRepository.update(id, data);
   }
 
   async delete(id: string) {
-    await this.getById(id);
-
-    return courseRepository.delete(id);
+    return await courseRepository.delete(id);
   }
 
   async restore(id: string) {
-    return courseRepository.restore(id);
+    return await courseRepository.restore(id);
   }
 }
 
-export const courseService =
-  new CourseService();
+export const courseService = new CourseService();

@@ -2,141 +2,327 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Menu, Sun, Moon, Bell, Search, LogOut, CircleUser, Settings } from 'lucide-react'
+
+import {
+  Menu,
+  Sun,
+  Moon,
+  Bell,
+  Search,
+  LogOut,
+  CircleUser,
+  Settings,
+} from 'lucide-react'
+
 import { useAuth } from '@/providers/auth-provider'
 import { useTheme } from '@/providers/theme-provider'
+
 import { NOTIFICATIONS } from '@/lib/mock-data'
+
 import { SidebarNav } from './sidebar-nav'
+
 import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { InputGroup, InputGroupInput, InputGroupAddon } from '@/components/ui/input-group'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
+
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+} from '@/components/ui/sheet'
+
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/components/ui/avatar'
+
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@/components/ui/input-group'
+
+import {
+  Badge,
+} from '@/components/ui/badge'
+
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
 } from '@/components/ui/popover'
+
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuGroup,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
 
-function initials(name: string) {
-  return name.split(' ').slice(-2).map((n) => n[0]).join('')
+function initials(name?: string) {
+  if (!name) return '?'
+
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(-2)
+    .map((n) => n.charAt(0))
+    .join('')
+    .toUpperCase()
 }
 
-export function Topbar({ title }: { title: string }) {
-  const { user, logout } = useAuth()
-  const { theme, toggleTheme } = useTheme()
-  const [mobileOpen, setMobileOpen] = useState(false)
-  if (!user) return null
+export function Topbar({
+  title,
+}: {
+  title: string
+}) {
+  const {
+    user,
+    profile,
+    logout,
+  } = useAuth()
+
+  const {
+    theme,
+    toggleTheme,
+  } = useTheme()
+
+  const [mobileOpen, setMobileOpen] =
+    useState(false)
+
+  if (!user || !profile) return null
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-md sm:px-6">
-      {/* Mobile menu */}
-      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetTrigger
-          render={
-            <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open menu" />
-          }
-        >
-          <Menu />
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur-md sm:px-6">
+
+      <Sheet
+        open={mobileOpen}
+        onOpenChange={setMobileOpen}
+      >
+
+        <SheetTrigger asChild>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden"
+          >
+            <Menu />
+          </Button>
+
         </SheetTrigger>
-        <SheetContent side="left" className="w-72 border-0 p-0">
-          <SheetTitle className="sr-only">Navigation</SheetTitle>
-          <SidebarNav onNavigate={() => setMobileOpen(false)} />
+
+        <SheetContent
+          side="left"
+          className="w-72 p-0"
+        >
+
+          <SheetTitle className="sr-only">
+            Navigation
+          </SheetTitle>
+
+          <SidebarNav
+            onNavigate={() =>
+              setMobileOpen(false)
+            }
+          />
+
         </SheetContent>
+
       </Sheet>
 
-      <h1 className="text-lg font-semibold tracking-tight sm:text-xl">{title}</h1>
+      <h1 className="text-lg font-semibold">
+        {title}
+      </h1>
 
       <div className="ml-auto flex items-center gap-2">
+
         <div className="hidden md:block">
+
           <InputGroup className="w-64">
+
             <InputGroupAddon>
               <Search />
             </InputGroupAddon>
-            <InputGroupInput placeholder="Search courses, exams…" />
+
+            <InputGroupInput
+              placeholder="Search..."
+            />
+
           </InputGroup>
+
         </div>
 
-        <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
-          {theme === 'dark' ? <Sun /> : <Moon />}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleTheme}
+        >
+          {theme === 'dark'
+            ? <Sun />
+            : <Moon />}
         </Button>
 
-        {/* Notifications */}
         <Popover>
-          <PopoverTrigger
-            render={<Button variant="ghost" size="icon" className="relative" aria-label="Notifications" />}
-          >
-            <Bell />
-            <span className="absolute right-2 top-2 size-2 rounded-full bg-primary ring-2 ring-background" />
+
+          <PopoverTrigger asChild>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+            >
+              <Bell />
+
+              <span className="absolute right-2 top-2 size-2 rounded-full bg-primary" />
+
+            </Button>
+
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-80 p-0">
-            <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <p className="text-sm font-semibold">Notifications</p>
-              <Badge variant="secondary">{NOTIFICATIONS.length} new</Badge>
+
+          <PopoverContent
+            align="end"
+            className="w-80 p-0"
+          >
+
+            <div className="flex items-center justify-between border-b px-4 py-3">
+
+              <p className="font-semibold">
+                Notifications
+              </p>
+
+              <Badge>
+                {NOTIFICATIONS.length}
+              </Badge>
+
             </div>
+
             <div className="max-h-80 overflow-y-auto">
-              {NOTIFICATIONS.map((n) => (
+
+              {NOTIFICATIONS.map((item) => (
+
                 <div
-                  key={n.id}
-                  className="flex gap-3 border-b border-border px-4 py-3 last:border-0 hover:bg-muted/50"
+                  key={item.id}
+                  className="border-b px-4 py-3"
                 >
-                  <span className="mt-1 size-2 shrink-0 rounded-full bg-primary" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">{n.title}</p>
-                    <p className="truncate text-xs text-muted-foreground">{n.description}</p>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground/70">{n.time}</p>
-                  </div>
+
+                  <p className="font-medium">
+                    {item.title}
+                  </p>
+
+                  <p className="text-xs text-muted-foreground">
+                    {item.description}
+                  </p>
+
                 </div>
+
               ))}
+
             </div>
+
           </PopoverContent>
+
         </Popover>
 
-        {/* Profile */}
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={<button className="ml-1 rounded-full outline-none ring-primary focus-visible:ring-2" aria-label="Account menu" />}
-          >
-            <Avatar className="size-9">
-              <AvatarImage src={user.avatar || '/placeholder.svg'} alt={user.name} />
-              <AvatarFallback>{initials(user.name)}</AvatarFallback>
-            </Avatar>
+
+          <DropdownMenuTrigger asChild>
+
+            <button>
+
+              <Avatar className="size-9">
+
+                <AvatarImage
+                  src={
+                    profile.avatar_url ||
+                    '/placeholder.svg'
+                  }
+                  alt={profile.full_name}
+                />
+
+                <AvatarFallback>
+                  {initials(profile.full_name)}
+                </AvatarFallback>
+
+              </Avatar>
+
+            </button>
+
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+
+          <DropdownMenuContent
+            align="end"
+            className="w-56"
+          >
+
             <DropdownMenuLabel>
+
               <div className="flex flex-col">
-                <span className="font-semibold">{user.name}</span>
-                <span className="text-xs font-normal text-muted-foreground">{user.email}</span>
+
+                <span>
+                  {profile.full_name}
+                </span>
+
+                <span className="text-xs text-muted-foreground">
+                  {user.email}
+                </span>
+
               </div>
+
             </DropdownMenuLabel>
+
             <DropdownMenuSeparator />
+
             <DropdownMenuGroup>
-              <DropdownMenuItem render={<Link href="/profile" />}>
-                <CircleUser />
-                Profile
+
+              <DropdownMenuItem asChild>
+
+                <Link href="/profile">
+
+                  <CircleUser className="mr-2 h-4 w-4" />
+
+                  Profile
+
+                </Link>
+
               </DropdownMenuItem>
-              <DropdownMenuItem render={<Link href="/settings" />}>
-                <Settings />
-                Settings
+
+              <DropdownMenuItem asChild>
+
+                <Link href="/settings">
+
+                  <Settings className="mr-2 h-4 w-4" />
+
+                  Settings
+
+                </Link>
+
               </DropdownMenuItem>
+
             </DropdownMenuGroup>
+
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onClick={logout}>
-              <LogOut />
+
+            <DropdownMenuItem
+              onClick={logout}
+              className="text-red-600"
+            >
+
+              <LogOut className="mr-2 h-4 w-4" />
+
               Log out
+
             </DropdownMenuItem>
+
           </DropdownMenuContent>
+
         </DropdownMenu>
+
       </div>
+
     </header>
   )
 }

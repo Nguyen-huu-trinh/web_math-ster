@@ -3,46 +3,24 @@ import {
   CreateChapterDto,
 } from "@/repositories/chapter.repository";
 
-export class ChapterService {
+class ChapterService {
   getByCourse(courseId: string) {
     return chapterRepository.getByCourse(courseId);
   }
 
-  getById(id: string) {
-    return chapterRepository.getById(id);
-  }
-
-  create(values: CreateChapterDto) {
-    if (!values.title.trim()) {
-      throw new Error("Chapter title is required");
-    }
-
-    return chapterRepository.create(values);
+  create(data: CreateChapterDto) {
+    return chapterRepository.create(data);
   }
 
   update(
     id: string,
-    values: Partial<CreateChapterDto>
+    data: Partial<CreateChapterDto>
   ) {
-    return chapterRepository.update(id, values);
+    return chapterRepository.update(id, data);
   }
 
   delete(id: string) {
     return chapterRepository.delete(id);
-  }
-
-  restore(id: string) {
-    return chapterRepository.restore(id);
-  }
-
-  reorder(
-    id: string,
-    order: number
-  ) {
-    return chapterRepository.reorder(
-      id,
-      order
-    );
   }
 }
 

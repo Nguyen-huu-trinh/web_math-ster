@@ -1,48 +1,32 @@
 import {
   lessonRepository,
   CreateLessonDto,
+  UpdateLessonDto,
 } from "@/repositories/lesson.repository";
 
-export class LessonService {
-  getByChapter(chapterId: string) {
-    return lessonRepository.getByChapter(chapterId);
+class LessonService {
+  async getByChapter(chapterId: string) {
+    return await lessonRepository.getByChapter(chapterId);
   }
 
-  getById(id: string) {
-    return lessonRepository.getById(id);
+  async get(id: string) {
+    return await lessonRepository.getById(id);
   }
 
-  create(values: CreateLessonDto) {
-    if (!values.title.trim()) {
-      throw new Error("Lesson title is required");
-    }
-
-    return lessonRepository.create(values);
+  async create(data: CreateLessonDto) {
+    return await lessonRepository.create(data);
   }
 
-  update(
+  async update(
     id: string,
-    values: Partial<CreateLessonDto>
+    data: UpdateLessonDto
   ) {
-    return lessonRepository.update(id, values);
+    return await lessonRepository.update(id, data);
   }
 
-  delete(id: string) {
-    return lessonRepository.delete(id);
-  }
-
-  restore(id: string) {
-    return lessonRepository.restore(id);
-  }
-
-  publish(id: string) {
-    return lessonRepository.publish(id);
-  }
-
-  unpublish(id: string) {
-    return lessonRepository.unpublish(id);
+  async delete(id: string) {
+    return await lessonRepository.delete(id);
   }
 }
 
-export const lessonService =
-  new LessonService();
+export const lessonService = new LessonService();

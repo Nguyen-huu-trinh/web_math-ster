@@ -1,34 +1,35 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
 
 export interface CreateLessonDto {
   chapter_id: string;
   title: string;
-  description?: string;
-  lesson_order: number;
-  estimated_minutes?: number;
-  is_published?: boolean;
+  order_index: number;
+  is_active?: boolean;
 }
 
-export class LessonRepository {
-  async getByChapter(chapterId: string) {
-    const supabase = await createClient();
+export interface UpdateLessonDto {
+  title?: string;
+  order_index?: number;
+  is_active?: boolean;
+}
 
-    const { data, error } = await supabase
+class LessonRepository {
+  private supabase = createClient();
+
+  async getByChapter(chapterId: string) {
+    const { data, error } = await this.supabase
       .from("lessons")
       .select("*")
       .eq("chapter_id", chapterId)
-      .is("deleted_at", null)
-      .order("lesson_order");
+      .order("order_index", { ascending: true });
 
     if (error) throw error;
 
-    return data;
+    return data ?? [];
   }
 
   async getById(id: string) {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
+    const { data, error } = await this.supabase
       .from("lessons")
       .select("*")
       .eq("id", id)
@@ -39,12 +40,15 @@ export class LessonRepository {
     return data;
   }
 
-  async create(values: CreateLessonDto) {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
+  async create(dto: CreateLessonDto) {
+    const { data, error } = await this.supabase
       .from("lessons")
-      .insert(values)
+      .insert({
+        chapter_id: dto.chapter_id,
+        title: dto.title,
+        order_index: dto.order_index,
+        is_active: dto.is_active ?? true,
+      })
       .select()
       .single();
 
@@ -55,13 +59,14 @@ export class LessonRepository {
 
   async update(
     id: string,
-    values: Partial<CreateLessonDto>
+    dto: UpdateLessonDto
   ) {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
+    const { data, error } = await this.supabase
       .from("lessons")
-      .update(values)
+      .update({
+        ...dto,
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", id)
       .select()
       .single();
@@ -72,69 +77,13 @@ export class LessonRepository {
   }
 
   async delete(id: string) {
-    const supabase = await createClient();
-
-    const { error } = await supabase
+    const { error } = await this.supabase
       .from("lessons")
-      .update({
-        deleted_at: new Date().toISOString(),
-      })
+      .delete()
       .eq("id", id);
 
     if (error) throw error;
   }
-
-  async restore(id: string) {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from("lessons")
-      .update({
-        deleted_at: null,
-      })
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return data;
-  }
-
-  async publish(id: string) {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from("lessons")
-      .update({
-        is_published: true,
-      })
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return data;
-  }
-
-  async unpublish(id: string) {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from("lessons")
-      .update({
-        is_published: false,
-      })
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return data;
-  }
 }
 
-export const lessonRepository =
-  new LessonRepository();
+export const lessonRepository = new LessonRepository();

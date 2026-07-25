@@ -1,118 +1,271 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
+import { useRouter } from "next/navigation";
+
 import {
-  Clock,
-  CalendarClock,
-  RotateCcw,
-  ArrowRight,
-  CircleCheckBig,
-  CircleX,
-  CircleDashed,
-  Lock,
-} from 'lucide-react'
-import type { Exam } from '@/lib/types'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+  Card,
+  CardContent,
+} from "@/components/ui/card";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+
 import {
-  EXAM_TYPE_LABEL,
-  STUDENT_STATUS_LABEL,
-  studentStatusVariant,
-} from '@/lib/exam-utils'
-import { cn } from '@/lib/utils'
+  Calendar,
+  Clock3,
+  GraduationCap,
+  Trophy,
+} from "lucide-react";
 
-const STATUS_ICON = {
-  passed: CircleCheckBig,
-  failed: CircleX,
-  'not-started': CircleDashed,
-} as const
+import { StudentExamItem } from "@/services/student-exam-client.service";
+import { useStartExam } from "@/hooks/use-start-exam";
 
-// Mock deadlines per exam
-const DEADLINES: Record<string, string> = {
-  'e-1': 'Closed',
-  'e-2': 'Mar 28, 2027 · 22:00',
-  'e-3': 'No deadline',
-  'e-4': 'Apr 02, 2027 · 18:00',
-  'e-5': 'Apr 10, 2027 · 07:00',
+interface Props {
+  exam: StudentExamItem;
 }
 
-const COURSE_LABEL: Record<string, string> = {
-  'e-1': 'Algebra & Functions',
-  'e-2': 'Algebra & Functions',
-  'e-3': 'Calculus Essentials',
-  'e-4': 'Calculus Essentials',
-  'e-5': 'Calculus Essentials',
-}
+export function StudentExamCard({
+  exam,
+}: Props) {
 
-export function StudentExamCard({ exam }: { exam: Exam }) {
-  const status = exam.studentStatus ?? 'not-started'
-  const StatusIcon = STATUS_ICON[status]
-  const isLocked = exam.status === 'locked'
-  const remaining = exam.attemptsRemaining ?? 0
-  const unlimited = exam.attemptLimit === 'unlimited'
-  const canStart = !isLocked && (unlimited || remaining > 0)
+  const router = useRouter();
+
+  const startExam =
+    useStartExam();
+
+  function renderStatus() {
+
+    switch (exam.status) {
+
+      case "NOT_STARTED":
+        return (
+          <Badge className="bg-gray-100 text-gray-700 border">
+            Chưa làm
+          </Badge>
+        );
+
+      case "PASSED":
+        return (
+          <Badge className="bg-green-100 text-green-700 border-green-200">
+            Đạt
+          </Badge>
+        );
+
+      case "FAILED":
+        return (
+          <Badge className="bg-red-100 text-red-700 border-red-200">
+            Chưa đạt
+          </Badge>
+        );
+
+      default:
+        return (
+          <Badge className="bg-blue-100 text-blue-700 border-blue-200">
+            Đã làm
+          </Badge>
+        );
+
+    }
+
+  }
+
+  async function handleStartExam() {
+
+    try {
+
+      const attempt =
+        await startExam.mutateAsync(
+          exam.id
+        );
+
+      router.push(
+        `/student-exams/${attempt.id}`
+      );
+
+    } catch (error: any) {
+
+      alert(
+        error.message ??
+          "Không thể bắt đầu bài làm."
+      );
+
+    }
+
+  }
+
+  function renderButton() {
+
+    if (!exam.canStart) {
+
+      return (
+        <Button
+          disabled
+          className="w-32"
+        >
+          Hết lượt
+        </Button>
+      );
+
+    }
+
+    return (
+      <Button
+        className="w-32"
+        disabled={
+          startExam.isPending
+        }
+        onClick={handleStartExam}
+      >
+        {startExam.isPending
+          ? "Đang mở..."
+          : exam.attempts === 0
+          ? "Làm bài"
+          : "Làm lại"}
+      </Button>
+    );
+
+  }
 
   return (
-    <Card className="flex h-full flex-col transition-all hover:border-primary/50 hover:shadow-md">
-      <CardContent className="flex flex-1 flex-col gap-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex flex-col gap-1">
-            <h3 className="font-serif text-base font-semibold leading-tight text-balance">
+
+    <Card className="transition-all duration-300 hover:border-primary/40 hover:shadow-md">
+
+      <CardContent className="flex items-center justify-between gap-8 p-5">
+
+        {/* LEFT */}
+
+        <div className="min-w-[260px]">
+
+          <div className="flex flex-wrap items-center gap-2">
+
+            <h3 className="text-lg font-semibold">
               {exam.title}
             </h3>
-            <p className="text-xs text-muted-foreground">{COURSE_LABEL[exam.id] ?? '—'}</p>
-          </div>
-          <Badge variant={studentStatusVariant(status)} className="shrink-0 gap-1">
-            <StatusIcon className="size-3" />
-            {STUDENT_STATUS_LABEL[status]}
-          </Badge>
-        </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="outline">{EXAM_TYPE_LABEL[exam.type]}</Badge>
-          {typeof exam.score === 'number' ? (
-            <Badge variant="secondary" className="tabular-nums">
-              Score {exam.score.toFixed(1)}/10
+            <Badge variant="outline">
+
+              {exam.category === "ATTENDANCE"
+                ? "Điểm danh"
+                : "Định kỳ"}
+
             </Badge>
-          ) : null}
+
+            {renderStatus()}
+
+          </div>
+
+          <p className="mt-3 text-sm text-muted-foreground">
+            {exam.courseName}
+          </p>
+
         </div>
 
-        <div className="mt-auto flex flex-col gap-2 border-t pt-3 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Clock className="size-4" />
-            {exam.duration} minutes
+        {/* CENTER */}
+
+        <div className="flex flex-1 justify-center gap-3">
+
+          {/* Thời gian */}
+
+          <div className="w-24 rounded-md border border-blue-100 bg-blue-50 px-3 py-2">
+
+            <div className="flex items-center gap-1 text-blue-700">
+
+              <Clock3 className="h-3.5 w-3.5" />
+
+              <span className="text-[10px] uppercase">
+                Thời gian
+              </span>
+
+            </div>
+
+            <p className="mt-1 text-xs font-semibold text-blue-900">
+              {exam.duration} phút
+            </p>
+
           </div>
-          <div className="flex items-center gap-2">
-            <RotateCcw className="size-4" />
-            {unlimited ? 'Unlimited attempts' : `${remaining} attempt${remaining === 1 ? '' : 's'} remaining`}
+
+          {/* Lượt */}
+
+          <div className="w-24 rounded-md border border-purple-100 bg-purple-50 px-3 py-2">
+
+            <div className="flex items-center gap-1 text-purple-700">
+
+              <GraduationCap className="h-3.5 w-3.5" />
+
+              <span className="text-[10px] uppercase">
+                Lượt
+              </span>
+
+            </div>
+
+            <p className="mt-1 text-xs font-semibold text-purple-900">
+              {exam.attempts}/{exam.maxAttempts}
+            </p>
+
           </div>
-          <div className="flex items-center gap-2">
-            <CalendarClock className="size-4" />
-            {DEADLINES[exam.id] ?? 'No deadline'}
+
+          {/* Điểm */}
+
+          <div className="w-24 rounded-md border border-yellow-100 bg-yellow-50 px-3 py-2">
+
+            <div className="flex items-center gap-1 text-yellow-700">
+
+              <Trophy className="h-3.5 w-3.5" />
+
+              <span className="text-[10px] uppercase">
+                Điểm
+              </span>
+
+            </div>
+
+            <p className="mt-1 text-xs font-semibold text-yellow-900">
+              {exam.lastScore ?? "--"}
+            </p>
+
           </div>
+
+          {/* Gần nhất */}
+
+          <div className="w-28 rounded-md border border-green-100 bg-green-50 px-3 py-2">
+
+            <div className="flex items-center gap-1 text-green-700">
+
+              <Calendar className="h-3.5 w-3.5" />
+
+              <span className="text-[10px] uppercase">
+                Gần nhất
+              </span>
+
+            </div>
+
+            <p className="mt-1 whitespace-nowrap text-[11px] font-semibold text-green-900">
+
+              {exam.lastAttemptAt
+                ? new Date(
+                    exam.lastAttemptAt
+                  ).toLocaleDateString(
+                    "vi-VN"
+                  )
+                : "Chưa làm"}
+
+            </p>
+
+          </div>
+
         </div>
 
-        <Button
-          className={cn('w-full')}
-          disabled={!canStart}
-          render={canStart ? <Link href={`/exams/${exam.id}`} /> : undefined}
-        >
-          {isLocked ? (
-            <>
-              <Lock data-icon="inline-start" />
-              Locked
-            </>
-          ) : !canStart ? (
-            'No attempts left'
-          ) : (
-            <>
-              {status === 'not-started' ? 'Start exam' : 'Retake exam'}
-              <ArrowRight data-icon="inline-end" />
-            </>
-          )}
-        </Button>
+        {/* RIGHT */}
+
+        <div className="flex items-center">
+
+          {renderButton()}
+
+        </div>
+
       </CardContent>
+
     </Card>
-  )
+
+  );
+
 }

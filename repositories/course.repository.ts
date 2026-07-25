@@ -8,7 +8,8 @@ export interface CreateCourseDto {
 }
 
 export class CourseRepository {
-  async getAll() {
+ async getAll() {
+  try {
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -19,10 +20,26 @@ export class CourseRepository {
         ascending: false,
       });
 
+    console.log("Supabase data:", data);
+    console.log("Supabase error:", error);
+
     if (error) throw error;
 
-    return data;
+    return (data ?? []).map((course) => ({
+      ...course,
+      title: course.name,
+      thumbnail: course.thumbnail_url,
+      category: "",
+      teacher: "",
+      progress: 0,
+      totalLessons: 0,
+      chapters: [],
+    }));
+  } catch (err) {
+    console.error("CourseRepository.getAll()", err);
+    throw err;
   }
+}
 
   async getById(id: string) {
     const supabase = await createClient();
@@ -35,7 +52,20 @@ export class CourseRepository {
 
     if (error) throw error;
 
-    return data;
+    if (!data) return null;
+
+    return {
+      ...data,
+
+      // ===== UI Compatibility =====
+      title: data.name,
+      thumbnail: data.thumbnail_url,
+      category: "",
+      teacher: "",
+      progress: 0,
+      totalLessons: 0,
+      chapters: [],
+    };
   }
 
   async create(values: CreateCourseDto) {
@@ -103,3 +133,10 @@ export class CourseRepository {
 
 export const courseRepository =
   new CourseRepository();
+
+export type CourseEntity =
+  Awaited<
+    ReturnType<
+      CourseRepository["getById"]
+    >
+  >;

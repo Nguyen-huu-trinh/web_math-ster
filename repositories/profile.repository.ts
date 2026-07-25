@@ -1,122 +1,62 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
+import { Profile } from "@/types/profile";
 
-export class ProfileRepository {
-  async getCurrentProfile() {
-    const supabase = await createClient();
+class ProfileRepository {
+  private supabase = createClient();
 
+  async getCurrentProfile(): Promise<Profile | null> {
     const {
       data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError) throw userError;
+    } = await this.supabase.auth.getUser();
 
     if (!user) return null;
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    if (error) throw error;
-
-    return data;
+    return this.getProfile(user.id);
   }
 
-  async getById(id: string) {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
+  async getProfile(id: string): Promise<Profile> {
+    const { data, error } = await this.supabase
       .from("profiles")
       .select("*")
       .eq("id", id)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
-    return data;
+    return data as Profile;
   }
 
-  async getByStudentCode(studentCode: string) {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("student_code", studentCode)
-      .single();
-
-    if (error) throw error;
-
-    return data;
-  }
-
-  async getAllStudents() {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("role", "STUDENT")
-      .eq("is_active", true)
-      .order("student_code");
-
-    if (error) throw error;
-
-    return data;
-  }
-
-  async getAllTeachers() {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("role", "TEACHER")
-      .eq("is_active", true)
-      .order("student_code");
-
-    if (error) throw error;
-
-    return data;
+  async getById(id: string): Promise<Profile> {
+    return this.getProfile(id);
   }
 
   async updateProfile(
     id: string,
-    values: {
-      full_name?: string;
-      avatar_url?: string | null;
-      must_change_password?: boolean;
-      is_active?: boolean;
-    }
-  ) {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
+    values: Partial<
+      Pick<
+        Profile,
+        | "full_name"
+        | "avatar_url"
+        | "phone"
+        | "must_change_password"
+        | "is_active"
+      >
+    >
+  ): Promise<Profile> {
+    const { data, error } = await this.supabase
       .from("profiles")
       .update(values)
       .eq("id", id)
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
-    return data;
-  }
-
-  async deleteProfile(id: string) {
-    const supabase = await createClient();
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        is_active: false,
-        deleted_at: new Date().toISOString(),
-      })
-      .eq("id", id);
-
-    if (error) throw error;
+    return data as Profile;
   }
 }
 

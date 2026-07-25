@@ -1,108 +1,199 @@
-export type Role = 'teacher' | 'student'
+// export type Role =
+//   | "ADMIN"
+//   | "TEACHER"
+//   | "STUDENT";
 
-export interface User {
-  id: string
-  name: string
-  email: string
-  role: Role
-  studentCode?: string
-  avatar?: string
-  bio?: string
-  joinedAt: string
+// export interface User {
+//   id: string
+//   name: string
+//   email: string
+//   role: Role
+//   studentCode?: string
+//   avatar?: string
+//   bio?: string
+//   joinedAt: string
+// }
+
+// export interface Lesson {
+//   id: string
+//   title: string
+//   duration: string
+//   youtubeId: string
+//   completed?: boolean
+//   documents: DocumentItem[]
+//   assignmentId?: string
+//   description: string
+// }
+
+// export interface DocumentItem {
+//   id: string
+//   title: string
+//   type: 'pdf' | 'slide' | 'sheet'
+// }
+
+// export interface Chapter {
+//   id: string
+//   title: string
+//   lessons: Lesson[]
+// }
+
+// export interface Course {
+//   id: string
+//   title: string
+//   description: string
+//   thumbnail: string
+//   category: string
+//   teacher: string
+//   totalLessons: number
+//   progress: number
+//   chapters: Chapter[]
+//   color: string
+// }
+
+// export type ExamType = 'attendance' | 'periodic' | 'free'
+// export type ExamStatus = 'open' | 'locked' | 'draft'
+// export type StudentExamStatus = 'passed' | 'failed' | 'not-started'
+// export type QuestionType = 'multiple-choice' | 'true-false' | 'short-answer'
+
+// export interface Question {
+//   id: string
+//   type: QuestionType
+//   prompt: string
+//   options?: string[]
+//   answer: string
+// }
+
+// export interface Exam {
+//   id: string
+//   title: string
+//   type: ExamType
+//   status: ExamStatus
+//   attempts: number
+//   attemptLimit: 'one-time' | 'unlimited'
+//   highestScore: number
+//   duration: number
+//   passingScore: number
+//   driveLink: string
+//   showAnswers: boolean
+//   questions: Question[]
+//   topStudents: { name: string; score: number }[]
+//   // student facing
+//   studentStatus?: StudentExamStatus
+//   attemptsRemaining?: number
+//   score?: number
+// }
+
+// export interface StudentRecord {
+//   id: string
+//   studentCode: string
+//   name: string
+//   email: string
+//   courses: number
+//   attendance: 'present' | 'absent' | 'partial'
+//   disabled?: boolean
+//   averageScore: number
+// }
+
+// export interface LeaderboardEntry {
+//   rank: number
+//   name: string
+//   avatar?: string
+//   score: number
+//   change: number
+// }
+
+// export interface AppNotification {
+//   id: string
+//   title: string
+//   description: string
+//   type: 'lesson' | 'attendance' | 'exam'
+//   time: string
+// }
+
+
+import type { Role } from "./types";
+
+export interface NavItem {
+  label: string;
+  href: string;
+  icon: string;
+  roles: Role[];
 }
 
-export interface Lesson {
-  id: string
-  title: string
-  duration: string
-  youtubeId: string
-  completed?: boolean
-  documents: DocumentItem[]
-  assignmentId?: string
-  description: string
-}
+export const NAV_ITEMS: NavItem[] = [
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: "LayoutDashboard",
+    roles: ["ADMIN", "TEACHER", "STUDENT"],
+  },
 
-export interface DocumentItem {
-  id: string
-  title: string
-  type: 'pdf' | 'slide' | 'sheet'
-}
+  {
+    label: "Courses",
+    href: "/courses",
+    icon: "GraduationCap",
+    roles: ["ADMIN", "TEACHER", "STUDENT"],
+  },
 
-export interface Chapter {
-  id: string
-  title: string
-  lessons: Lesson[]
-}
+  {
+    label: "My Exams",
+    href: "/student-exams",
+    icon: "FileText",
+    roles: ["STUDENT"],
+  },
 
-export interface Course {
-  id: string
-  title: string
-  description: string
-  thumbnail: string
-  category: string
-  teacher: string
-  totalLessons: number
-  progress: number
-  chapters: Chapter[]
-  color: string
-}
+  {
+    label: "Manage Exams",
+    href: "/exams",
+    icon: "ClipboardList",
+    roles: ["ADMIN", "TEACHER"],
+  },
 
-export type ExamType = 'attendance' | 'periodic' | 'free'
-export type ExamStatus = 'open' | 'locked' | 'draft'
-export type StudentExamStatus = 'passed' | 'failed' | 'not-started'
-export type QuestionType = 'multiple-choice' | 'true-false' | 'short-answer'
+  {
+    label: "Create Exam",
+    href: "/exams/create",
+    icon: "FilePlus2",
+    roles: ["ADMIN", "TEACHER"],
+  },
 
-export interface Question {
-  id: string
-  type: QuestionType
-  prompt: string
-  options?: string[]
-  answer: string
-}
+  {
+    label: "Students",
+    href: "/students",
+    icon: "Users",
+    roles: ["ADMIN", "TEACHER"],
+  },
 
-export interface Exam {
-  id: string
-  title: string
-  type: ExamType
-  status: ExamStatus
-  attempts: number
-  attemptLimit: 'one-time' | 'unlimited'
-  highestScore: number
-  duration: number
-  passingScore: number
-  driveLink: string
-  showAnswers: boolean
-  questions: Question[]
-  topStudents: { name: string; score: number }[]
-  // student facing
-  studentStatus?: StudentExamStatus
-  attemptsRemaining?: number
-  score?: number
-}
+  {
+    label: "Accounts",
+    href: "/accounts",
+    icon: "UserCog",
+    roles: ["ADMIN"],
+  },
+]
 
-export interface StudentRecord {
-  id: string
-  studentCode: string
-  name: string
-  email: string
-  courses: number
-  attendance: 'present' | 'absent' | 'partial'
-  disabled?: boolean
-  averageScore: number
-}
+export const SECONDARY_NAV: NavItem[] = [
+  {
+    label: "Profile",
+    href: "/profile",
+    icon: "CircleUser",
+    roles: ["ADMIN", "TEACHER", "STUDENT"],
+  },
 
-export interface LeaderboardEntry {
-  rank: number
-  name: string
-  avatar?: string
-  score: number
-  change: number
-}
+  {
+    label: "Settings",
+    href: "/settings",
+    icon: "Settings",
+    roles: ["ADMIN", "TEACHER", "STUDENT"],
+  },
+];
 
-export interface AppNotification {
-  id: string
-  title: string
-  description: string
-  type: 'lesson' | 'attendance' | 'exam'
-  time: string
+export function navForRole(role: Role) {
+  return {
+    primary: NAV_ITEMS.filter((i) =>
+      i.roles.includes(role)
+    ),
+    secondary: SECONDARY_NAV.filter((i) =>
+      i.roles.includes(role)
+    ),
+  };
 }

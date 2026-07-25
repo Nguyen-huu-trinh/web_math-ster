@@ -1,25 +1,21 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { courseService } from "@/services/course.service";
-import { CreateCourseSchema } from "@/validators/course.schema";
 
 export async function GET() {
-  return NextResponse.json(
-    await courseService.getAll()
-  );
-}
+  try {
+    const data = await courseService.getAll();
 
-export async function POST(
-  request: NextRequest
-) {
-  const body = await request.json();
+    return NextResponse.json(data);
+  } catch (err) {
+    console.error(err);
 
-  const values =
-    CreateCourseSchema.parse(body);
-
-  return NextResponse.json(
-    await courseService.create(values),
-    {
-      status: 201,
-    }
-  );
+    return NextResponse.json(
+      {
+        error: String(err),
+      },
+      {
+        status: 500,
+      }
+    );
+  }
 }

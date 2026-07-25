@@ -1,5 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
-
+import { createClient } from "@/lib/supabase/client";
 export class QuestionRepository {
   async getByExam(examId: string) {
     const supabase = await createClient();

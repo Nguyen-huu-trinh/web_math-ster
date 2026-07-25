@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import { courseService } from "@/services/course.service";
 import { UpdateCourseSchema } from "@/validators/course.schema";
 
@@ -23,7 +24,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: Props
 ) {
-  const body = await request.json();
+  const body =
+    await request.json();
 
   const values =
     UpdateCourseSchema.parse(body);

@@ -1,59 +1,114 @@
-'use client'
+"use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import type { Role, User } from '@/lib/types'
-import { MOCK_USERS } from '@/lib/mock-data'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 
-interface AuthContextValue {
-  user: User | null
-  role: Role | null
-  loading: boolean
-  login: (role: Role) => void
-  logout: () => void
-}
+import { User } from "@supabase/supabase-js";
 
-const AuthContext = createContext<AuthContextValue | undefined>(undefined)
+import { authService } from "@/services/auth.service";
+import { profileService } from "@/services/profile.service";
 
-const STORAGE_KEY = 'mathster-auth'
+import { Profile } from "@/types/profile";
+import { AuthContextType } from "@/types/auth";
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
+const AuthContext =
+  createContext<AuthContextType | null>(null);
+
+export function AuthProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const [user, setUser] =
+    useState<User | null>(null);
+
+  const [profile, setProfile] =
+    useState<Profile | null>(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  async function refresh() {
+    setLoading(true);
+
+    try {
+      const currentUser =
+        await authService.getUser();
+
+      if (!currentUser) {
+        setUser(null);
+        setProfile(null);
+        return;
+      }
+
+      const currentProfile =
+        await profileService.getCurrentProfile();
+
+      setUser(currentUser);
+      setProfile(currentProfile);
+    } catch (error) {
+      console.error(error);
+
+      setUser(null);
+      setProfile(null);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Role | null
-    if (stored && MOCK_USERS[stored]) {
-      setUser(MOCK_USERS[stored])
-    }
-    setLoading(false)
-  }, [])
+    void refresh();
+  }, []);
 
-  const login = useCallback(
-    (role: Role) => {
-      setUser(MOCK_USERS[role])
-      localStorage.setItem(STORAGE_KEY, role)
-      router.push('/dashboard')
-    },
-    [router],
-  )
+  async function login(
+    email: string,
+    password: string
+  ) {
+    await authService.login({
+      email,
+      password,
+    });
 
-  const logout = useCallback(() => {
-    setUser(null)
-    localStorage.removeItem(STORAGE_KEY)
-    router.push('/login')
-  }, [router])
+    await refresh();
+  }
+
+  async function logout() {
+    await authService.logout();
+
+    setUser(null);
+    setProfile(null);
+  }
 
   return (
-    <AuthContext.Provider value={{ user, role: user?.role ?? null, loading, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        profile,
+        loading,
+        login,
+        logout,
+        refresh,
+      }}
+    >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
-  return ctx
+  const context =
+    useContext(AuthContext);
+
+  if (!context) {
+    throw new Error(
+      "useAuth must be used inside AuthProvider"
+    );
+  }
+
+  return context;
 }

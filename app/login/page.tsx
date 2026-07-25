@@ -15,7 +15,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/utils'
 
 export default function LoginPage() {
-  const { login, user, loading } = useAuth()
+  const { login, user, profile, loading } = useAuth()
   const router = useRouter()
   const [role, setRole] = useState<Role>('student')
   const [email, setEmail] = useState('')
@@ -24,18 +24,35 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
-    if (!loading && user) router.replace('/dashboard')
-  }, [loading, user, router])
+  if (loading) return;
 
-  useEffect(() => {
-    setEmail(role === 'teacher' ? 'teacher@mathster.edu.vn' : 'student@mathster.edu.vn')
-    setPassword('demo1234')
-  }, [role])
+  if (!user || !profile) return;
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setSubmitting(true)
-    setTimeout(() => login(role), 650)
+  router.replace("/dashboard");
+
+}, [loading, user, profile, router]);
+  async function handleSubmit(
+    e: React.FormEvent
+  ) {
+    e.preventDefault();
+
+    try {
+      setSubmitting(true);
+
+      await login(email, password);
+
+    } catch (error: any) {
+
+      alert(
+        error.message ||
+        "Sai email hoặc mật khẩu."
+      );
+
+    } finally {
+
+      setSubmitting(false);
+
+    }
   }
 
   return (
@@ -147,7 +164,7 @@ export default function LoginPage() {
 
           <p className="mt-6 flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground">
             <Sparkles className="size-3.5 text-primary" />
-            Demo mode — credentials are prefilled. Just pick a role and sign in.
+            Đăng nhập bằng tài khoản của bạn để tiếp tục.
           </p>
         </div>
       </div>

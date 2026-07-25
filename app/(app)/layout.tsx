@@ -8,17 +8,16 @@ import { Topbar } from '@/components/layout/topbar'
 import { Spinner } from '@/components/ui/spinner'
 
 const TITLES: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/courses': 'Courses',
-  '/student-exams': 'My Exams',
-  '/manage-exams': 'Manage Exams',
-  '/create-exam': 'Create Exam',
-  '/students': 'Student Management',
-  '/accounts': 'Account Management',
-  '/profile': 'Profile',
-  '/settings': 'Settings',
-  '/exam': 'Exam',
-}
+  "/dashboard": "Dashboard",
+  "/courses": "Khóa học",
+  "/student-exams": "Đề thi của tôi",
+  "/exams": "Quản lý đề thi",
+  "/exams/create": "Tạo đề thi",
+  "/students": "Quản lý học sinh",
+  "/accounts": "Quản lý tài khoản",
+  "/profile": "Hồ sơ",
+  "/settings": "Cài đặt",
+};
 
 function titleFor(pathname: string) {
   const match = Object.keys(TITLES).find((k) => pathname === k || pathname.startsWith(k + '/'))

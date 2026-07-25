@@ -15,8 +15,12 @@ export class DocumentService {
   }
 
   create(values: CreateDocumentDto) {
+    if (!values.title.trim()) {
+        throw new Error("Document title is required");
+    }
+
     return documentRepository.create(values);
-  }
+}
 
   update(
     id: string,

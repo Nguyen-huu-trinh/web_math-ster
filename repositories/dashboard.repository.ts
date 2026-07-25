@@ -1,8 +1,10 @@
+
 import { createClient } from "@/lib/supabase/server";
 
 export class DashboardRepository {
 
   async getStudentDashboard(studentId: string) {
+
 
     const supabase = await createClient();
 
@@ -10,8 +12,8 @@ export class DashboardRepository {
       profile,
       courses,
       progress,
+      lessons,
       attempts,
-      studyTime,
     ] = await Promise.all([
 
       supabase
@@ -26,19 +28,28 @@ export class DashboardRepository {
         .eq("student_id", studentId),
 
       supabase
-        .from("learning_progress")
-        .select("completed"),
+        .from("lesson_progress")
+        .select("is_completed")
+        .eq("student_id", studentId),
+
+      supabase
+        .from("lessons")
+        .select("id"),
 
       supabase
         .from("exam_attempts")
-        .select("score"),
-
-      supabase
-        .from("study_time_logs")
-        .select("total_seconds")
+        .select("score")
         .eq("student_id", studentId),
 
     ]);
+
+    const completedLessons =
+      progress.data?.filter(
+        p => p.is_completed
+      ).length ?? 0;
+
+    const totalLessons =
+      lessons.data?.length ?? 0;
 
     return {
 
@@ -47,10 +58,9 @@ export class DashboardRepository {
       totalCourses:
         courses.data?.length ?? 0,
 
-      completedLessons:
-        progress.data?.filter(
-          p => p.completed
-        ).length ?? 0,
+      completedLessons,
+
+      totalLessons,
 
       totalAttempts:
         attempts.data?.length ?? 0,
@@ -58,16 +68,10 @@ export class DashboardRepository {
       averageScore:
         attempts.data?.length
           ? attempts.data.reduce(
-              (s, a) => s + Number(a.score ?? 0),
+              (sum, item) => sum + Number(item.score ?? 0),
               0
             ) / attempts.data.length
           : 0,
-
-      totalStudySeconds:
-        studyTime.data?.reduce(
-          (s, t) => s + t.total_seconds,
-          0
-        ) ?? 0,
 
     };
   }
@@ -94,7 +98,7 @@ export class DashboardRepository {
       supabase
         .from("profiles")
         .select("id")
-        .eq("role","STUDENT"),
+        .eq("role", "STUDENT"),
 
       supabase
         .from("exams")
@@ -117,8 +121,11 @@ export class DashboardRepository {
         exams.data?.length ?? 0,
 
     };
+
   }
+
 }
 
 export const dashboardRepository =
   new DashboardRepository();
+

@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
 
 export class AnswerRepository {
   async getByQuestion(questionId: string) {

@@ -1,58 +1,86 @@
 import { examRepository } from "@/repositories/exam.repository";
-import { questionRepository } from "@/repositories/question.repository";
-import { answerRepository } from "@/repositories/answer.repository";
+
+import {
+  AnswerKey,
+  CreateExamDto,
+  UpdateExamDto,
+} from "@/types/exam";
 
 export class ExamService {
-  getAll() {
+
+  // =========================
+  // Query
+  // =========================
+
+  async getAll() {
     return examRepository.getAll();
   }
 
-  getById(id: string) {
+  async getById(id: string) {
     return examRepository.getById(id);
   }
 
-  create(values: {
-    title: string;
-    description?: string;
-    exam_type: "FREE" | "MOET";
-    exam_category: "ATTENDANCE" | "PERIODIC";
-    duration_minutes: number;
-    total_score: number;
-    max_attempts: number;
-  }) {
-    return examRepository.create(values);
+  async getAnswerKey(id: string) {
+    return examRepository.getAnswerKey(id);
   }
 
-  update(
-    id: string,
-    values: Record<string, unknown>
+  // =========================
+  // Commands
+  // =========================
+
+  async create(
+    teacherId: string,
+    values: CreateExamDto
   ) {
-    return examRepository.update(id, values);
+    return examRepository.create(
+      teacherId,
+      values
+    );
   }
 
-  open(id: string) {
-    return examRepository.open(id);
+  async update(
+    id: string,
+    values: UpdateExamDto
+  ) {
+    return examRepository.update(
+      id,
+      values
+    );
   }
 
-  lock(id: string) {
-    return examRepository.lock(id);
+  async updateAnswerKey(
+    id: string,
+    answerKey: AnswerKey
+  ) {
+    return examRepository.updateAnswerKey(
+      id,
+      answerKey
+    );
   }
 
-  remove(id: string) {
+  async activate(id: string) {
+    return examRepository.activate(id);
+  }
+
+  async deactivate(id: string) {
+    return examRepository.deactivate(id);
+  }
+
+  async duplicate(
+    id: string,
+    teacherId: string
+  ) {
+    return examRepository.duplicate(
+      id,
+      teacherId
+    );
+  }
+
+  async softDelete(id: string) {
     return examRepository.softDelete(id);
   }
 
-  restore(id: string) {
-    return examRepository.restore(id);
-  }
-
-  getQuestions(examId: string) {
-    return questionRepository.getByExam(examId);
-  }
-
-  getAnswers(questionId: string) {
-    return answerRepository.getByQuestion(questionId);
-  }
 }
 
-export const examService = new ExamService();
+export const examService =
+  new ExamService();

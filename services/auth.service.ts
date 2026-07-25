@@ -1,48 +1,42 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/client";
 
-export class AuthService {
-  async getCurrentUser() {
-    const supabase = await createClient();
+class AuthService {
+  private supabase = createClient();
 
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
+
+  async login(data: LoginDto) {
+    const { data: auth, error } =
+      await this.supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
 
     if (error) throw error;
+
+    return auth.user;
+  }
+
+  async logout() {
+    const { error } =
+      await this.supabase.auth.signOut();
+
+    if (error) throw error;
+  }
+
+  async getUser() {
+    const {
+      data: { user },
+    } = await this.supabase.auth.getUser();
 
     return user;
   }
 
   async getSession() {
-    const supabase = await createClient();
-
     const {
       data: { session },
-      error,
-    } = await supabase.auth.getSession();
-
-    if (error) throw error;
+    } = await this.supabase.auth.getSession();
 
     return session;
-  }
-
-  async requireUser() {
-    const user = await this.getCurrentUser();
-
-    if (!user) {
-      throw new Error("Unauthorized");
-    }
-
-    return user;
-  }
-
-  async signOut() {
-    const supabase = await createClient();
-
-    const { error } = await supabase.auth.signOut();
-
-    if (error) throw error;
   }
 }
 

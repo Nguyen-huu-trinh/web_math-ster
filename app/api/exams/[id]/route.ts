@@ -1,78 +1,69 @@
-import { NextResponse } from "next/server";
-import { examService } from "@/services/exam.service";
+import { NextRequest, NextResponse } from "next/server";
 
-interface Params {
+import { examService } from "@/services/exam.service";
+import { requireTeacher } from "@/lib/auth/teacher";
+
+interface Props {
   params: Promise<{
     id: string;
   }>;
 }
 
 export async function GET(
-  request: Request,
-  { params }: Params
+  request: NextRequest,
+  { params }: Props
 ) {
-  try {
-    const { id } = await params;
+  await requireTeacher();
 
-    const exam = await examService.getById(id);
+  const { id } = await params;
 
-    return NextResponse.json(exam);
-  } catch (error) {
-    return NextResponse.json(
-      {
-        message: error instanceof Error ? error.message : "Internal Server Error",
-      },
-      {
-        status: 500,
-      }
-    );
-  }
+  return NextResponse.json(
+    await examService.getById(id)
+  );
 }
 
+// ===== PUT =====
+export async function PUT(
+  request: NextRequest,
+  { params }: Props
+) {
+  await requireTeacher();
+
+  const { id } = await params;
+
+  const body = await request.json();
+
+  return NextResponse.json(
+    await examService.update(id, body)
+  );
+}
+
+// ===== PATCH =====
 export async function PATCH(
-  request: Request,
-  { params }: Params
+  request: NextRequest,
+  { params }: Props
 ) {
-  try {
-    const body = await request.json();
+  await requireTeacher();
 
-    const { id } = await params;
+  const { id } = await params;
 
-    const exam = await examService.update(id, body);
+  const body = await request.json();
 
-    return NextResponse.json(exam);
-  } catch (error) {
-    return NextResponse.json(
-      {
-        message: error instanceof Error ? error.message : "Internal Server Error",
-      },
-      {
-        status: 500,
-      }
-    );
-  }
+  return NextResponse.json(
+    await examService.update(id, body)
+  );
 }
 
+// ===== DELETE =====
 export async function DELETE(
-  request: Request,
-  { params }: Params
+  request: NextRequest,
+  { params }: Props
 ) {
-  try {
-    const { id } = await params;
+  await requireTeacher();
 
-    await examService.remove(id);
+  const { id } = await params;
 
-    return NextResponse.json({
-      success: true,
-    });
-  } catch (error) {
-    return NextResponse.json(
-      {
-        message: error instanceof Error ? error.message : "Internal Server Error",
-      },
-      {
-        status: 500,
-      }
-    );
-  }
+  return NextResponse.json(
+    await examService.softDelete(id)
+  );
 }

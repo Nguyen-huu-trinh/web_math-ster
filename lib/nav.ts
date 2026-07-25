@@ -8,13 +8,54 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: 'LayoutDashboard', roles: ['teacher', 'student'] },
-  { label: 'Courses', href: '/courses', icon: 'GraduationCap', roles: ['teacher', 'student'] },
-  { label: 'My Exams', href: '/student-exams', icon: 'FileText', roles: ['student'] },
-  { label: 'Manage Exams', href: '/manage-exams', icon: 'ClipboardList', roles: ['teacher'] },
-  { label: 'Create Exam', href: '/create-exam', icon: 'FilePlus2', roles: ['teacher'] },
-  { label: 'Students', href: '/students', icon: 'Users', roles: ['teacher'] },
-  { label: 'Accounts', href: '/accounts', icon: 'UserCog', roles: ['teacher'] },
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: "LayoutDashboard",
+    roles: ["teacher", "student"],
+  },
+
+  {
+    label: "Courses",
+    href: "/courses",
+    icon: "GraduationCap",
+    roles: ["teacher", "student"],
+  },
+
+  {
+    label: "My Exams",
+    href: "/student-exams",
+    icon: "FileText",
+    roles: ["student"],
+  },
+
+  {
+    label: "Manage Exams",
+    href: "/exams",
+    icon: "ClipboardList",
+    roles: ["teacher"],
+  },
+
+  {
+    label: "Create Exam",
+    href: "/exams/create",
+    icon: "FilePlus2",
+    roles: ["teacher"],
+  },
+
+  {
+    label: "Students",
+    href: "/students",
+    icon: "Users",
+    roles: ["teacher"],
+  },
+
+  {
+    label: "Accounts",
+    href: "/accounts",
+    icon: "UserCog",
+    roles: ["teacher"],
+  },
 ]
 
 export const SECONDARY_NAV: NavItem[] = [

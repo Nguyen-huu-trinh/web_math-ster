@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+
 import { examService } from "@/services/exam.service";
+import { requireTeacher } from "@/lib/auth/teacher";
 
 interface Props {
   params: Promise<{
@@ -11,24 +13,17 @@ export async function POST(
   request: Request,
   { params }: Props
 ) {
-  try {
-    const { id } = await params;
 
-    const exam =
-      await examService.duplicate(id);
+  const teacher =
+    await requireTeacher();
 
-    return NextResponse.json(exam);
-  } catch (error) {
-    return NextResponse.json(
-      {
-        message:
-          error instanceof Error
-            ? error.message
-            : "Internal Server Error",
-      },
-      {
-        status: 500,
-      }
+  const { id } = await params;
+
+  const exam =
+    await examService.duplicate(
+      id,
+      teacher.id
     );
-  }
+
+  return NextResponse.json(exam);
 }

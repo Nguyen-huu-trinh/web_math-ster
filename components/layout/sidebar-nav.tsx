@@ -3,30 +3,60 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LogOut } from 'lucide-react'
+
 import { useAuth } from '@/providers/auth-provider'
 import { navForRole } from '@/lib/nav'
+
 import { Icon } from '@/components/icon'
 import { BrandLogo } from '@/components/brand-logo'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/components/ui/avatar'
+
 import { cn } from '@/lib/utils'
 
-function initials(name: string) {
+function initials(name?: string) {
+  if (!name) return '?'
+
   return name
-    .split(' ')
+    .trim()
+    .split(/\s+/)
     .slice(-2)
-    .map((n) => n[0])
+    .map((n) => n.charAt(0))
     .join('')
+    .toUpperCase()
 }
 
-export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+export function SidebarNav({
+  onNavigate,
+}: {
+  onNavigate?: () => void
+}) {
   const pathname = usePathname()
-  const { user, logout } = useAuth()
-  if (!user) return null
 
-  const { primary, secondary } = navForRole(user.role)
+  const {
+    user,
+    profile,
+    logout,
+  } = useAuth()
 
-  const renderItem = (item: { label: string; href: string; icon: string }) => {
-    const active = pathname === item.href || pathname.startsWith(item.href + '/')
+  if (!user || !profile) return null
+
+  const { primary, secondary } =
+    navForRole(profile.role.toLowerCase() as any)
+
+  const renderItem = (item: {
+    label: string
+    href: string
+    icon: string
+  }) => {
+    const active =
+      pathname === item.href ||
+      pathname.startsWith(item.href + '/')
+
     return (
       <Link
         key={item.href}
@@ -47,8 +77,12 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
               : 'bg-sidebar-accent/40 text-sidebar-foreground/70 group-hover:text-sidebar-foreground',
           )}
         >
-          <Icon name={item.icon} className="size-4" />
+          <Icon
+            name={item.icon}
+            className="size-4"
+          />
         </span>
+
         {item.label}
       </Link>
     )
@@ -64,31 +98,53 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
         <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40">
           Menu
         </p>
-        <div className="flex flex-col gap-1">{primary.map(renderItem)}</div>
+
+        <div className="flex flex-col gap-1">
+          {primary.map(renderItem)}
+        </div>
 
         <p className="px-3 pb-2 pt-6 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40">
           Account
         </p>
-        <div className="flex flex-col gap-1">{secondary.map(renderItem)}</div>
+
+        <div className="flex flex-col gap-1">
+          {secondary.map(renderItem)}
+        </div>
       </nav>
 
       <div className="border-t border-sidebar-border p-3">
         <div className="flex items-center gap-3 rounded-xl px-2 py-2">
+
           <Avatar className="size-9">
-            <AvatarImage src={user.avatar || '/placeholder.svg'} alt={user.name} />
-            <AvatarFallback>{initials(user.name)}</AvatarFallback>
+            <AvatarImage
+              src={profile.avatar_url || '/placeholder.svg'}
+              alt={profile.full_name || 'User'}
+            />
+
+            <AvatarFallback>
+              {initials(profile.full_name)}
+            </AvatarFallback>
           </Avatar>
+
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-sidebar-foreground">{user.name}</p>
-            <p className="truncate text-xs capitalize text-sidebar-foreground/50">{user.role}</p>
+
+            <p className="truncate text-sm font-semibold">
+              {profile.full_name}
+            </p>
+
+            <p className="truncate text-xs capitalize text-sidebar-foreground/50">
+              {profile.role}
+            </p>
+
           </div>
+
           <button
             onClick={logout}
-            aria-label="Log out"
-            className="flex size-8 items-center justify-center rounded-lg text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            className="flex size-8 items-center justify-center rounded-lg hover:bg-sidebar-accent"
           >
             <LogOut className="size-4" />
           </button>
+
         </div>
       </div>
     </div>

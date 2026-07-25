@@ -17,7 +17,6 @@ import { useSubmitAttempt } from "@/hooks/use-submit-attempt";
 interface Props {
   attempt: any;
   exam: any;
-  questions: any[];
 }
 
 const OPTIONS = ["A", "B", "C", "D"];
@@ -25,10 +24,51 @@ const OPTIONS = ["A", "B", "C", "D"];
 export default function AnswerSheet({
   attempt,
   exam,
-  questions,
 }: Props) {
   const router = useRouter();
+const questionConfig = exam.question_config ?? {};
 
+const generatedQuestions = [
+  ...Array.from(
+    {
+      length: questionConfig.multipleChoice ?? 0,
+    },
+    (_, i) => ({
+      id: `mc_${i + 1}`,
+      number: i + 1,
+      type: "MC",
+    })
+  ),
+
+  ...Array.from(
+    {
+      length: questionConfig.trueFalse ?? 0,
+    },
+    (_, i) => ({
+      id: `tf_${i + 1}`,
+      number:
+        (questionConfig.multipleChoice ?? 0) +
+        i +
+        1,
+      type: "TF",
+    })
+  ),
+
+  ...Array.from(
+    {
+      length: questionConfig.shortAnswer ?? 0,
+    },
+    (_, i) => ({
+      id: `sa_${i + 1}`,
+      number:
+        (questionConfig.multipleChoice ?? 0) +
+        (questionConfig.trueFalse ?? 0) +
+        i +
+        1,
+      type: "SA",
+    })
+  ),
+];
   const duration =
     (exam.duration_minutes ?? 60) * 60;
 
@@ -158,7 +198,7 @@ export default function AnswerSheet({
               <span>Đã trả lời</span>
 
               <span>
-                {answeredCount}/{questions.length}
+                {answeredCount}/{generatedQuestions.length}
               </span>
 
             </div>
@@ -169,93 +209,119 @@ export default function AnswerSheet({
 
           <div className="space-y-4">
 
-            {questions.map((question) => {
+            {generatedQuestions.map((question) => (
+  <div
+    key={question.id}
+    className="rounded-lg border p-3"
+  >
+    <div className="mb-3 flex justify-between">
 
-              const correct =
-                result?.answers?.find(
-                  (x: any) =>
-                    x.questionId === question.id
-                )?.correctAnswer;
+      <span className="font-semibold">
+        Câu {question.number}
+      </span>
 
-              return (
+      {answers[question.id] && (
+        <span className="text-xs text-green-600">
+          Đã chọn: {answers[question.id]}
+        </span>
+      )}
 
-                <div
-                  key={question.id}
-                  className="rounded-lg border p-3"
-                >
+    </div>
 
-                  <div className="mb-3 flex justify-between">
+    {/* Trắc nghiệm */}
 
-                    <span className="font-semibold">
-                      Câu {question.question_number}
-                    </span>
+    {question.type === "MC" && (
+      <div className="grid grid-cols-4 gap-2">
 
-                    {answers[question.id] && (
-                      <span className="text-xs text-green-600">
-                        Đã chọn: {answers[question.id]}
-                      </span>
-                    )}
+        {OPTIONS.map((option) => (
 
-                  </div>
+          <Button
+            key={option}
+            type="button"
+            variant={
+              answers[question.id] === option
+                ? "default"
+                : "outline"
+            }
+            disabled={!!result}
+            onClick={() =>
+              chooseAnswer(
+                question.id,
+                option
+              )
+            }
+          >
+            {option}
+          </Button>
 
-                  <div className="grid grid-cols-4 gap-2">
+        ))}
 
-                    {OPTIONS.map((option) => {
+      </div>
+    )}
 
-                      let variant:
-                        | "default"
-                        | "outline" =
-                        "outline";
+    {/* Đúng Sai */}
 
-                      if (
-                        answers[
-                          question.id
-                        ] === option
-                      ) {
-                        variant =
-                          "default";
-                      }
+    {question.type === "TF" && (
+      <div className="grid grid-cols-2 gap-2">
 
-                      return (
+        <Button
+          variant={
+            answers[question.id] === "TRUE"
+              ? "default"
+              : "outline"
+          }
+          disabled={!!result}
+          onClick={() =>
+            chooseAnswer(
+              question.id,
+              "TRUE"
+            )
+          }
+        >
+          Đúng
+        </Button>
 
-                        <Button
-                          key={option}
-                          type="button"
-                          variant={variant}
-                          disabled={!!result}
-                          onClick={() =>
-                            chooseAnswer(
-                              question.id,
-                              option
-                            )
-                          }
-                        >
-                          {option}
-                        </Button>
+        <Button
+          variant={
+            answers[question.id] === "FALSE"
+              ? "default"
+              : "outline"
+          }
+          disabled={!!result}
+          onClick={() =>
+            chooseAnswer(
+              question.id,
+              "FALSE"
+            )
+          }
+        >
+          Sai
+        </Button>
 
-                      );
-                    })}
+      </div>
+    )}
 
-                  </div>
+    {/* Trả lời ngắn */}
 
-                  {result &&
-                    result.showAnswer && (
-                      <div className="mt-3 text-sm">
+    {question.type === "SA" && (
+      <input
+        type="text"
+        disabled={!!result}
+        value={answers[question.id] ?? ""}
+        onChange={(e) =>
+          chooseAnswer(
+            question.id,
+            e.target.value
+          )
+        }
+        className="w-full rounded-md border px-3 py-2"
+        placeholder="Nhập đáp án..."
+      />
+    )}
+  </div>
+))}
 
-                        <span className="font-medium">
-                          Đáp án đúng:
-                        </span>{" "}
-                        <span className="font-bold text-green-600">
-                          {correct}
-                        </span>
-
-                      </div>
-                    )}
-
-                </div>
-
-              );
-            })}
+                  
 
           </div>
 

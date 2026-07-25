@@ -1,6 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-
+import { createClient } from "@/lib/supabase/server";
 import StudentExamLayout from "./student-exam-layout";
 
 interface Props {
@@ -17,60 +16,53 @@ export default async function StudentExamPage({
   const supabase = await createClient();
 
   // ==========================
-  // Attempt + Exam
-  // ==========================
-
-  const { data: attempt, error } =
-    await supabase
-      .from("exam_attempts")
-      .select(`
-        *,
-        exams (
-          id,
-          title,
-          duration_minutes,
-          show_answer,
-          exam_file_url,
-          max_attempts,
-          attendance_min_score,
-          category
-        )
-      `)
-      .eq("id", id)
-      .single();
-
-  if (error || !attempt) {
-    notFound();
-  }
-
-  // ==========================
-  // Questions
+  // Lấy Attempt + Exam
   // ==========================
 
   const {
-    data: questions,
-    error: questionError,
+    data: attempt,
+    error,
   } = await supabase
-    .from("exam_questions")
-    .select("*")
-    .eq("exam_id", attempt.exam_id)
-    .order("question_number");
+    .from("exam_attempts")
+    .select(`
+      *,
+      exams (
+        id,
+        title,
+        category,
+        duration_minutes,
+        exam_file_url,
+        show_answer,
+        max_attempts,
+        attendance_min_score,
+        question_config,
+        answer_key
+      )
+    `)
+    .eq("id", id)
+    .single();
 
-  if (questionError) {
-    console.error(questionError);
+  if (error || !attempt) {
+    console.error(error);
+    return notFound();
   }
 
-  // ==========================
-  // Exam object
-  // ==========================
-
   const exam = attempt.exams;
+
+  if (!exam) {
+    return notFound();
+  }
+
+  // Debug
+  console.log("===========");
+  console.log("Attempt:", attempt);
+  console.log("Exam:", exam);
+  console.log("===========");
 
   return (
     <StudentExamLayout
       attempt={attempt}
       exam={exam}
-      questions={questions ?? []}
     />
   );
 }

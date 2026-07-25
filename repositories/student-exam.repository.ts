@@ -221,44 +221,6 @@ async startExam(
 
   if (error) throw error;
 
-  // ===========================
-  // Lấy danh sách câu hỏi
-  // ===========================
-
-  const {
-    data: questions,
-    error: questionError,
-  } = await supabase
-    .from("exam_questions")
-    .select("id")
-    .eq("exam_id", examId);
-
-  if (questionError) throw questionError;
-
-  // ===========================
-  // Tạo sẵn exam_answers
-  // ===========================
-
-  if (questions && questions.length > 0) {
-
-    const rows = questions.map((q) => ({
-      attempt_id: attempt.id,
-      question_id: q.id,
-      answer: null,
-      earned_score: 0,
-      is_correct: false,
-    }));
-
-    const { error: answerError } =
-      await supabase
-        .from("exam_answers")
-        .insert(rows);
-
-    if (answerError) {
-      throw answerError;
-    }
-  }
-
   return attempt;
 }
 async getAttemptDetail(
@@ -309,24 +271,7 @@ async getAttemptDetail(
     throw examError;
   }
 
-  // Questions
-
-  const {
-    data: questions,
-    error: questionError,
-  } = await supabase
-
-    .from("exam_questions")
-
-    .select("*")
-
-    .eq("exam_id", exam.id)
-
-    .order("question_number");
-
-  if (questionError) {
-    throw questionError;
-  }
+  
 
   return {
 
@@ -334,15 +279,12 @@ async getAttemptDetail(
 
     exam,
 
-    questions,
-
-    pdfUrl:
-      exam.exam_file_url,
+    pdfUrl: exam.exam_file_url,
 
     remainingSeconds:
-      exam.duration_minutes * 60,
+        exam.duration_minutes * 60,
 
-  };
+};
 
 }
 

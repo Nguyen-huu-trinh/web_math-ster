@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+// import { NextResponse } from "next/server";
 
-import { studyTimeService } from "@/services/study-time.service";
+// import { studyTimeService } from "@/services/study-time.service";
 
-export async function GET() {
-  return NextResponse.json(
-    await studyTimeService.leaderboard()
-  );
-}
+// export async function GET() {
+//   return NextResponse.json(
+//     await studyTimeService.leaderboard()
+//   );
+// }

@@ -17,7 +17,7 @@ export class CourseRepository {
       .select("*")
       .is("deleted_at", null)
       .order("created_at", {
-        ascending: false,
+        ascending: true,
       });
 
     console.log("Supabase data:", data);

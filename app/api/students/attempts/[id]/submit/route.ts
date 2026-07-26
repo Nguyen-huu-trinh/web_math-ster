@@ -19,6 +19,8 @@ export async function POST(
 
   const body = await request.json();
 
+  try {
+
   const result =
     await studentExamService.submitAttempt(
       student.id,
@@ -27,4 +29,22 @@ export async function POST(
     );
 
   return NextResponse.json(result);
+
+} catch (err) {
+
+  console.error(err);
+
+  return NextResponse.json(
+    {
+      error:
+        err instanceof Error
+          ? err.message
+          : String(err),
+    },
+    {
+      status: 500,
+    }
+  );
+
+}
 }

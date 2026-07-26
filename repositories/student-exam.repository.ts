@@ -293,7 +293,10 @@ async submitAttempt(
   studentId: string,
   attemptId: string,
   answers: Record<string, any>
-) {
+)
+
+
+{
   const supabase = await createClient();
 
   // ==========================
@@ -316,84 +319,73 @@ async submitAttempt(
   if (attempt.submitted_at) {
     throw new Error("Bài thi đã được nộp.");
   }
+  
 
   // ==========================
   // Questions
   // ==========================
 
-  const {
-    data: questions,
-    error: questionError,
-  } = await supabase
-    .from("exam_questions")
-    .select("*")
-    .eq("exam_id", attempt.exam_id)
-    .order("question_number");
+  // const {
+  //   data: questions,
+  //   error: questionError,
+  // } = await supabase
+  //   .from("exam_questions")
+  //   .select("*")
+  //   .eq("exam_id", attempt.exam_id)
+  //   .order("question_number");
 
-  if (questionError) throw questionError;
+  
 
-  let totalScore = 0;
+  // // ==========================
+  // // Score
+  // // ==========================
 
-  // ==========================
-  // Update exam_answers
-  // ==========================
+  // const maxScore =
+  //   questions?.reduce(
+  //     (sum, q) => sum + Number(q.score),
+  //     0
+  //   ) ?? 0;
 
-  for (const q of questions ?? []) {
+  // const percent =
+  //   maxScore === 0
+  //     ? 0
+  //     : Number(
+  //         (
+  //           (totalScore / maxScore) *
+  //           100
+  //         ).toFixed(2)
+  //       );
 
-    const studentAnswer =
-      answers[q.id] ?? null;
+  // const passed =
+  //   attempt.exams.category === "ATTENDANCE"
+  //     ? percent >=
+  //       Number(
+  //         attempt.exams.attendance_min_score ?? 0
+  //       )
+  //     : true;
 
-    const correct =
-      JSON.stringify(studentAnswer) ===
-      JSON.stringify(q.answer);
+const answerKey =
+  typeof attempt.exams.answer_key === "string"
+    ? JSON.parse(attempt.exams.answer_key)
+    : attempt.exams.answer_key;
 
-    const earned =
-      correct
-        ? Number(q.score)
-        : 0;
+let score = 0;
 
-    totalScore += earned;
+if (attempt.exams.exam_type === "MOET") {
+  score = this.gradeTHPT(answerKey, answers);
+} else {
+  score = this.gradeCustom(answerKey, answers);
+}
 
-    await supabase
-      .from("exam_answers")
-      .update({
-        answer: studentAnswer,
-        earned_score: earned,
-        is_correct: correct,
-      })
-      .eq("attempt_id", attemptId)
-      .eq("question_id", q.id);
+score = Number(score.toFixed(2));
 
-  }
 
-  // ==========================
-  // Score
-  // ==========================
 
-  const maxScore =
-    questions?.reduce(
-      (sum, q) => sum + Number(q.score),
-      0
-    ) ?? 0;
 
-  const percent =
-    maxScore === 0
-      ? 0
-      : Number(
-          (
-            (totalScore / maxScore) *
-            100
-          ).toFixed(2)
-        );
-
-  const passed =
-    attempt.exams.category === "ATTENDANCE"
-      ? percent >=
-        Number(
-          attempt.exams.attendance_min_score ?? 0
-        )
-      : true;
-
+const passed =
+  attempt.exams.category === "ATTENDANCE"
+    ? score >= Number(attempt.exams.attendance_min_score ?? 0)
+    : true;
   // ==========================
   // Finish attempt
   // ==========================
@@ -403,7 +395,7 @@ async submitAttempt(
     .update({
       submitted_at:
         new Date().toISOString(),
-      score: percent,
+      score: score,
       is_passed: passed,
     })
     .eq("id", attemptId);
@@ -413,7 +405,7 @@ async submitAttempt(
   // ==========================
 
   return {
-    score: percent,
+    score: score,
 
     passed,
 
@@ -422,12 +414,124 @@ async submitAttempt(
 
     answers:
       attempt.exams.show_answer
-        ? questions.map((q) => ({
-            questionId: q.id,
-            correctAnswer: q.answer,
-          }))
-        : null,
+        ? answerKey
+        : null
   };
+}
+
+private gradeTHPT(
+  answerKey: any,
+  answers: any
+) {
+
+  let score = 0;
+
+  // ======================
+  // PART I
+  // ======================
+
+  const mcKey = answerKey.multipleChoice ?? [];
+  const mc = answers.multipleChoice ?? [];
+
+  for (let i = 0; i < mcKey.length; i++) {
+    if (mc[i] === mcKey[i]) {
+      score += 0.25;
+    }
+  }
+
+  // ======================
+  // PART II
+  // ======================
+
+  const tfKey = answerKey.trueFalse ?? [];
+  const tf = answers.trueFalse ?? [];
+
+  for (let i = 0; i < tfKey.length; i++) {
+
+    let correct = 0;
+
+    for (let j = 0; j < 4; j++) {
+
+      if (tf[i]?.[j] === tfKey[i]?.[j]) {
+        correct++;
+      }
+
+    }
+
+    switch (correct) {
+
+      case 1:
+        score += 0.1;
+        break;
+
+      case 2:
+        score += 0.25;
+        break;
+
+      case 3:
+        score += 0.5;
+        break;
+
+      case 4:
+        score += 1;
+        break;
+
+    }
+
+  }
+
+  // ======================
+  // PART III
+  // ======================
+
+  const saKey = answerKey.shortAnswer ?? [];
+  const sa = answers.shortAnswer ?? [];
+
+  for (let i = 0; i < saKey.length; i++) {
+
+    const student = String(sa[i] ?? "")
+      .trim()
+      .replace(",", ".");
+
+    const correct = String(saKey[i] ?? "")
+      .trim()
+      .replace(",", ".");
+
+    if (student === correct) {
+      score += 0.5;
+    }
+
+  }
+
+  return score;
+
+}
+private gradeCustom(
+  answerKey: any,
+  answers: any
+) {
+
+  let score = 0;
+
+  const mcKey = answerKey.multipleChoice ?? [];
+  const mc = answers.multipleChoice ?? [];
+
+  if (mcKey.length > 0) {
+
+    const point = 10 / mcKey.length;
+
+    for (let i = 0; i < mcKey.length; i++) {
+
+      if (mc[i] === mcKey[i]) {
+        score += point;
+      }
+
+    }
+
+  }
+
+  return score;
+
 }
 }
 

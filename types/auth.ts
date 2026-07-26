@@ -23,6 +23,8 @@ export interface Profile {
   created_at: string;
 
   updated_at: string;
+
+  personal_email: string | null;
 }
 
 export interface AuthContextType {

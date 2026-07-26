@@ -299,9 +299,9 @@ async function updateLesson(values: LessonFormValues) {
         Back to courses
       </Link>
 
-      <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[360px_1fr] items-start">
 
-        <div className="relative aspect-video rounded-xl overflow-hidden border bg-muted">
+        <div className="relative h-44 overflow-hidden rounded-xl border bg-muted">
 
           <Image
             src={
@@ -419,28 +419,33 @@ async function updateLesson(values: LessonFormValues) {
       {chapters.map((chapter) => (
 
         <ChapterCard
-          key={chapter.id}
-          chapter={chapter}
-          onAddLesson={(chapter) => {
-            setSelectedChapterForLesson(chapter);
-            setSelectedLesson(null);
-            setLessonDialogOpen(true);
-        }}
-          onEdit={(chapter) => {
-
-            setSelectedChapter(chapter);
-
-            setChapterDialogOpen(true);
-
-          }}
-          onDelete={(chapter) => {
-
-            setSelectedChapter(chapter);
-
-            setDeleteOpen(true);
-
-          }}
-        >
+  chapter={chapter}
+  onAddLesson={
+    role === "TEACHER"
+      ? (chapter) => {
+          setSelectedChapterForLesson(chapter);
+          setSelectedLesson(null);
+          setLessonDialogOpen(true);
+        }
+      : undefined
+  }
+  onEdit={
+    role === "TEACHER"
+      ? (chapter) => {
+          setSelectedChapter(chapter);
+          setChapterDialogOpen(true);
+        }
+      : undefined
+  }
+  onDelete={
+    role === "TEACHER"
+      ? (chapter) => {
+          setSelectedChapter(chapter);
+          setDeleteOpen(true);
+        }
+      : undefined
+  }
+>
           <div className="space-y-2">
 
            {(chapter.lessons ?? []).map((lesson: any) => (

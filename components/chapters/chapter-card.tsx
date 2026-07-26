@@ -55,44 +55,50 @@ export function ChapterCard({
             </Badge>
 
             {/* Add Lesson */}
+            {onAddLesson && (
             <Button
               type="button"
               size="icon"
               variant="ghost"
               onClick={(e) => {
                 e.stopPropagation();
-                onAddLesson?.(chapter);
+                onAddLesson(chapter);
               }}
             >
               <Plus className="h-4 w-4" />
             </Button>
+          )}
 
             {/* Edit Chapter */}
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit?.(chapter);
-              }}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
+            {onEdit && (
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(chapter);
+                }}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
 
             {/* Delete Chapter */}
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              className="text-red-500"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete?.(chapter);
-              }}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {onDelete && (
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="text-red-500"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(chapter);
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       </AccordionTrigger>

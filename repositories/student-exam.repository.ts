@@ -133,9 +133,9 @@ export class StudentExamRepository {
 // =====================================================
 
 async startExam(
-  
-  studentId: string,
   examId: string,
+  studentId: string,
+  
 ) {
   const supabase = await createClient();
 

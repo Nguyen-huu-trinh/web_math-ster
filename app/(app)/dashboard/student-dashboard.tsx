@@ -62,14 +62,14 @@ export default function StudentDashboard() {
 
         {
             label: "Bài kiểm tra",
-            value: dashboard?.totalAttempts ?? 0,
+            value: dashboard?.totalExams ?? 0,
             icon: "file-text",
         },
 
         {
             label: "Điểm trung bình",
             value: Number(
-                (dashboard?.averageScore ?? 0).toFixed(1)
+                (dashboard?.averagePeriodicScore ?? 0).toFixed(1)
             ),
             icon: "award",
         },

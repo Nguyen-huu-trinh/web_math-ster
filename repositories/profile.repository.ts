@@ -39,7 +39,7 @@ class ProfileRepository {
         Profile,
         | "full_name"
         | "avatar_url"
-        | "phone"
+        | "personal_email"
         | "must_change_password"
         | "is_active"
       >
@@ -58,6 +58,15 @@ class ProfileRepository {
 
     return data as Profile;
   }
+
+  async changePassword(newPassword: string) {
+  const { error } =
+    await this.supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+  if (error) throw error;
+}
 }
 
 export const profileRepository = new ProfileRepository();

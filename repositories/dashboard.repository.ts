@@ -1,11 +1,7 @@
-
 import { createClient } from "@/lib/supabase/server";
 
 export class DashboardRepository {
-
   async getStudentDashboard(studentId: string) {
-
-
     const supabase = await createClient();
 
     const [
@@ -15,7 +11,6 @@ export class DashboardRepository {
       lessons,
       attempts,
     ] = await Promise.all([
-
       supabase
         .from("profiles")
         .select("full_name")
@@ -23,8 +18,8 @@ export class DashboardRepository {
         .single(),
 
       supabase
-        .from("course_enrollments")
-        .select("id")
+        .from("course_students")
+        .select("course_id")
         .eq("student_id", studentId),
 
       supabase
@@ -38,21 +33,47 @@ export class DashboardRepository {
 
       supabase
         .from("exam_attempts")
-        .select("score")
+        .select(`
+          exam_id,
+          score,
+          exams!inner(
+            id,
+            category
+          )
+        `)
         .eq("student_id", studentId),
-
     ]);
 
     const completedLessons =
-      progress.data?.filter(
-        p => p.is_completed
-      ).length ?? 0;
+      progress.data?.filter((p) => p.is_completed).length ?? 0;
 
     const totalLessons =
       lessons.data?.length ?? 0;
 
-    return {
+    // ===== số đề đã làm =====
 
+    const totalExams = new Set(
+      (attempts.data ?? []).map((a: any) => a.exam_id)
+    ).size;
+
+    // ===== chỉ đề định kỳ =====
+
+    const periodicAttempts =
+      (attempts.data ?? []).filter(
+        (a: any) =>
+          a.exams?.category === "PERIODIC"
+      );
+
+    const averagePeriodicScore =
+      periodicAttempts.length > 0
+        ? periodicAttempts.reduce(
+            (sum: number, item: any) =>
+              sum + Number(item.score ?? 0),
+            0
+          ) / periodicAttempts.length
+        : 0;
+
+    return {
       profile: profile.data,
 
       totalCourses:
@@ -62,22 +83,13 @@ export class DashboardRepository {
 
       totalLessons,
 
-      totalAttempts:
-        attempts.data?.length ?? 0,
+      totalExams,
 
-      averageScore:
-        attempts.data?.length
-          ? attempts.data.reduce(
-              (sum, item) => sum + Number(item.score ?? 0),
-              0
-            ) / attempts.data.length
-          : 0,
-
+      averagePeriodicScore,
     };
   }
 
   async getTeacherDashboard() {
-
     const supabase = await createClient();
 
     const [
@@ -86,28 +98,29 @@ export class DashboardRepository {
       students,
       exams,
     ] = await Promise.all([
-
       supabase
         .from("courses")
-        .select("id"),
+        .select("id")
+        .is("deleted_at", null),
 
       supabase
         .from("lessons")
-        .select("id"),
+        .select("id")
+        .is("deleted_at", null),
 
       supabase
         .from("profiles")
         .select("id")
-        .eq("role", "STUDENT"),
+        .eq("role", "STUDENT")
+        .eq("is_active", true),
 
       supabase
         .from("exams")
-        .select("id"),
-
+        .select("id")
+        .is("deleted_at", null),
     ]);
 
     return {
-
       totalCourses:
         courses.data?.length ?? 0,
 
@@ -119,13 +132,9 @@ export class DashboardRepository {
 
       totalExams:
         exams.data?.length ?? 0,
-
     };
-
   }
-
 }
 
 export const dashboardRepository =
   new DashboardRepository();
-

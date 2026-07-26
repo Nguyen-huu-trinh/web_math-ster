@@ -90,7 +90,7 @@ export function SidebarNav({
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <div className="flex h-16 items-center px-5">
+      <div className="flex h-16 items-center px-5 pt-7">
         <BrandLogo variant="sidebar" />
       </div>
 

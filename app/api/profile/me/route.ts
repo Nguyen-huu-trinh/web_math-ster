@@ -1,84 +1,71 @@
-// import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { profileService } from "@/services/profile.service";
 
-// import { profileService } from "@/services/profile.service";
+export async function GET() {
+  try {
+    const supabase = await createClient();
 
-// import { createClient } from "@/lib/supabase/server";
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-// export async function GET() {
-//   try {
-//     const profile =
-//       await profileService.getCurrentProfile();
+    if (!user) {
+      return NextResponse.json(
+        { message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
 
-//     return NextResponse.json(profile);
-//   } catch (error) {
-//     return NextResponse.json(
-//       {
-//         message:
-//           error instanceof Error
-//             ? error.message
-//             : "Internal Server Error",
-//       },
-//       {
-//         status: 500,
-//       }
-//     );
-//   }
-// }
+    const profile =
+      await profileService.getCurrentProfile();
 
-// export async function PATCH(
-//   request: NextRequest
-// ) {
-//   try {
-//     const supabase =
-//       await createClient();
+    return NextResponse.json(profile);
+  } catch (e: any) {
+    console.error(e);
 
-//     const {
-//       data: { user },
-//     } = await supabase.auth.getUser();
+    return NextResponse.json(
+      {
+        message: e.message,
+      },
+      {
+        status: 500,
+      }
+    );
+  }
+}
 
-//     if (!user) {
-//       return NextResponse.json(
-//         {
-//           message: "Unauthorized",
-//         },
-//         {
-//           status: 401,
-//         }
-//       );
-//     }
+export async function PATCH(req: NextRequest) {
+  try {
+    const supabase = await createClient();
 
-//     const body =
-//       await request.json();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-//     const profile =
-//       await profileService.update(
-//         user.id,
-//         {
-//           full_name:
-//             body.full_name,
+    if (!user) {
+      return NextResponse.json(
+        { message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
 
-//           phone:
-//             body.phone,
+    const body = await req.json();
 
-//           avatar_url:
-//             body.avatar_url,
-//         }
-//       );
+    const profile =
+      await profileService.update(user.id, body);
 
-//     return NextResponse.json(profile);
+    return NextResponse.json(profile);
+  } catch (e: any) {
+    console.error(e);
 
-//   } catch (error) {
-
-//     return NextResponse.json(
-//       {
-//         message:
-//           error instanceof Error
-//             ? error.message
-//             : "Internal Server Error",
-//       },
-//       {
-//         status: 500,
-//       }
-//     );
-//   }
-// }
+    return NextResponse.json(
+      {
+        message: e.message,
+      },
+      {
+        status: 500,
+      }
+    );
+  }
+}

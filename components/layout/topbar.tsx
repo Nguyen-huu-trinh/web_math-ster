@@ -103,17 +103,11 @@ export function Topbar({
         onOpenChange={setMobileOpen}
       >
 
-        <SheetTrigger asChild>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-          >
-            <Menu />
-          </Button>
-
-        </SheetTrigger>
+        <SheetTrigger
+  className="inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent lg:hidden"
+>
+  <Menu className="h-5 w-5" />
+</SheetTrigger>
 
         <SheetContent
           side="left"
@@ -168,20 +162,13 @@ export function Topbar({
 
         <Popover>
 
-          <PopoverTrigger asChild>
+          <PopoverTrigger className="relative inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent">
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative"
-            >
-              <Bell />
+        <Bell />
 
-              <span className="absolute right-2 top-2 size-2 rounded-full bg-primary" />
+        <span className="absolute right-2 top-2 size-2 rounded-full bg-primary" />
 
-            </Button>
-
-          </PopoverTrigger>
+      </PopoverTrigger>
 
           <PopoverContent
             align="end"
@@ -229,11 +216,10 @@ export function Topbar({
 
         <DropdownMenu>
 
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger className="rounded-full">
 
-            <button>
+            <Avatar className="size-9">
 
-              <Avatar className="size-9">
 
                 <AvatarImage
                   src={
@@ -248,8 +234,6 @@ export function Topbar({
                 </AvatarFallback>
 
               </Avatar>
-
-            </button>
 
           </DropdownMenuTrigger>
 
@@ -278,29 +262,29 @@ export function Topbar({
 
             <DropdownMenuGroup>
 
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem
+  onClick={() => {
+    window.location.href = "/profile";
+  }}
+>
 
-                <Link href="/profile">
+  <CircleUser className="mr-2 h-4 w-4" />
 
-                  <CircleUser className="mr-2 h-4 w-4" />
+  Profile
 
-                  Profile
+</DropdownMenuItem>
 
-                </Link>
+              <DropdownMenuItem
+  onClick={() => {
+    window.location.href = "/settings";
+  }}
+>
 
-              </DropdownMenuItem>
+  <Settings className="mr-2 h-4 w-4" />
 
-              <DropdownMenuItem asChild>
+  Settings
 
-                <Link href="/settings">
-
-                  <Settings className="mr-2 h-4 w-4" />
-
-                  Settings
-
-                </Link>
-
-              </DropdownMenuItem>
+</DropdownMenuItem>
 
             </DropdownMenuGroup>
 

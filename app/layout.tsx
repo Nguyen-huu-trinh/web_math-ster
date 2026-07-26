@@ -18,10 +18,9 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Math-ster — Premium Math Learning Platform',
-  description:
-    'Math-ster is a modern learning management system helping students master mathematics for the Vietnam High School Graduation Exam.',
+  title: 'MATH-STER',
   generator: 'v0.app',
+  icons: "/logo.jpg",
 }
 
 export const viewport: Viewport = {

@@ -1,37 +1,59 @@
-class ProfileClientService {
-  async getMe() {
-    const res = await fetch("/api/profile/me", {
-      credentials: "include",
-      cache: "no-store",
-    });
+import { profileRepository } from "@/repositories/profile.repository";
+import { Profile } from "@/types/profile";
 
-    if (!res.ok) {
-      throw new Error("Failed to load profile");
-    }
-
-    return res.json();
+export class ProfileClientService {
+  getCurrentProfile(): Promise<Profile | null> {
+    return profileRepository.getCurrentProfile();
   }
 
-  async update(values: {
-    full_name?: string;
-    phone?: string | null;
-    avatar_url?: string | null;
-  }) {
-    const res = await fetch("/api/profile/me", {
-      method: "PATCH",
-      credentials: "include",
+  getById(id: string): Promise<Profile> {
+    return profileRepository.getById(id);
+  }
+
+  update(
+    id: string,
+    values: Partial<
+      Pick<
+        Profile,
+        | "full_name"
+        | "avatar_url"
+        | "phone"
+        | "must_change_password"
+        | "is_active"
+      >
+    >
+  ) {
+    return profileRepository.updateProfile(id, values);
+  }
+async changePassword(
+  currentPassword: string,
+  newPassword: string
+) {
+  const res = await fetch(
+    "/api/profile/change-password",
+    {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(values),
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to update profile");
+      body: JSON.stringify({
+        currentPassword,
+        newPassword,
+      }),
     }
+  );
 
-    return res.json();
+  const result = await res.json();
+
+  if (!res.ok) {
+    throw new Error(
+      result.message ?? "Failed to change password"
+    );
   }
+
+  return result;
+}
+
 }
 
 export const profileClientService =

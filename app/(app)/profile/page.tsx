@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import {
-  Camera,
+ 
   Save,
   KeyRound,
   Mail,
-  Phone,
+  
   IdCard,
   ShieldCheck,
 } from 'lucide-react'
@@ -54,55 +54,48 @@ export default function ProfilePage() {
     refresh,
   } = useAuth()
 
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
-
-  useEffect(() => {
-    if (!profile) return
-
-    setName(profile.full_name)
-    setPhone(profile.phone ?? '')
-  }, [profile])
 
   if (!user || !profile) return null
 
-  async function saveProfile(
-    e: React.FormEvent<HTMLFormElement>
-  ) {
-    e.preventDefault()
 
-    try {
-      await profileClientService.update({
-        full_name: name,
-        phone,
-      })
 
-      await refresh()
+ async function changePassword(
+  e: React.FormEvent<HTMLFormElement>
+) {
+  e.preventDefault()
 
-      toast.success('Profile updated successfully')
-    } catch (error) {
-      console.error(error)
+  const form = new FormData(e.currentTarget)
 
-      toast.error('Failed to update profile')
-    }
+  const currentPassword =
+    form.get("current") as string
+
+  const newPassword =
+    form.get("new") as string
+
+  const confirmPassword =
+    form.get("confirm") as string
+
+  if (newPassword !== confirmPassword) {
+    toast.error("New passwords do not match")
+    return
   }
 
-  function changePassword(
-    e: React.FormEvent<HTMLFormElement>
-  ) {
-    e.preventDefault()
+  try {
+    await profileClientService.changePassword(
+      currentPassword,
+      newPassword
+    )
 
-    const form = new FormData(e.currentTarget)
-
-    if (form.get('new') !== form.get('confirm')) {
-      toast.error('New passwords do not match')
-      return
-    }
-
-    toast.success('Password changed')
+    toast.success("Password changed")
 
     e.currentTarget.reset()
+
+  } catch (err: any) {
+
+    toast.error(err.message)
+
   }
+}
 
   return (
     <div className="flex flex-col gap-6">
@@ -134,18 +127,7 @@ export default function ProfilePage() {
 
               </Avatar>
 
-              <button
-                type="button"
-                onClick={() =>
-                  toast.info(
-                    'Avatar upload coming soon'
-                  )
-                }
-                className="absolute bottom-0 right-0 flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground ring-2 ring-card"
-              >
-                <Camera className="size-4" />
-              </button>
-
+              
             </div>
 
             <div>
@@ -168,18 +150,7 @@ export default function ProfilePage() {
               {profile.role}
             </Badge>
 
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() =>
-                toast.info(
-                  'Avatar upload coming soon'
-                )
-              }
-            >
-              <Camera className="mr-2 size-4" />
-              Change avatar
-            </Button>
+            
 
           </CardContent>
         </Card>
@@ -192,18 +163,9 @@ export default function ProfilePage() {
               <CardTitle>
                 Personal information
               </CardTitle>
-
-              <CardDescription>
-                Update your account details.
-              </CardDescription>
             </CardHeader>
 
             <CardContent>
-
-              <form
-                onSubmit={saveProfile}
-                className="flex flex-col gap-4"
-              >
 
                 <div className="grid gap-4 sm:grid-cols-2">
 
@@ -212,14 +174,11 @@ export default function ProfilePage() {
                     <Label htmlFor="name">
                       Full name
                     </Label>
-
-                    <Input
-                      id="name"
-                      value={name}
-                      onChange={(e) =>
-                        setName(e.target.value)
-                      }
-                    />
+                      <Input
+                          id="name"
+                          value={profile.full_name}
+                          disabled
+                      />
 
                   </div>
 
@@ -240,34 +199,15 @@ export default function ProfilePage() {
                   </div>
 
                   <div>
-
-                    <Label htmlFor="phone">
-                      <Phone className="mr-1 inline size-3" />
-                      Phone
+                    <Label htmlFor="personal_email">
+                      Personal Email
                     </Label>
 
                     <Input
-                      id="phone"
-                      value={phone}
-                      onChange={(e) =>
-                        setPhone(e.target.value)
-                      }
-                    />
-
-                  </div>
-
-                  <div>
-
-                    <Label htmlFor="role">
-                      Role
-                    </Label>
-
-                    <Input
-                      id="role"
-                      value={profile.role}
+                      id="personal_email"
+                      value={profile.personal_email ?? ""}
                       disabled
                     />
-
                   </div>
 
                   {profile.student_code && (
@@ -292,16 +232,6 @@ export default function ProfilePage() {
 
                 </div>
 
-                <div className="flex justify-end">
-
-                  <Button type="submit">
-                    <Save className="mr-2 size-4" />
-                    Save Changes
-                  </Button>
-
-                </div>
-
-              </form>
 
             </CardContent>
 

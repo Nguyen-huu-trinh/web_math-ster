@@ -35,6 +35,8 @@ import {
   MoreHorizontal,
   Plus,
   Search,
+  Link2,
+  Copy,
 } from "lucide-react";
 
 import { Exam } from "@/types/exam";
@@ -78,6 +80,14 @@ interface Props {
 //       );
 //   }
 // }
+const copyExamLink = async (examId: string) => {
+  const url =
+    `${window.location.origin}/student-exams/start/${examId}`;
+
+  await navigator.clipboard.writeText(url);
+
+  alert("Đã sao chép liên kết đề");
+};
 
 export function ExamTable({
   exams,
@@ -85,7 +95,10 @@ export function ExamTable({
   onClose,
   onDuplicate,
   onDelete,
-}: Props) {
+}: Props)
+
+
+{
 
   return (
 
@@ -218,7 +231,15 @@ export function ExamTable({
                         Chi tiết
 
                         </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => copyExamLink(exam.id)}
+                        >
+                          <Link2 className="mr-2 h-4 w-4" />
+                          Sao chép liên kết
+                        </DropdownMenuItem>
 
+                        
+                        
                       <DropdownMenuItem
                         onClick={() => {
                             window.location.href = `/exams/${exam.id}/edit`;

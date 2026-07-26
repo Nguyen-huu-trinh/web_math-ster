@@ -1,23 +1,24 @@
 import { apiClient } from "@/lib/api/client";
 
 export interface StudentDashboard {
+  profile: {
+    full_name: string;
+  };
 
-    profile: {
-        full_name: string;
-    };
+  totalCourses: number;
 
-    totalCourses: number;
+  completedLessons: number;
 
-    completedLessons: number;
+  totalLessons: number;
 
-    totalLessons: number;
+  // Đổi từ totalAttempts
+  totalExams: number;
 
-    totalAttempts: number;
-
-    averageScore: number;
+  // Đổi từ averageScore
+  averagePeriodicScore: number;
 }
-export interface TeacherDashboard {
 
+export interface TeacherDashboard {
   totalCourses: number;
 
   totalLessons: number;
@@ -25,8 +26,8 @@ export interface TeacherDashboard {
   totalStudents: number;
 
   totalExams: number;
-
 }
+
 export interface LeaderboardEntry {
   rank: number;
   name: string;
@@ -40,16 +41,18 @@ export interface DashboardLeaderboard {
 }
 
 class DashboardClientService {
-  getStudentDashboard() {
+  async getStudentDashboard() {
     return apiClient.get<StudentDashboard>(
       "/api/dashboard/student"
     );
   }
-getTeacherDashboard() {
-  return apiClient.get<TeacherDashboard>(
-    "/api/dashboard/teacher"
-  );
-}
+
+  async getTeacherDashboard() {
+    return apiClient.get<TeacherDashboard>(
+      "/api/dashboard/teacher"
+    );
+  }
+
   async getLeaderboard(): Promise<DashboardLeaderboard> {
     const data = await apiClient.get<any>(
       "/api/dashboard/leaderboard"

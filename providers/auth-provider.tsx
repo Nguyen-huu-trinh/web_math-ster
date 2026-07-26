@@ -11,7 +11,7 @@ import {
 import { User } from "@supabase/supabase-js";
 
 import { authService } from "@/services/auth.service";
-import { profileService } from "@/services/profile.service";
+import { profileClientService } from "@/services/profile-client.service";
 
 import { Profile } from "@/types/profile";
 import { AuthContextType } from "@/types/auth";
@@ -47,7 +47,7 @@ export function AuthProvider({
       }
 
       const currentProfile =
-        await profileService.getCurrentProfile();
+        await profileClientService.getCurrentProfile();
 
       setUser(currentUser);
       setProfile(currentProfile);

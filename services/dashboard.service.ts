@@ -1,23 +1,16 @@
 import { dashboardRepository } from "@/repositories/dashboard.repository";
 
 export class DashboardService {
+  async studentDashboard(studentId: string) {
+    return await dashboardRepository.getStudentDashboard(
+      studentId
+    );
+  }
 
-    studentDashboard(studentId: string){
-console.log("SERVICE studentId:", studentId);
-
-        return dashboardRepository.getStudentDashboard(
-            studentId
-        );
-
-    }
-
-    teacherDashboard(){
-
-        return dashboardRepository.getTeacherDashboard();
-
-    }
-
+  async teacherDashboard() {
+    return await dashboardRepository.getTeacherDashboard();
+  }
 }
 
 export const dashboardService =
-    new DashboardService();
+  new DashboardService();

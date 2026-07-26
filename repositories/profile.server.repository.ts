@@ -28,6 +28,19 @@ export class ProfileServerRepository {
 
     return data;
   }
+  async getCurrentProfile(id: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+
+  return data;
+}
 }
 
 export const profileServerRepository =

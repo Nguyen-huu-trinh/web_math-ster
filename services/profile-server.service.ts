@@ -23,6 +23,17 @@ export class ProfileServerService {
       }
     );
   }
+
+  async getCurrentProfile(userId: string) {
+  return profileServerRepository.getCurrentProfile(userId);
+}
+
+async update(userId: string, values: any) {
+  return profileServerRepository.updateProfile(
+    userId,
+    values
+  );
+}
 }
 
 export const profileServerService =

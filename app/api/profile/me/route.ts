@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { profileService } from "@/services/profile.service";
+import { profileServerService } from "@/services/profile-server.service";
 
 export async function GET() {
   try {
@@ -18,7 +18,9 @@ export async function GET() {
     }
 
     const profile =
-      await profileService.getCurrentProfile();
+  await profileServerService.getCurrentProfile(
+    user.id
+  );
 
     return NextResponse.json(profile);
   } catch (e: any) {
@@ -53,7 +55,7 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json();
 
     const profile =
-      await profileService.update(user.id, body);
+      await profileServerService.update(user.id, body);
 
     return NextResponse.json(profile);
   } catch (e: any) {

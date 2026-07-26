@@ -216,26 +216,20 @@ export function Topbar({
 
         <DropdownMenu>
 
-          <DropdownMenuTrigger className="rounded-full">
-
-            <Avatar className="size-9">
-
-
-                <AvatarImage
-                  src={
-                    profile.avatar_url ||
-                    '/placeholder.svg'
-                  }
-                  alt={profile.full_name}
-                />
-
-                <AvatarFallback>
-                  {initials(profile.full_name)}
-                </AvatarFallback>
-
-              </Avatar>
-
-          </DropdownMenuTrigger>
+          <button
+  type="button"
+  className="rounded-full cursor-default"
+>
+  <Avatar className="size-9">
+    <AvatarImage
+      src={profile.avatar_url || "/placeholder.svg"}
+      alt={profile.full_name}
+    />
+    <AvatarFallback>
+      {initials(profile.full_name)}
+    </AvatarFallback>
+  </Avatar>
+</button>
 
           <DropdownMenuContent
             align="end"

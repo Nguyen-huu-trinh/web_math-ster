@@ -482,26 +482,30 @@ private gradeTHPT(
   // ======================
   // PART III
   // ======================
+const saKey = answerKey.shortAnswer ?? [];
+const sa = answers.shortAnswer ?? [];
 
-  const saKey = answerKey.shortAnswer ?? [];
-  const sa = answers.shortAnswer ?? [];
+for (let i = 0; i < saKey.length; i++) {
 
-  for (let i = 0; i < saKey.length; i++) {
+  // Học sinh gửi lên là mảng ký tự
+  const student = Array.isArray(sa[i])
+    ? sa[i]
+        .join("")
+        .replace(/\s/g, "")
+        .trim()
+    : String(sa[i] ?? "")
+        .replace(/\s/g, "")
+        .trim();
 
-    const student = String(sa[i] ?? "")
-      .trim()
-      .replace(",", ".");
+  // Giáo viên lưu là chuỗi
+  const correct = String(saKey[i] ?? "")
+    .replace(/\s/g, "")
+    .trim();
 
-    const correct = String(saKey[i] ?? "")
-      .trim()
-      .replace(",", ".");
-
-    if (student === correct) {
-      score += 0.5;
-    }
-
+  if (student === correct) {
+    score += 0.5;
   }
-
+}
   return score;
 
 }

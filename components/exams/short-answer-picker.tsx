@@ -15,7 +15,7 @@ const DIGITS = [
   "9",
 ];
 
-const MAX = 6;
+const MAX = 4;
 
 interface Props {
   value: string;
@@ -36,17 +36,15 @@ export function ShortAnswerPicker({
 
   return (
     <div className="flex gap-2">
-
       {chars.map((current, col) => (
-
         <div
           key={col}
           className="flex flex-col items-center gap-1"
         >
-
+          {/* Ô hiển thị đáp án */}
           <div
             className={cn(
-              "flex h-8 w-8 items-center justify-center rounded border font-bold",
+              "flex h-10 w-10 items-center justify-center rounded border text-lg font-bold",
               current.trim()
                 ? "border-primary bg-primary/10"
                 : "border-dashed"
@@ -55,22 +53,33 @@ export function ShortAnswerPicker({
             {current.trim() || "·"}
           </div>
 
-          <button
-            type="button"
-            onClick={() => update(col, "-")}
-            className="rounded border px-2 text-xs"
-          >
-            -
-          </button>
+          {/* Dòng 1 */}
+          {col === 0 ? (
+            <button
+              type="button"
+              onClick={() => update(col, "-")}
+              className="flex h-6 w-6 items-center justify-center rounded-full border text-xs transition"
+            >
+              -
+            </button>
+          ) : (
+            <div className="h-6 w-6" />
+          )}
 
-          <button
-            type="button"
-            onClick={() => update(col, ".")}
-            className="rounded border px-2 text-xs"
-          >
-            .
-          </button>
+          {/* Dòng 2 */}
+          {col === 1 || col === 2 ? (
+            <button
+              type="button"
+              onClick={() => update(col, ".")}
+              className="flex h-6 w-6 items-center justify-center rounded-full border text-xs transition"
+            >
+              ,
+            </button>
+          ) : (
+            <div className="h-6 w-6" />
+          )}
 
+          {/* Các số */}
           {DIGITS.map((d) => (
             <button
               key={d}
@@ -86,11 +95,8 @@ export function ShortAnswerPicker({
               {d}
             </button>
           ))}
-
         </div>
-
       ))}
-
     </div>
   );
 }

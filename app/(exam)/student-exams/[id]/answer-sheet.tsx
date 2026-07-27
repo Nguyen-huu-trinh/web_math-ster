@@ -28,7 +28,8 @@ interface Props {
 
 const MC = ["A", "B", "C", "D"];
 const TF = ["Đ", "S"];
-
+const SHORT_ANSWER_COLS = 4;
+const DIGITS = ["0","1","2","3","4","5","6","7","8","9"];
 export default function AnswerSheet({
   attempt,
   exam,
@@ -64,9 +65,10 @@ export default function AnswerSheet({
       () => ["", "", "", ""]
     ),
 
-    shortAnswer: Array(
-      questionConfig.shortAnswer
-    ).fill(""),
+    shortAnswer: Array.from(
+  { length: questionConfig.shortAnswer },
+  () => Array(SHORT_ANSWER_COLS).fill("")
+),
   });
 
   // ============================
@@ -144,9 +146,10 @@ export default function AnswerSheet({
         row.every((x) => x !== "")
     ).length;
 
-    total += answers.shortAnswer.filter(
-      (x: string) => x.trim() !== ""
-    ).length;
+   total += answers.shortAnswer.filter(
+  (row: string[]) =>
+    row.some((x) => x !== "")
+).length;
 
     return total;
 
@@ -223,24 +226,24 @@ export default function AnswerSheet({
   // Short Answer
   // ============================
 
-  function chooseShortAnswer(
-    index: number,
-    value: string
-  ) {
-    if (result) return;
+ function chooseShortAnswer(
+  questionIndex: number,
+  columnIndex: number,
+  value: string
+) {
+  if (result) return;
 
-    setAnswers((prev) => {
+  setAnswers((prev) => {
+    const next = {
+      ...prev,
+      shortAnswer: prev.shortAnswer.map((row) => [...row]),
+    };
 
-      const next = {
-        ...prev,
-        shortAnswer: [...prev.shortAnswer],
-      };
+    next.shortAnswer[questionIndex][columnIndex] = value;
 
-      next.shortAnswer[index] = value;
-
-      return next;
-    });
-  }
+    return next;
+  });
+}
 
   // ============================
   // Submit
@@ -291,10 +294,39 @@ export default function AnswerSheet({
     }
   }
 
+async function handleRetry() {
+  try {
+    const res = await fetch(
+      `/api/students/my-exams/${exam.id}/start`,
+      {
+        method: "POST",
+      }
+    );
 
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message);
+    }
+
+    router.push(`/student-exams/${data.id}`);
+  } catch (err: any) {
+    console.error(err);
+    alert(err.message);
+  }
+}
 
 const submitted = !!result;
 const lowTime = timeLeft <= 300;
+
+const showAnswer = submitted && exam.show_answer;
+
+const answerKey = exam.answer_key ?? {
+  multipleChoice: [],
+  trueFalse: [],
+  shortAnswer: [],
+};
+
     return (
 
     <div className="flex h-screen flex-col bg-background">
@@ -362,39 +394,79 @@ const lowTime = timeLeft <= 300;
   </div>
 
   <div className="columns-1 sm:columns-2 xl:columns-3 gap-x-6">
-    {Array.from({
-      length: questionConfig.multipleChoice,
-    }).map((_, index) => (
+   {Array.from({
+  length: questionConfig.multipleChoice,
+}).map((_, index) => {
+
+const selected = answers.multipleChoice[index];
+const correct = answerKey.multipleChoice[index];
+
+  return (
       <div
-        key={index}
-        className="break-inside-avoid mb-3 flex items-center gap-3 rounded-lg px-1 py-2"
+      key={index}
+      className="break-inside-avoid mb-3 flex items-center justify-between rounded-lg px-1 py-2"
       >
-        <span className="w-7 text-right font-bold">
-          {index + 1}
-        </span>
+        <div className="flex items-center gap-2">
+
+  <span className="w-7 text-right font-bold">
+    {index + 1}
+  </span>
+
+  {showAnswer && (
+
+    selected === correct ? (
+
+      <span className="text-green-600 text-lg">✓</span>
+
+    ) : (
+
+      <span className="text-red-600 text-lg">✕</span>
+
+    )
+
+  )}
+
+</div>
 
         <div className="flex gap-2">
-          {MC.map((item) => (
-            <Button
-              key={item}
-              size="sm"
-              disabled={!!result}
-              variant={
-                answers.multipleChoice[index] === item
-                  ? "default"
-                  : "outline"
-              }
-              onClick={() =>
-                chooseMultipleChoice(index, item)
-              }
-              className="rounded-full w-8 h-8 p-0"
-            >
-              {item}
-            </Button>
-          ))}
+          {MC.map((item) => {
+
+
+  return (
+    <Button
+      key={item}
+      size="sm"
+      disabled={submitted}
+      variant="outline"
+      onClick={() =>
+        chooseMultipleChoice(index, item)
+      }
+      className={cn(
+        "rounded-full w-8 h-8 p-0",
+
+        !showAnswer &&
+          selected === item &&
+          "bg-primary text-white",
+
+        showAnswer &&
+          item === correct &&
+          "bg-green-600 border-green-600 text-white",
+
+        showAnswer &&
+          selected === item &&
+          selected !== correct &&
+          "bg-red-600 border-red-600 text-white"
+      )}
+    >
+      {item}
+    </Button>
+  );
+
+})}
         </div>
       </div>
-    ))}
+    );
+})}
   </div>
 </section>
 
@@ -423,13 +495,40 @@ length: questionConfig.trueFalse,
 key={questionIndex}
 className="rounded-lg border p-3"
 >
+<div className="mb-3 flex items-center justify-between">
 
-<p className="font-semibold mb-3">
-Câu {questionConfig.multipleChoice + questionIndex + 1}
+  <p className="font-semibold">
+  Câu {questionConfig.multipleChoice + questionIndex + 1}
 </p>
 
-{["a","b","c","d"].map((label,columnIndex)=>(
+  {showAnswer && (() => {
 
+    const student = answers.trueFalse[questionIndex];
+
+    const key = answerKey.trueFalse?.[questionIndex] ?? [];
+
+    const ok =
+      JSON.stringify(student) === JSON.stringify(key);
+
+    return ok ? (
+      <span className="text-green-600 text-lg">✓</span>
+    ) : (
+      <span className="text-red-600 text-lg">✕</span>
+    );
+
+  })()}
+
+</div>
+
+{["a", "b", "c", "d"].map((label, columnIndex) => {
+
+  const selected =
+    answers.trueFalse[questionIndex][columnIndex];
+
+  const correct =
+    answerKey.trueFalse?.[questionIndex]?.[columnIndex];
+
+  return (
 <div
 key={columnIndex}
 className="flex justify-between items-center mb-2"
@@ -440,36 +539,68 @@ className="flex justify-between items-center mb-2"
 <div className="flex gap-2">
 
 <Button
-size="sm"
-variant={
-answers.trueFalse[questionIndex][columnIndex]=="Đ"
-?"default"
-:"outline"
-}
-disabled={!!result}
-onClick={()=>chooseTrueFalse(questionIndex,columnIndex,"Đ")}
+  size="sm"
+  variant="outline"
+  disabled={submitted}
+  onClick={() =>
+    chooseTrueFalse(
+      questionIndex,
+      columnIndex,
+      "Đ"
+    )
+  }
+  className={cn(
+    !showAnswer &&
+      selected === "Đ" &&
+      "bg-primary text-white",
+
+    showAnswer &&
+      correct === "Đ" &&
+      "bg-green-600 border-green-600 text-white",
+
+    showAnswer &&
+      selected === "Đ" &&
+      selected !== correct &&
+      "bg-red-600 border-red-600 text-white"
+  )}
 >
-Đ
+  Đ
 </Button>
 
 <Button
-size="sm"
-variant={
-answers.trueFalse[questionIndex][columnIndex]=="S"
-?"destructive"
-:"outline"
-}
-disabled={!!result}
-onClick={()=>chooseTrueFalse(questionIndex,columnIndex,"S")}
+  size="sm"
+  variant="outline"
+  disabled={submitted}
+  onClick={() =>
+    chooseTrueFalse(
+      questionIndex,
+      columnIndex,
+      "S"
+    )
+  }
+  className={cn(
+    !showAnswer &&
+      selected === "S" &&
+      "bg-primary text-white",
+
+    showAnswer &&
+      correct === "S" &&
+      "bg-green-600 border-green-600 text-white",
+
+    showAnswer &&
+      selected === "S" &&
+      selected !== correct &&
+      "bg-red-600 border-red-600 text-white"
+  )}
 >
-S
+  S
 </Button>
 
 </div>
 
 </div>
 
-))}
+);})}
 
 </div>
 
@@ -498,39 +629,180 @@ Trả lời ngắn
 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
 
 {Array.from({
-length: questionConfig.shortAnswer,
-}).map((_,index)=>(
+  length: questionConfig.shortAnswer,
+}).map((_, index) => {
+
+  const studentAnswer = answers.shortAnswer[index]
+    .join("")
+    .replace(/,/g, "")
+    .replace(/-/g, "");
+
+  const correctAnswer = String(
+    answerKey.shortAnswer?.[index] ?? ""
+  );
+
+  const isCorrect =
+    studentAnswer === correctAnswer;
+
+  return (
 
 <div
 key={index}
 className="rounded-lg border p-3"
 >
+<div className="mb-3 flex items-center justify-between">
 
-<p className="font-semibold mb-3">
-Câu {questionConfig.multipleChoice + questionConfig.trueFalse + index +1}
-</p>
+  <p className="font-semibold">
+    Câu {questionConfig.multipleChoice + questionConfig.trueFalse + index + 1}
+  </p>
 
-<input
+  {showAnswer && (
 
-type="text"
+    <div className="flex items-center gap-2">
+      <span className="text-xs font-semibold text-blue-600">
+          Đáp án: {correctAnswer}
+      </span>
+      {isCorrect ? (
 
-value={answers.shortAnswer[index]}
+        <span className="text-green-600 font-bold text-lg">
+          ✓
+        </span>
 
-disabled={!!result}
+      ) : (
 
-onChange={(e)=>
-chooseShortAnswer(index,e.target.value)
-}
+        <span className="text-red-600 font-bold text-lg">
+          ✕
+        </span>
 
-className="w-full rounded-lg border h-11 px-3"
+      )}
 
-placeholder="Nhập đáp án..."
+    </div>
 
- />
+  )}
 
 </div>
 
-))}
+<div className="flex gap-2">
+
+  {Array.from({
+    length: SHORT_ANSWER_COLS,
+  }).map((_, columnIndex) => {
+
+    const current =
+      answers.shortAnswer[index][columnIndex];
+   const fullCorrect =
+  String(answerKey.shortAnswer?.[index] ?? "");
+
+const correctChars = fullCorrect.split("");
+
+const correct =
+  correctChars[columnIndex] ?? "";
+    return (
+
+      <div
+  key={columnIndex}
+  className="flex flex-col items-center gap-1"
+>
+
+        <div
+  className={cn(
+    "relative flex h-11 w-11 items-center justify-center rounded border font-bold transition-all",
+
+    !showAnswer &&
+      current &&
+      "border-primary bg-primary/10",
+
+    showAnswer &&
+      current === correct &&
+      current !== "" &&
+      "bg-green-600 border-green-600 text-white",
+
+    showAnswer &&
+      current !== "" &&
+      current !== correct &&
+      "bg-red-600 border-red-600 text-white"
+  )}
+>
+{current}
+
+
+</div>
+        <div className="flex flex-col gap-1">
+
+  {/* dòng 1 */}
+
+  <Button
+    size="sm"
+    className="h-7 w-7 p-0 text-sm font-semibold"
+    variant={current === "-" ? "default" : "outline"}
+    disabled={!!result || columnIndex !== 0}
+    onClick={() =>
+      chooseShortAnswer(index, columnIndex, "-")
+    }
+  >
+    {columnIndex === 0 ? "-" : ""}
+  </Button>
+
+  {/* dòng 2 */}
+
+  <Button
+    size="sm"
+    className="h-7 w-7 p-0 text-xs"
+    variant={current === "." ? "default" : "outline"}
+    disabled={
+      !!result ||
+      !(columnIndex === 1 || columnIndex === 2)
+    }
+    onClick={() =>
+      chooseShortAnswer(index, columnIndex, ".")
+    }
+  >
+    {columnIndex === 1 || columnIndex === 2
+      ? "."
+      : ""}
+  </Button>
+
+  {/* dòng 3 -> 12 */}
+
+  {DIGITS.map((d) => (
+
+    <Button
+      key={d}
+      size="sm"
+      className="h-7 w-7 p-0 text-xs"
+      variant={
+        current === d
+          ? "default"
+          : "outline"
+      }
+      disabled={!!result}
+      onClick={() =>
+        chooseShortAnswer(
+          index,
+          columnIndex,
+          d
+        )
+      }
+    >
+      {d}
+    </Button>
+
+  ))}
+
+</div>
+
+      </div>
+
+    );
+
+  })}
+
+</div>
+
+</div>
+
+);
+})}
 
 </div>
 
@@ -603,13 +875,9 @@ placeholder="Nhập đáp án..."
 
                     <Button
                       variant="outline"
-                      onClick={() =>
-                        window.location.reload()
-                      }
+                      onClick={handleRetry}
                     >
-
                       Làm lại
-
                     </Button>
 
                   )}
@@ -621,6 +889,41 @@ placeholder="Nhập đáp án..."
             </Card>
 
           )}
+          {showAnswer && (
+
+  <Card className="mb-8 border-blue-300">
+
+    <CardHeader>
+
+      <CardTitle>
+
+        Đáp án đã được mở
+
+      </CardTitle>
+
+    </CardHeader>
+
+    <CardContent>
+
+      <p className="text-sm text-muted-foreground">
+
+        Đáp án đúng đã được hiển thị ngay trên từng câu hỏi.
+
+        <br />
+
+        Màu xanh là đáp án đúng.
+
+        <br />
+
+        Màu đỏ là đáp án bạn làm sai.
+
+      </p>
+
+    </CardContent>
+
+  </Card>
+
+)}
 
           {/* ==========================================
               NÚT NỘP BÀI

@@ -149,7 +149,7 @@ async startExam(
       .select("*")
       .eq("id", examId)
       .single();
-
+      
   if (examError) throw examError;
 
   if (!exam.is_active) {
@@ -218,8 +218,7 @@ async startExam(
     })
     .select()
     .single();
-
-  if (error) throw error;
+ if (error) throw error;
 
   return attempt;
 }

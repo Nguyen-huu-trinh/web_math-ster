@@ -13,15 +13,26 @@ export async function POST(
   request: Request,
   { params }: Context
 ) {
-  const student = await requireStudent();
+  try {
+    const student = await requireStudent();
 
-  const { id } = await params;
+    const { id } = await params;
 
-  const attempt =
-    await studentExamService.startExam(
-      student.id,
-      id
+    const attempt =
+      await studentExamService.startExam(
+        id,
+        student.id
+      );
+
+    return NextResponse.json(attempt);
+
+  } catch (e: any) {
+
+    console.error("START EXAM ERROR:", e);
+
+    return NextResponse.json(
+      { message: e.message },
+      { status: 500 }
     );
-
-  return NextResponse.json(attempt);
+  }
 }

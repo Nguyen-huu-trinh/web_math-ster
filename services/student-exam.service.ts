@@ -9,8 +9,9 @@ export class StudentExamService {
   studentId: string
 ) {
   return studentExamRepository.startExam(
+     
     examId,
-    studentId
+   studentId,
   );
 }
 async getAttemptDetail(

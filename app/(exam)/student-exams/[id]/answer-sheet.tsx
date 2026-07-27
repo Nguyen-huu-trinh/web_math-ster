@@ -682,7 +682,7 @@ className="rounded-lg border p-3"
 
 </div>
 
-<div className="flex gap-2">
+<div className="grid grid-cols-4 gap-1">
 
   {Array.from({
     length: SHORT_ANSWER_COLS,

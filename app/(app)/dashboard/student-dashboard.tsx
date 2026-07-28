@@ -94,25 +94,25 @@ export default function StudentDashboard() {
                 <p className="mt-1 text-muted-foreground">
                     <p className="bg-gradient-to-r from-red-500 to-yellow-400 bg-clip-text text-transparent font-bold">
                         🔥 Những bạn học dở nhất:
-                    </p>{" "}
+                    </p>
                     <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Võ Thị Như Ý
-                    </p>{", "}
+                    </p>
                     <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Vũ Tina Diễm
-                    </p>{", "}
+                    </p>
                     <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Nguyễn Thị Phương Ly
-                    </p>{", "}
+                    </p>
                     <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Chương Hồng Ân
-                    </p>{", "}
+                    </p>
                     <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Trần Hải Yến
-                    </p>{", "}
+                    </p>
                     <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Nguyễn Ngọc Bảo Trân
-                    </p>{", "}
+                    </p>
                     <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Lương Yến Nhi
                     </p>

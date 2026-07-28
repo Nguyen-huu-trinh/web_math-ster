@@ -354,20 +354,20 @@ function isCompleted(lesson: any) {
               ).length
               } Video   
             <span aria-hidden>·</span>
-              Lesson {lessonIndex + 1} of {allLessons.length}
+              Bài học {lessonIndex + 1} trong {allLessons.length}
             </div>
             <h1 className="font-serif text-2xl font-semibold tracking-tight text-balance">
               {lesson.title}
             </h1>
             <p className="text-muted-foreground">
 
-              This lesson contains
+              Bài học này có 
 
               <strong>
               {" "}
               {lesson.contents?.length ?? 0}
               {" "}
-              resources
+              tài liệu
               </strong>
 
               .
@@ -388,14 +388,14 @@ function isCompleted(lesson: any) {
                 ) : (
                   <Circle data-icon="inline-start" />
                 )}
-                {completed ? 'Completed' : 'Mark as complete'}
+                {completed ? 'Hoàn thành' : 'Đánh dấu hoàn thành'}
               </Button>
               {nextLesson ? (
                 <Link
                   href={`/courses/${course.id}/lessons/${nextLesson.id}`}
               >
                   <Button variant="ghost">
-                      Next lesson
+                      Bài học tiếp theo
                       <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
               </Link>
@@ -403,7 +403,7 @@ function isCompleted(lesson: any) {
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline">Edit lesson</Button>
+              <Button variant="outline">Chỉnh sửa bài học</Button>
               <Button
                   variant="outline"
                   onClick={()=>{
@@ -427,14 +427,14 @@ function isCompleted(lesson: any) {
   <Card>
     <CardHeader>
       <CardTitle className="text-base">
-        Resources
+        Tài liệu
       </CardTitle>
     </CardHeader>
 
     <CardContent className="flex flex-col gap-2">
       {(lesson.contents ?? []).length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          No resources for this lesson.
+          Chưa có tài liệu bài học này.
         </p>
       ) : (
         (lesson.contents ?? []).map((resource: any) => (
@@ -492,7 +492,7 @@ function isCompleted(lesson: any) {
 
                 }}
             >
-                Open
+                Mở
             </Button>
               </a>
             )}
@@ -561,7 +561,7 @@ function isCompleted(lesson: any) {
           {/* Lesson list */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">In this course</CardTitle>
+              <CardTitle className="text-base">Khoá học này</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-1">
               {allLessons.map((l: any, i: number) => (

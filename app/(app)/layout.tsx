@@ -8,9 +8,9 @@ import { Topbar } from '@/components/layout/topbar'
 import { Spinner } from '@/components/ui/spinner'
 
 const TITLES: Record<string, string> = {
-  "/dashboard": "Dashboard",
+  "/dashboard": "Trang chủ",
   "/courses": "Khóa học",
-  "/student-exams": "Đề thi của tôi",
+  "/student-exams": "Bài kiểm tra",
   "/exams": "Quản lý đề thi",
   "/exams/create": "Tạo đề thi",
   "/students": "Quản lý học sinh",

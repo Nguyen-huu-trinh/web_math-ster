@@ -105,9 +105,6 @@ export default function StudentDashboard() {
                         Vũ Tina Diễm
                     </p>
                     <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold pl-4">
-                        Nguyễn Thị Phương Ly
-                    </p>
-                    <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold pl-4">
                         Chương Hồng Ân
                     </p>
                     <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold pl-4">

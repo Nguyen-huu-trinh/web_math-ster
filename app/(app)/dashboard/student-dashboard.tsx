@@ -91,12 +91,26 @@ export default function StudentDashboard() {
                         profile?.full_name}
                 </h2>
 
-                <div className="mt-1 flex items-center gap-2">
-  <span className="text-muted-foreground">Những bạn học dở nhất:</span>
-  <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold px-3 py-1 rounded-full text-sm shadow-lg">
-    Võ Thị Như Ý
-  </span>
-</div>
+                <div className="mt-1 bg-red-50 border border-red-200 rounded-lg p-2 inline-block">
+                    <p className="text-muted-foreground">
+                        <span className="text-red-600 font-bold">🔴 Những bạn học DỞ nhất:</span>{" "}
+                        <span className="text-red-700 font-bold bg-red-100 px-2 py-0.5 rounded">
+                        Võ Thị Như Ý
+                        </span>
+                        <span className="text-red-700 font-bold bg-red-100 px-2 py-0.5 rounded">
+                        Vũ Tina Diễm
+                        </span>
+                        <span className="text-red-700 font-bold bg-red-100 px-2 py-0.5 rounded">
+                        Nguyễn Ngọc Bảo Trân
+                        </span>
+                        <span className="text-red-700 font-bold bg-red-100 px-2 py-0.5 rounded">
+                        Lương Yến Nhi
+                        </span>
+                        <span className="text-red-700 font-bold bg-red-100 px-2 py-0.5 rounded">
+                        Trần Hải Yến
+                        </span>
+                    </p>
+                </div>
 
             </div>
 

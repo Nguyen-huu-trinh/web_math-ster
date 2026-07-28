@@ -143,7 +143,7 @@ export function Topbar({
             </InputGroupAddon>
 
             <InputGroupInput
-              placeholder="Search..."
+              placeholder="Tìm kiếm..."
             />
 
           </InputGroup>

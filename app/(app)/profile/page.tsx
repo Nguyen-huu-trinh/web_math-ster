@@ -100,8 +100,8 @@ export default function ProfilePage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Profile"
-        description="Manage your personal information and password."
+        title="Hồ sơ"
+        description="Thông tin cá nhân và mật khẩu"
       />
 
       <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
@@ -216,7 +216,7 @@ export default function ProfilePage() {
 
                       <Label htmlFor="code">
                         <IdCard className="mr-1 inline size-3" />
-                        Student Code
+                        Mã số học sinh
                       </Label>
 
                       <Input
@@ -242,11 +242,11 @@ export default function ProfilePage() {
             <CardHeader>
 
               <CardTitle>
-                Change password
+                Đổi mật khẩu
               </CardTitle>
 
               <CardDescription>
-                Use a strong password you don't reuse elsewhere.
+                Đổi mật khẩu xong ghi lại dùm còn không đừng đổi để xài đại đi
               </CardDescription>
 
             </CardHeader>
@@ -261,7 +261,7 @@ export default function ProfilePage() {
                 <div>
 
                   <Label htmlFor="current">
-                    Current password
+                    Mật khẩu hiện tại
                   </Label>
 
                   <Input
@@ -280,7 +280,7 @@ export default function ProfilePage() {
                   <div>
 
                     <Label htmlFor="new">
-                      New password
+                      Mật khẩu mới
                     </Label>
 
                     <Input
@@ -295,7 +295,7 @@ export default function ProfilePage() {
                   <div>
 
                     <Label htmlFor="confirm">
-                      Confirm password
+                      Nhập lại mật khẩu
                     </Label>
 
                     <Input
@@ -316,7 +316,7 @@ export default function ProfilePage() {
                     variant="outline"
                   >
                     <KeyRound className="mr-2 size-4" />
-                    Update Password
+                    Cập nhập mật khẩu
                   </Button>
 
                 </div>

@@ -96,7 +96,7 @@ export function SidebarNav({
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40">
-          Menu
+          ...
         </p>
 
         <div className="flex flex-col gap-1">

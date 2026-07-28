@@ -23,10 +23,10 @@ export function CountdownCard() {
   }, [])
 
   const units = [
-    { label: 'Days', value: parts.days },
-    { label: 'Hours', value: parts.hours },
-    { label: 'Minutes', value: parts.minutes },
-    { label: 'Seconds', value: parts.seconds },
+    { label: 'Ngày', value: parts.days },
+    { label: 'Giờ', value: parts.hours },
+    { label: 'Phút', value: parts.minutes },
+    { label: 'Giây', value: parts.seconds },
   ]
 
   return (
@@ -38,11 +38,11 @@ export function CountdownCard() {
             <CalendarClock className="size-5" />
           </span>
           <div>
-            <p className="text-xs font-medium uppercase tracking-widest text-primary">Countdown</p>
+            <p className="text-xs font-medium uppercase tracking-widest text-primary">Đếm ngược</p>
             <h3 className="text-balance text-lg font-bold">
-              Vietnam High School Graduation Exam 2027
+              Kỳ thi tốt nghiệp THPT năm 2027
             </h3>
-            <p className="text-sm text-sidebar-foreground/60">Target date · June 26, 2027</p>
+            <p className="text-sm text-sidebar-foreground/60">Ngày thi · 26 tháng 6 năm 2027</p>
           </div>
         </div>
 

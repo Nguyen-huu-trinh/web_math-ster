@@ -59,8 +59,8 @@ export const NAV_ITEMS: NavItem[] = [
 ]
 
 export const SECONDARY_NAV: NavItem[] = [
-  { label: 'Profile', href: '/profile', icon: 'CircleUser', roles: ['teacher', 'student'] },
-  { label: 'Settings', href: '/settings', icon: 'Settings', roles: ['teacher', 'student'] },
+  { label: 'Hồ sơ', href: '/profile', icon: 'CircleUser', roles: ['teacher', 'student'] },
+  { label: 'Cài đặt', href: '/settings', icon: 'Settings', roles: ['teacher', 'student'] },
 ]
 
 export function navForRole(role: Role) {

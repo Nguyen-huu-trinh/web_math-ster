@@ -92,7 +92,7 @@ export default function StudentDashboard() {
                 </h2>
 
                 <p className="mt-1 text-muted-foreground">
-                    Hướng tới kì thi THPTQG 2027
+                    Những bạn học dở nhất
                 </p>
 
             </div>

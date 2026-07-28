@@ -92,7 +92,8 @@ export default function StudentDashboard() {
                 </h2>
 
                 <p className="mt-1 text-muted-foreground">
-                    Những bạn học dở nhất
+                    Những bạn học dở nhất: 
+                    Võ Thị Như Ý
                 </p>
 
             </div>

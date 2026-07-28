@@ -91,14 +91,14 @@ export default function StudentDashboard() {
                         profile?.full_name}
                 </h2>
 
-                <p className="mt-1 text-muted-foreground">
-  <span className="bg-gradient-to-r from-red-500 to-yellow-400 bg-clip-text text-transparent font-bold">
-    🔥 Những bạn học dở nhất:
-  </span>{" "}
-  <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
-    Võ Thị Như Ý
-  </span>
-</p>
+                <div className="mt-1 bg-red-50 border border-red-200 rounded-lg p-2 inline-block">
+  <p className="text-muted-foreground">
+    <span className="text-red-600 font-bold">🔴 Những bạn học dở nhất:</span>{" "}
+    <span className="text-red-700 font-bold bg-red-100 px-2 py-0.5 rounded">
+      Võ Thị Như Ý
+    </span>
+  </p>
+</div>
 
             </div>
 

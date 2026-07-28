@@ -109,6 +109,12 @@ export default function StudentDashboard() {
                         <span className="text-red-700 font-bold bg-red-100 px-2 py-0.5 rounded">
                         Trần Hải Yến
                         </span>
+                        <span className="text-red-700 font-bold bg-red-100 px-2 py-0.5 rounded">
+                        Chương Hồng Ân
+                        </span>
+                        <span className="text-red-700 font-bold bg-red-100 px-2 py-0.5 rounded">
+                        Nguyễn Thị Phương Ly
+                        </span>
                     </p>
                 </div>
 

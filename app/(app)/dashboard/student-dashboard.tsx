@@ -95,10 +95,10 @@ export default function StudentDashboard() {
                     <p className="bg-gradient-to-r from-red-500 to-yellow-400 bg-clip-text text-transparent font-bold">
                         🔥 Những bạn học dở nhất:
                     </p>
-                    <p className="text-red-700 font-bold bg-red-100 px-2 py-0.5 rounded pl-4 text-2xl">
+                    <p className="text-[#8B6508] font-bold bg-[#F5E56B] px-2 py-0.5 rounded pl-4 text-2xl">
                         Võ Thị Như Ý (dở nhất)
                     </p>
-                     <p className="text-red-700 font-bold bg-red-100 px-2 py-0.5 rounded pl-4 text-2xl">
+                    <p className="text-[#8B6508] font-bold bg-[#F5E56B] px-2 py-0.5 rounded pl-4 text-2xl">
                         Thái Khánh Băng (phá nhất)
                     </p>
                     <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold pl-4">

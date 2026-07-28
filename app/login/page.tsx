@@ -116,7 +116,7 @@ export default function LoginPage() {
                   onCheckedChange={(v) => setRemember(Boolean(v))}
                 />
                 <label htmlFor="remember" className="text-sm text-muted-foreground">
-                  Remember me for 30 days
+                  Nhớ tài khoản trong 30 ngày
                 </label>
               </div>
 

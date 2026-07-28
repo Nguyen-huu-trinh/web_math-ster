@@ -345,7 +345,7 @@ async function updateLesson(values: LessonFormValues) {
 
             <BookOpen className="size-4" />
 
-            {course.totalLessons} Lessons
+            {course.totalLessons} bài
 
           </div>
 

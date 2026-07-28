@@ -122,49 +122,49 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   {
-    label: "Dashboard",
+    label: "Trang chủ",
     href: "/dashboard",
     icon: "LayoutDashboard",
     roles: ["ADMIN", "TEACHER", "STUDENT"],
   },
 
   {
-    label: "Courses",
+    label: "Khoá học",
     href: "/courses",
     icon: "GraduationCap",
     roles: ["ADMIN", "TEACHER", "STUDENT"],
   },
 
   {
-    label: "My Exams",
+    label: "Bài Kiểm Tra",
     href: "/student-exams",
     icon: "FileText",
     roles: ["STUDENT"],
   },
 
   {
-    label: "Manage Exams",
+    label: "Quản Lý Bài Kiểm Tra",
     href: "/exams",
     icon: "ClipboardList",
     roles: ["ADMIN", "TEACHER"],
   },
 
   {
-    label: "Create Exam",
+    label: "Tạo Bài Kiểm Tra",
     href: "/exams/create",
     icon: "FilePlus2",
     roles: ["ADMIN", "TEACHER"],
   },
 
   {
-    label: "Students",
+    label: "Học Sinh",
     href: "/students",
     icon: "Users",
     roles: ["ADMIN", "TEACHER"],
   },
 
   {
-    label: "Accounts",
+    label: "Tài Khoản",
     href: "/accounts",
     icon: "UserCog",
     roles: ["ADMIN"],
@@ -173,14 +173,14 @@ export const NAV_ITEMS: NavItem[] = [
 
 export const SECONDARY_NAV: NavItem[] = [
   {
-    label: "Profile",
+    label: "Hồ sơ",
     href: "/profile",
     icon: "CircleUser",
     roles: ["ADMIN", "TEACHER", "STUDENT"],
   },
 
   {
-    label: "Settings",
+    label: "Cài đặt",
     href: "/settings",
     icon: "Settings",
     roles: ["ADMIN", "TEACHER", "STUDENT"],

@@ -37,7 +37,7 @@ export default function StudentDashboard() {
     ) {
         return (
             <div className="flex justify-center py-20">
-                Loading ...
+                Đang tải ...
             </div>
         )
     }

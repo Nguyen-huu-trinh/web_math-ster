@@ -194,11 +194,11 @@ export default function CoursesPage() {
     <div className="flex flex-col gap-6">
 
       <PageHeader
-        title="Courses"
+        title="Khoá học"
         description={
           role === "TEACHER"
             ? "Manage your courses, chapters and lessons."
-            : "Continue learning and track your progress."
+            : "Vô học bớt lười đi."
         }
       //   action={
       //     role === "TEACHER" ? (
@@ -237,7 +237,7 @@ export default function CoursesPage() {
 
         <div className="py-20 text-center">
 
-          Loading...
+          Đang tải...
 
         </div>
 

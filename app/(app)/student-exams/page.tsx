@@ -104,8 +104,8 @@ export default function StudentExamsPage() {
     <div className="space-y-6">
 
       <PageHeader
-        title="Bài tập của tôi"
-        description="Danh sách các bài tập và đề thi trong khóa học."
+        title="Bài kiểm tra"
+        description="Danh sách các bài kiểm tra định kì và bài điểm danh."
       />
 
       <div className="space-y-4">

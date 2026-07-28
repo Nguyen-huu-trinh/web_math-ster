@@ -25,7 +25,7 @@ export function CourseToolbar({
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <InputGroup className="sm:max-w-sm">
         <InputGroupInput
-          placeholder="Search course..."
+          placeholder="Tìm khoá học..."
           value={keyword}
           onChange={(e) =>
             onKeywordChange(e.target.value)

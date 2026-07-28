@@ -92,30 +92,30 @@ export default function StudentDashboard() {
                 </h2>
 
                 <p className="mt-1 text-muted-foreground">
-                    <span className="bg-gradient-to-r from-red-500 to-yellow-400 bg-clip-text text-transparent font-bold">
+                    <p className="bg-gradient-to-r from-red-500 to-yellow-400 bg-clip-text text-transparent font-bold">
                         🔥 Những bạn học dở nhất:
-                    </span>{" "}
-                    <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
+                    </p>{" "}
+                    <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Võ Thị Như Ý
-                    </span>{", "}
-                    <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
+                    </p>{", "}
+                    <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Vũ Tina Diễm
-                    </span>{", "}
-                    <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
+                    </p>{", "}
+                    <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Nguyễn Thị Phương Ly
-                    </span>{", "}
-                    <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
+                    </p>{", "}
+                    <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Chương Hồng Ân
-                    </span>{", "}
-                    <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
+                    </p>{", "}
+                    <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Trần Hải Yến
-                    </span>{", "}
-                    <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
+                    </p>{", "}
+                    <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Nguyễn Ngọc Bảo Trân
-                    </span>{", "}
-                    <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
+                    </p>{", "}
+                    <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Lương Yến Nhi
-                    </span>
+                    </p>
                 </p>
 
             </div>

@@ -104,7 +104,7 @@ export function SidebarNav({
         </div>
 
         <p className="px-3 pb-2 pt-6 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40">
-          Account
+          Tài khoản
         </p>
 
         <div className="flex flex-col gap-1">

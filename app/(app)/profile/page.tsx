@@ -161,7 +161,7 @@ export default function ProfilePage() {
 
             <CardHeader>
               <CardTitle>
-                Personal information
+                Thông tin cá nhân
               </CardTitle>
             </CardHeader>
 
@@ -172,7 +172,7 @@ export default function ProfilePage() {
                   <div>
 
                     <Label htmlFor="name">
-                      Full name
+                      Họ tên
                     </Label>
                       <Input
                           id="name"
@@ -200,7 +200,7 @@ export default function ProfilePage() {
 
                   <div>
                     <Label htmlFor="personal_email">
-                      Personal Email
+                      Email thông báo không làm bài
                     </Label>
 
                     <Input

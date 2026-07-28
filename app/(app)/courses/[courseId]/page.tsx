@@ -296,7 +296,7 @@ async function updateLesson(values: LessonFormValues) {
         className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ChevronLeft className="size-4" />
-        Back to courses
+        Quay về
       </Link>
 
       <div className="grid gap-6 lg:grid-cols-[360px_1fr] items-start">

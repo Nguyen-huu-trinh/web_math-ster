@@ -97,19 +97,19 @@ export default function StudentDashboard() {
                     </span>{" "}
                     <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Võ Thị Như Ý
-                    </span>
+                    </span>{", "}
                     <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Vũ Tina Diễm
-                    </span>
+                    </span>{", "}
                     <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Nguyễn Thị Phương Ly
-                    </span>
+                    </span>{", "}
                     <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Chương Hồng Ân
-                    </span>
+                    </span>{", "}
                     <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Trần Hải Yến
-                    </span>
+                    </span>{", "}
                     <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Nguyễn Ngọc Bảo Trân
                     </span>

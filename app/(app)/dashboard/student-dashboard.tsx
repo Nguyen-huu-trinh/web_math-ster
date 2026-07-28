@@ -92,8 +92,10 @@ export default function StudentDashboard() {
                 </h2>
 
                 <p className="mt-1 text-muted-foreground">
-  <span className="text-red-500 font-bold">🔥 Những bạn học dở nhất:</span>{" "}
-  <span className="text-yellow-400 font-semibold bg-red-500/10 px-2 py-0.5 rounded">
+  <span className="bg-gradient-to-r from-red-500 to-yellow-400 bg-clip-text text-transparent font-bold">
+    🔥 Những bạn học dở nhất:
+  </span>{" "}
+  <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
     Võ Thị Như Ý
   </span>
 </p>

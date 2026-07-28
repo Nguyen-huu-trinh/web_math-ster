@@ -95,8 +95,8 @@ export default function StudentDashboard() {
                     <p className="bg-gradient-to-r from-red-500 to-yellow-400 bg-clip-text text-transparent font-bold">
                         🔥 Những bạn học dở nhất:
                     </p>
-                    <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold pl-4">
-                        Võ Thị Như Ý
+                    <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold pl-4 text-2xl">
+                        Võ Thị Như Ý (dở nhất)
                     </p>
                     <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold pl-4">
                         Vũ Tina Diễm
@@ -115,6 +115,9 @@ export default function StudentDashboard() {
                     </p>
                     <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold pl-4">
                         Lương Yến Nhi
+                    </p>
+                    <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold pl-4">
+                        Thái Khánh Băng
                     </p>
                 </p>
 

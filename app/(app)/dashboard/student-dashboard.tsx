@@ -112,6 +112,9 @@ export default function StudentDashboard() {
                     </span>{", "}
                     <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
                         Nguyễn Ngọc Bảo Trân
+                    </span>{", "}
+                    <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold">
+                        Lương Yến Nhi
                     </span>
                 </p>
 

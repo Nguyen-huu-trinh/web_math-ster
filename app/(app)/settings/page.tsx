@@ -52,14 +52,14 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Settings" description="Customise your experience and manage your account." />
+      <PageHeader title="Cài đặt" description="Tùy chỉnh trải nghiệm của bạn và quản lý tài khoản của bạn." />
 
       <div className="flex max-w-3xl flex-col gap-6">
         {/* Appearance */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Appearance</CardTitle>
-            <CardDescription>Choose how Math-ster looks to you.</CardDescription>
+            <CardTitle className="text-base">Giao diện</CardTitle>
+            <CardDescription>Chọn sáng tối thôi.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-3">
@@ -96,9 +96,9 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="text-base">
               <Languages className="size-4 text-muted-foreground" />
-              Language
+              Ngôn ngữ
             </CardTitle>
-            <CardDescription>Select your preferred language.</CardDescription>
+            <CardDescription>Chọn cũng không có tác dụng đâu.</CardDescription>
           </CardHeader>
           <CardContent>
             <Select defaultValue="en" onValueChange={(v) => toast.success(`Language: ${v}`)}>
@@ -118,16 +118,16 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="text-base">
               <Bell className="size-4 text-muted-foreground" />
-              Notifications
+              Thông báo
             </CardTitle>
-            <CardDescription>Decide what updates you receive.</CardDescription>
+            <CardDescription>Quyết định những cập nhật bạn nhận được.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-1">
             {[
-              { key: 'lessons', label: 'Lesson reminders', desc: 'Incomplete lessons and new content' },
-              { key: 'exams', label: 'Exam alerts', desc: 'Upcoming and graded exams' },
-              { key: 'attendance', label: 'Attendance', desc: 'Weekly check-in reminders' },
-              { key: 'weekly', label: 'Weekly summary', desc: 'Your progress digest every Sunday' },
+              { key: 'lessons', label: 'Nhắc nhở bài học', desc: 'Bài học chưa đầy đủ và nội dung mới' },
+              { key: 'exams', label: 'Thông báo bài kiểm tra', desc: 'Kỳ thi sắp tới và chấm điểm' },
+              { key: 'attendance', label: 'Tham dự', desc: 'Lời nhắc đăng ký hàng tuần' },
+              { key: 'weekly', label: 'Tóm tắt hàng tuần', desc: 'Thông báo tiến độ của bạn vào Chủ Nhật hàng tuần' },
             ].map((item, i, arr) => (
               <div key={item.key}>
                 <div className="flex items-center justify-between py-2.5">
@@ -156,20 +156,20 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="text-base">
               <ShieldCheck className="size-4 text-muted-foreground" />
-              Security
+              Bảo mật 
             </CardTitle>
-            <CardDescription>Protect your account.</CardDescription>
+            <CardDescription>Bảo vệ tài khoản. (không cần làm không có tác dụng gì đâu đổi mật khẩu ở trang hồ sơ)</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div className="flex flex-col">
-                <span className="text-sm font-medium">Two-factor authentication</span>
-                <span className="text-xs text-muted-foreground">Add an extra layer of security</span>
+                <span className="text-sm font-medium">Bảo mật 2 lớp</span>
+                <span className="text-xs text-muted-foreground">Thêm một lớp bảo mật bổ sung</span>
               </div>
               <Switch onCheckedChange={(c) => toast.success(c ? '2FA enabled' : '2FA disabled')} />
             </div>
             <Button variant="outline" className="w-fit" onClick={() => toast.info('Redirecting to profile')}>
-              Change password
+              Đổi mật khẩu (qua trang hồ sơ đổi)
             </Button>
           </CardContent>
         </Card>
@@ -178,14 +178,14 @@ export default function SettingsPage() {
         <Card>
           <CardContent className="flex flex-col gap-3 py-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col">
-              <span className="text-sm font-medium">Log out</span>
+              <span className="text-sm font-medium">Đăng xuất</span>
               <span className="text-xs text-muted-foreground">
-                Sign out of your Math-ster account on this device.
+                Đăng xuất khỏi tài khoản MATH-STER của bạn trên thiết bị này
               </span>
             </div>
             <Button variant="destructive" onClick={logout} className="w-fit">
               <LogOut data-icon="inline-start" />
-              Log out
+              Đăng xuất
             </Button>
           </CardContent>
         </Card>

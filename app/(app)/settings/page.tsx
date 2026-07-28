@@ -23,9 +23,9 @@ import { cn } from '@/lib/utils'
 type ThemePref = 'light' | 'dark' | 'system'
 
 const THEME_OPTIONS: { value: ThemePref; label: string; icon: typeof Sun }[] = [
-  { value: 'light', label: 'Light', icon: Sun },
-  { value: 'dark', label: 'Dark', icon: Moon },
-  { value: 'system', label: 'System', icon: Monitor },
+  { value: 'light', label: 'Sáng', icon: Sun },
+  { value: 'dark', label: 'Tối', icon: Moon },
+  { value: 'system', label: 'Hệ thống', icon: Monitor },
 ]
 
 export default function SettingsPage() {

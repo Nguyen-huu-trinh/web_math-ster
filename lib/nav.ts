@@ -9,49 +9,49 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   {
-    label: "Dashboard",
+    label: "Trang chủ",
     href: "/dashboard",
     icon: "LayoutDashboard",
     roles: ["teacher", "student"],
   },
 
   {
-    label: "Courses",
+    label: "Khoá học",
     href: "/courses",
     icon: "GraduationCap",
     roles: ["teacher", "student"],
   },
 
   {
-    label: "My Exams",
+    label: "Bài Kiểm Tra",
     href: "/student-exams",
     icon: "FileText",
     roles: ["student"],
   },
 
   {
-    label: "Manage Exams",
+    label: "Quản Lý Bài Kiểm Tra",
     href: "/exams",
     icon: "ClipboardList",
     roles: ["teacher"],
   },
 
   {
-    label: "Create Exam",
+    label: "Tạo Bài Kiểm Tra",
     href: "/exams/create",
     icon: "FilePlus2",
     roles: ["teacher"],
   },
 
   {
-    label: "Students",
+    label: "Học Sinh",
     href: "/students",
     icon: "Users",
     roles: ["teacher"],
   },
 
   {
-    label: "Accounts",
+    label: "Tài Khoản",
     href: "/accounts",
     icon: "UserCog",
     roles: ["teacher"],

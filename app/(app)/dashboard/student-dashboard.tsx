@@ -92,9 +92,11 @@ export default function StudentDashboard() {
                 </h2>
 
                 <p className="mt-1 text-muted-foreground">
-                    Những bạn học dở nhất: 
-                    Võ Thị Như Ý
-                </p>
+  <span className="text-red-500 font-bold">🔥 Những bạn học dở nhất:</span>{" "}
+  <span className="text-yellow-400 font-semibold bg-red-500/10 px-2 py-0.5 rounded">
+    Võ Thị Như Ý
+  </span>
+</p>
 
             </div>
 

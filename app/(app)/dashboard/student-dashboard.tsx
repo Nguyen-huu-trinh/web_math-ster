@@ -91,6 +91,10 @@ export default function StudentDashboard() {
                         profile?.full_name}
                 </h2>
 
+                <div className="mt-4 rounded-xl border-2 border-orange-400 bg-orange-50 px-4 py-3 text-orange-800 font-medium shadow-md">
+  ⏰ 20h ngày 29/7 — Sửa bài thực tế
+</div>
+
                 <p className="mt-1 text-muted-foreground">
                     <p className="bg-gradient-to-r from-red-500 to-yellow-400 bg-clip-text text-transparent font-bold">
                         🔥 Những bạn học dở nhất:

@@ -92,8 +92,11 @@ export default function StudentDashboard() {
                 </h2>
 
                 <div className="mt-4 rounded-xl border-2 border-orange-400 bg-orange-50 px-4 py-3 text-orange-800 font-medium shadow-md">
-  ⏰ 20h ngày 29/7 — Sửa bài thực tế
-</div>
+                    ⏰ 21h ngày 29/7 — Học thực tế: min max quãng đường <br />
+                    ⏰ 20h ngày 30/7 - Chữa bài tập tối ưu doanh thu chi phí <br />
+                    ⏰ 18h ngày 30/7 - Chữa tiếp tục tối ưu diện tích, thể tích
+
+                </div>
 
                 <p className="mt-1 text-muted-foreground">
                     <p className="bg-gradient-to-r from-red-500 to-yellow-400 bg-clip-text text-transparent font-bold">

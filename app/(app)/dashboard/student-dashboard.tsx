@@ -95,7 +95,7 @@ export default function StudentDashboard() {
                     BÀI TẬP ĐIỂM DANH TRÊN WEB CHƯA ĐƯỢC, MAI HÃY VÀO <br />
                     Hằng tuần vào cuối tuần sẽ có bữa học BẮT BUỘC PHẢI VÀO để hỏi và trả lời<br />
                     ⏰ 21h ngày 31/7 — Chữa bài tập tối ưu doanh thu chi phí <br />
-                    ⏰ 13h ngày 1/8 - Chữa bài tập min max quãng đường thời gian <br />gia
+                    ⏰ 13h ngày 1/8 - Chữa bài tập min max quãng đường thời gian <br />
 
                 </div>
 

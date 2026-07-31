@@ -92,10 +92,10 @@ export default function StudentDashboard() {
                 </h2>
 
                 <div className="mt-4 rounded-xl border-2 border-orange-400 bg-orange-50 px-4 py-3 text-orange-800 font-medium shadow-md">
-                    BÀI TẬP ĐIỂM DANH TRÊN WEB CHƯA ĐƯỢC MAI HÃY VÀO <br />
-                    ⏰ 21h ngày 29/7 — Học thực tế: min max quãng đường <br />
-                    ⏰ 20h ngày 30/7 - Chữa bài tập tối ưu doanh thu chi phí <br />
-                    ⏰ 18h ngày 30/7 - Chữa tiếp tục tối ưu diện tích, thể tích
+                    BÀI TẬP ĐIỂM DANH TRÊN WEB CHƯA ĐƯỢC, MAI HÃY VÀO <br />
+                    Hằng tuần vào cuối tuần sẽ có bữa học BẮT BUỘC PHẢI VÀO để hỏi và trả lời<br />
+                    ⏰ 21h ngày 31/7 — Chữa bài tập tối ưu doanh thu chi phí <br />
+                    ⏰ 13h ngày 1/8 - Chữa bài tập min max quãng đường thời gian <br />gia
 
                 </div>
 

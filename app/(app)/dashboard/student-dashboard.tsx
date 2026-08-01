@@ -94,8 +94,8 @@ export default function StudentDashboard() {
                 <div className="mt-4 rounded-xl border-2 border-orange-400 bg-orange-50 px-4 py-3 text-orange-800 font-medium shadow-md">
                     BÀI TẬP ĐIỂM DANH TRÊN WEB ĐÃ CÓ FILE, CHƯA CÓ LINK ĐIỀN NHƯ TRƯỚC CÁC EM VÀO MỞ FILE LÀM NHA<br />
                     Hằng tuần vào cuối tuần sẽ có bữa học BẮT BUỘC PHẢI VÀO để hỏi và trả lời<br />
-                    ⏰ 21h ngày 31/7 — Chữa bài tập tối ưu doanh thu chi phí <br />
-                    ⏰ 13h ngày 1/8 - Chữa bài tập min max quãng đường thời gian <br />
+                    ⏰ 21h ngày 3/8 — Học logarit, mũ, lượng giác, csc, csn <br />
+                    ⏰ 20h ngày 4/8 - Chữa bài tập min max quãng đường thời gian <br />
 
                 </div>
 

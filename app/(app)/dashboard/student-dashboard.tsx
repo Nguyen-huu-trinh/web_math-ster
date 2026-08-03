@@ -98,7 +98,7 @@ export default function StudentDashboard() {
                     ⏰ 20h ngày 4/8 - Chữa bài tập min max quãng đường thời gian <br />
 
                 </div>
-
+{/* 
                 <p className="mt-1 text-muted-foreground">
                     <p className="bg-gradient-to-r from-red-500 to-yellow-400 bg-clip-text text-transparent font-bold">
                         🔥 Những bạn học dở nhất:
@@ -124,7 +124,7 @@ export default function StudentDashboard() {
                     <p className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent font-bold pl-4">
                         Lương Yến Nhi
                     </p>
-                </p>
+                </p> */}
 
             </div>
 

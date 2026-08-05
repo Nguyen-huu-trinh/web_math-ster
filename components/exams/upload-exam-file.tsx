@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 
 import { Button } from "@/components/ui/button";
+import { useUploadExamFile } from "@/hooks/use-exams";
 
 interface Props {
   value: string;
@@ -14,7 +15,7 @@ export function UploadExamFile({
   value,
   onChange,
 }: Props) {
-  const [loading, setLoading] = useState(false);
+  const uploadExamFile = useUploadExamFile();
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -22,32 +23,13 @@ export function UploadExamFile({
 
       if (!file) return;
 
-      setLoading(true);
-
       try {
-        const formData = new FormData();
-
-        formData.append("file", file);
-
-        const response = await fetch(
-          "/api/exams/upload",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        if (!response.ok)
-          throw new Error();
-
-        const data = await response.json();
+        const data = await uploadExamFile.mutateAsync(file);
 
         onChange(data.url);
-      } finally {
-        setLoading(false);
-      }
+      } catch {}
     },
-    [onChange]
+    [onChange, uploadExamFile]
   );
 
   const { getRootProps, getInputProps } =
@@ -78,7 +60,7 @@ export function UploadExamFile({
 
       </div>
 
-      {loading && (
+      {uploadExamFile.isPending && (
         <Button disabled>
           Uploading...
         </Button>

@@ -14,7 +14,7 @@ export class CourseRepository {
 
     const { data, error } = await supabase
       .from("courses")
-      .select("*")
+      .select("id, name, description, thumbnail_url, is_active, deleted_at, created_at, updated_at")
       .is("deleted_at", null)
       .order("created_at", {
         ascending: true,
@@ -46,7 +46,7 @@ export class CourseRepository {
 
     const { data, error } = await supabase
       .from("courses")
-      .select("*")
+      .select("id, name, description, thumbnail_url, is_active, deleted_at, created_at, updated_at")
       .eq("id", id)
       .single();
 

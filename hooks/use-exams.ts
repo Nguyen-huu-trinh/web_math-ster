@@ -22,6 +22,7 @@ export function useExams() {
   return useQuery({
     queryKey: queryKeys.exam.all,
     queryFn: () => examClientService.getAll(),
+    staleTime: 1000 * 60 * 5,
   });
 }
 
@@ -30,6 +31,7 @@ export function useExam(id: string) {
     enabled: !!id,
     queryKey: queryKeys.exam.detail(id),
     queryFn: () => examClientService.getById(id),
+    staleTime: 1000 * 60 * 5,
   });
 }
 
@@ -38,6 +40,7 @@ export function useAnswerKey(id: string) {
     enabled: !!id,
     queryKey: queryKeys.exam.answerKey(id),
     queryFn: () => examClientService.getAnswerKey(id),
+    staleTime: 1000 * 60 * 5,
   });
 }
 
@@ -129,6 +132,10 @@ export function useUpdateAnswerKey() {
           ),
       });
 
+      qc.invalidateQueries({
+        queryKey: queryKeys.exam.detail(variables.id),
+      });
+
     },
 
   });
@@ -144,10 +151,14 @@ export function usePublishExam() {
     mutationFn: (id: string) =>
       examClientService.publish(id),
 
-    onSuccess() {
+    onSuccess(_, id) {
 
       qc.invalidateQueries({
         queryKey: queryKeys.exam.all,
+      });
+
+      qc.invalidateQueries({
+        queryKey: queryKeys.exam.detail(id),
       });
 
     },
@@ -165,10 +176,14 @@ export function useCloseExam() {
     mutationFn: (id: string) =>
       examClientService.close(id),
 
-    onSuccess() {
+    onSuccess(_, id) {
 
       qc.invalidateQueries({
         queryKey: queryKeys.exam.all,
+      });
+
+      qc.invalidateQueries({
+        queryKey: queryKeys.exam.detail(id),
       });
 
     },
@@ -186,10 +201,14 @@ export function useDuplicateExam() {
     mutationFn: (id: string) =>
       examClientService.duplicate(id),
 
-    onSuccess() {
+    onSuccess(_, id) {
 
       qc.invalidateQueries({
         queryKey: queryKeys.exam.all,
+      });
+
+      qc.invalidateQueries({
+        queryKey: queryKeys.exam.detail(id),
       });
 
     },
@@ -207,14 +226,28 @@ export function useDeleteExam() {
     mutationFn: (id: string) =>
       examClientService.delete(id),
 
-    onSuccess() {
+    onSuccess(_, id) {
 
       qc.invalidateQueries({
         queryKey: queryKeys.exam.all,
+      });
+
+      qc.removeQueries({
+        queryKey: queryKeys.exam.detail(id),
+      });
+
+      qc.removeQueries({
+        queryKey: queryKeys.exam.answerKey(id),
       });
 
     },
 
   });
 
+}
+
+export function useUploadExamFile() {
+  return useMutation({
+    mutationFn: (file: File) => examClientService.upload(file),
+  });
 }

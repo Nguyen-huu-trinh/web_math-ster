@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useCallback,
   useState,
   ReactNode,
 } from "react";
@@ -11,10 +12,10 @@ import {
 import { User } from "@supabase/supabase-js";
 
 import { authService } from "@/services/auth.service";
-import { profileClientService } from "@/services/profile-client.service";
-
-import { Profile } from "@/types/profile";
 import { AuthContextType } from "@/types/auth";
+import { useProfile } from "@/hooks/use-profile";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/react-query/query-keys";
 
 const AuthContext =
   createContext<AuthContextType | null>(null);
@@ -27,13 +28,14 @@ export function AuthProvider({
   const [user, setUser] =
     useState<User | null>(null);
 
-  const [profile, setProfile] =
-    useState<Profile | null>(null);
-
   const [loading, setLoading] =
     useState(true);
 
-  async function refresh() {
+  const queryClient = useQueryClient();
+  const profileQuery = useProfile(user?.id);
+  const profile = profileQuery.data ?? null;
+
+  const refresh = useCallback(async () => {
     setLoading(true);
 
     try {
@@ -42,28 +44,25 @@ export function AuthProvider({
 
       if (!currentUser) {
         setUser(null);
-        setProfile(null);
         return;
       }
 
-      const currentProfile =
-        await profileClientService.getCurrentProfile();
-
       setUser(currentUser);
-      setProfile(currentProfile);
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.profile.detail(currentUser.id),
+      });
     } catch (error) {
       console.error(error);
 
       setUser(null);
-      setProfile(null);
     } finally {
       setLoading(false);
     }
-  }
+  }, [queryClient]);
 
   useEffect(() => {
     void refresh();
-  }, []);
+  }, [refresh]);
 
   async function login(
     email: string,
@@ -78,10 +77,16 @@ export function AuthProvider({
   }
 
   async function logout() {
+    const userId = user?.id;
+
     await authService.logout();
 
     setUser(null);
-    setProfile(null);
+    if (userId) {
+      queryClient.removeQueries({
+        queryKey: queryKeys.profile.detail(userId),
+      });
+    }
   }
 
   return (

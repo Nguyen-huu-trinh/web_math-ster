@@ -6,9 +6,54 @@ import { useLeaderboard } from '@/hooks/use-leaderboard'
 
 import { StatCard } from '@/components/dashboard/stat-card'
 import { CountdownCard } from '@/components/dashboard/countdown-card'
-import { TeacherActivityChart } from '@/components/dashboard/dashboard-charts'
-import { LeaderboardCard } from '@/components/dashboard/leaderboard-card'
-import { NotificationsCard } from '@/components/dashboard/notifications-card'
+// import { TeacherActivityChart } from '@/components/dashboard/dashboard-charts'
+// import { LeaderboardCard } from '@/components/dashboard/leaderboard-card'
+// import { NotificationsCard } from '@/components/dashboard/notifications-card'
+
+import dynamic from "next/dynamic";
+
+const TeacherActivityChart = dynamic(
+  () =>
+    import("@/components/dashboard/dashboard-charts").then(
+      (m) => ({
+        default: m.TeacherActivityChart,
+      })
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[320px] rounded-xl border animate-pulse bg-muted" />
+    ),
+  }
+);
+
+const LeaderboardCard = dynamic(
+  () =>
+    import("@/components/dashboard/leaderboard-card").then(
+      (m) => ({
+        default: m.LeaderboardCard,
+      })
+    ),
+  {
+    loading: () => (
+      <div className="h-72 rounded-xl border animate-pulse bg-muted" />
+    ),
+  }
+);
+
+const NotificationsCard = dynamic(
+  () =>
+    import("@/components/dashboard/notifications-card").then(
+      (m) => ({
+        default: m.NotificationsCard,
+      })
+    ),
+  {
+    loading: () => (
+      <div className="h-72 rounded-xl border animate-pulse bg-muted" />
+    ),
+  }
+);
 
 function greeting() {
 

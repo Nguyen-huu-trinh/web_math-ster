@@ -9,6 +9,22 @@ import {
 
 export class ExamClientService {
 
+  async upload(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/api/exams/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error("Upload failed");
+    }
+
+    return response.json() as Promise<{ url: string }>;
+  }
+
   getAll() {
     return apiClient.get<Exam[]>(
       "/api/exams"

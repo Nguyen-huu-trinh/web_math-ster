@@ -3,7 +3,6 @@ import { ResourceDialog } from "@/components/lesson-resources/resource-dialog";
 
 import { DeleteResourceDialog } from "@/components/lesson-resources/delete-resource-dialog";
 
-import { lessonContentService } from "@/services/lesson-content.service";
 import { use, useEffect, useState } from "react";
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -28,9 +27,15 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/providers/auth-provider'
 import { toast } from 'sonner'
 
-import { getCourseDetail } from "@/services/course-detail.service";
-
-import { learningProgressService } from "@/services/learning-progress.service";
+import {
+  useCourseDetail,
+} from "@/hooks/use-course-detail";
+import {
+  useCreateLessonContent,
+  useDeleteLessonContent,
+  useSaveLearningProgress,
+  useUpdateLessonContent,
+} from "@/hooks/use-lesson";
 
 
 
@@ -85,8 +90,12 @@ export default function LessonPage({
   const { profile } = useAuth();
 
   const role = profile?.role;
-  const [course, setCourse] =
-    useState<any>(null);
+  const courseQuery = useCourseDetail(courseId, profile?.id);
+  const createLessonContentMutation = useCreateLessonContent(courseId);
+  const updateLessonContentMutation = useUpdateLessonContent(courseId);
+  const deleteLessonContentMutation = useDeleteLessonContent(courseId);
+  const saveLearningProgressMutation = useSaveLearningProgress(courseId);
+  const course = courseQuery.course;
 
   const [completed, setCompleted] =
     useState(false);
@@ -104,6 +113,7 @@ const [currentVideo, setCurrentVideo] =
 
 
 
+/* Legacy manual loading replaced by useCourseDetail above.
 async function load() {
   const data =
     await getCourseDetail(
@@ -116,13 +126,13 @@ async function load() {
 
 
 
+*/
+
 async function createResource(values: any) {
     if (!lesson) return;
 
     try {
-        await lessonContentService.create(
-          
-          {
+        await createLessonContentMutation.mutateAsync({
             lesson_id: lesson.id,
             title: values.title,
             type: values.type,
@@ -135,7 +145,6 @@ async function createResource(values: any) {
 
         setResourceDialogOpen(false);
 
-        await load();
     } catch (error) {
         console.error(error);
         toast.error("Create resource failed");
@@ -146,23 +155,22 @@ async function updateResource(values: any) {
     if (!selectedResource) return;
 
     try {
-        await lessonContentService.update(
-            selectedResource.id,
-            {
+        await updateLessonContentMutation.mutateAsync({
+            id: selectedResource.id,
+            values: {
                 title: values.title,
                 type: values.type,
                 provider: values.provider,
                 url: values.url,
                 order_index: values.order_index,
-            }
-        );
+            },
+        });
 
         toast.success("Resource updated");
 
         setSelectedResource(null);
         setResourceDialogOpen(false);
 
-        await load();
     } catch (error) {
         console.error(error);
         toast.error("Update resource failed");
@@ -173,14 +181,13 @@ async function deleteResource() {
     if (!selectedResource) return;
 
     try {
-        await lessonContentService.delete(selectedResource.id);
+        await deleteLessonContentMutation.mutateAsync(selectedResource.id);
 
         toast.success("Resource deleted");
 
         setDeleteResourceOpen(false);
         setSelectedResource(null);
 
-        await load();
     } catch (error) {
         console.error(error);
         toast.error("Delete resource failed");
@@ -246,11 +253,13 @@ useEffect(() => {
     }
 }, [resources]);
 
+/* Legacy manual fetch effect.
 useEffect(() => {
     if (!profile) return;
 
     load();
 }, [courseId, profile]);
+*/
 if (!course) {
   return (
     <div className="py-20 text-center">
@@ -268,15 +277,13 @@ if (lessonIndex===-1)
     if (!profile) return;
     if (completed) return;
 
-    await learningProgressService.save({
+    await saveLearningProgressMutation.mutateAsync({
         student_id: profile.id,
         lesson_id: lesson.id,
         is_completed: true,
     });
 
     setCompleted(true);
-
-    await load();
 
     toast.success("Lesson completed");
 }

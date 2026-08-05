@@ -3,7 +3,7 @@ import { authService } from "@/services/auth.service";
 import { profileService } from "@/services/profile.service";
 
 export async function requireAuth() {
-  const user = await authService.getCurrentUser();
+  const user = await authService.getUser();
 
   if (!user) {
     redirect("/login");

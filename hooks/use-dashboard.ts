@@ -18,6 +18,7 @@ export function useStudentDashboard() {
     queryKey: queryKeys.dashboard.student,
     queryFn: () =>
       dashboardClientService.getStudentDashboard(),
+    staleTime: 1000 * 30,
   });
 }
 
@@ -26,5 +27,6 @@ export function useTeacherDashboard() {
     queryKey: queryKeys.dashboard.teacher,
     queryFn: () =>
       dashboardClientService.getTeacherDashboard(),
+    staleTime: 1000 * 30,
   });
 }

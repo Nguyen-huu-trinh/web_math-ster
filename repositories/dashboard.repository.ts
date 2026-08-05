@@ -19,17 +19,18 @@ export class DashboardRepository {
 
       supabase
         .from("course_students")
-        .select("course_id")
+        .select("course_id", { count: "exact", head: true })
         .eq("student_id", studentId),
 
       supabase
         .from("lesson_progress")
-        .select("is_completed")
-        .eq("student_id", studentId),
+        .select("lesson_id", { count: "exact", head: true })
+        .eq("student_id", studentId)
+        .eq("is_completed", true),
 
       supabase
         .from("lessons")
-        .select("id"),
+        .select("id", { count: "exact", head: true }),
 
       supabase
         .from("exam_attempts")
@@ -45,10 +46,10 @@ export class DashboardRepository {
     ]);
 
     const completedLessons =
-      progress.data?.filter((p) => p.is_completed).length ?? 0;
+      progress.count ?? 0;
 
     const totalLessons =
-      lessons.data?.length ?? 0;
+      lessons.count ?? 0;
 
     // ===== số đề đã làm =====
 
@@ -77,7 +78,7 @@ export class DashboardRepository {
       profile: profile.data,
 
       totalCourses:
-        courses.data?.length ?? 0,
+        courses.count ?? 0,
 
       completedLessons,
 
@@ -100,38 +101,38 @@ export class DashboardRepository {
     ] = await Promise.all([
       supabase
         .from("courses")
-        .select("id")
+        .select("id", { count: "exact", head: true })
         .is("deleted_at", null),
 
       supabase
         .from("lessons")
-        .select("id")
+        .select("id", { count: "exact", head: true })
         .is("deleted_at", null),
 
       supabase
         .from("profiles")
-        .select("id")
+        .select("id", { count: "exact", head: true })
         .eq("role", "STUDENT")
         .eq("is_active", true),
 
       supabase
         .from("exams")
-        .select("id")
+        .select("id", { count: "exact", head: true })
         .is("deleted_at", null),
     ]);
 
     return {
       totalCourses:
-        courses.data?.length ?? 0,
+        courses.count ?? 0,
 
       totalLessons:
-        lessons.data?.length ?? 0,
+        lessons.count ?? 0,
 
       totalStudents:
-        students.data?.length ?? 0,
+        students.count ?? 0,
 
       totalExams:
-        exams.data?.length ?? 0,
+        exams.count ?? 0,
     };
   }
 }

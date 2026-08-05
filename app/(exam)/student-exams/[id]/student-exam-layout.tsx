@@ -1,10 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { FileText, ListChecks } from "lucide-react";
 
-import PdfViewer from "./pdf-viewer";
 import AnswerSheet from "./answer-sheet";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const PdfViewer = dynamic(
+  () => import("./pdf-viewer"),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-full w-full" />,
+  }
+);
 
 interface Props {
   attempt: any;

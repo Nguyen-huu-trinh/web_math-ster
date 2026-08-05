@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -12,10 +11,8 @@ import {
 
 import { CourseForm } from "./course-form";
 
-import {
-  courseRepository,
-  CreateCourseDto,
-} from "@/repositories/course.repository";
+import type { CreateCourseDto } from "@/repositories/course.repository";
+import { useUpdateCourse } from "@/hooks/use-courses";
 
 import type { Course } from "@/types/course";
 
@@ -23,44 +20,36 @@ interface Props {
   open: boolean;
   course: Course | null;
   onOpenChange(open: boolean): void;
-  onUpdated(): Promise<void> | void;
 }
-const courseId = course?.id;
 export function EditCourseDialog({
   open,
   course,
   onOpenChange,
-  onUpdated,
 }: Props) {
-  const [loading, setLoading] = useState(false);
+  const updateCourse = useUpdateCourse();
 
   if (!course) return null;
 
   async function handleUpdate(
   values: CreateCourseDto
 ) {
-  if (!courseId) return;
+  if (!course) return;
 
   try {
-    setLoading(true);
-
-    await courseRepository.update(
-      courseId,
-      values
-    );
+    await updateCourse.mutateAsync({
+      id: course.id,
+      values,
+    });
 
     toast.success("Cập nhật khóa học thành công.");
 
     onOpenChange(false);
 
-    await onUpdated();
   } catch (error: any) {
     toast.error(
       error.message ??
       "Không thể cập nhật khóa học."
     );
-  } finally {
-    setLoading(false);
   }
 }
 
@@ -80,7 +69,7 @@ export function EditCourseDialog({
         </DialogHeader>
 
         <CourseForm
-          loading={loading}
+          loading={updateCourse.isPending}
           submitText="Lưu thay đổi"
           defaultValues={{
             name: course.name,

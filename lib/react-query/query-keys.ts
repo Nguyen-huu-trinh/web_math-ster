@@ -8,6 +8,13 @@ export const queryKeys = {
 
   course: {
     all: ["courses"] as const,
+    detail: (courseId: string, studentId?: string) =>
+      ["course", courseId, studentId ?? "anonymous"] as const,
+  },
+
+  lesson: {
+    detail: (lessonId: string) =>
+      ["lesson", lessonId] as const,
   },
 
   exam: {
@@ -24,6 +31,16 @@ export const queryKeys = {
 
   profile: {
     current: ["profile"] as const,
+    detail: (id: string) => ["profile", id] as const,
+  },
+
+  student: {
+    myExams: () => ["student", "my-exams"] as const,
+  },
+
+  attempt: {
+    detail: (id: string) => ["attempt", id] as const,
+    answers: (id: string) => ["attempt", id, "answers"] as const,
   },
 
 };

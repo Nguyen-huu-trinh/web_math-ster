@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { PdfViewer } from "@/components/exams/pdf-viewer";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import {
   useCloseExam,
@@ -18,6 +19,14 @@ import {
   useExam,
   usePublishExam,
 } from "@/hooks/use-exams";
+
+const PdfViewer = dynamic(
+  () => import("@/components/exams/pdf-viewer").then((module) => module.PdfViewer),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-[700px] w-full" />,
+  }
+);
 
 export default function ExamDetailPage() {
   const params = useParams();

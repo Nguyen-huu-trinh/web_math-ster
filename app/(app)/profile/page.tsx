@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import {
  
   Save,
@@ -13,7 +12,7 @@ import {
 import { toast } from 'sonner'
 
 import { useAuth } from '@/providers/auth-provider'
-import { profileClientService } from '@/services/profile-client.service'
+import { useChangePassword } from '@/hooks/use-profile'
 
 import { PageHeader } from '@/components/layout/page-header'
 
@@ -53,6 +52,7 @@ export default function ProfilePage() {
     profile,
     refresh,
   } = useAuth()
+  const changePasswordMutation = useChangePassword()
 
 
   if (!user || !profile) return null
@@ -81,10 +81,10 @@ export default function ProfilePage() {
   }
 
   try {
-    await profileClientService.changePassword(
+    await changePasswordMutation.mutateAsync({
       currentPassword,
-      newPassword
-    )
+      newPassword,
+    })
 
     toast.success("Password changed")
 
@@ -314,6 +314,7 @@ export default function ProfilePage() {
                   <Button
                     type="submit"
                     variant="outline"
+                    disabled={changePasswordMutation.isPending}
                   >
                     <KeyRound className="mr-2 size-4" />
                     Cập nhập mật khẩu

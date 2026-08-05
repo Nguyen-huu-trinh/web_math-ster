@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { useSubmitAttempt } from "@/hooks/use-submit-attempt";
+import { useStartExam } from "@/hooks/use-start-exam";
 
 interface Props {
   attempt: any;
@@ -94,6 +95,7 @@ export default function AnswerSheet({
 
   const submitMutation =
     useSubmitAttempt();
+  const startExamMutation = useStartExam();
       // ============================
   // Countdown Timer
   // ============================
@@ -296,18 +298,7 @@ export default function AnswerSheet({
 
 async function handleRetry() {
   try {
-    const res = await fetch(
-      `/api/students/my-exams/${exam.id}/start`,
-      {
-        method: "POST",
-      }
-    );
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.message);
-    }
+    const data = await startExamMutation.mutateAsync(exam.id);
 
     router.push(`/student-exams/${data.id}`);
   } catch (err: any) {

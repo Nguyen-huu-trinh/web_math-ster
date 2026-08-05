@@ -7,5 +7,6 @@ export function useLeaderboard() {
     queryKey: queryKeys.dashboard.leaderboard,
     queryFn: () =>
       dashboardClientService.getLeaderboard(),
+    staleTime: 1000 * 30,
   });
 }

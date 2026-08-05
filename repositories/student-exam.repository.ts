@@ -20,7 +20,17 @@ export class StudentExamRepository {
     const { data: exams, error: examError } = await supabase
       .from("exams")
       .select(`
-        *,
+        id,
+        title,
+        description,
+        category,
+        exam_type,
+        duration_minutes,
+        course_id,
+        max_attempts,
+        attendance_min_score,
+        show_answer,
+        exam_file_url,
         courses(
           id,
           name
@@ -42,13 +52,17 @@ export class StudentExamRepository {
     // 3. Lấy toàn bộ lịch sử làm bài
     const { data: attempts, error: attemptError } = await supabase
       .from("exam_attempts")
-      .select("*")
+      .select("exam_id, score, is_passed, created_at, submitted_at")
       .eq("student_id", studentId)
       .in("exam_id", examIds);
 
     if (attemptError) throw attemptError;
 
     return exams.map((exam) => {
+      const course = Array.isArray(exam.courses)
+        ? exam.courses[0]
+        : exam.courses;
+
       const examAttempts = attempts.filter(
         (a) => a.exam_id === exam.id
       );
@@ -96,7 +110,7 @@ export class StudentExamRepository {
         courseId: exam.course_id,
 
         courseName:
-          exam.courses?.name ?? "",
+          course?.name ?? "",
 
         maxAttempts:
           exam.max_attempts ?? 1,

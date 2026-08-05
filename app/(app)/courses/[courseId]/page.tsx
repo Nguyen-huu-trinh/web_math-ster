@@ -1,7 +1,7 @@
 'use client'
 import { DeleteLessonDialog } from "@/components/lessons/delete-lesson-dialog";
 import { toast } from "sonner";
-import { use, useEffect, useState } from 'react'
+import { use, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -16,14 +16,12 @@ import {
   Trash2,
   ChevronLeft,
 } from 'lucide-react'
-import { getCourseDetail } from "@/services/course-detail.service";
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent } from '@/components/ui/card'
 
 import { LessonDialog } from "@/components/lessons/lesson-dialog";
-import { lessonService } from "@/services/lesson.service";
 
 import {
   Accordion,
@@ -35,7 +33,6 @@ import { DeleteChapterDialog } from "@/components/chapters/delete-chapter-dialog
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/providers/auth-provider'
 
-import { courseDetailService } from '@/services/course-detail.service'
 
 
 import {
@@ -43,8 +40,14 @@ import {
 } from "@/components/chapters/chapter-card";
 
 import {
-  chapterService,
-} from "@/services/chapter.service";
+  useCourseDetail,
+  useCreateChapter,
+  useCreateLesson,
+  useDeleteChapter,
+  useDeleteLesson,
+  useUpdateChapter,
+  useUpdateLesson,
+} from "@/hooks/use-course-detail";
 export default function CourseDetailPage({
   params,
 }: {
@@ -52,8 +55,6 @@ export default function CourseDetailPage({
     courseId: string
   }>
 }) {
-  const [chapters, setChapters] =
-  useState<any[]>([]);
   const [chapterDialogOpen, setChapterDialogOpen] =
   useState(false);
 
@@ -77,12 +78,20 @@ const [selectedChapterForLesson, setSelectedChapterForLesson] =
 
   const role = profile?.role
 
-  const [course, setCourse] = useState<any>(null)
+  const courseQuery = useCourseDetail(courseId, profile?.id);
+  const createChapterMutation = useCreateChapter(courseId);
+  const updateChapterMutation = useUpdateChapter(courseId);
+  const deleteChapterMutation = useDeleteChapter(courseId);
+  const createLessonMutation = useCreateLesson(courseId);
+  const updateLessonMutation = useUpdateLesson(courseId);
+  const deleteLessonMutation = useDeleteLesson(courseId);
 
-  const [loading, setLoading] =
-    useState(true)
+  const course = courseQuery.course;
+  const chapters = course?.chapters ?? [];
+  const loading = courseQuery.isLoading;
   const [deleteLessonOpen, setDeleteLessonOpen] =
 useState(false);
+/* Legacy manual loading replaced by useCourseDetail above.
 useEffect(() => {
     if (!profile) return;
 
@@ -107,12 +116,14 @@ setChapters(data.chapters ?? []);
     }
   }
 
+*/
+
   async function createChapter(values: {
   title: string;
   order_index: number;
 }) {
   try {
-    await chapterService.create({
+    await createChapterMutation.mutateAsync({
       course_id: courseId,
       title: values.title,
       order_index: values.order_index,
@@ -122,7 +133,6 @@ setChapters(data.chapters ?? []);
 
     setChapterDialogOpen(false);
 
-    loadCourse();
     setSelectedChapterForLesson(null);
 
   } catch (error) {
@@ -139,9 +149,7 @@ async function deleteLesson() {
 
     try {
 
-        await lessonService.delete(
-            selectedLesson.id
-        );
+        await deleteLessonMutation.mutateAsync(selectedLesson.id);
 
         toast.success("Lesson deleted");
 
@@ -149,8 +157,6 @@ async function deleteLesson() {
 
         setSelectedLesson(null);
         setSelectedChapterForLesson(null);
-
-        loadCourse();
 
     } catch (e) {
 
@@ -168,18 +174,16 @@ async function updateChapter(values: {
   if (!selectedChapter) return;
 
   try {
-    await chapterService.update(
-      selectedChapter.id,
-      values
-    );
+    await updateChapterMutation.mutateAsync({
+      id: selectedChapter.id,
+      values,
+    });
 
     toast.success("Chapter updated");
 
     setChapterDialogOpen(false);
 
     setSelectedChapter(null);
-
-    loadCourse();
 
   } catch (error) {
 
@@ -194,17 +198,13 @@ async function deleteChapter() {
   if (!selectedChapter) return;
 
   try {
-    await chapterService.delete(
-      selectedChapter.id
-    );
+    await deleteChapterMutation.mutateAsync(selectedChapter.id);
 
     toast.success("Chapter deleted");
 
     setDeleteOpen(false);
 
     setSelectedChapter(null);
-
-    loadCourse();
 
   } catch (error) {
 
@@ -223,7 +223,7 @@ async function createLesson(values: LessonFormValues) {
   if (!selectedChapterForLesson) return;
 
   try {
-    await lessonService.create({
+    await createLessonMutation.mutateAsync({
     chapter_id: selectedChapterForLesson.id,
     title: values.title,
     order_index: values.order_index,
@@ -236,7 +236,6 @@ async function createLesson(values: LessonFormValues) {
     setSelectedLesson(null);
     setSelectedChapterForLesson(null);
 
-    loadCourse();
   } catch (error) {
     console.error(error);
     toast.error("Create lesson failed");
@@ -247,11 +246,14 @@ async function updateLesson(values: LessonFormValues) {
   if (!selectedLesson) return;
 
   try {
-    await lessonService.update(selectedLesson.id, {
-    title: values.title,
-    order_index: values.order_index,
-    is_active: values.is_active,
-});
+    await updateLessonMutation.mutateAsync({
+      id: selectedLesson.id,
+      values: {
+        title: values.title,
+        order_index: values.order_index,
+        is_active: values.is_active,
+      },
+    });
 
     toast.success("Lesson updated");
 
@@ -259,7 +261,6 @@ async function updateLesson(values: LessonFormValues) {
     setSelectedLesson(null);
     setSelectedChapterForLesson(null);
 
-    loadCourse();
   } catch (error) {
     console.error(error);
     toast.error("Update lesson failed");
@@ -412,11 +413,11 @@ async function updateLesson(values: LessonFormValues) {
 
     <Accordion
       defaultValue={chapters.map(
-        (c) => c.id
+        (c: any) => c.id
       )}
     >
 
-      {chapters.map((chapter) => (
+      {chapters.map((chapter: any) => (
 
         <ChapterCard
   chapter={chapter}

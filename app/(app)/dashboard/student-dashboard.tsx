@@ -8,9 +8,21 @@ import { useLeaderboard } from '@/hooks/use-leaderboard'
 
 import { StatCard } from '@/components/dashboard/stat-card'
 import { CountdownCard } from '@/components/dashboard/countdown-card'
-import { StudentProgressChart } from '@/components/dashboard/dashboard-charts'
 import { LeaderboardCard } from '@/components/dashboard/leaderboard-card'
 import { NotificationsCard } from '@/components/dashboard/notifications-card'
+import { Skeleton } from '@/components/ui/skeleton'
+import dynamic from 'next/dynamic'
+
+const StudentProgressChart = dynamic(
+  () =>
+    import('@/components/dashboard/dashboard-charts').then(
+      (module) => module.StudentProgressChart
+    ),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-[280px] w-full" />,
+  }
+)
 
 function greeting() {
     const h = new Date().getHours()

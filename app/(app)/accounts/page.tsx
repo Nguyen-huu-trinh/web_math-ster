@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,8 @@ import { Users, Upload } from "lucide-react";
 
 import { CreateStudentDialog } from "@/components/accounts/create-student-dialog";
 import ImportStudentsDialog from "@/components/accounts/import-students-dialog";
+import { useCourses } from "@/hooks/use-courses";
+import { useCreateStudent, useImportStudents } from "@/hooks/use-accounts";
 
 interface Course {
   id: string;
@@ -16,11 +18,13 @@ interface Course {
 }
 
 export default function AccountsPage() {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { courses, isLoading: loading } = useCourses();
+  const createStudentMutation = useCreateStudent();
+  const importStudentsMutation = useImportStudents();
 
   const [importOpen, setImportOpen] = useState(false);
 
+  /* Legacy manual course loading; useCourses supplies the shared query above.
   useEffect(() => {
     loadCourses();
   }, []);
@@ -46,6 +50,8 @@ export default function AccountsPage() {
     }
   }
 
+  */
+
   async function handleCreateStudent(payload: {
     student_code: string;
     full_name: string;
@@ -53,7 +59,7 @@ export default function AccountsPage() {
     course_ids: string[];
   }) {
     try {
-      const res = await fetch("/api/accounts/create", {
+      /* const res = await fetch("/api/accounts/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -66,6 +72,9 @@ export default function AccountsPage() {
       if (!res.ok) {
         throw new Error(result.message ?? "Có lỗi xảy ra.");
       }
+
+      */
+      const result = await createStudentMutation.mutateAsync(payload);
 
       alert(
         `Tạo thành công!\n\nEmail: ${result.email}\nPassword: ${result.password}`
@@ -80,7 +89,7 @@ export default function AccountsPage() {
   file: File,
   courseIds: string[]
 ) {
-  const formData = new FormData();
+  /* const formData = new FormData();
 
   formData.append("file", file);
 
@@ -98,6 +107,9 @@ export default function AccountsPage() {
   if (!res.ok) {
     throw new Error(result.message);
   }
+
+  */
+  const result = await importStudentsMutation.mutateAsync({ file, courseIds });
 
   alert(
     `Import thành công!

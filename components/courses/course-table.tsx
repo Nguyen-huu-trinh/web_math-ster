@@ -29,7 +29,11 @@ import { Badge } from "@/components/ui/badge";
 import { CourseDialog } from "./course-dialog";
 import { CourseActions } from "./course-actions";
 
-import { courseService } from "@/services/course.service";
+import {
+  useCreateCourse,
+  useDeleteCourse,
+  useUpdateCourse,
+} from "@/hooks/use-courses";
 
 import { toast } from "sonner";
 
@@ -42,6 +46,10 @@ export function CourseTable({
   courses,
   refresh,
 }: Props) {
+  const createCourseMutation = useCreateCourse();
+  const updateCourseMutation = useUpdateCourse();
+  const deleteCourseMutation = useDeleteCourse();
+
   const [open, setOpen] =
     useState(false);
 
@@ -51,24 +59,21 @@ export function CourseTable({
   async function createCourse(
     values: any
   ) {
-    await courseService.createCourse(
-      values
-    );
+    await createCourseMutation.mutateAsync(values);
 
     toast.success(
       "Course created"
     );
 
-    await refresh();
   }
 
   async function updateCourse(
     values: any
   ) {
-    await courseService.updateCourse(
-      editing.id,
-      values
-    );
+    await updateCourseMutation.mutateAsync({
+      id: editing.id,
+      values,
+    });
 
     toast.success(
       "Course updated"
@@ -76,7 +81,6 @@ export function CourseTable({
 
     setEditing(null);
 
-    await refresh();
   }
 
   async function deleteCourse(
@@ -90,15 +94,12 @@ export function CourseTable({
       return;
     }
 
-    await courseService.deleteCourse(
-      id
-    );
+    await deleteCourseMutation.mutateAsync(id);
 
     toast.success(
       "Course deleted"
     );
 
-    await refresh();
   }
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { Search, Plus } from "lucide-react";
 import type { CreateCourseDto } from "@/repositories/course.repository";
@@ -21,8 +21,14 @@ import {
 
 import { useAuth } from "@/providers/auth-provider";
 
-import { courseClientService } from "@/services/course-client.service";
 import type { Course } from "@/types/course";
+import {
+  useCourses,
+  useCreateCourse,
+  useDeleteCourse,
+  useRestoreCourse,
+  useUpdateCourse,
+} from "@/hooks/use-courses";
 
 import { toast } from "sonner";
 import { UpdateCourseInput } from "@/validators/course.schema";
@@ -37,11 +43,14 @@ export default function CoursesPage() {
 
   const role = profile?.role;
 
-  const [courses, setCourses] =
-    useState<Course[]>([]);
+  const coursesQuery = useCourses();
+  const createCourseMutation = useCreateCourse();
+  const updateCourseMutation = useUpdateCourse();
+  const deleteCourseMutation = useDeleteCourse();
+  const restoreCourseMutation = useRestoreCourse();
 
-  const [loading, setLoading] =
-    useState(true);
+  const courses = coursesQuery.courses;
+  const loading = coursesQuery.isLoading;
 
   const [query, setQuery] =
     useState("");
@@ -63,46 +72,17 @@ export default function CoursesPage() {
   const [selectedCourse, setSelectedCourse] =
     useState<Course | null>(null);
 
-  useEffect(() => {
-    loadCourses();
-  }, []);
-
-  async function loadCourses() {
-    try {
-
-      setLoading(true);
-
-      const data =
-        await courseClientService.getAll();
-
-      setCourses(data);
-
-    } catch (error) {
-
-      console.error(error);
-
-      toast.error("Cannot load courses");
-
-    } finally {
-
-      setLoading(false);
-
-    }
-  }
-
   async function createCourse(
     values: CreateCourseDto
   ){
 
     try {
 
-      await courseClientService.create(values);
+      await createCourseMutation.mutateAsync(values);
 
       toast.success("Course created");
 
       setDialogOpen(false);
-
-      loadCourses();
 
     } catch {
 
@@ -120,18 +100,16 @@ export default function CoursesPage() {
 
     try {
 
-      await courseClientService.update(
-        selectedCourse.id,
-        values
-      );
+      await updateCourseMutation.mutateAsync({
+        id: selectedCourse.id,
+        values,
+      });
 
       toast.success("Course updated");
 
       setDialogOpen(false);
 
       setSelectedCourse(null);
-
-      loadCourses();
 
     } catch {
 
@@ -147,17 +125,13 @@ export default function CoursesPage() {
 
     try {
 
-      await courseClientService.delete(
-        selectedCourse.id
-      );
+      await deleteCourseMutation.mutateAsync(selectedCourse.id);
 
       toast.success("Course deleted");
 
       setDeleteOpen(false);
 
       setSelectedCourse(null);
-
-      loadCourses();
 
     } catch {
 
@@ -173,13 +147,9 @@ export default function CoursesPage() {
 
     try {
 
-      await courseClientService.restore(
-        course.id
-      );
+      await restoreCourseMutation.mutateAsync(course.id);
 
       toast.success("Course restored");
-
-      loadCourses();
 
     } catch {
 

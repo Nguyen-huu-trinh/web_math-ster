@@ -53,11 +53,7 @@ export default async function StudentExamPage({
     return notFound();
   }
 
-  // Debug
-  console.log("===========");
-  console.log("Attempt:", attempt);
-  console.log("Exam:", exam);
-  console.log("===========");
+  
 
   return (
     <StudentExamLayout

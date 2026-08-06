@@ -485,7 +485,7 @@ const answerKey = exam.answer_key ?? {
     </h3>
   </div>
 
-  <div className="columns-1 sm:columns-2 xl:columns-3 gap-x-6">
+  <div className="columns-1 sm:columns-1 md:columns-2 lg:columns-3 2xl:columns-3 min-[1920px]:columns-5 min-[2560px]:columns-6 gap-x-6">
    {Array.from({
   length: questionConfig.multipleChoice,
 }).map((_, index) => {
@@ -577,7 +577,7 @@ const correct = answerKey.multipleChoice[index];
 </h3>
 </div>
 
-<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+<div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-4 min-[2560px]:grid-cols-5">
 
 {Array.from({
 length: questionConfig.trueFalse,
@@ -717,7 +717,7 @@ Trả lời ngắn
 </h3>
 </div>
 
-<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+<div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 min-[2560px]:grid-cols-5">
 
 {Array.from({
   length: questionConfig.shortAnswer,

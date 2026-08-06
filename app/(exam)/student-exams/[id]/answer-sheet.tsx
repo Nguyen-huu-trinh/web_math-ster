@@ -717,7 +717,7 @@ Trả lời ngắn
 </h3>
 </div>
 
-<div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 min-[2560px]:grid-cols-5">
+<div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 min-[2560px]:grid-cols-4">
 
 {Array.from({
   length: questionConfig.shortAnswer,

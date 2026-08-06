@@ -1,6 +1,6 @@
 "use client";
 
-
+import { useMediaQuery } from "usehooks-ts";
 import dynamic from "next/dynamic";
 import {
   FileText,
@@ -59,6 +59,9 @@ export default function StudentExamLayout({
 const [showExitDialog, setShowExitDialog] =
   useState(false);
 
+const finishExamRef =
+  useRef(false);
+
 const [exitCountdown, setExitCountdown] =
   useState(30);
 
@@ -68,15 +71,21 @@ const exitTimer =
   useEffect(() => {
   function handleFullscreenChange() {
 
-    if (!document.fullscreenElement) {
+  if (!document.fullscreenElement) {
 
-      setShowExitDialog(true);
+    if (finishExamRef.current) {
 
-      setExitCountdown(30);
+      return;
 
     }
 
+    setShowExitDialog(true);
+
+    setExitCountdown(30);
+
   }
+
+}
 
   document.addEventListener(
     "fullscreenchange",
@@ -103,9 +112,11 @@ useEffect(() => {
 
         clearInterval(exitTimer.current!);
 
-       window.dispatchEvent(
-          new Event("force-submit")
-        );
+      if (!submitted) {
+      window.dispatchEvent(
+        new Event("force-submit")
+      );
+    }
 
         return 0;
 
@@ -153,6 +164,9 @@ async function resumeExam() {
 
   const [mobileView, setMobileView] =
     useState<"pdf" | "sheet">("pdf");
+
+    const isDesktop =
+  useMediaQuery("(min-width:768px)");
 const [examStarted, setExamStarted] =
   useState(false);
 async function startFullscreen() {
@@ -210,6 +224,13 @@ const lowTime = timeLeft <= 300;
 useEffect(() => {
 
   function handleSubmitSuccess() {
+    finishExamRef.current = true;
+
+    if (document.fullscreenElement) {
+
+  document.exitFullscreen();
+
+}
 
     setSubmitted(true);
 
@@ -339,8 +360,8 @@ useEffect(() => {
       {/* ==========================================
           DESKTOP
       ========================================== */}
-
-      <div className="hidden h-full md:flex">
+      {isDesktop && (
+      <div className=" h-full md:flex">
 
         {/* PDF */}
 
@@ -366,12 +387,13 @@ useEffect(() => {
         </div>
 
       </div>
+      )}
 
       {/* ==========================================
           MOBILE
       ========================================== */}
-
-<div className="flex h-full flex-col md:hidden">
+{!isDesktop && (
+<div className="flex h-full flex-col ">
 
  
 
@@ -439,6 +461,7 @@ useEffect(() => {
 
       </div>
       </div>
+)}
 
       {/* ==========================================
           FLOAT BUTTON

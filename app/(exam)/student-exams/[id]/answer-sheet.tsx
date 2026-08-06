@@ -16,6 +16,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 import { useSaveAnswer } from "@/hooks/use-save-answer";
 import { Button } from "@/components/ui/button";
 
@@ -57,6 +70,7 @@ export default function AnswerSheet({
   // Question Config
   // ============================
 
+
   const questionConfig =
     exam.question_config ?? {
       multipleChoice: 0,
@@ -92,6 +106,11 @@ const [answers, setAnswers] = useState(() => ({
           () => ["", "", "", ""]
         ),
 }));
+const answersRef = useRef(answers);
+
+useEffect(() => {
+  answersRef.current = answers;
+}, [answers]);
 
   // ============================
   // Timer
@@ -111,7 +130,8 @@ const [answers, setAnswers] = useState(() => ({
 
   const [result, setResult] =
     useState<any>(null);
-
+const [submitDialogOpen, setSubmitDialogOpen] =
+  useState(false);
 const saveTimeout =
 useRef<NodeJS.Timeout | null>(
     null
@@ -125,6 +145,8 @@ useRef<NodeJS.Timeout | null>(
 
   const submitMutation =
     useSubmitAttempt();
+
+    const submittedRef = useRef(false);
     const saveAnswerMutation =
     useSaveAnswer();
   const startExamMutation = useStartExam();
@@ -255,7 +277,7 @@ useRef<NodeJS.Timeout | null>(
     };
 
     next.multipleChoice[index] = value;
-
+    answersRef.current = next;
     // Autosave toàn bộ phiếu trả lời
     autoSaveAnswers(next);
 
@@ -284,7 +306,7 @@ useRef<NodeJS.Timeout | null>(
 
     next.trueFalse[questionIndex][columnIndex] =
       value;
-
+    answersRef.current = next;
     autoSaveAnswers(next);
 
     return next;
@@ -313,7 +335,7 @@ useRef<NodeJS.Timeout | null>(
 
     next.shortAnswer[questionIndex][columnIndex] =
       value;
-
+    answersRef.current = next;
     autoSaveAnswers(next);
 
     return next;
@@ -327,41 +349,41 @@ useRef<NodeJS.Timeout | null>(
   async function handleSubmit(
     confirm = true
   ) {
+  if (submittedRef.current) return;
 
-    if (submitMutation.isPending) return;
+  if (submitMutation.isPending) return;
 
-    if (
-      confirm &&
-      !window.confirm(
-        "Bạn chắc chắn muốn nộp bài?"
-      )
-    ) {
-      return;
-    }
+  submittedRef.current = true;
+
+    
 
     try {
-
+      
       const payload = {
         attemptId: attempt.id,
         answers: {
           multipleChoice:
-            answers.multipleChoice,
+            answersRef.current.multipleChoice,
           trueFalse:
-            answers.trueFalse,
+            answersRef.current.trueFalse,
           shortAnswer:
-            answers.shortAnswer,
+            answersRef.current.shortAnswer,
         },
       };
 
       const data =
-        await submitMutation.mutateAsync(
-          payload
-        );
+  await submitMutation.mutateAsync(payload);
 
-      setResult(data);
-      window.dispatchEvent(new Event("submit-success"));
+setResult(data);
+
+setSubmitDialogOpen(false);
+
+window.dispatchEvent(
+  new Event("submit-success")
+);
 
     } catch (err) {
+      submittedRef.current = false;
 
       console.error(err);
 
@@ -374,11 +396,9 @@ useEffect(() => {
 
   function forceSubmit() {
 
-    if (!submitMutation.isPending) {
+    console.log("force submit");
 
-      handleSubmit(false);
-
-    }
+    handleSubmit(false);
 
   }
 
@@ -396,7 +416,7 @@ useEffect(() => {
 
   };
 
-}, [submitMutation.isPending]);
+}, []);
 
 
 
@@ -432,22 +452,14 @@ const answerKey = exam.answer_key ?? {
 
       
 
-        <ExamHeader
-
-title={exam.title}
-
-displayTime={displayTime}
-
-lowTime={lowTime}
-
-submitted={submitted}
-
-score={result?.score}
-
-submitting={submitMutation.isPending}
-
-onSubmit={() => handleSubmit(true)}
-
+<ExamHeader
+  title={exam.title}
+  displayTime={displayTime}
+  lowTime={lowTime}
+  submitted={submitted}
+  score={result?.score}
+  submitting={submitMutation.isPending}
+  onSubmit={() => setSubmitDialogOpen(true)}
 />
       
       
@@ -1017,8 +1029,8 @@ const correct =
                 <Button
                   className="h-12 w-full text-base font-semibold"
                   disabled={submitMutation.isPending}
-                  onClick={() =>
-                    handleSubmit(true)
+                 onClick={() =>
+                      setSubmitDialogOpen(true)
                   }
                 >
 
@@ -1035,6 +1047,48 @@ const correct =
           )}</div>
 
         </div>
+
+        <AlertDialog
+  open={submitDialogOpen}
+  onOpenChange={setSubmitDialogOpen}
+>
+  <AlertDialogContent>
+
+    <AlertDialogHeader>
+
+      <AlertDialogTitle>
+        Xác nhận nộp bài
+      </AlertDialogTitle>
+
+      <AlertDialogDescription>
+        Sau khi nộp bài bạn sẽ không thể thay đổi đáp án.
+        Bạn có chắc chắn muốn nộp bài?
+      </AlertDialogDescription>
+
+    </AlertDialogHeader>
+
+    <AlertDialogFooter>
+
+      <AlertDialogCancel>
+        Huỷ
+      </AlertDialogCancel>
+
+      <AlertDialogAction
+        onClick={async () => {
+
+          setSubmitDialogOpen(false);
+
+          await handleSubmit(false);
+
+        }}
+      >
+        Nộp bài
+      </AlertDialogAction>
+
+    </AlertDialogFooter>
+
+  </AlertDialogContent>
+</AlertDialog>
 
       </div>
 

@@ -8,7 +8,7 @@ import {
  GraduationCap,
   Send,
 } from "lucide-react";
-
+import ExamHeader from "./exam-header";
 import { cn } from "@/lib/utils";
 import {
   Card,
@@ -401,38 +401,23 @@ const answerKey = exam.answer_key ?? {
 
       
 
-        <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-card px-3 py-2 sm:px-4">
-        <div className="flex min-w-0 items-center gap-2">
-          <FileText className="size-5 shrink-0 text-primary" />
-          <span className="truncate text-sm font-semibold text-foreground">{exam.title}</span>
-        </div>
-        <div className="flex shrink-0 items-center gap-3">
-          {!submitted ? (
-            <>
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-mono text-sm font-bold tabular-nums",
-                  lowTime
-                    ? "bg-destructive/15 text-destructive"
-                    : "bg-primary/15 text-foreground",
-                )}
-              >
-                <Clock className="size-4" />
-                {displayTime}
-              </span>
-              <Button size="sm" onClick={() => handleSubmit(true)} disabled={submitMutation.isPending}>
-                <Send />
-                Nộp bài
-              </Button>
-            </>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary/15 px-2.5 py-1 text-sm font-bold text-foreground">
-              <GraduationCap className="size-4" />
-              {result ? `${result.score} điểm` : "Đã nộp"}
-            </span>
-          )}
-        </div>
-      </header>
+        <ExamHeader
+
+title={exam.title}
+
+displayTime={displayTime}
+
+lowTime={lowTime}
+
+submitted={submitted}
+
+score={result?.score}
+
+submitting={submitMutation.isPending}
+
+onSubmit={() => handleSubmit(true)}
+
+/>
       
       
 

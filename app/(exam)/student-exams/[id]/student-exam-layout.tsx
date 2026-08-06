@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+
 import dynamic from "next/dynamic";
 import {
   FileText,
   ListChecks,
 } from "lucide-react";
-
+import { Clock } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import AnswerSheet from "./answer-sheet";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -52,6 +53,32 @@ export default function StudentExamLayout({
 
   const [mobileView, setMobileView] =
     useState<"pdf" | "sheet">("pdf");
+  const [timeLeft, setTimeLeft] =
+  useState(remainingSeconds);
+
+useEffect(() => {
+  setTimeLeft(remainingSeconds);
+}, [remainingSeconds]);
+
+useEffect(() => {
+  const timer = setInterval(() => {
+    setTimeLeft((prev) => {
+      if (prev <= 0) return 0;
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, []);
+
+const displayTime = useMemo(() => {
+  const m = Math.floor(timeLeft / 60);
+  const s = timeLeft % 60;
+
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}, [timeLeft]);
+
+const lowTime = timeLeft <= 300;
 
   return (
     <div className="h-screen overflow-hidden bg-slate-100">
@@ -91,25 +118,33 @@ export default function StudentExamLayout({
           MOBILE
       ========================================== */}
 
-      <div className="relative h-full md:hidden">
+      <div className="flex h-full flex-col bg-white">
 
-        {/* ================= PDF ================= */}
+  <div className="flex items-center justify-between border-b bg-card px-4 py-3">
 
-        <div
-          className={cn(
-            "absolute inset-0 transition-opacity duration-200",
+    <span className="truncate text-sm font-semibold">
+      {exam.title}
+    </span>
 
-            mobileView === "pdf"
-              ? "opacity-100 z-10"
-              : "opacity-0 pointer-events-none"
-          )}
-        >
+    <span
+      className={cn(
+        "flex items-center gap-1 rounded-lg px-2 py-1 font-mono text-sm font-bold",
+        lowTime
+          ? "bg-red-100 text-red-600"
+          : "bg-primary/10"
+      )}
+    >
+      <Clock className="size-4" />
+      {displayTime}
+    </span>
 
-          <PdfViewer
-            url={pdfUrl}
-          />
+  </div>
 
-        </div>
+  <div className="flex-1">
+    <PdfViewer url={pdfUrl} />
+  </div>
+
+
 
         {/* ============== ANSWER SHEET ============== */}
 

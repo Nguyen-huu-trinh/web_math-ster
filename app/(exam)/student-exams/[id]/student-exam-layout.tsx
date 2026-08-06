@@ -351,7 +351,7 @@ useEffect(() => {
           MOBILE
       ========================================== */}
 
-     <div className="relative h-full md:hidden">
+<div className="flex h-full flex-col md:hidden">
 
   <div className="flex items-center justify-between border-b bg-card px-4 py-3">
 
@@ -373,9 +373,26 @@ useEffect(() => {
 
   </div>
 
-  <div className="flex-1">
+<div className="relative flex-1">
+  <div
+  className={cn(
+    "absolute inset-0 transition-opacity duration-200",
+    mobileView === "pdf"
+      ? "opacity-100 z-10"
+      : "opacity-0 pointer-events-none"
+  )}
+>
+
+  <PdfViewer
+    url={pdfUrl}
+  />
+
+</div>
+
+
+  {/* <div className="flex-1">
     <PdfViewer url={pdfUrl} />
-  </div>
+  </div> */}
 
 
 
@@ -400,6 +417,7 @@ useEffect(() => {
 
         </div>
 
+      </div>
       </div>
 
       {/* ==========================================

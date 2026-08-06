@@ -7,11 +7,16 @@ import {
   ListChecks,
 } from "lucide-react";
 import { Clock } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { cn } from "@/lib/utils";
 import AnswerSheet from "./answer-sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import { Button } from "@/components/ui/button";
 const PdfViewer = dynamic(
   () => import("./pdf-viewer"),
   {
@@ -51,8 +56,117 @@ export default function StudentExamLayout({
     savedAnswers,
   } = session;
 
+const [showExitDialog, setShowExitDialog] =
+  useState(false);
+
+const [exitCountdown, setExitCountdown] =
+  useState(30);
+
+const exitTimer =
+  useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+  function handleFullscreenChange() {
+
+    if (!document.fullscreenElement) {
+
+      setShowExitDialog(true);
+
+      setExitCountdown(30);
+
+    }
+
+  }
+
+  document.addEventListener(
+    "fullscreenchange",
+    handleFullscreenChange
+  );
+
+  return () =>
+    document.removeEventListener(
+      "fullscreenchange",
+      handleFullscreenChange
+    );
+
+}, []);
+
+useEffect(() => {
+
+  if (!showExitDialog) return;
+
+  exitTimer.current = setInterval(() => {
+
+    setExitCountdown((prev) => {
+
+      if (prev <= 1) {
+
+        clearInterval(exitTimer.current!);
+
+       window.dispatchEvent(
+          new Event("force-submit")
+        );
+
+        return 0;
+
+      }
+
+      return prev - 1;
+
+    });
+
+  }, 1000);
+
+  return () => {
+
+    if (exitTimer.current) {
+
+      clearInterval(exitTimer.current);
+
+    }
+
+  };
+
+}, [showExitDialog]);
+
+async function resumeExam() {
+
+  try {
+
+    await document.documentElement.requestFullscreen();
+
+    setShowExitDialog(false);
+
+    if (exitTimer.current) {
+
+      clearInterval(exitTimer.current);
+
+    }
+
+  } catch {
+
+    // Người dùng từ chối vào fullscreen
+
+  }
+
+}
+
   const [mobileView, setMobileView] =
     useState<"pdf" | "sheet">("pdf");
+const [examStarted, setExamStarted] =
+  useState(false);
+async function startFullscreen() {
+  try {
+    if (document.documentElement.requestFullscreen) {
+      await document.documentElement.requestFullscreen();
+    }
+  } catch (e) {
+    console.error(e);
+  }
+
+  setExamStarted(true);
+}
+
   const [timeLeft, setTimeLeft] =
   useState(remainingSeconds);
 
@@ -80,8 +194,127 @@ const displayTime = useMemo(() => {
 
 const lowTime = timeLeft <= 300;
 
+useEffect(() => {
+
+  function handleSubmitSuccess() {
+
+    setShowExitDialog(false);
+
+    if (exitTimer.current) {
+      clearInterval(exitTimer.current);
+    }
+
+  }
+
+  window.addEventListener(
+    "submit-success",
+    handleSubmitSuccess
+  );
+
+  return () => {
+    window.removeEventListener(
+      "submit-success",
+      handleSubmitSuccess
+    );
+  };
+
+}, []);
+
+
   return (
     <div className="h-screen overflow-hidden bg-slate-100">
+
+      {
+            !examStarted && (
+
+            <div
+            className="
+            fixed
+            inset-0
+            z-[9999]
+            flex
+            items-center
+            justify-center
+            bg-black/80
+            "
+            >
+
+            <div className="rounded-xl bg-white p-8 shadow-xl">
+
+            <h2 className="mb-3 text-xl font-bold">
+
+            Bắt đầu làm bài
+
+            </h2>
+
+            <p className="mb-6 text-gray-600">
+
+            Hệ thống sẽ chuyển sang chế độ toàn màn hình.
+
+            </p>
+
+            <Button
+            onClick={startFullscreen}
+            >
+
+            Bắt đầu
+
+            </Button>
+
+            </div>
+
+            </div>
+
+            )
+            }
+
+{showExitDialog && (
+  <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80">
+
+    <div className="w-[420px] rounded-xl bg-white p-8">
+
+      <h2 className="text-xl font-bold text-red-600">
+        Bạn đã thoát khỏi chế độ thi
+      </h2>
+
+      <p className="mt-3 text-gray-600">
+        Bài thi sẽ được kết thúc sau
+      </p>
+
+      <p className="my-5 text-center text-5xl font-bold text-red-600">
+        {exitCountdown}
+      </p>
+
+      <p className="text-gray-600">
+        giây nếu bạn không quay lại chế độ toàn màn hình.
+      </p>
+
+      <div className="mt-8 flex gap-3">
+
+        <Button
+          className="flex-1"
+          onClick={resumeExam}
+        >
+          Quay lại toàn màn hình
+        </Button>
+
+        <Button
+          variant="destructive"
+          onClick={() =>
+          window.dispatchEvent(
+            new Event("force-submit")
+          )
+        }
+        >
+          Nộp bài ngay
+        </Button>
+
+      </div>
+
+    </div>
+
+  </div>
+)}
 
       {/* ==========================================
           DESKTOP
@@ -118,7 +351,7 @@ const lowTime = timeLeft <= 300;
           MOBILE
       ========================================== */}
 
-      <div className="flex h-full flex-col bg-white">
+     <div className="relative h-full md:hidden">
 
   <div className="flex items-center justify-between border-b bg-card px-4 py-3">
 

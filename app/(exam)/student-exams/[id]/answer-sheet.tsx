@@ -1,6 +1,6 @@
 "use client";
 import { useRef } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, } from "react";
 import { useRouter } from "next/navigation";
 import {
   Clock,
@@ -359,6 +359,7 @@ useRef<NodeJS.Timeout | null>(
         );
 
       setResult(data);
+      window.dispatchEvent(new Event("submit-success"));
 
     } catch (err) {
 
@@ -368,6 +369,36 @@ useRef<NodeJS.Timeout | null>(
 
     }
   }
+
+useEffect(() => {
+
+  function forceSubmit() {
+
+    if (!submitMutation.isPending) {
+
+      handleSubmit(false);
+
+    }
+
+  }
+
+  window.addEventListener(
+    "force-submit",
+    forceSubmit
+  );
+
+  return () => {
+
+    window.removeEventListener(
+      "force-submit",
+      forceSubmit
+    );
+
+  };
+
+}, [submitMutation.isPending]);
+
+
 
 async function handleRetry() {
   try {

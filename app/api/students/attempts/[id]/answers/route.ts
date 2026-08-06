@@ -7,24 +7,6 @@ interface Context {
   }>;
 }
 
-export async function GET(
-  request: Request,
-  { params }: Context
-) {
-  const { id } = await params;
-
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("exam_answers")
-    .select("*")
-    .eq("attempt_id", id);
-
-  if (error) throw error;
-
-  return NextResponse.json(data);
-}
-
 export async function POST(
   request: Request,
   { params }: Context
@@ -35,32 +17,16 @@ export async function POST(
 
   const supabase = await createClient();
 
-  const { data: exist } = await supabase
-    .from("exam_answers")
-    .select("id")
-    .eq("attempt_id", id)
-    .eq("question_id", body.questionId)
-    .maybeSingle();
+  const { error } = await supabase
+    .from("exam_attempts")
+    .update({
+      answers: body.answers,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
 
-  if (exist) {
-
-    await supabase
-      .from("exam_answers")
-      .update({
-        answer: body.answer,
-      })
-      .eq("id", exist.id);
-
-  } else {
-
-    await supabase
-      .from("exam_answers")
-      .insert({
-        attempt_id: id,
-        question_id: body.questionId,
-        answer: body.answer,
-      });
-
+  if (error) {
+    throw error;
   }
 
   return NextResponse.json({

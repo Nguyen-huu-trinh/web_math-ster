@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import { FileText, ListChecks } from "lucide-react";
+import {
+  FileText,
+  ListChecks,
+} from "lucide-react";
 
 import AnswerSheet from "./answer-sheet";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,22 +14,47 @@ const PdfViewer = dynamic(
   () => import("./pdf-viewer"),
   {
     ssr: false,
-    loading: () => <Skeleton className="h-full w-full" />,
+    loading: () => (
+      <Skeleton className="h-full w-full" />
+    ),
   }
 );
 
-interface Props {
+interface ExamAnswers {
+  multipleChoice: string[];
+  trueFalse: string[][];
+  shortAnswer: string[][];
+}
+
+interface ExamSession {
   attempt: any;
   exam: any;
+
+  pdfUrl: string;
+
+  remainingSeconds: number;
+
+  savedAnswers: ExamAnswers;
+}
+
+interface Props {
+  session: ExamSession;
 }
 
 export default function StudentExamLayout({
-  attempt,
-  exam,
+  session,
 }: Props) {
-  const [mobileView, setMobileView] = useState<
-    "pdf" | "sheet"
-  >("pdf");
+
+  const {
+    attempt,
+    exam,
+    pdfUrl,
+    remainingSeconds,
+    savedAnswers,
+  } = session;
+
+  const [mobileView, setMobileView] =
+    useState<"pdf" | "sheet">("pdf");
 
   return (
     <div className="h-screen overflow-hidden bg-slate-100">
@@ -39,19 +67,25 @@ export default function StudentExamLayout({
 
         {/* PDF */}
 
-        <div className="w-1/2 border-r bg-white overflow-hidden">
+        <div className="w-1/2 overflow-hidden border-r bg-white">
+
           <PdfViewer
-            url={exam.exam_file_url}
+            url={pdfUrl}
           />
+
         </div>
 
         {/* ANSWER SHEET */}
 
         <div className="w-1/2 overflow-y-auto bg-[#f8f6ef]">
+
           <AnswerSheet
             attempt={attempt}
             exam={exam}
+            remainingSeconds={remainingSeconds}
+            savedAnswers={savedAnswers}
           />
+
         </div>
 
       </div>
@@ -65,7 +99,7 @@ export default function StudentExamLayout({
         {mobileView === "pdf" ? (
 
           <PdfViewer
-            url={exam.exam_file_url}
+            url={pdfUrl}
           />
 
         ) : (
@@ -73,6 +107,8 @@ export default function StudentExamLayout({
           <AnswerSheet
             attempt={attempt}
             exam={exam}
+            remainingSeconds={remainingSeconds}
+            savedAnswers={savedAnswers}
           />
 
         )}
@@ -86,8 +122,8 @@ export default function StudentExamLayout({
       <button
         type="button"
         onClick={() =>
-          setMobileView((v) =>
-            v === "pdf"
+          setMobileView((view) =>
+            view === "pdf"
               ? "sheet"
               : "pdf"
           )
@@ -113,6 +149,7 @@ export default function StudentExamLayout({
           md:hidden
         "
       >
+
         {mobileView === "pdf" ? (
           <>
             <ListChecks className="size-5" />
@@ -124,6 +161,7 @@ export default function StudentExamLayout({
             Xem đề thi
           </>
         )}
+
       </button>
 
     </div>

@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+
 import StudentExamLayout from "./student-exam-layout";
+
+import { requireStudent } from "@/lib/auth/student";
+import { studentExamService } from "@/services/student-exam.service";
 
 interface Props {
   params: Promise<{
@@ -13,52 +16,26 @@ export default async function StudentExamPage({
 }: Props) {
   const { id } = await params;
 
-  const supabase = await createClient();
+  try {
+    const profile = await requireStudent();
 
-  // ==========================
-  // Lấy Attempt + Exam
-  // ==========================
+    const session =
+      await studentExamService.getExamSession(
+        profile.id,
+        id
+      );
+     
+    return (
+      <StudentExamLayout
+        session={session}
+      />
+    );
+  } catch (error) {
+    console.error(
+      "StudentExamPage:",
+      error
+    );
 
-  const {
-    data: attempt,
-    error,
-  } = await supabase
-    .from("exam_attempts")
-    .select(`
-      *,
-      exams (
-        id,
-        title,
-        category,
-        duration_minutes,
-        exam_file_url,
-        show_answer,
-        max_attempts,
-        attendance_min_score,
-        question_config,
-        answer_key
-      )
-    `)
-    .eq("id", id)
-    .single();
-
-  if (error || !attempt) {
-    console.error(error);
     return notFound();
   }
-
-  const exam = attempt.exams;
-
-  if (!exam) {
-    return notFound();
-  }
-
-  
-
-  return (
-    <StudentExamLayout
-      attempt={attempt}
-      exam={exam}
-    />
-  );
 }

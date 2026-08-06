@@ -1,5 +1,5 @@
 "use client";
-
+import { useRef } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -16,15 +16,26 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
+import { useSaveAnswer } from "@/hooks/use-save-answer";
 import { Button } from "@/components/ui/button";
 
 import { useSubmitAttempt } from "@/hooks/use-submit-attempt";
 import { useStartExam } from "@/hooks/use-start-exam";
 
+
+
+
+interface ExamAnswers {
+  multipleChoice: string[];
+  trueFalse: string[][];
+  shortAnswer: string[][];
+}
+
 interface Props {
   attempt: any;
   exam: any;
+  remainingSeconds: number;
+  savedAnswers: ExamAnswers;
 }
 
 const MC = ["A", "B", "C", "D"];
@@ -34,7 +45,11 @@ const DIGITS = ["0","1","2","3","4","5","6","7","8","9"];
 export default function AnswerSheet({
   attempt,
   exam,
-}: Props) {
+  remainingSeconds,
+  savedAnswers,
+}: Props)  
+
+{
 
   const router = useRouter();
 
@@ -53,35 +68,21 @@ export default function AnswerSheet({
   // Answers
   // ============================
 
-  const [answers, setAnswers] = useState({
-    multipleChoice: Array(
-      questionConfig.multipleChoice
-    ).fill(""),
-
-    trueFalse: Array.from(
-      {
-        length:
-          questionConfig.trueFalse,
-      },
-      () => ["", "", "", ""]
-    ),
-
-    shortAnswer: Array.from(
-  { length: questionConfig.shortAnswer },
-  () => Array(SHORT_ANSWER_COLS).fill("")
-),
-  });
+ const [answers, setAnswers] =
+  useState(savedAnswers);
 
   // ============================
   // Timer
   // ============================
 
-  const duration =
-    (exam.duration_minutes ?? 60) * 60;
+ const [timeLeft, setTimeLeft] =
+  useState(remainingSeconds);
 
-  const [timeLeft, setTimeLeft] =
-    useState(duration);
-
+  useEffect(() => {
+  setTimeLeft(
+    remainingSeconds
+  );
+}, [remainingSeconds]);
   // ============================
   // Result
   // ============================
@@ -89,13 +90,23 @@ export default function AnswerSheet({
   const [result, setResult] =
     useState<any>(null);
 
+const saveTimeout =
+useRef<NodeJS.Timeout | null>(
+    null
+);
+
   // ============================
   // Submit
   // ============================
 
+
+
   const submitMutation =
     useSubmitAttempt();
+    const saveAnswerMutation =
+    useSaveAnswer();
   const startExamMutation = useStartExam();
+  
       // ============================
   // Countdown Timer
   // ============================
@@ -118,6 +129,36 @@ export default function AnswerSheet({
     return () => clearInterval(timer);
   }, [result]);
 
+  function autoSaveAnswers(
+    nextAnswers: typeof answers
+) {
+
+    if (!attempt?.id) return;
+
+    if (saveTimeout.current) {
+
+        clearTimeout(
+            saveTimeout.current
+        );
+
+    }
+
+    saveTimeout.current =
+        setTimeout(() => {
+
+            saveAnswerMutation.mutate({
+
+                attemptId:
+                    attempt.id,
+
+                answers:
+                    nextAnswers,
+
+            });
+
+        }, 500);
+
+}
   // ============================
   // Display Time
   // ============================
@@ -179,51 +220,54 @@ export default function AnswerSheet({
   // ============================
 
   function chooseMultipleChoice(
-    index: number,
-    value: string
-  ) {
-    if (result) return;
+  index: number,
+  value: string
+) {
+  if (result) return;
 
-    setAnswers((prev) => {
+  setAnswers((prev) => {
 
-      const next = {
-        ...prev,
-        multipleChoice: [...prev.multipleChoice],
-      };
+    const next = {
+      ...prev,
+      multipleChoice: [...prev.multipleChoice],
+    };
 
-      next.multipleChoice[index] = value;
+    next.multipleChoice[index] = value;
 
-      return next;
-    });
-  }
+    // Autosave toàn bộ phiếu trả lời
+    autoSaveAnswers(next);
 
+    return next;
+  });
+}
   // ============================
   // True False
   // ============================
 
   function chooseTrueFalse(
-    questionIndex: number,
-    columnIndex: number,
-    value: string
-  ) {
-    if (result) return;
+  questionIndex: number,
+  columnIndex: number,
+  value: string
+) {
+  if (result) return;
 
-    setAnswers((prev) => {
+  setAnswers((prev) => {
 
-      const next = {
-        ...prev,
-        trueFalse: prev.trueFalse.map(
-          (row) => [...row]
-        ),
-      };
+    const next = {
+      ...prev,
+      trueFalse: prev.trueFalse.map(
+        (row) => [...row]
+      ),
+    };
 
-      next.trueFalse[questionIndex][columnIndex] =
-        value;
+    next.trueFalse[questionIndex][columnIndex] =
+      value;
 
-      return next;
-    });
-  }
+    autoSaveAnswers(next);
 
+    return next;
+  });
+}
   // ============================
   // Short Answer
   // ============================
@@ -236,12 +280,19 @@ export default function AnswerSheet({
   if (result) return;
 
   setAnswers((prev) => {
+
     const next = {
       ...prev,
-      shortAnswer: prev.shortAnswer.map((row) => [...row]),
+      shortAnswer:
+        prev.shortAnswer.map(
+          (row) => [...row]
+        ),
     };
 
-    next.shortAnswer[questionIndex][columnIndex] = value;
+    next.shortAnswer[questionIndex][columnIndex] =
+      value;
+
+    autoSaveAnswers(next);
 
     return next;
   });

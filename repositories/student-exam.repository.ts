@@ -149,21 +149,24 @@ export class StudentExamRepository {
 async startExam(
   examId: string,
   studentId: string,
-  
 ) {
-  const supabase = await createClient();
+
+  const supabase =
+    await createClient();
 
   // ===========================
   // Lấy thông tin đề
   // ===========================
 
-  const { data: exam, error: examError } =
-    await supabase
-      .from("exams")
-      .select("*")
-      .eq("id", examId)
-      .single();
-      
+  const {
+    data: exam,
+    error: examError,
+  } = await supabase
+    .from("exams")
+    .select("*")
+    .eq("id", examId)
+    .single();
+
   if (examError) throw examError;
 
   if (!exam.is_active) {
@@ -190,9 +193,35 @@ async startExam(
     throw new Error("Đề đã kết thúc.");
   }
 
-  // ===========================
-  // Kiểm tra số lượt
-  // ===========================
+  // ====================================
+  // NEW
+  // Kiểm tra attempt chưa nộp
+  // ====================================
+
+  const {
+    data: currentAttempt,
+  } = await supabase
+    .from("exam_attempts")
+    .select("*")
+    .eq("exam_id", examId)
+    .eq("student_id", studentId)
+    .is("submitted_at", null)
+    .order("created_at", {
+      ascending: false,
+    })
+    .maybeSingle();
+
+  if (currentAttempt) {
+
+    console.log(
+      "Resume attempt:",
+      currentAttempt.id
+    );
+
+    return currentAttempt;
+
+  }
+
 
   const {
     data: oldAttempts,
@@ -203,21 +232,21 @@ async startExam(
     .eq("exam_id", examId)
     .eq("student_id", studentId);
 
-  if (attemptError) throw attemptError;
+  if (attemptError)
+    throw attemptError;
 
   const attemptNumber =
     (oldAttempts?.length ?? 0) + 1;
 
   if (
     exam.max_attempts &&
-    attemptNumber > exam.max_attempts
+    attemptNumber >
+      exam.max_attempts
   ) {
-    throw new Error("Bạn đã hết lượt làm.");
+    throw new Error(
+      "Bạn đã hết lượt làm."
+    );
   }
-
-  // ===========================
-  // Tạo attempt
-  // ===========================
 
   const {
     data: attempt,
@@ -225,16 +254,28 @@ async startExam(
   } = await supabase
     .from("exam_attempts")
     .insert({
+
       exam_id: examId,
+
       student_id: studentId,
-      attempt_number: attemptNumber,
-      started_at: new Date().toISOString(),
+
+      attempt_number:
+        attemptNumber,
+
+      started_at:
+        new Date().toISOString(),
+
+      duration_seconds:
+        exam.duration_minutes * 60,
+
     })
     .select()
     .single();
- if (error) throw error;
+
+  if (error) throw error;
 
   return attempt;
+
 }
 async getAttemptDetail(
   studentId: string,
@@ -284,9 +325,63 @@ async getAttemptDetail(
     throw examError;
   }
 
-  
+// ==========================
+// Saved Answers
+// ==========================
 
-  return {
+const savedAnswers =
+  attempt.answers ?? {
+    multipleChoice: [],
+    trueFalse: [],
+    shortAnswer: [],
+  };
+  // ============================
+// Remaining Time
+// ============================
+
+const startedAt =
+  new Date(attempt.started_at).getTime();
+
+const now =
+  Date.now();
+
+const duration =
+  attempt.duration_seconds ??
+  exam.duration_minutes * 60;
+
+const elapsed =
+  Math.floor(
+    (now - startedAt) / 1000
+  );
+
+const remainingSeconds =
+  Math.max(
+    duration - elapsed,
+    0
+  );
+  if (
+  remainingSeconds <= 0 &&
+  !attempt.submitted_at
+) {
+
+  await supabase
+    .from("exam_attempts")
+    .update({
+
+      submitted_at:
+        new Date().toISOString(),
+
+    })
+    .eq(
+      "id",
+      attempt.id
+    );
+
+}
+
+
+
+return {
 
     attempt,
 
@@ -294,14 +389,13 @@ async getAttemptDetail(
 
     pdfUrl: exam.exam_file_url,
 
-    remainingSeconds:
-        exam.duration_minutes * 60,
+    remainingSeconds,
+
+    savedAnswers,
 
 };
 
 }
-
-
 async submitAttempt(
   studentId: string,
   attemptId: string,

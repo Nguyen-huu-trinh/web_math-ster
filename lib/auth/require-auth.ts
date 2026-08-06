@@ -1,16 +1,19 @@
-import { createClient } from "@/lib/supabase/server";
+import { cache } from "react";
+import { getServerSupabase } from "./auth-context";
 
-export async function requireAuth() {
-  const supabase = await createClient();
+export const requireAuth = cache(async () => {
 
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
+    const supabase =
+        await getServerSupabase();
 
-  if (error || !user) {
-    throw new Error("Unauthorized");
-  }
+    const {
+        data: { user },
+        error,
+    } = await supabase.auth.getUser();
 
-  return user;
-}
+    if (error || !user) {
+        throw new Error("Unauthorized");
+    }
+
+    return user;
+});

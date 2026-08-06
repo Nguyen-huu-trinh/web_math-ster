@@ -2,93 +2,48 @@ import { createClient } from "@/lib/supabase/server";
 
 export class DashboardRepository {
   async getStudentDashboard(studentId: string) {
-    const supabase = await createClient();
 
-    const [
-      profile,
-      courses,
-      progress,
-      lessons,
-      attempts,
-    ] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", studentId)
-        .single(),
+    const supabase =
+        await createClient();
 
-      supabase
-        .from("course_students")
-        .select("course_id", { count: "exact", head: true })
-        .eq("student_id", studentId),
+    const {
+        data,
+        error,
+    } = await supabase.rpc(
+        "get_student_dashboard",
+        {
+            p_student_id: studentId,
+        }
+    );
 
-      supabase
-        .from("lesson_progress")
-        .select("lesson_id", { count: "exact", head: true })
-        .eq("student_id", studentId)
-        .eq("is_completed", true),
+    if (error) throw error;
 
-      supabase
-        .from("lessons")
-        .select("id", { count: "exact", head: true }),
-
-      supabase
-        .from("exam_attempts")
-        .select(`
-          exam_id,
-          score,
-          exams!inner(
-            id,
-            category
-          )
-        `)
-        .eq("student_id", studentId),
-    ]);
-
-    const completedLessons =
-      progress.count ?? 0;
-
-    const totalLessons =
-      lessons.count ?? 0;
-
-    // ===== số đề đã làm =====
-
-    const totalExams = new Set(
-      (attempts.data ?? []).map((a: any) => a.exam_id)
-    ).size;
-
-    // ===== chỉ đề định kỳ =====
-
-    const periodicAttempts =
-      (attempts.data ?? []).filter(
-        (a: any) =>
-          a.exams?.category === "PERIODIC"
-      );
-
-    const averagePeriodicScore =
-      periodicAttempts.length > 0
-        ? periodicAttempts.reduce(
-            (sum: number, item: any) =>
-              sum + Number(item.score ?? 0),
-            0
-          ) / periodicAttempts.length
-        : 0;
+    const row = data?.[0];
 
     return {
-      profile: profile.data,
+        profile: {
+            full_name: row.full_name,
+        },
 
-      totalCourses:
-        courses.count ?? 0,
+        totalCourses:
+            Number(row.total_courses),
 
-      completedLessons,
+        completedLessons:
+            Number(row.completed_lessons),
 
-      totalLessons,
+        totalLessons:
+            Number(row.total_lessons),
 
-      totalExams,
+        totalExams:
+            Number(row.total_exams),
 
-      averagePeriodicScore,
+        averagePeriodicScore:
+            Number(
+                row.average_periodic_score ?? 0
+            ),
     };
-  }
+
+}
 
   async getTeacherDashboard() {
     const supabase = await createClient();

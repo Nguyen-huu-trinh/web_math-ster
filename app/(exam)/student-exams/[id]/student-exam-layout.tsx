@@ -7,6 +7,7 @@ import {
   ListChecks,
 } from "lucide-react";
 
+import { cn } from "@/lib/utils";
 import AnswerSheet from "./answer-sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -29,11 +30,8 @@ interface ExamAnswers {
 interface ExamSession {
   attempt: any;
   exam: any;
-
   pdfUrl: string;
-
   remainingSeconds: number;
-
   savedAnswers: ExamAnswers;
 }
 
@@ -44,7 +42,6 @@ interface Props {
 export default function StudentExamLayout({
   session,
 }: Props) {
-
   const {
     attempt,
     exam,
@@ -59,9 +56,9 @@ export default function StudentExamLayout({
   return (
     <div className="h-screen overflow-hidden bg-slate-100">
 
-      {/* ===========================
+      {/* ==========================================
           DESKTOP
-      =========================== */}
+      ========================================== */}
 
       <div className="hidden h-full md:flex">
 
@@ -90,19 +87,41 @@ export default function StudentExamLayout({
 
       </div>
 
-      {/* ===========================
+      {/* ==========================================
           MOBILE
-      =========================== */}
+      ========================================== */}
 
-      <div className="h-full md:hidden">
+      <div className="relative h-full md:hidden">
 
-        {mobileView === "pdf" ? (
+        {/* ================= PDF ================= */}
+
+        <div
+          className={cn(
+            "absolute inset-0 transition-opacity duration-200",
+
+            mobileView === "pdf"
+              ? "opacity-100 z-10"
+              : "opacity-0 pointer-events-none"
+          )}
+        >
 
           <PdfViewer
             url={pdfUrl}
           />
 
-        ) : (
+        </div>
+
+        {/* ============== ANSWER SHEET ============== */}
+
+        <div
+          className={cn(
+            "absolute inset-0 transition-opacity duration-200",
+
+            mobileView === "sheet"
+              ? "opacity-100 z-10"
+              : "opacity-0 pointer-events-none"
+          )}
+        >
 
           <AnswerSheet
             attempt={attempt}
@@ -111,13 +130,13 @@ export default function StudentExamLayout({
             savedAnswers={savedAnswers}
           />
 
-        )}
+        </div>
 
       </div>
 
-      {/* ===========================
-          MOBILE FLOAT BUTTON
-      =========================== */}
+      {/* ==========================================
+          FLOAT BUTTON
+      ========================================== */}
 
       <button
         type="button"
@@ -144,12 +163,12 @@ export default function StudentExamLayout({
           font-semibold
           text-primary-foreground
           shadow-xl
-          transition
+          transition-all
           hover:scale-105
+          active:scale-95
           md:hidden
         "
       >
-
         {mobileView === "pdf" ? (
           <>
             <ListChecks className="size-5" />
@@ -161,7 +180,6 @@ export default function StudentExamLayout({
             Xem đề thi
           </>
         )}
-
       </button>
 
     </div>

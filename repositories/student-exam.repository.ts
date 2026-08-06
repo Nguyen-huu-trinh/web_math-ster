@@ -148,9 +148,8 @@ export class StudentExamRepository {
 
 async startExam(
   examId: string,
-  studentId: string,
+  studentId: string
 ) {
-
   const supabase =
     await createClient();
 
@@ -193,10 +192,9 @@ async startExam(
     throw new Error("Đề đã kết thúc.");
   }
 
-  // ====================================
-  // NEW
-  // Kiểm tra attempt chưa nộp
-  // ====================================
+  // ===========================
+  // Resume nếu còn bài chưa nộp
+  // ===========================
 
   const {
     data: currentAttempt,
@@ -212,16 +210,17 @@ async startExam(
     .maybeSingle();
 
   if (currentAttempt) {
-
     console.log(
       "Resume attempt:",
       currentAttempt.id
     );
 
     return currentAttempt;
-
   }
 
+  // ===========================
+  // Đếm số lần làm
+  // ===========================
 
   const {
     data: oldAttempts,
@@ -232,8 +231,9 @@ async startExam(
     .eq("exam_id", examId)
     .eq("student_id", studentId);
 
-  if (attemptError)
+  if (attemptError) {
     throw attemptError;
+  }
 
   const attemptNumber =
     (oldAttempts?.length ?? 0) + 1;
@@ -247,6 +247,43 @@ async startExam(
       "Bạn đã hết lượt làm."
     );
   }
+
+  // ===========================
+  // Khởi tạo đáp án rỗng
+  // ===========================
+
+  const questionConfig =
+    exam.question_config ?? {
+      multipleChoice: 0,
+      trueFalse: 0,
+      shortAnswer: 0,
+    };
+
+  const emptyAnswers = {
+    multipleChoice: Array(
+      questionConfig.multipleChoice
+    ).fill(""),
+
+    trueFalse: Array.from(
+      {
+        length:
+          questionConfig.trueFalse,
+      },
+      () => ["", "", "", ""]
+    ),
+
+    shortAnswer: Array.from(
+      {
+        length:
+          questionConfig.shortAnswer,
+      },
+      () => ["", "", "", ""]
+    ),
+  };
+
+  // ===========================
+  // Tạo attempt mới
+  // ===========================
 
   const {
     data: attempt,
@@ -268,14 +305,18 @@ async startExam(
       duration_seconds:
         exam.duration_minutes * 60,
 
+      answers:
+        emptyAnswers,
+
     })
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
 
   return attempt;
-
 }
 async getAttemptDetail(
   studentId: string,

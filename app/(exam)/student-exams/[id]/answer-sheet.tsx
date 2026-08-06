@@ -67,9 +67,31 @@ export default function AnswerSheet({
   // ============================
   // Answers
   // ============================
+const [answers, setAnswers] = useState(() => ({
+  multipleChoice:
+    savedAnswers?.multipleChoice ??
+    Array(questionConfig.multipleChoice).fill(""),
 
- const [answers, setAnswers] =
-  useState(savedAnswers);
+  trueFalse:
+    savedAnswers?.trueFalse?.length
+      ? savedAnswers.trueFalse
+      : Array.from(
+          {
+            length: questionConfig.trueFalse,
+          },
+          () => ["", "", "", ""]
+        ),
+
+  shortAnswer:
+    savedAnswers?.shortAnswer?.length
+      ? savedAnswers.shortAnswer
+      : Array.from(
+          {
+            length: questionConfig.shortAnswer,
+          },
+          () => ["", "", "", ""]
+        ),
+}));
 
   // ============================
   // Timer
@@ -564,9 +586,8 @@ className="rounded-lg border p-3"
 
 {["a", "b", "c", "d"].map((label, columnIndex) => {
 
-  const selected =
-    answers.trueFalse[questionIndex][columnIndex];
-
+ const selected =
+    answers.trueFalse?.[questionIndex]?.[columnIndex] ?? "";
   const correct =
     answerKey.trueFalse?.[questionIndex]?.[columnIndex];
 
@@ -730,9 +751,9 @@ className="rounded-lg border p-3"
     length: SHORT_ANSWER_COLS,
   }).map((_, columnIndex) => {
 
-    const current =
-      answers.shortAnswer[index][columnIndex];
-   const fullCorrect =
+   const current =
+    answers.shortAnswer?.[index]?.[columnIndex] ?? "";
+       const fullCorrect =
   String(answerKey.shortAnswer?.[index] ?? "");
 
 const correctChars = fullCorrect.split("");

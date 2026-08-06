@@ -174,16 +174,29 @@ useEffect(() => {
   setTimeLeft(remainingSeconds);
 }, [remainingSeconds]);
 
+const [submitted, setSubmitted] =
+  useState(false);
+
 useEffect(() => {
+
+    
+  if (submitted) return;
+
   const timer = setInterval(() => {
+
     setTimeLeft((prev) => {
+
       if (prev <= 0) return 0;
+
       return prev - 1;
+
     });
+
   }, 1000);
 
   return () => clearInterval(timer);
-}, []);
+
+}, [submitted]);
 
 const displayTime = useMemo(() => {
   const m = Math.floor(timeLeft / 60);
@@ -198,10 +211,14 @@ useEffect(() => {
 
   function handleSubmitSuccess() {
 
+    setSubmitted(true);
+
     setShowExitDialog(false);
 
     if (exitTimer.current) {
+
       clearInterval(exitTimer.current);
+
     }
 
   }
@@ -212,13 +229,16 @@ useEffect(() => {
   );
 
   return () => {
+
     window.removeEventListener(
       "submit-success",
       handleSubmitSuccess
     );
+
   };
 
 }, []);
+
 
 
   return (
@@ -353,7 +373,18 @@ useEffect(() => {
 
 <div className="flex h-full flex-col md:hidden">
 
-  <div className="flex items-center justify-between border-b bg-card px-4 py-3">
+ 
+
+<div className="relative flex-1">
+  <div
+  className={cn(
+    "absolute inset-0 transition-opacity duration-200",
+    mobileView === "pdf"
+      ? "opacity-100 z-10"
+      : "opacity-0 pointer-events-none"
+  )}
+>
+   <div className="flex items-center justify-between border-b bg-card px-4 py-3">
 
     <span className="truncate text-sm font-semibold">
       {exam.title}
@@ -372,17 +403,6 @@ useEffect(() => {
     </span>
 
   </div>
-
-<div className="relative flex-1">
-  <div
-  className={cn(
-    "absolute inset-0 transition-opacity duration-200",
-    mobileView === "pdf"
-      ? "opacity-100 z-10"
-      : "opacity-0 pointer-events-none"
-  )}
->
-
   <PdfViewer
     url={pdfUrl}
   />

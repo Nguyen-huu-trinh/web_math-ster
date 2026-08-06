@@ -1,4 +1,14 @@
 'use client'
+import { useState } from "react";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import {
  
@@ -55,6 +65,9 @@ export default function ProfilePage() {
   const changePasswordMutation = useChangePassword()
 
 
+  const [successOpen, setSuccessOpen] =
+  useState(false);
+
   if (!user || !profile) return null
 
 
@@ -76,7 +89,7 @@ export default function ProfilePage() {
     form.get("confirm") as string
 
   if (newPassword !== confirmPassword) {
-    toast.error("New passwords do not match")
+    toast.error("Mật khẩu mới và xác nhận mật khẩu không khớp.")
     return
   }
 
@@ -86,9 +99,11 @@ export default function ProfilePage() {
       newPassword,
     })
 
-    toast.success("Password changed")
+    setSuccessOpen(true);
 
-    e.currentTarget.reset()
+// e.currentTarget.reset();
+
+//     e.currentTarget.reset()
 
   } catch (err: any) {
 
@@ -331,6 +346,39 @@ export default function ProfilePage() {
         </div>
 
       </div>
+
+                  <Dialog
+  open={successOpen}
+  onOpenChange={setSuccessOpen}
+>
+  <DialogContent>
+
+    <DialogHeader>
+
+      <DialogTitle>
+        🎉 Thành công
+      </DialogTitle>
+
+      <DialogDescription>
+        Mật khẩu của bạn đã được cập nhật thành công.
+      </DialogDescription>
+
+    </DialogHeader>
+
+    <DialogFooter>
+
+      <Button
+        onClick={() => setSuccessOpen(false)}
+      >
+        Đóng
+      </Button>
+
+    </DialogFooter>
+
+  </DialogContent>
+</Dialog>
+
+      
     </div>
   )
 }

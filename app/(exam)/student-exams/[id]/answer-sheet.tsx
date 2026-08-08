@@ -496,7 +496,7 @@ const correct = answerKey.multipleChoice[index];
   return (
       <div
       key={index}
-      className="break-inside-avoid mb-3 flex items-center justify-start rounded-lg px-1 py-2"
+      className="break-inside-avoid mb-3 flex items-center justify-between rounded-lg px-1 py-2"
       >
         <div className="flex items-center gap-2">
 

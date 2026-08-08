@@ -1,6 +1,6 @@
 
 'use client'
-
+import { useAnnouncement } from "@/hooks/use-announcement";
 import { useAuth } from '@/providers/auth-provider'
 
 import { useStudentDashboard } from '@/hooks/use-dashboard'
@@ -44,10 +44,13 @@ export default function StudentDashboard() {
 
     const leaderboard =
         useLeaderboard()
+    const announcement =
+    useAnnouncement()
 
     if (
         studentDashboard.isLoading ||
-        leaderboard.isLoading
+        leaderboard.isLoading ||
+        announcement.isLoading
     ) {
         return (
             <div className="flex justify-center py-20">
@@ -186,26 +189,26 @@ export default function StudentDashboard() {
             
             <div className="rounded-xl border border-amber-300 bg-amber-50 p-5 shadow-sm">
 
-                <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2">
 
-                    <span className="text-xl">📢</span>
+        <span className="text-xl">📢</span>
 
-                    <h3 className="font-semibold text-amber-900">
-                        Thông báo 
-                    </h3>
+        <h3 className="font-semibold text-amber-900">
 
-                </div>
+            {announcement.data?.title ?? "Thông báo"}
 
-                <p className="mt-3 whitespace-pre-line text-sm leading-7 text-amber-800">
+        </h3>
 
-                    BÀI TẬP ĐIỂM DANH TRÊN WEB ĐÃ CÓ FILE, CHƯA CÓ LINK ĐIỀN NHƯ TRƯỚC CÁC EM VÀO MỞ FILE LÀM NHA<br />
-                    Hằng tuần vào cuối tuần sẽ có bữa học BẮT BUỘC PHẢI VÀO để hỏi và trả lời<br />
-                    ⏰ 21h ngày 3/8 — Học logarit, mũ, lượng giác, csc, csn <br />
-                    ⏰ 20h ngày 4/8 - Chữa bài tập min max quãng đường thời gian <br />
+    </div>
 
-                </p>
+    <p className="mt-3 whitespace-pre-line text-sm leading-7 text-amber-800">
 
-            </div>
+        {announcement.data?.content ??
+            "Chưa có thông báo."}
+
+    </p>
+
+</div>
 
 
 

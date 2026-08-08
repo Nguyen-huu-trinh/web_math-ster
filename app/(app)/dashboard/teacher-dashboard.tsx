@@ -1,6 +1,24 @@
 
 'use client'
 
+import { useEffect, useState } from "react";
+
+import {
+    useAnnouncement,
+    useUpdateAnnouncement,
+} from "@/hooks/use-announcement";
+
+import { Input } from "@/components/ui/input";
+
+import { Textarea } from "@/components/ui/textarea";
+
+import { Button } from "@/components/ui/button";
+
+import { Save } from "lucide-react";
+
+import { toast } from "sonner";
+
+
 import { useTeacherDashboard } from '@/hooks/use-dashboard'
 import { useLeaderboard } from '@/hooks/use-leaderboard'
 
@@ -74,6 +92,34 @@ export default function TeacherDashboard() {
 
     const leaderboard =
         useLeaderboard()
+    const announcement =
+    useAnnouncement();
+
+    console.log("announcement.data", announcement.data);
+
+    const updateAnnouncement =
+    useUpdateAnnouncement();
+
+    const [title, setTitle] = useState("");
+
+    const [content, setContent] = useState("");
+
+    useEffect(() => {
+
+    if (announcement.data) {
+
+        setTitle(
+            announcement.data.title
+        );
+
+        setContent(
+            announcement.data.content
+        );
+
+    }
+
+}, [announcement.data]);
+
 
     if (
         teacherDashboard.isLoading ||
@@ -91,102 +137,233 @@ export default function TeacherDashboard() {
 
     const stats = [
 
-        {
-            label: "Courses",
-            value: dashboard?.totalCourses ?? 0,
-            icon: "book-open",
-        },
+    {
+        label: "Khóa học",
+        value: dashboard?.totalCourses ?? 0,
+        icon: "book-open",
+    },
 
-        {
-            label: "Lessons",
-            value: dashboard?.totalLessons ?? 0,
-            icon: "play-circle",
-        },
+    {
+        label: "Bài học",
+        value: dashboard?.totalLessons ?? 0,
+        icon: "play-circle",
+    },
 
-        {
-            label: "Students",
-            value: dashboard?.totalStudents ?? 0,
-            icon: "users",
-        },
+    {
+        label: "Học sinh",
+        value: dashboard?.totalStudents ?? 0,
+        icon: "users",
+    },
 
-        {
-            label: "Exams",
-            value: dashboard?.totalExams ?? 0,
-            icon: "clipboard-list",
-        },
+    {
+        label: "Bài kiểm tra",
+        value: dashboard?.totalExams ?? 0,
+        icon: "clipboard-list",
+    },
 
-    ]
+]
+
+async function saveAnnouncement() {
+     console.log("announcement", announcement.data);
+
+    console.log("title", title);
+
+    console.log("content", content);
+
+    if (!announcement.data) return;
+
+    try {
+
+        await updateAnnouncement.mutateAsync({
+
+            ...announcement.data,
+
+            title,
+
+            content,
+
+        });
+
+        toast.success(
+            "Đã cập nhật thông báo"
+        );
+
+    }
+
+    catch {
+
+        toast.error(
+            "Không thể cập nhật"
+        );
+
+    }
+
+}
 
     return (
 
         <div className="flex flex-col gap-6">
 
-            <div>
+            <div className="grid gap-4 lg:grid-cols-[1fr_220px]">
 
-                <p className="text-sm text-muted-foreground">
-                    {greeting()}
-                </p>
+    <div className="rounded-xl border bg-card p-6 shadow-sm">
 
-                <h2 className="text-3xl font-bold">
-                    Teacher Dashboard 👋
-                </h2>
+        <p className="text-sm text-muted-foreground">
 
-                <p className="mt-1 text-muted-foreground">
-                    Here's how your classes are performing this week.
-                </p>
+            👋 {greeting()}
+
+        </p>
+
+        <h2 className="mt-2 text-3xl font-bold">
+
+            Giáo viên
+
+        </h2>
+
+        <p className="mt-2 text-muted-foreground">
+
+            Chúc bạn có một ngày giảng dạy hiệu quả!
+
+        </p>
 
             </div>
 
+            <div className="rounded-xl border bg-card p-6 shadow-sm flex flex-col justify-center">
+
+                <p className="text-sm font-medium text-muted-foreground">
+
+                    👨‍🎓 Đang học
+
+                </p>
+
+                <div className="mt-3 flex items-end gap-2">
+
+                    <span className="text-4xl font-bold text-primary">
+
+                        --
+
+                    </span>
+
+                    <span className="pb-1 text-sm text-muted-foreground">
+
+                        học sinh
+
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div className="rounded-xl border border-amber-300 bg-amber-50 p-5 shadow-sm">
+
+            <div className="flex items-center justify-between">
+
+                <h3 className="font-semibold text-amber-900">
+
+                    📢 Thông báo học sinh
+
+                </h3>
+
+                <Button
+                    size="sm"
+                    onClick={saveAnnouncement}
+                    disabled={updateAnnouncement.isPending}
+                >
+
+                    <Save className="mr-2 h-4 w-4"/>
+
+                    Lưu
+
+                </Button>
+
+            </div>
+
+            <div className="mt-4 space-y-4">
+
+                <Input
+
+                    placeholder="Tiêu đề"
+
+                    value={title}
+
+                    onChange={(e)=>
+
+                        setTitle(e.target.value)
+
+                    }
+
+                />
+
+                <Textarea
+
+                    rows={6}
+
+                    placeholder="Nhập nội dung..."
+
+                    value={content}
+
+                    onChange={(e)=>
+
+                        setContent(e.target.value)
+
+                    }
+
+                />
+
+            </div>
+
+        </div>
             <CountdownCard />
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-                {stats.map((item, index) => (
+    {stats.map((item, index) => (
 
-                    <StatCard
-                        key={item.label}
-                        {...item}
-                        index={index}
-                    />
+        <StatCard
+            key={item.label}
+            {...item}
+            index={index}
+        />
 
-                ))}
+    ))}
 
-            </div>
+</div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-
-                <div className="lg:col-span-2">
-
-                    <TeacherActivityChart />
-
-                </div>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
 
                 <LeaderboardCard
-                    title="Top 5 Overall"
-                    entries={
-                        leaderboard.data?.overall ?? []
-                    }
+                    title="😴 Cần cố gắng"
+                    description="Top 5 học sinh hoàn thành ít bài học nhất"
+                    entries={leaderboard.data?.lazy ?? []}
+                />
+
+                <LeaderboardCard
+                    title="📉 Làm bài ít"
+                    description="Top 5 học sinh làm ít bài tập nhất"
+                    entries={leaderboard.data?.lowHomework ?? []}
+                />
+
+                <LeaderboardCard
+                    title="🔥 Chăm học"
+                    description="Top 5 học sinh tích cực học tập nhất"
+                    entries={leaderboard.data?.hardworking ?? []}
+                />
+
+                <LeaderboardCard
+                    title="🏆 Học giỏi"
+                    description="Top 5 học sinh có điểm trung bình cao nhất"
+                    entries={leaderboard.data?.excellent ?? []}
                 />
 
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div>
 
-                <LeaderboardCard
-                    title="Top 5 · Latest Exam"
-                    entries={
-                        leaderboard.data?.latest ?? []
-                    }
-                />
+    <TeacherActivityChart />
 
-                <div className="lg:col-span-2">
-
-                    <NotificationsCard />
-
-                </div>
-
-            </div>
-
+</div>
         </div>
 
     )

@@ -51,51 +51,41 @@ export class DashboardRepository {
 
 }
 
-  async getTeacherDashboard() {
-    const supabase = await createClient();
+ async getTeacherDashboard() {
 
-    const [
-      courses,
-      lessons,
-      students,
-      exams,
-    ] = await Promise.all([
-      supabase
-        .from("courses")
-        .select("id", { count: "exact", head: true })
-        .is("deleted_at", null),
+    const supabase =
+        await createClient();
 
-      supabase
-        .from("lessons")
-        .select("id", { count: "exact", head: true })
-        .is("deleted_at", null),
+    const {
+        data,
+        error,
+    } = await supabase
 
-      supabase
-        .from("profiles")
-        .select("id", { count: "exact", head: true })
-        .eq("role", "STUDENT")
-        .eq("is_active", true),
+        .from("v_teacher_dashboard")
 
-      supabase
-        .from("exams")
-        .select("id", { count: "exact", head: true })
-        .is("deleted_at", null),
-    ]);
+        .select("*")
+
+        .single();
+
+    if (error) throw error;
 
     return {
-      totalCourses:
-        courses.count ?? 0,
 
-      totalLessons:
-        lessons.count ?? 0,
+        totalCourses:
+            Number(data.total_courses),
 
-      totalStudents:
-        students.count ?? 0,
+        totalLessons:
+            Number(data.total_lessons),
 
-      totalExams:
-        exams.count ?? 0,
+        totalStudents:
+            Number(data.total_students),
+
+        totalExams:
+            Number(data.total_exams),
+
     };
-  }
+
+}
 
 async lazyStudents() {
 

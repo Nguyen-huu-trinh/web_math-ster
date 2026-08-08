@@ -9,38 +9,44 @@ export class DashboardRepository {
     const {
         data,
         error,
-    } = await supabase.rpc(
-        "get_student_dashboard",
-        {
-            p_student_id: studentId,
-        }
-    );
+    } = await supabase
+
+        .from("v_student_dashboard")
+
+        .select("*")
+
+        .eq("student_id", studentId)
+
+        .single();
 
     if (error) throw error;
 
-    const row = data?.[0];
-
     return {
+
         profile: {
-            full_name: row.full_name,
+
+            full_name:
+                data.full_name,
+
         },
 
         totalCourses:
-            Number(row.total_courses),
+            Number(data.total_courses),
 
         completedLessons:
-            Number(row.completed_lessons),
+            Number(data.completed_lessons),
 
         totalLessons:
-            Number(row.total_lessons),
+            Number(data.total_lessons),
 
-        totalExams:
-            Number(row.total_exams),
+        pendingExams:
+            Number(data.pending_exams),
 
         averagePeriodicScore:
             Number(
-                row.average_periodic_score ?? 0
+                data.average_periodic_score ?? 0
             ),
+
     };
 
 }
@@ -90,7 +96,86 @@ export class DashboardRepository {
         exams.count ?? 0,
     };
   }
+
+async lazyStudents() {
+
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+
+        .from("v_lazy_students")
+
+        .select("*")
+
+        .limit(5);
+
+    if (error) throw error;
+
+    return data;
+
 }
+
+async lowHomeworkStudents() {
+
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+
+        .from("v_low_homework_students")
+
+        .select("*")
+
+        .limit(5);
+
+    if (error) throw error;
+
+    return data;
+
+}
+
+async hardworkingStudents() {
+
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+
+        .from("v_hardworking_students")
+
+        .select("*")
+
+        .limit(5);
+
+    if (error) throw error;
+
+    return data;
+
+}
+
+async excellentStudents() {
+
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+
+        .from("v_excellent_students")
+
+        .select("*")
+
+        .limit(5);
+
+    if (error) throw error;
+
+    return data;
+
+}
+
+
+
+
+}
+
+
+
 
 export const dashboardRepository =
   new DashboardRepository();

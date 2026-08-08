@@ -1,41 +1,60 @@
 import {
+  leaderboardService,
+} from "./leaderboard.service";
 
-leaderboardService
+export class DashboardLeaderboardService {
+
+  async dashboard() {
+
+    const [
+
+      overall,
+
+      latest,
+
+      lazy,
+
+      lowHomework,
+
+      hardworking,
+
+      excellent,
+
+    ] = await Promise.all([
+
+      leaderboardService.overall(),
+
+      leaderboardService.latest(),
+
+      leaderboardService.lazyStudents(),
+
+      leaderboardService.lowHomeworkStudents(),
+
+      leaderboardService.hardworkingStudents(),
+
+      leaderboardService.excellentStudents(),
+
+    ]);
+
+    return {
+
+      overall,
+
+      latest,
+
+      lazy,
+
+      lowHomework,
+
+      hardworking,
+
+      excellent,
+
+    };
+
+  }
 
 }
 
-from "./leaderboard.service";
-
-export class DashboardLeaderboardService{
-
-    async dashboard(){
-
-        const [
-
-            overall,
-
-            latest
-
-        ]=await Promise.all([
-
-            leaderboardService.overall(),
-
-            leaderboardService.latest()
-
-        ]);
-
-        return{
-
-            overall,
-
-            latest
-
-        };
-
-    }
-
-}
-
-export const dashboardLeaderboardService=
-
-new DashboardLeaderboardService();
+export const dashboardLeaderboardService =
+  new DashboardLeaderboardService();

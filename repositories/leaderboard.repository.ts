@@ -1,53 +1,96 @@
 import { createClient } from "@/lib/supabase/server";
 
-export class LeaderboardRepository{
+export class LeaderboardRepository {
 
-    async overall(){
+  async overall() {
 
-        const supabase=await createClient();
+    const supabase = await createClient();
 
-        const {data,error}=await supabase
+    const { data, error } = await supabase
+      .from("v_leaderboard")
+      .select("*")
+      .order("average_score", {
+        ascending: false,
+      })
+      .limit(10);
 
-        .from("v_leaderboard")
+    if (error) throw error;
 
-        .select("*")
+    return data;
+  }
 
-        .order("average_score",{
+  async latest() {
 
-            ascending:false
+    const supabase = await createClient();
 
-        })
+    const { data, error } = await supabase
+      .from("v_latest_exam_leaderboard")
+      .select("*")
+      .order("ranking")
+      .limit(10);
 
-        .limit(10);
+    if (error) throw error;
 
-        if(error) throw error;
+    return data;
+  }
 
-        return data;
+  async lazyStudents() {
 
-    }
+    const supabase = await createClient();
 
-    async latest(){
+    const { data, error } = await supabase
+      .from("v_lazy_students")
+      .select("*")
+      .limit(5);
 
-        const supabase=await createClient();
+    if (error) throw error;
 
-        const {data,error}=await supabase
+    return data;
+  }
 
-        .from("v_latest_exam_leaderboard")
+  async lowHomeworkStudents() {
 
-        .select("*")
+    const supabase = await createClient();
 
-        .order("ranking")
+    const { data, error } = await supabase
+      .from("v_low_homework_students")
+      .select("*")
+      .limit(5);
 
-        .limit(10);
+    if (error) throw error;
 
-        if(error) throw error;
+    return data;
+  }
 
-        return data;
+  async hardworkingStudents() {
 
-    }
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from("v_hardworking_students")
+      .select("*")
+      .limit(5);
+
+    if (error) throw error;
+
+    return data;
+  }
+
+  async excellentStudents() {
+
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from("v_excellent_students")
+      .select("*")
+      .limit(5);
+
+    if (error) throw error;
+
+    return data;
+  }
 
 }
 
-export const leaderboardRepository=
-
-new LeaderboardRepository();
+export const leaderboardRepository =
+  new LeaderboardRepository();

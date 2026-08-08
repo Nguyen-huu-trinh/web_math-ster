@@ -8,7 +8,7 @@ export interface StatCardProps {
 
   suffix?: string;
 
-  // Hiển thị tùy chỉnh (ví dụ "5/12")
+  // Ví dụ: "52/80"
   displayValue?: string;
 
   index?: number;
@@ -24,36 +24,54 @@ export function StatCard({
 }: StatCardProps) {
   return (
     <Card
-      className="animate-fade-in-up transition-shadow hover:shadow-md"
+      className="
+        animate-fade-in-up
+        transition-all
+        duration-300
+        hover:-translate-y-1
+        hover:shadow-lg
+      "
       style={{
         animationDelay: `${index * 60}ms`,
       }}
     >
-      <CardContent className="flex flex-col gap-4 p-5">
-        <div className="flex items-center justify-between">
-          <span className="flex size-11 items-center justify-center rounded-2xl bg-primary/15 text-primary">
+      <CardContent className="p-1">
+
+        {/* Header */}
+        <div className="flex items-center gap-2">
+
+          <div className="rounded-full bg-primary/10 p-2.5">
+
             <Icon
               name={icon}
-              className="size-5"
+              className="size-5 text-primary"
             />
-          </span>
-        </div>
 
-        <div>
-          <p className="text-sm text-muted-foreground">
-            {label}
+          </div>
+
+        <p className="whitespace-nowrap text-lg font-semibold text-foreground">
+              {label}
           </p>
 
-          <p className="mt-1 text-3xl font-bold tracking-tight tabular-nums">
+        </div>
+
+        {/* Value */}
+        <div className="mt-4 text-center">
+
+          <p className="text-4xl font-bold tracking-tight tabular-nums">
+
             {displayValue ?? value}
 
             {!displayValue && suffix && (
-              <span className="ml-1 text-lg text-muted-foreground">
+              <span className="ml-1 text-xl font-medium text-muted-foreground">
                 {suffix}
               </span>
             )}
+
           </p>
+
         </div>
+
       </CardContent>
     </Card>
   );

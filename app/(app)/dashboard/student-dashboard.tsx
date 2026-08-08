@@ -20,7 +20,9 @@ const StudentProgressChart = dynamic(
     ),
   {
     ssr: false,
-    loading: () => <Skeleton className="h-[280px] w-full" />,
+    loading: () => (
+      <Skeleton className="h-[350px] w-full rounded-xl" />
+    ),
   }
 )
 
@@ -73,9 +75,11 @@ export default function StudentDashboard() {
         },
 
         {
-            label: "Bài kiểm tra",
-            value: dashboard?.totalExams ?? 0,
-            icon: "file-text",
+            label:"Bài kiểm tra chưa làm",
+
+            value:dashboard?.pendingExams ?? 0,
+
+            icon:"file-warning",
         },
 
         {
@@ -92,7 +96,7 @@ export default function StudentDashboard() {
 
         <div className="flex flex-col gap-6">
 
-            <div>
+            {/* <div>
 
                 <p className="text-sm text-muted-foreground">
                     {greeting()}
@@ -138,7 +142,72 @@ export default function StudentDashboard() {
                     </p>
                 </p> */}
 
+            {/* </div> */} 
+
+                <div className="grid gap-4 lg:grid-cols-[1fr_220px]">
+
+                <div className="rounded-xl border bg-card p-6 shadow-sm">
+
+                    <p className="text-sm text-muted-foreground">
+                        👋 {greeting()}
+                    </p>
+
+                    <h2 className="mt-2 text-3xl font-bold">
+                        {dashboard?.profile?.full_name ??
+                            profile?.full_name}
+                    </h2>
+
+                    <p className="mt-2 text-muted-foreground">
+                        Chúc bạn có một ngày học tập hiệu quả!
+                    </p>
+
+                </div>
+
+                <div className="rounded-xl border bg-card p-6 shadow-sm flex flex-col justify-center">
+
+                <p className="text-sm font-medium text-muted-foreground">
+                    👨‍🎓 Đang học
+                </p>
+
+                <div className="mt-3 flex items-end gap-2">
+
+                    <span className="text-4xl font-bold text-primary">
+                        --
+                    </span>
+
+                    <span className="pb-1 text-sm text-muted-foreground">
+                        học sinh
+                    </span>
+
+                </div>
+
             </div>
+            </div>
+            
+            <div className="rounded-xl border border-amber-300 bg-amber-50 p-5 shadow-sm">
+
+                <div className="flex items-center gap-2">
+
+                    <span className="text-xl">📢</span>
+
+                    <h3 className="font-semibold text-amber-900">
+                        Thông báo 
+                    </h3>
+
+                </div>
+
+                <p className="mt-3 whitespace-pre-line text-sm leading-7 text-amber-800">
+
+                    BÀI TẬP ĐIỂM DANH TRÊN WEB ĐÃ CÓ FILE, CHƯA CÓ LINK ĐIỀN NHƯ TRƯỚC CÁC EM VÀO MỞ FILE LÀM NHA<br />
+                    Hằng tuần vào cuối tuần sẽ có bữa học BẮT BUỘC PHẢI VÀO để hỏi và trả lời<br />
+                    ⏰ 21h ngày 3/8 — Học logarit, mũ, lượng giác, csc, csn <br />
+                    ⏰ 20h ngày 4/8 - Chữa bài tập min max quãng đường thời gian <br />
+
+                </p>
+
+            </div>
+
+
 
             <CountdownCard />
 
@@ -156,42 +225,41 @@ export default function StudentDashboard() {
 
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 min-[1800px]:grid-cols-4">
 
-                <div className="lg:col-span-2">
+            <LeaderboardCard
+                title="😴 Cần cố gắng"
+                description="Top 5 học sinh hoàn thành ít bài học nhất"
+                entries={leaderboard.data?.lazy ?? []}
+            />
 
-                    <StudentProgressChart />
+            <LeaderboardCard
+                title="📉 Làm bài ít"
+                description="Top 5 học sinh làm ít bài tập nhất"
+                entries={leaderboard.data?.lowHomework ?? []}
+            />
 
-                </div>
+            <LeaderboardCard
+                title="🔥 Chăm học"
+                description="Top 5 học sinh tích cực học tập nhất"
+                entries={leaderboard.data?.hardworking ?? []}
+            />
 
-                <LeaderboardCard
-                    title="Top 5 Overall"
-                    entries={
-                        leaderboard.data?.overall ?? []
-                    }
-                />
+            <LeaderboardCard
+                title="🏆 Học giỏi"
+                description="Top 5 học sinh có điểm trung bình cao nhất"
+                entries={leaderboard.data?.excellent ?? []}
+            />
 
-            </div>
+        </div>     
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div>
 
-                <LeaderboardCard
-                    title="Top 5 · Latest Exam"
-                    entries={
-                        leaderboard.data?.latest ?? []
-                    }
-                />
+        <StudentProgressChart />
 
-                <div className="lg:col-span-2">
+    </div>      
 
-                    <NotificationsCard />
-
-                </div>
-
-            </div>
-
-        </div>
-
+     </div>
     )
 }
 

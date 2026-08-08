@@ -6,21 +6,13 @@ class ApiClient {
   ): Promise<T> {
 
     const response = await fetch(url, {
-
       credentials: "include",
-
       cache: "no-store",
-
       headers: {
-
         "Content-Type": "application/json",
-
         ...(options?.headers ?? {}),
-
       },
-
       ...options,
-
     });
 
     if (!response.ok) {
@@ -28,41 +20,31 @@ class ApiClient {
       let message = "Something went wrong";
 
       try {
-
         const error = await response.json();
-
         message = error.message ?? message;
-
       } catch {}
 
       throw new Error(message);
-
     }
 
-    return response.json();
-
+    return response.json() as Promise<T>;
   }
 
-  get<T>(url: string) {
-
+  get<T>(url: string): Promise<T> {
     return this.request<T>(url);
-
   }
 
   post<T>(
     url: string,
     body?: unknown
-  ) {
+  ): Promise<T> {
 
     return this.request<T>(url, {
-
       method: "POST",
-
       body:
         body !== undefined
           ? JSON.stringify(body)
           : undefined,
-
     });
 
   }
@@ -70,17 +52,14 @@ class ApiClient {
   put<T>(
     url: string,
     body?: unknown
-  ) {
+  ): Promise<T> {
 
     return this.request<T>(url, {
-
       method: "PUT",
-
       body:
         body !== undefined
           ? JSON.stringify(body)
           : undefined,
-
     });
 
   }
@@ -88,32 +67,26 @@ class ApiClient {
   patch<T>(
     url: string,
     body?: unknown
-  ) {
+  ): Promise<T> {
 
     return this.request<T>(url, {
-
       method: "PATCH",
-
       body:
         body !== undefined
           ? JSON.stringify(body)
           : undefined,
-
     });
 
   }
 
-  delete<T>(url: string) {
+  delete<T>(url: string): Promise<T> {
 
     return this.request<T>(url, {
-
       method: "DELETE",
-
     });
 
   }
 
 }
 
-export const apiClient =
-  new ApiClient();
+export const apiClient = new ApiClient();

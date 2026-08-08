@@ -1,66 +1,145 @@
-import { Trophy, ArrowUp, ArrowDown, Minus, ArrowRight } from 'lucide-react'
-import type { LeaderboardEntry } from '@/lib/types'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { cn } from '@/lib/utils'
+import { Trophy } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const RANK_STYLES = ['bg-primary text-primary-foreground', 'bg-primary/70 text-primary-foreground', 'bg-primary/40 text-foreground']
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
 
-function initials(name: string) {
-  return name.split(' ').slice(-2).map((n) => n[0]).join('')
+import { LeaderboardStudent } from "@/services/dashboard-client.service";
+
+interface LeaderboardCardProps {
+  title: string;
+  description: string;
+  entries: LeaderboardStudent[];
 }
 
 export function LeaderboardCard({
   title,
+  description,
   entries,
-}: {
-  title: string
-  entries: LeaderboardEntry[]
-}) {
+}: LeaderboardCardProps) {
   return (
-    <Card className="animate-fade-in-up">
-      <CardHeader className="flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
-          <Trophy className="size-4 text-primary" />
+    <Card className="h-full animate-fade-in-up shadow-sm">
+
+      <CardHeader className="pb-1">
+
+        <CardTitle className="text-lg flex items-center gap-2">
+
+          
+
           {title}
+
         </CardTitle>
-        <button className="flex items-center gap-1 text-xs font-medium text-primary hover:underline">
-          View more
-          <ArrowRight className="size-3" />
-        </button>
+
+        <p className="text-sm leading-5 text-muted-foreground">
+
+          {description}
+
+        </p>
+
       </CardHeader>
-      <CardContent className="flex flex-col gap-1">
-        {entries.map((e) => (
+
+      <CardContent className="space-y-3">
+
+        {entries.map((student, index) => (
+
           <div
-            key={e.rank}
-            className="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-muted/60"
+            key={student.student_id}
+            className="
+              flex
+              items-center
+              gap-3
+              rounded-xl
+              border
+              border-border/50
+              bg-background
+              px-3
+              py-2
+              transition-all
+              hover:border-primary/40
+              hover:shadow-sm
+            "
           >
-            <span
+
+            {/* Rank */}
+
+            <div
               className={cn(
-                'flex size-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold',
-                e.rank <= 3 ? RANK_STYLES[e.rank - 1] : 'bg-muted text-muted-foreground',
+                 "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white",
+
+                index === 0 && "bg-yellow-500",
+
+                index === 1 && "bg-slate-400",
+
+                index === 2 && "bg-amber-600",
+
+                index > 2 && "bg-primary"
               )}
             >
-              {e.rank}
-            </span>
-            <Avatar className="size-8">
-              <AvatarFallback className="text-xs">{initials(e.name)}</AvatarFallback>
-            </Avatar>
-            <span className="min-w-0 flex-1 truncate text-sm font-medium">{e.name}</span>
-            <span className="flex items-center text-xs text-muted-foreground">
-              {e.change > 0 ? (
-                <ArrowUp className="size-3 text-primary" />
-              ) : e.change < 0 ? (
-                <ArrowDown className="size-3 text-destructive" />
-              ) : (
-                <Minus className="size-3" />
-              )}
-              {e.change !== 0 && Math.abs(e.change)}
-            </span>
-            <span className="w-10 text-right text-sm font-bold tabular-nums">{e.score}</span>
+              {index + 1}
+            </div>
+
+            {/* Student */}
+
+            <div className="min-w-0 flex-1">
+
+              <p className="truncate text-sm font-semibold">
+
+                  <span className="font-mono text-primary">
+
+                      {student.student_code}
+
+                  </span>
+
+                  <span className="mx-2 text-muted-foreground">
+
+                      -
+
+                  </span>
+
+                  <span>
+
+                      {student.full_name}
+
+                  </span>
+
+              </p>
+
           </div>
+
+            {/* Value */}
+
+            <div
+    className="
+        shrink-0
+        rounded-lg
+        bg-primary/10
+        px-3
+        py-1
+    "
+>
+
+    <span
+        className="
+            font-bold
+            text-primary
+            tabular-nums
+        "
+    >
+        {student.count}
+    </span>
+
+</div>
+
+          </div>
+
         ))}
+
       </CardContent>
+
     </Card>
-  )
+  );
 }

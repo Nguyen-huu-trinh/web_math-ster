@@ -11,10 +11,8 @@ export interface StudentDashboard {
 
   totalLessons: number;
 
-  // Đổi từ totalAttempts
-  totalExams: number;
+  pendingExams:number;
 
-  // Đổi từ averageScore
   averagePeriodicScore: number;
 }
 
@@ -35,30 +33,55 @@ export interface LeaderboardEntry {
   change: number;
 }
 
+export interface LeaderboardStudent {
+  student_id: string;
+
+  student_code: string;
+
+  full_name: string;
+
+  count: number;
+}
+
 export interface DashboardLeaderboard {
   overall: LeaderboardEntry[];
+
   latest: LeaderboardEntry[];
+
+  lazy: LeaderboardStudent[];
+
+  lowHomework: LeaderboardStudent[];
+
+  hardworking: LeaderboardStudent[];
+
+  excellent: LeaderboardStudent[];
 }
 
 class DashboardClientService {
-  async getStudentDashboard() {
-    return apiClient.get<StudentDashboard>(
-      "/api/dashboard/student"
-    );
-  }
+  async getStudentDashboard(): Promise<StudentDashboard> {
+  return apiClient.get<StudentDashboard>(
+    "/api/dashboard/student"
+  );
+}
 
-  async getTeacherDashboard() {
-    return apiClient.get<TeacherDashboard>(
-      "/api/dashboard/teacher"
-    );
-  }
+  async getTeacherDashboard(): Promise<TeacherDashboard> {
+  return apiClient.get<TeacherDashboard>(
+    "/api/dashboard/teacher"
+  );
+}
 
   async getLeaderboard(): Promise<DashboardLeaderboard> {
-    const data = await apiClient.get<any>(
-      "/api/dashboard/leaderboard"
-    );
+
+    const response = await apiClient.get<any>(
+  "/api/dashboard/leaderboard"
+);
+
+const data = response.data;
 
     return {
+
+      // ===== Leaderboard cũ =====
+
       overall: data.overall.map(
         (item: any, index: number) => ({
           rank: index + 1,
@@ -76,6 +99,37 @@ class DashboardClientService {
           change: 0,
         })
       ),
+
+      // ===== Leaderboard mới =====
+
+      lazy: data.lazy.map((item: any) => ({
+        student_id: item.student_id,
+        student_code: item.student_code,
+        full_name: item.full_name,
+        count: Number(item.count),
+      })),
+
+      lowHomework: data.lowHomework.map((item: any) => ({
+        student_id: item.student_id,
+        student_code: item.student_code,
+        full_name: item.full_name,
+        count: Number(item.count),
+      })),
+
+      hardworking: data.hardworking.map((item: any) => ({
+        student_id: item.student_id,
+        student_code: item.student_code,
+        full_name: item.full_name,
+        count: Number(item.count),
+      })),
+
+      excellent: data.excellent.map((item: any) => ({
+        student_id: item.student_id,
+        student_code: item.student_code,
+        full_name: item.full_name,
+        count: Number(item.count),
+      })),
+
     };
   }
 }

@@ -478,7 +478,7 @@ const answerKey = exam.answer_key ?? {
 
           {questionConfig.multipleChoice > 0 && (
 <section className="rounded-xl border border-border bg-card p-4 mb-8">
-  <div className="mb-3 flex items-baseline justify-between border-b pb-2">
+  <div className="mb-3 flex items-baseline justify-start border-b pb-2">
     <h3 className="text-base font-bold">
       <span className="text-primary">PHẦN I.</span>{" "}
       Trắc nghiệm nhiều lựa chọn

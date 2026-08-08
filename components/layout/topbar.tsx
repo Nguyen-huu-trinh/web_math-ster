@@ -160,7 +160,7 @@ export function Topbar({
             : <Moon />}
         </Button>
 
-        <Popover>
+        {/* <Popover>
 
           <PopoverTrigger className="relative inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent">
 
@@ -212,7 +212,7 @@ export function Topbar({
 
           </PopoverContent>
 
-        </Popover>
+        </Popover> */}
 
         <DropdownMenu>
 

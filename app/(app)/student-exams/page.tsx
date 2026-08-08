@@ -30,7 +30,6 @@ import { useStudentExams } from "@/hooks/use-student-exams";
 const STATUS_FILTERS = [
   { value: "all", label: "Tất cả" },
   { value: "NOT_STARTED", label: "Chưa làm" },
-  { value: "DONE", label: "Đã làm" },
   { value: "PASSED", label: "Đạt" },
   { value: "FAILED", label: "Chưa đạt" },
 ];

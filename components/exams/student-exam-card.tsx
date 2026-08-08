@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -32,7 +32,7 @@ export function StudentExamCard({
 
   const startExam =
     useStartExam();
-
+const [isStarting, setIsStarting] = useState(false);
   function renderStatus() {
 
     switch (exam.status) {
@@ -58,25 +58,16 @@ export function StudentExamCard({
           </Badge>
         );
 
-      default:
-        return (
-          <Badge className="bg-blue-100 text-blue-700 border-blue-200">
-            Đã làm
-          </Badge>
-        );
+      
 
     }
 
   }
 
   async function handleStartExam() {
-
+    setIsStarting(true);
     try {
-
-      const attempt =
-        await startExam.mutateAsync(
-          exam.id
-        );
+      const attempt = await startExam.mutateAsync(exam.id);
 
       router.push(
         `/student-exams/${attempt.id}`
@@ -111,12 +102,10 @@ export function StudentExamCard({
     return (
       <Button
         className="w-32"
-        disabled={
-          startExam.isPending
-        }
+        disabled={isStarting || startExam.isPending}
         onClick={handleStartExam}
       >
-        {startExam.isPending
+        {isStarting ||startExam.isPending
           ? "Đang mở..."
           : exam.attempts === 0
           ? "Làm bài"

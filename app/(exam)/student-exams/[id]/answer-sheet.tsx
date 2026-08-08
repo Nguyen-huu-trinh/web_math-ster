@@ -476,84 +476,72 @@ const answerKey = exam.answer_key ?? {
               PHẦN I · TRẮC NGHIỆM
           ========================================== */}
 
-          {questionConfig.multipleChoice > 0 && (
-<section className="rounded-xl border border-border bg-card p-4 mb-8">
-  <div className="mb-3 flex items-baseline justify-between border-b pb-2">
-    <h3 className="text-base font-bold">
-      <span className="text-primary">PHẦN I.</span>{" "}
-      Trắc nghiệm nhiều lựa chọn
-    </h3>
-  </div>
+{questionConfig.multipleChoice > 0 && (
+  <section className="mb-8 rounded-xl border border-border bg-card p-4">
+    {/* Header */}
+    <div className="mb-3 flex items-baseline justify-between border-b pb-2">
+      <h3 className="text-base font-bold">
+        <span className="text-primary">PHẦN I.</span> Trắc nghiệm nhiều lựa chọn
+      </h3>
+    </div>
 
-  <div className="columns-1 sm:columns-1 md:columns-2 lg:columns-2 2xl:columns-3 min-[1920px]:columns-5 min-[2560px]:columns-6 gap-x-6">
-   {Array.from({
-  length: questionConfig.multipleChoice,
-}).map((_, index) => {
+    {/* Question Grid */}
+    <div className="columns-1 gap-x-6 sm:columns-1 md:columns-2 lg:columns-2 2xl:columns-3 min-[1920px]:columns-5 min-[2560px]:columns-6">
+      {Array.from({ length: questionConfig.multipleChoice }).map((_, index) => {
+        const selected = answers.multipleChoice[index];
+        const correct = answerKey.multipleChoice[index];
 
-const selected = answers.multipleChoice[index];
-const correct = answerKey.multipleChoice[index];
+        return (
+          <div
+            key={index}
+            /* Đã đổi justify-between thành justify-start và thêm gap-3 */
+            className="mb-3 flex items-center justify-start gap-3 break-inside-avoid rounded-lg px-2 py-1.5"
+          >
+            {/* Cụm Icon + STT đứng sát nhau */}
+            <div className="flex items-center gap-1.5">
+              {/* Vùng chứa Icon (cố định độ rộng để không bị lệch hàng khi chưa có icon) */}
+              <div className="flex h-6 w-5 items-center justify-center text-base font-bold">
+                {showAnswer && (
+                  <span className={selected === correct ? "text-green-600" : "text-red-600"}>
+                    {selected === correct ? "✓" : "✕"}
+                  </span>
+                )}
+              </div>
 
-  return (
-      <div
-      key={index}
-      className="break-inside-avoid mb-3 flex items-center justify-between rounded-lg px-1 py-2"
-      >
-        <div className="flex items-center gap-2">
+              {/* Số thứ tự */}
+              <span className="w-5 text-right font-bold">{index + 1}</span>
+            </div>
 
-  <span className="w-7 text-right font-bold">
-    {index + 1}
-  </span>
+            {/* Các nút A, B, C, D nằm ngay liền sau STT */}
+            <div className="flex gap-2">
+              {MC.map((item) => {
+                const isSelected = selected === item;
+                const isCorrect = item === correct;
 
-  {showAnswer && (
+                return (
+                  <Button
+                    key={item}
+                    size="sm"
+                    disabled={submitted}
+                    variant="outline"
+                    onClick={() => chooseMultipleChoice(index, item)}
+                    className={cn(
+                      "h-8 w-8 rounded-full p-0 transition-colors",
 
-    selected === correct ? (
+                      // 1. Chưa nộp bài + đã chọn
+                      !showAnswer && isSelected && 
+                        "bg-primary text-primary-foreground border-primary hover:bg-primary/90",
 
-      <span className="text-green-600 text-lg">✓</span>
+                      // 2. Đã nộp + đáp án đúng
+                      showAnswer && isCorrect && 
+                        "bg-green-600 text-white border-green-600 hover:bg-green-600",
 
-    ) : (
-
-      <span className="text-red-600 text-lg">✕</span>
-
-    )
-
-  )}
-
-</div>
-
-        <div className="flex gap-2">
-          {MC.map((item) => {
-
-
-  return (
-    <Button
-  key={item}
-  size="sm"
-  disabled={submitted}
-  variant="outline"
-  onClick={() =>
-    chooseMultipleChoice(index, item)
-  }
-  className={cn(
-  "rounded-full w-8 h-8 p-0",
-
-  // Chưa nộp bài + đã chọn
-  !showAnswer &&
-    selected === item &&
-    "bg-primary text-primary-foreground border-primary hover:bg-primary hover:text-primary-foreground hover:border-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary dark:hover:text-primary-foreground dark:hover:border-primary",
-
-  // Đã nộp + đáp án đúng
-  showAnswer &&
-    item === correct &&
-    "bg-green-600 text-white border-green-600 hover:bg-green-600 hover:text-white hover:border-green-600 dark:bg-green-600 dark:text-white dark:border-green-600 dark:hover:bg-green-600 dark:hover:text-white dark:hover:border-green-600",
-
-  // Đã nộp + học sinh chọn sai
-  showAnswer &&
-    selected === item &&
-    selected !== correct &&
-    "bg-red-600 text-white border-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 dark:bg-red-600 dark:text-white dark:border-red-600 dark:hover:bg-red-600 dark:hover:text-white dark:hover:border-red-600"
-)}
->
-  {item}
+                      // 3. Đã nộp + học sinh chọn sai
+                      showAnswer && isSelected && !isCorrect && 
+                        "bg-red-600 text-white border-red-600 hover:bg-red-600"
+                    )}
+                  >
+                    {item}
 </Button>
   );
 

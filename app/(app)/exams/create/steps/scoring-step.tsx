@@ -27,7 +27,7 @@ export function ScoringStep({
       : Number((10 / totalQuestions).toFixed(2));
 
   useEffect(() => {
-    if (form.exam_type !== "CUSTOM") return;
+    if (form.exam_type !== "FREE") return;
 
     setForm((prev) => ({
       ...prev,
@@ -42,7 +42,7 @@ export function ScoringStep({
 
       <CardContent className="space-y-6 p-6">
 
-        {form.exam_type === "THPT_2025" ? (
+        {form.exam_type === "MOET" ? (
           <>
             <Label className="text-lg font-semibold">
               Thang điểm THPT 2025

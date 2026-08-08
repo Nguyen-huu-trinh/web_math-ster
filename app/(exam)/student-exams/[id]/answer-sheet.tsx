@@ -526,32 +526,35 @@ const correct = answerKey.multipleChoice[index];
 
   return (
     <Button
-      key={item}
-      size="sm"
-      disabled={submitted}
-      variant="outline"
-      onClick={() =>
-        chooseMultipleChoice(index, item)
-      }
-      className={cn(
-        "rounded-full w-8 h-8 p-0",
+  key={item}
+  size="sm"
+  disabled={submitted}
+  variant="outline"
+  onClick={() =>
+    chooseMultipleChoice(index, item)
+  }
+  className={cn(
+  "rounded-full w-8 h-8 p-0",
 
-        !showAnswer &&
-          selected === item &&
-          "bg-primary text-white",
+  // Chưa nộp bài + đã chọn
+  !showAnswer &&
+    selected === item &&
+    "bg-primary text-primary-foreground border-primary hover:bg-primary hover:text-primary-foreground hover:border-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary dark:hover:text-primary-foreground dark:hover:border-primary",
 
-        showAnswer &&
-          item === correct &&
-          "bg-green-600 border-green-600 text-white",
+  // Đã nộp + đáp án đúng
+  showAnswer &&
+    item === correct &&
+    "bg-green-600 text-white border-green-600 hover:bg-green-600 hover:text-white hover:border-green-600 dark:bg-green-600 dark:text-white dark:border-green-600 dark:hover:bg-green-600 dark:hover:text-white dark:hover:border-green-600",
 
-        showAnswer &&
-          selected === item &&
-          selected !== correct &&
-          "bg-red-600 border-red-600 text-white"
-      )}
-    >
-      {item}
-    </Button>
+  // Đã nộp + học sinh chọn sai
+  showAnswer &&
+    selected === item &&
+    selected !== correct &&
+    "bg-red-600 text-white border-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 dark:bg-red-600 dark:text-white dark:border-red-600 dark:hover:bg-red-600 dark:hover:text-white dark:hover:border-red-600"
+)}
+>
+  {item}
+</Button>
   );
 
 })}
@@ -641,19 +644,19 @@ className="flex justify-between items-center mb-2"
     )
   }
   className={cn(
-    !showAnswer &&
-      selected === "Đ" &&
-      "bg-primary text-white",
+  !showAnswer &&
+    selected === "Đ" &&
+    "bg-primary text-primary-foreground border-primary hover:bg-primary hover:text-primary-foreground hover:border-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary dark:hover:text-primary-foreground",
 
-    showAnswer &&
-      correct === "Đ" &&
-      "bg-green-600 border-green-600 text-white",
+  showAnswer &&
+    correct === "Đ" &&
+    "bg-green-600 text-white border-green-600 hover:bg-green-600 hover:text-white hover:border-green-600 dark:bg-green-600 dark:text-white dark:border-green-600 dark:hover:bg-green-600 dark:hover:text-white dark:hover:border-green-600",
 
-    showAnswer &&
-      selected === "Đ" &&
-      selected !== correct &&
-      "bg-red-600 border-red-600 text-white"
-  )}
+  showAnswer &&
+    selected === "Đ" &&
+    selected !== correct &&
+    "bg-red-600 text-white border-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 dark:bg-red-600 dark:text-white dark:border-red-600 dark:hover:bg-red-600 dark:hover:text-white dark:hover:border-red-600"
+    )}
 >
   Đ
 </Button>
@@ -670,19 +673,18 @@ className="flex justify-between items-center mb-2"
     )
   }
   className={cn(
-    !showAnswer &&
-      selected === "S" &&
-      "bg-primary text-white",
+  !showAnswer &&
+    selected === "S" &&
+     "bg-primary text-primary-foreground border-primary hover:bg-primary hover:text-primary-foreground hover:border-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary dark:hover:text-primary-foreground",
 
-    showAnswer &&
-      correct === "S" &&
-      "bg-green-600 border-green-600 text-white",
-
-    showAnswer &&
-      selected === "S" &&
-      selected !== correct &&
-      "bg-red-600 border-red-600 text-white"
-  )}
+  showAnswer &&
+    correct === "S" &&
+ "bg-green-600 text-white border-green-600 hover:bg-green-600 hover:text-white hover:border-green-600 dark:bg-green-600 dark:text-white dark:border-green-600 dark:hover:bg-green-600 dark:hover:text-white dark:hover:border-green-600",
+  showAnswer &&
+    selected === "S" &&
+    selected !== correct &&
+    "bg-red-600 text-white border-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 dark:bg-red-600 dark:text-white dark:border-red-600 dark:hover:bg-red-600 dark:hover:text-white dark:hover:border-red-600"
+)}
 >
   S
 </Button>
@@ -823,9 +825,15 @@ const correct =
   {/* dòng 1 */}
 
   <Button
-    size="sm"
-    className="h-7 w-7 p-0 text-sm font-semibold"
-    variant={current === "-" ? "default" : "outline"}
+  size="sm"
+  className={cn(
+    "h-7 w-7 p-0 text-sm font-semibold",
+
+    current === "-"
+      ? "bg-primary text-primary-foreground border-primary hover:bg-primary hover:text-primary-foreground hover:border-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary dark:hover:text-primary-foreground"
+      : "bg-background text-foreground border-input hover:bg-background hover:text-foreground dark:bg-background dark:text-foreground dark:hover:bg-background dark:hover:text-foreground"
+  )}
+  variant="outline"
     disabled={!!result || columnIndex !== 0}
     onClick={() =>
       chooseShortAnswer(index, columnIndex, "-")
@@ -837,9 +845,15 @@ const correct =
   {/* dòng 2 */}
 
   <Button
-    size="sm"
-    className="h-7 w-7 p-0 text-xs"
-    variant={current === "." ? "default" : "outline"}
+  size="sm"
+  className={cn(
+    "h-7 w-7 p-0 text-xs",
+
+    current === "."
+     ? "bg-primary text-primary-foreground border-primary hover:bg-primary hover:text-primary-foreground hover:border-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary dark:hover:text-primary-foreground"
+      : "bg-background text-foreground border-input hover:bg-background hover:text-foreground dark:bg-background dark:text-foreground dark:hover:bg-background dark:hover:text-foreground"
+  )}
+  variant="outline"
     disabled={
       !!result ||
       !(columnIndex === 1 || columnIndex === 2)
@@ -858,25 +872,27 @@ const correct =
   {DIGITS.map((d) => (
 
     <Button
-      key={d}
-      size="sm"
-      className="h-7 w-7 p-0 text-xs"
-      variant={
-        current === d
-          ? "default"
-          : "outline"
-      }
-      disabled={!!result}
-      onClick={() =>
-        chooseShortAnswer(
-          index,
-          columnIndex,
-          d
-        )
-      }
-    >
-      {d}
-    </Button>
+  key={d}
+  size="sm"
+  className={cn(
+    "h-7 w-7 p-0 text-xs",
+
+    current === d
+      ? "bg-primary text-primary-foreground border-primary hover:bg-primary hover:text-primary-foreground hover:border-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary dark:hover:text-primary-foreground"
+      : "bg-background text-foreground border-input hover:bg-background hover:text-foreground dark:bg-background dark:text-foreground dark:hover:bg-background dark:hover:text-foreground"
+  )}
+  variant="outline"
+  disabled={!!result}
+  onClick={() =>
+    chooseShortAnswer(
+      index,
+      columnIndex,
+      d
+    )
+  }
+>
+  {d}
+</Button>
 
   ))}
 

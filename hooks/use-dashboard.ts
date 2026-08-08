@@ -13,6 +13,18 @@ import { queryKeys } from "@/lib/react-query/query-keys";
 //   TeacherDashboard,
 // } from "@/types/dashboard";
 
+
+export function useActiveStudentCount() {
+    return useQuery({
+        queryKey: ["active-student-count"],
+        queryFn: () =>
+            dashboardClientService
+                .getActiveStudentCount(),
+        refetchInterval: 60 * 1000,
+    });
+}
+
+
 export function useStudentDashboard() {
   return useQuery<StudentDashboard>({
     queryKey: queryKeys.dashboard.student,

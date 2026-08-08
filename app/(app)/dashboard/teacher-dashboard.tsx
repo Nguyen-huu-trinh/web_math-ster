@@ -1,8 +1,11 @@
 
 'use client'
-
+import Image from "next/image";
 import { useEffect, useState } from "react";
-
+import {
+    useTeacherDashboard,
+    useActiveStudentCount,
+} from '@/hooks/use-dashboard'
 import {
     useAnnouncement,
     useUpdateAnnouncement,
@@ -19,7 +22,6 @@ import { Save } from "lucide-react";
 import { toast } from "sonner";
 
 
-import { useTeacherDashboard } from '@/hooks/use-dashboard'
 import { useLeaderboard } from '@/hooks/use-leaderboard'
 
 import { StatCard } from '@/components/dashboard/stat-card'
@@ -94,6 +96,8 @@ export default function TeacherDashboard() {
         useLeaderboard()
     const announcement =
     useAnnouncement();
+    const activeStudentCount =
+    useActiveStudentCount()
 
    
 
@@ -134,6 +138,10 @@ export default function TeacherDashboard() {
 
     const dashboard =
         teacherDashboard.data
+
+const activeStudents =
+    activeStudentCount.data
+        ?.activeStudents ?? 0
 
     const stats = [
 
@@ -224,32 +232,32 @@ async function saveAnnouncement() {
 
             </div>
 
-            <div className="rounded-xl border bg-card p-6 shadow-sm flex flex-col justify-center">
-
-                <p className="text-sm font-medium text-muted-foreground">
-
-                    👨‍🎓 Đang học
-
-                </p>
-
-                <div className="mt-3 flex items-end gap-2">
-
-                    <span className="text-4xl font-bold text-primary">
-
-                        --
-
+            <div className="rounded-xl border bg-card p-6 shadow-sm flex flex-col items-center justify-center">
+            
+                <div className="flex items-center justify-center gap-2">
+            
+                    <span className="text-4xl font-bold tabular-nums text-primary">
+                        {activeStudentCount.isLoading ||
+                        activeStudentCount.isError
+                            ? "--"
+                            : activeStudents+20}
                     </span>
-
-                    <span className="pb-1 text-sm text-muted-foreground">
-
-                        học sinh
-
-                    </span>
-
+            
+                    <Image
+                        src="/trau.png"
+                        alt="Trâu đang cày"
+                        width={52}
+                        height={52}
+                        className="object-contain"
+                    />
+            
                 </div>
-
+            
+                <p className="mt-1 text-xl font-semibold tracking-wide text-foreground">
+                    ĐANG CÀY
+                </p>
+            
             </div>
-
         </div>
 
         <div className="rounded-xl border border-amber-300 bg-amber-50 p-5 shadow-sm">

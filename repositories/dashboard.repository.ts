@@ -87,6 +87,32 @@ export class DashboardRepository {
 
 }
 
+
+async getActiveStudentCount() {
+
+    const supabase =
+        await createClient();
+
+    const {
+        data,
+        error,
+    } = await supabase
+        .from("v_active_student_count")
+        .select("active_students")
+        .single();
+
+    if (error) {
+        throw error;
+    }
+
+    return {
+        activeStudents:
+            Number(
+                data?.active_students ?? 0
+            ),
+    };
+}
+
 async lazyStudents() {
 
     const supabase = await createClient();

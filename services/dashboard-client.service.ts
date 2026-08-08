@@ -70,6 +70,29 @@ class DashboardClientService {
   );
 }
 
+
+async getActiveStudentCount(): Promise<{
+    activeStudents: number;
+}> {
+    const response =
+        await apiClient.get<{
+            success: boolean;
+            message?: string;
+            data?: {
+                activeStudents: number;
+            };
+        }>(
+            "/api/dashboard/active-students"
+        );
+
+    return {
+        activeStudents:
+            Number(
+                response.data?.activeStudents ?? 0
+            ),
+    };
+}
+
   async getLeaderboard(): Promise<DashboardLeaderboard> {
 
     const response = await apiClient.get<any>(

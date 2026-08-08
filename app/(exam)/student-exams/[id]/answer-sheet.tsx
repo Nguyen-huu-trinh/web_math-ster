@@ -485,7 +485,7 @@ const answerKey = exam.answer_key ?? {
     </h3>
   </div>
 
-  <div className="columns-1 sm:columns-1 md:columns-2 lg:columns-3 2xl:columns-3 min-[1920px]:columns-5 min-[2560px]:columns-6 gap-x-6">
+  <div className="columns-1 sm:columns-1 md:columns-2 lg:columns-2 2xl:columns-3 min-[1920px]:columns-5 min-[2560px]:columns-6 gap-x-6">
    {Array.from({
   length: questionConfig.multipleChoice,
 }).map((_, index) => {

@@ -95,7 +95,7 @@ export default function TeacherDashboard() {
     const announcement =
     useAnnouncement();
 
-    console.log("announcement.data", announcement.data);
+   
 
     const updateAnnouncement =
     useUpdateAnnouncement();
@@ -164,11 +164,7 @@ export default function TeacherDashboard() {
 ]
 
 async function saveAnnouncement() {
-     console.log("announcement", announcement.data);
-
-    console.log("title", title);
-
-    console.log("content", content);
+     
 
     if (!announcement.data) return;
 

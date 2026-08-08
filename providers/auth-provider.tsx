@@ -8,6 +8,12 @@ import {
   useState,
   ReactNode,
 } from "react";
+import {
+    useIdleLogout,
+} from "@/hooks/use-idle-logout";
+import {
+    useAuthHeartbeat,
+} from "@/hooks/use-auth-heartbeat";
 
 import { User } from "@supabase/supabase-js";
 
@@ -34,6 +40,14 @@ export function AuthProvider({
   const queryClient = useQueryClient();
   const profileQuery = useProfile(user?.id);
   const profile = profileQuery.data ?? null;
+
+useAuthHeartbeat(
+    Boolean(user)
+);
+
+useIdleLogout(
+    Boolean(user)
+);
 
   const refresh = useCallback(async () => {
     setLoading(true);

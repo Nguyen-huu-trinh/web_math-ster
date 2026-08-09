@@ -528,18 +528,22 @@ const answerKey = exam.answer_key ?? {
                     className={cn(
                       "h-8 w-8 rounded-full p-0 transition-colors",
 
-                      // 1. Chưa nộp bài + đã chọn
-                      !showAnswer && isSelected && 
-                        "bg-primary text-primary-foreground border-primary hover:bg-primary/90",
+                       // 1. Chưa nộp bài + học sinh đã chọn
+                    !showAnswer &&
+                      isSelected &&
+                      "bg-primary text-primary-foreground border-primary hover:bg-primary hover:text-primary-foreground hover:border-primary dark:bg-primary dark:text-primary-foreground dark:border-primary dark:hover:bg-primary dark:hover:text-primary-foreground dark:hover:border-primary",
 
-                      // 2. Đã nộp + đáp án đúng
-                      showAnswer && isCorrect && 
-                        "bg-green-600 text-white border-green-600 hover:bg-green-600",
+                    // 2. Đã nộp bài + đáp án đúng
+                    showAnswer &&
+                      isCorrect &&
+                      "bg-green-600 text-white border-green-600 hover:bg-green-600 hover:text-white hover:border-green-600 dark:bg-green-600 dark:text-white dark:border-green-600 dark:hover:bg-green-600 dark:hover:text-white dark:hover:border-green-600",
 
-                      // 3. Đã nộp + học sinh chọn sai
-                      showAnswer && isSelected && !isCorrect && 
-                        "bg-red-600 text-white border-red-600 hover:bg-red-600"
-                    )}
+                    // 3. Đã nộp bài + học sinh chọn sai
+                    showAnswer &&
+                      isSelected &&
+                      !isCorrect &&
+                      "bg-red-600 text-white border-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 dark:bg-red-600 dark:text-white dark:border-red-600 dark:hover:bg-red-600 dark:hover:text-white dark:hover:border-red-600"
+                  )}
                   >
                     {item}
 </Button>

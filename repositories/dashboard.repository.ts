@@ -27,6 +27,8 @@ export class DashboardRepository {
 
             full_name:
                 data.full_name,
+            learning_goal:
+            data.learning_goal ?? null,
 
         },
 

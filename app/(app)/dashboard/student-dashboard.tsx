@@ -12,6 +12,23 @@ import { LeaderboardCard } from '@/components/dashboard/leaderboard-card'
 import { NotificationsCard } from '@/components/dashboard/notifications-card'
 import { Skeleton } from '@/components/ui/skeleton'
 import dynamic from 'next/dynamic'
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+    useEffect,
+    useState,
+} from "react";
+import {
+    Pencil,
+    Check,
+    X,
+} from "lucide-react";
+
+import {
+    useUpdateLearningGoal,
+} from "@/hooks/use-update-learning-goal";
+
 
 const StudentProgressChart = dynamic(
   () =>
@@ -42,27 +59,31 @@ export default function StudentDashboard() {
     const studentDashboard =
         useStudentDashboard()
 
+    const updateLearningGoal =
+    useUpdateLearningGoal();
+
+    const [editingGoal, setEditingGoal] =
+    useState(false);
+
+    const [goal, setGoal] =
+        useState("");
+
     const leaderboard =
         useLeaderboard()
     const announcement =
     useAnnouncement()
     const activeStudentCount =
     useActiveStudentCount()
-    if (
-        studentDashboard.isLoading ||
-        leaderboard.isLoading ||
-        announcement.isLoading||
-        activeStudentCount.isLoading
-    ) {
-        return (
-            <div className="flex justify-center py-20">
-                Đang tải ...
-            </div>
-        )
-    }
+    
 
     const dashboard =
         studentDashboard.data
+
+
+const learningGoal =
+    dashboard?.profile?.learning_goal ?? "";
+
+
     const activeStudents =
         activeStudentCount.data
             ?.activeStudents ?? 0
@@ -99,6 +120,65 @@ export default function StudentDashboard() {
         },
 
     ]
+useEffect(() => {
+    if (
+        dashboard?.profile?.learning_goal !==
+        undefined
+    ) {
+        setGoal(
+            dashboard.profile.learning_goal ?? ""
+        );
+    }
+}, [
+    dashboard?.profile?.learning_goal,
+]);
+
+async function handleSaveGoal() {
+    const value = goal.trim();
+
+    try {
+        await updateLearningGoal.mutateAsync(
+            value
+        );
+
+        setEditingGoal(false);
+
+        toast.success(
+            "Đã cập nhật mục tiêu học tập"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "UPDATE LEARNING GOAL ERROR:",
+            error
+        );
+
+        toast.error(
+            "Không thể cập nhật mục tiêu"
+        );
+    }
+}
+
+function handleStartEditGoal() {
+    setGoal(learningGoal);
+    setEditingGoal(true);
+}
+
+if (
+        studentDashboard.isLoading ||
+        leaderboard.isLoading ||
+        announcement.isLoading||
+        activeStudentCount.isLoading
+    ) {
+        return (
+            <div className="flex justify-center py-20">
+                Đang tải ...
+            </div>
+        )
+    }
+
+
 
     return (
 
@@ -165,9 +245,87 @@ export default function StudentDashboard() {
                             profile?.full_name}
                     </h2>
 
-                    <p className="mt-2 text-muted-foreground">
-                        Chúc bạn có một ngày học tập hiệu quả!
-                    </p>
+                    <div className="mt-3">
+    {!editingGoal ? (
+        <button
+            type="button"
+            onClick={handleStartEditGoal}
+            className="group flex items-center gap-2 text-left"
+        >
+            <span className="text-base font-medium text-muted-foreground transition-colors group-hover:text-foreground">
+                🎯{" "}
+                {learningGoal ||
+                    "Nhấn để đặt mục tiêu học tập"}
+            </span>
+
+            <Pencil
+                className="
+                    h-4 w-4
+                    text-muted-foreground
+                    opacity-0
+                    transition-all
+                    group-hover:opacity-100
+                "
+            />
+        </button>
+    ) : (
+        <div className="flex max-w-xl items-center gap-2">
+            <span className="text-base">
+                🎯
+            </span>
+
+            <Input
+                value={goal}
+                onChange={(e) =>
+                    setGoal(e.target.value)
+                }
+                placeholder="Ví dụ: Đạt 9+ môn Toán"
+                maxLength={200}
+                autoFocus
+                className="h-9"
+                onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                        void handleSaveGoal();
+                    }
+
+                    if (e.key === "Escape") {
+                        setGoal(learningGoal);
+                        setEditingGoal(false);
+                    }
+                }}
+            />
+
+            <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                disabled={
+                    updateLearningGoal.isPending
+                }
+                onClick={() =>
+                    void handleSaveGoal()
+                }
+            >
+                <Check className="h-4 w-4 text-green-600" />
+            </Button>
+
+            <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                disabled={
+                    updateLearningGoal.isPending
+                }
+                onClick={() => {
+                    setGoal(learningGoal);
+                    setEditingGoal(false);
+                }}
+            >
+                <X className="h-4 w-4 text-muted-foreground" />
+            </Button>
+        </div>
+    )}
+</div>
 
                 </div>
 

@@ -1,5 +1,6 @@
 import { profileRepository } from "@/repositories/profile.repository";
 import { Profile } from "@/types/profile";
+import { apiClient } from "@/lib/api/client";
 
 export class ProfileClientService {
   getCurrentProfile(): Promise<Profile | null> {
@@ -53,6 +54,18 @@ async changePassword(
 
   return result;
 }
+
+
+async updateLearningGoal(
+        learningGoal: string
+    ) {
+        return apiClient.patch(
+            "/api/profile/goal",
+            {
+                learningGoal,
+            }
+        );
+    }
 
 }
 

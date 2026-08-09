@@ -3,6 +3,8 @@ import { apiClient } from "@/lib/api/client";
 export interface StudentDashboard {
   profile: {
     full_name: string;
+    learning_goal: string | null;
+
   };
 
   totalCourses: number;

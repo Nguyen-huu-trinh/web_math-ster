@@ -28,6 +28,13 @@ export class LeaderboardService {
     return leaderboardRepository.excellentStudents();
   }
 
+  rewardMoneyStudents() {
+    return leaderboardRepository.rewardMoneyStudents();
+}
+
+dotrauStudents() {
+    return leaderboardRepository.doTrauStudents();
+}
 }
 
 export const leaderboardService =

@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { authService } from "@/services/auth.service";
 
 const IDLE_TIMEOUT =
-    30* 60 * 1000; // 30 phút
+    120* 60 * 1000; // 30 phút
 
 export function useIdleLogout(
     enabled: boolean

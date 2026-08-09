@@ -90,6 +90,34 @@ export class LeaderboardRepository {
     return data;
   }
 
+  async rewardMoneyStudents() {
+    const supabase = await createClient();
+
+    const { data, error } =
+        await supabase
+            .from("v_reward_money_students")
+            .select("*")
+            .limit(5);
+
+    if (error) throw error;
+
+    return data;
+}
+
+async doTrauStudents() {
+    const supabase = await createClient();
+
+    const { data, error } =
+        await supabase
+            .from("v_dotrau_students")
+            .select("*")
+            .limit(5);
+
+    if (error) throw error;
+
+    return data;
+}
+
 }
 
 export const leaderboardRepository =

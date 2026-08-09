@@ -8,18 +8,20 @@ import {
   CardContent,
 } from "@/components/ui/card";
 
-import { LeaderboardStudent } from "@/services/dashboard-client.service";
+import { LeaderboardStudent, RewardMoneyStudent, DoTrauStudent } from "@/services/dashboard-client.service";
 
 interface LeaderboardCardProps {
   title: string;
   description: string;
-  entries: LeaderboardStudent[];
+  entries: LeaderboardStudent[] | RewardMoneyStudent[] | DoTrauStudent[];
+ valueType?: "count" | "money" | "points";
 }
 
 export function LeaderboardCard({
   title,
   description,
   entries,
+  valueType = "count",
 }: LeaderboardCardProps) {
   return (
     <Card className="h-full animate-fade-in-up shadow-sm">
@@ -129,7 +131,18 @@ export function LeaderboardCard({
             tabular-nums
         "
     >
-        {student.count}
+        {valueType === "money"
+            ? `${Number(
+                  (student as RewardMoneyStudent)
+                      .reward_money ?? 0
+              ).toLocaleString("vi-VN")}đ`
+            : valueType === "points"
+                ? `${Number(
+                      (student as DoTrauStudent)
+                          .points ?? 0
+                  )}`
+                : (student as LeaderboardStudent)
+                      .count}
     </span>
 
 </div>

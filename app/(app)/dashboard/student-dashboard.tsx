@@ -504,25 +504,27 @@ if (
             <LeaderboardCard
                 title="😴 Top làm biếng"
                 description="Top lười biếng học nhất"
-                entries={leaderboard.data?.lazy ?? []}
+                entries={leaderboard.data?.lowHomework ?? []}
             />
 
             <LeaderboardCard
                 title="📉 Top học giỏi"
                 description="Top học giỏi nhất"
-                entries={leaderboard.data?.lowHomework ?? []}
+                entries={leaderboard.data?.excellent ?? []}
             />
 
             <LeaderboardCard
                 title="🔥 Top ĐỘ TRÂU"
                 description="Top trâu bò"
-                entries={leaderboard.data?.hardworking ?? []}
+                entries={leaderboard.data?.dotrau ?? []}
+                valueType="points"
             />
 
             <LeaderboardCard
                 title="🏆 Thợ săn tiền thưởng"
                 description="Top kiếm tiền nhiều nhất lớp"
-                entries={leaderboard.data?.excellent ?? []}
+                entries={leaderboard.data?.rewardMoney ?? []}
+                valueType="money"
             />
 
         </div>     

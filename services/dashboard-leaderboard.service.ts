@@ -20,6 +20,10 @@ export class DashboardLeaderboardService {
 
       excellent,
 
+      rewardMoney,
+
+      dotrau,
+
     ] = await Promise.all([
 
       leaderboardService.overall(),
@@ -33,6 +37,11 @@ export class DashboardLeaderboardService {
       leaderboardService.hardworkingStudents(),
 
       leaderboardService.excellentStudents(),
+
+      leaderboardService.rewardMoneyStudents(),
+
+      leaderboardService.dotrauStudents(),
+
 
     ]);
 
@@ -50,6 +59,9 @@ export class DashboardLeaderboardService {
 
       excellent,
 
+      rewardMoney,
+
+      dotrau,
     };
 
   }

@@ -46,6 +46,20 @@ export interface LeaderboardStudent {
   count: number;
 }
 
+export interface RewardMoneyStudent {
+    student_id: string;
+    student_code: string;
+    full_name: string;
+    reward_money: number;
+}
+
+export interface DoTrauStudent {
+    student_id: string;
+    student_code: string;
+    full_name: string;
+    points: number;
+}
+
 export interface DashboardLeaderboard {
   overall: LeaderboardEntry[];
 
@@ -58,6 +72,10 @@ export interface DashboardLeaderboard {
   hardworking: LeaderboardStudent[];
 
   excellent: LeaderboardStudent[];
+
+  rewardMoney: RewardMoneyStudent[];
+
+  dotrau: DoTrauStudent[];
 }
 
 class DashboardClientService {
@@ -155,6 +173,27 @@ const data = response.data;
         full_name: item.full_name,
         count: Number(item.count),
       })),
+
+
+    rewardMoney: data.rewardMoney.map(
+        (item: any) => ({
+            student_id: item.id,
+            student_code: item.student_code,
+            full_name: item.full_name,
+            reward_money:
+                Number(item.reward_money ?? 0),
+        })
+    ),
+
+    dotrau: data.dotrau.map(
+        (item: any) => ({
+            student_id: item.id,
+            student_code: item.student_code,
+            full_name: item.full_name,
+            points:
+                Number(item.points ?? 0),
+        })
+    ),
 
     };
   }

@@ -407,7 +407,7 @@ if (
             
            <div className="col-span-1 rounded-xl border bg-card p-4 text-center shadow-sm lg:col-span-5">
             <p className="mt-1 text-xl font-semibold tracking-wide text-foreground">
-                Điểm tích lũy
+                Độ trâu
             </p>
 
             <div className="mt-1">
@@ -416,7 +416,7 @@ if (
                 </span>
 
                 <span className="ml-1 text-smfont-semibold text-foreground">
-                    điểm
+                    máu
                 </span>
             </div>
 

@@ -446,22 +446,7 @@ async submitAttempt(
 
 {
 
-  console.log(
-    "========== SUBMIT ANSWERS =========="
-);
 
-console.log(
-    "SHORT ANSWER:",
-    JSON.stringify(
-        answers.shortAnswer,
-        null,
-        2
-    )
-);
-
-console.log(
-    "===================================="
-);
   const supabase = await createClient();
 
   // ==========================

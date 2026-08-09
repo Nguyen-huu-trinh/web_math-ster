@@ -270,15 +270,20 @@ useRef<NodeJS.Timeout | null>(
   if (result) return;
 
   setAnswers((prev) => {
-
     const next = {
       ...prev,
       multipleChoice: [...prev.multipleChoice],
     };
 
-    next.multipleChoice[index] = value;
+    // Click lại đáp án đang chọn → hủy chọn
+    if (next.multipleChoice[index] === value) {
+      next.multipleChoice[index] = "";
+    } else {
+      // Click đáp án khác → chuyển sang đáp án mới
+      next.multipleChoice[index] = value;
+    }
+
     answersRef.current = next;
-    // Autosave toàn bộ phiếu trả lời
     autoSaveAnswers(next);
 
     return next;
@@ -296,7 +301,6 @@ useRef<NodeJS.Timeout | null>(
   if (result) return;
 
   setAnswers((prev) => {
-
     const next = {
       ...prev,
       trueFalse: prev.trueFalse.map(
@@ -304,8 +308,16 @@ useRef<NodeJS.Timeout | null>(
       ),
     };
 
-    next.trueFalse[questionIndex][columnIndex] =
-      value;
+    // Click lại đáp án đang chọn → hủy chọn
+    if (
+      next.trueFalse[questionIndex][columnIndex] === value
+    ) {
+      next.trueFalse[questionIndex][columnIndex] = "";
+    } else {
+      // Chọn đáp án mới
+      next.trueFalse[questionIndex][columnIndex] = value;
+    }
+
     answersRef.current = next;
     autoSaveAnswers(next);
 
@@ -324,7 +336,6 @@ useRef<NodeJS.Timeout | null>(
   if (result) return;
 
   setAnswers((prev) => {
-
     const next = {
       ...prev,
       shortAnswer:
@@ -333,8 +344,16 @@ useRef<NodeJS.Timeout | null>(
         ),
     };
 
-    next.shortAnswer[questionIndex][columnIndex] =
-      value;
+    // Click lại ký tự đang chọn → hủy ký tự đó
+    if (
+      next.shortAnswer[questionIndex][columnIndex] === value
+    ) {
+      next.shortAnswer[questionIndex][columnIndex] = "";
+    } else {
+      // Chọn ký tự mới
+      next.shortAnswer[questionIndex][columnIndex] = value;
+    }
+
     answersRef.current = next;
     autoSaveAnswers(next);
 
@@ -723,7 +742,7 @@ Trả lời ngắn
   .trim();
 
 const correctAnswer = String(
-  answerKey.shortAnswer?.[index] ?? ""
+  answerKey.shortAnswer?.[index] ?? ""  
 )
   .replace(/\s/g, "")
   .trim();

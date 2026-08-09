@@ -26,16 +26,16 @@ export function ScoringStep({
       ? 0
       : Number((10 / totalQuestions).toFixed(2));
 
-  useEffect(() => {
-    if (form.exam_type !== "FREE") return;
+  // useEffect(() => {
+  //   if (form.exam_type !== "FREE") return;
 
-    setForm((prev) => ({
-      ...prev,
-      attendance_min_score: Number(
-        customScore.toFixed(2)
-      ),
-    }));
-  }, [customScore, form.exam_type, setForm]);
+  //   setForm((prev) => ({
+  //     ...prev,
+  //     attendance_min_score: Number(
+  //       customScore.toFixed(2)
+  //     ),
+  //   }));
+  // }, [customScore, form.exam_type, setForm]);
 
   return (
     <Card>

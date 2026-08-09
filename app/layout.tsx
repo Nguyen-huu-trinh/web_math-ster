@@ -37,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="vi" suppressHydrationWarning>
       <body className={`${jakarta.variable} ${jetbrainsMono.variable} font-sans antialiased bg-background`}>
         <Suspense fallback={null}>
           <Providers>{children}</Providers>

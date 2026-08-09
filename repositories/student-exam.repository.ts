@@ -438,135 +438,185 @@ return {
 
 }
 async submitAttempt(
-  studentId: string,
-  attemptId: string,
-  answers: Record<string, any>
-)
+    studentId: string,
+    attemptId: string,
+    answers: Record<string, any>
+) {
+    const supabase =
+        await createClient();
 
+    // ==========================
+    // Attempt
+    // ==========================
 
-{
+    const {
+        data: attempt,
+        error: attemptError,
+    } = await supabase
+        .from("exam_attempts")
+        .select(`
+            *,
+            exams(*)
+        `)
+        .eq("id", attemptId)
+        .eq("student_id", studentId)
+        .single();
 
+    if (attemptError) {
+        throw attemptError;
+    }
 
-  const supabase = await createClient();
+    // ==========================
+    // Answer key
+    // ==========================
 
-  // ==========================
-  // Attempt
-  // ==========================
+    const answerKey =
+        typeof attempt.exams.answer_key === "string"
+            ? JSON.parse(
+                  attempt.exams.answer_key
+              )
+            : attempt.exams.answer_key;
 
-  const { data: attempt, error: attemptError } =
-    await supabase
-      .from("exam_attempts")
-      .select(`
-        *,
-        exams(*)
-      `)
-      .eq("id", attemptId)
-      .eq("student_id", studentId)
-      .single();
+    let score = 0;
 
-  if (attemptError) throw attemptError;
+    if (
+        attempt.exams.exam_type ===
+        "MOET"
+    ) {
+        score =
+            this.gradeTHPT(
+                answerKey,
+                answers
+            );
+    } else {
+        score =
+            this.gradeCustom(
+                answerKey,
+                answers
+            );
+    }
 
-  if (attempt.submitted_at) {
-    throw new Error("Bài thi đã được nộp.");
-  }
-  
+    score =
+        Number(score.toFixed(2));
 
-  // ==========================
-  // Questions
-  // ==========================
+    const passed =
+        attempt.exams.category ===
+        "ATTENDANCE"
+            ? score >=
+              Number(
+                  attempt.exams
+                      .attendance_min_score ??
+                      0
+              )
+            : true;
 
-  // const {
-  //   data: questions,
-  //   error: questionError,
-  // } = await supabase
-  //   .from("exam_questions")
-  //   .select("*")
-  //   .eq("exam_id", attempt.exam_id)
-  //   .order("question_number");
+    // ==========================
+    // Atomic submit
+    // ==========================
 
-  
+    const submittedAt =
+        new Date().toISOString();
 
-  // // ==========================
-  // // Score
-  // // ==========================
+    const {
+        data: updatedAttempt,
+        error: updateError,
+    } = await supabase
+        .from("exam_attempts")
+        .update({
+            submitted_at:
+                submittedAt,
+            score,
+            is_passed:
+                passed,
+        })
+        .eq(
+            "id",
+            attemptId
+        )
+        .eq(
+            "student_id",
+            studentId
+        )
+        .is(
+            "submitted_at",
+            null
+        )
+        .select(
+            "id, score, is_passed, submitted_at"
+        )
+        .maybeSingle();
 
-  // const maxScore =
-  //   questions?.reduce(
-  //     (sum, q) => sum + Number(q.score),
-  //     0
-  //   ) ?? 0;
+    if (updateError) {
+        throw updateError;
+    }
 
-  // const percent =
-  //   maxScore === 0
-  //     ? 0
-  //     : Number(
-  //         (
-  //           (totalScore / maxScore) *
-  //           100
-  //         ).toFixed(2)
-  //       );
+    // ==========================
+    // Một request khác đã submit
+    // ==========================
 
-  // const passed =
-  //   attempt.exams.category === "ATTENDANCE"
-  //     ? percent >=
-  //       Number(
-  //         attempt.exams.attendance_min_score ?? 0
-  //       )
-  //     : true;
+    if (!updatedAttempt) {
+        const {
+            data: existingAttempt,
+            error:
+                existingAttemptError,
+        } = await supabase
+            .from("exam_attempts")
+            .select(
+                "score, is_passed, submitted_at"
+            )
+            .eq(
+                "id",
+                attemptId
+            )
+            .eq(
+                "student_id",
+                studentId
+            )
+            .single();
 
-const answerKey =
-  typeof attempt.exams.answer_key === "string"
-    ? JSON.parse(attempt.exams.answer_key)
-    : attempt.exams.answer_key;
+        if (existingAttemptError) {
+            throw existingAttemptError;
+        }
 
-let score = 0;
+        return {
+            score:
+                existingAttempt.score ??
+                0,
 
-if (attempt.exams.exam_type === "MOET") {
-  score = this.gradeTHPT(answerKey, answers);
-} else {
-  score = this.gradeCustom(answerKey, answers);
-}
+            passed:
+                existingAttempt.is_passed ??
+                false,
 
-score = Number(score.toFixed(2));
+            alreadySubmitted:
+                true,
 
+            showAnswer:
+                attempt.exams.show_answer,
 
+            answers:
+                attempt.exams.show_answer
+                    ? answerKey
+                    : null,
+        };
+    }
 
+    // ==========================
+    // Submit thành công
+    // ==========================
 
-const passed =
-  attempt.exams.category === "ATTENDANCE"
-    ? score >= Number(attempt.exams.attendance_min_score ?? 0)
-    : true;
-  // ==========================
-  // Finish attempt
-  // ==========================
+    return {
+        score,
+        passed,
+        alreadySubmitted: false,
 
-  await supabase
-    .from("exam_attempts")
-    .update({
-      submitted_at:
-        new Date().toISOString(),
-      score: score,
-      is_passed: passed,
-    })
-    .eq("id", attemptId);
+        showAnswer:
+            attempt.exams.show_answer,
 
-  // ==========================
-  // Return answers
-  // ==========================
-
-  return {
-    score: score,
-
-    passed,
-
-    showAnswer:
-      attempt.exams.show_answer,
-
-    answers:
-      attempt.exams.show_answer
-        ? answerKey
-        : null
-  };
+        answers:
+            attempt.exams.show_answer
+                ? answerKey
+                : null,
+    };
 }
 
 private gradeTHPT(

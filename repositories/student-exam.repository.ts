@@ -500,15 +500,9 @@ async submitAttempt(
         Number(score.toFixed(2));
 
     const passed =
-        attempt.exams.category ===
-        "ATTENDANCE"
-            ? score >=
-              Number(
-                  attempt.exams
-                      .attendance_min_score ??
-                      0
-              )
-            : true;
+    score >= Number(
+        attempt.exams.attendance_min_score ?? 0
+    );
 
     // ==========================
     // Atomic submit
@@ -600,6 +594,30 @@ async submitAttempt(
         };
     }
 
+
+
+    // ==========================
+// CỘNG / TRỪ POINTS
+// ==========================
+
+const pointDelta = passed ? 10 : -10;
+
+const { error: pointsError } = await supabase.rpc(
+    "adjust_student_points",
+    {
+        p_student_id: studentId,
+        p_delta: pointDelta,
+    }
+);
+
+if (pointsError) {
+    console.error(
+        "UPDATE STUDENT POINTS ERROR:",
+        pointsError
+    );
+
+    throw pointsError;
+}
     // ==========================
     // Submit thành công
     // ==========================

@@ -445,6 +445,23 @@ async submitAttempt(
 
 
 {
+
+  console.log(
+    "========== SUBMIT ANSWERS =========="
+);
+
+console.log(
+    "SHORT ANSWER:",
+    JSON.stringify(
+        answers.shortAnswer,
+        null,
+        2
+    )
+);
+
+console.log(
+    "===================================="
+);
   const supabase = await createClient();
 
   // ==========================
@@ -662,29 +679,178 @@ private gradeCustom(
   answerKey: any,
   answers: any
 ) {
-
   let score = 0;
 
-  const mcKey = answerKey.multipleChoice ?? [];
-  const mc = answers.multipleChoice ?? [];
+  // =====================================================
+  // TỔNG SỐ CÂU CỦA ĐỀ CUSTOM
+  // =====================================================
 
-  if (mcKey.length > 0) {
+  const totalQuestions =
+    this.getCustomTotalQuestions(answerKey);
 
-    const point = 10 / mcKey.length;
-
-    for (let i = 0; i < mcKey.length; i++) {
-
-      if (mc[i] === mcKey[i]) {
-        score += point;
-      }
-
-    }
-
+  // Không có câu hỏi
+  if (totalQuestions === 0) {
+    return 0;
   }
 
-  return score;
+  // Tổng điểm đề = 10 điểm
+  // Mỗi câu có trọng số bằng nhau
+  const point = 10 / totalQuestions;
 
+
+  // =====================================================
+  // PART I — MULTIPLE CHOICE
+  // =====================================================
+
+  const mcKey =
+    answerKey.multipleChoice ?? [];
+
+  const mc =
+    answers.multipleChoice ?? [];
+
+  for (
+    let i = 0;
+    i < mcKey.length;
+    i++
+  ) {
+    if (
+      mc[i] === mcKey[i]
+    ) {
+      score += point;
+    }
+  }
+
+
+  // =====================================================
+  // PART II — TRUE / FALSE
+  // =====================================================
+
+  const tfKey =
+    answerKey.trueFalse ?? [];
+
+  const tf =
+    answers.trueFalse ?? [];
+
+  for (
+    let i = 0;
+    i < tfKey.length;
+    i++
+  ) {
+    let correct = 0;
+
+    // Mỗi câu Đúng/Sai có 4 ý
+    for (
+      let j = 0;
+      j < 4;
+      j++
+    ) {
+      if (
+        tf[i]?.[j] ===
+        tfKey[i]?.[j]
+      ) {
+        correct++;
+      }
+    }
+
+    /*
+     * Quy tắc chấm:
+     *
+     * 0/4 → 0%
+     * 1/4 → 10%
+     * 2/4 → 25%
+     * 3/4 → 50%
+     * 4/4 → 100%
+     */
+
+    switch (correct) {
+      case 1:
+        score += point * 0.10;
+        break;
+
+      case 2:
+        score += point * 0.25;
+        break;
+
+      case 3:
+        score += point * 0.50;
+        break;
+
+      case 4:
+        score += point;
+        break;
+    }
+  }
+
+
+  // =====================================================
+  // PART III — SHORT ANSWER
+  // =====================================================
+
+  const saKey =
+    answerKey.shortAnswer ?? [];
+
+  const sa =
+    answers.shortAnswer ?? [];
+
+  for (
+    let i = 0;
+    i < saKey.length;
+    i++
+  ) {
+    const student =
+      this.normalizeShortAnswer(
+        sa[i]
+      );
+
+    const correct =
+      this.normalizeShortAnswer(
+        saKey[i]
+      );
+
+    // Không cho câu trả lời rỗng được tính đúng
+    if (
+      student !== "" &&
+      student === correct
+    ) {
+      score += point;
+    }
+  }
+
+
+  return score;
 }
+private getCustomTotalQuestions(
+    answerKey: any
+) {
+    const multipleChoice =
+        answerKey.multipleChoice?.length ?? 0;
+
+    const trueFalse =
+        answerKey.trueFalse?.length ?? 0;
+
+    const shortAnswer =
+        answerKey.shortAnswer?.length ?? 0;
+
+    return (
+        multipleChoice +
+        trueFalse +
+        shortAnswer
+    );
+}
+
+private normalizeShortAnswer(value: any): string {
+    if (Array.isArray(value)) {
+        return value
+            .join("")
+            .replace(/\s/g, "")
+            .trim();
+    }
+
+    return String(value ?? "")
+        .replace(/\s/g, "")
+        .trim();
+}
+
 }
 
 export const studentExamRepository =

@@ -718,16 +718,19 @@ Trả lời ngắn
 }).map((_, index) => {
 
   const studentAnswer = answers.shortAnswer[index]
-    .join("")
-    .replace(/,/g, "")
-    .replace(/-/g, "");
+  .join("")
+  .replace(/\s/g, "")
+  .trim();
 
-  const correctAnswer = String(
-    answerKey.shortAnswer?.[index] ?? ""
-  );
+const correctAnswer = String(
+  answerKey.shortAnswer?.[index] ?? ""
+)
+  .replace(/\s/g, "")
+  .trim();
 
-  const isCorrect =
-    studentAnswer === correctAnswer;
+const isCorrect =
+  studentAnswer !== "" &&
+  studentAnswer === correctAnswer;
 
   return (
 

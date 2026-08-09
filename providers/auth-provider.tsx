@@ -1,5 +1,7 @@
 "use client";
 
+import { usePathname } from "next/navigation";
+
 import {
   createContext,
   useContext,
@@ -33,7 +35,10 @@ export function AuthProvider({
 }) {
   const [user, setUser] =
     useState<User | null>(null);
+const pathname = usePathname();
 
+const isExamPage =
+  pathname.startsWith("/student-exams/");
   const [loading, setLoading] =
     useState(true);
 
@@ -41,12 +46,12 @@ export function AuthProvider({
   const profileQuery = useProfile(user?.id);
   const profile = profileQuery.data ?? null;
 
-useAuthHeartbeat(
-    Boolean(user)
-);
-
+// useAuthHeartbeat(
+//   Boolean(user)
+// );
+useAuthHeartbeat(false);
 useIdleLogout(
-    Boolean(user)
+  Boolean(user) && !isExamPage
 );
 
   const refresh = useCallback(async () => {

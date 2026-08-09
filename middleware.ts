@@ -1,56 +1,3 @@
-// import { NextResponse } from "next/server";
-// import type { NextRequest } from "next/server";
-// import { createServerClient } from "@supabase/ssr";
-
-// export async function middleware(
-//   request: NextRequest
-// ) {
-//   const response = NextResponse.next();
-
-//   const supabase = createServerClient(
-//     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-//     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-//     {
-//       cookies: {
-//         get(name) {
-//           return request.cookies.get(name)?.value;
-//         },
-
-//         set(name, value, options) {
-//           response.cookies.set({
-//             name,
-//             value,
-//             ...options,
-//           });
-//         },
-
-//         remove(name, options) {
-//           response.cookies.set({
-//             name,
-//             value: "",
-//             ...options,
-//             maxAge: 0,
-//           });
-//         },
-//       },
-//     }
-//   );
-
-//   await supabase.auth.getUser();
-
-//   return response;
-// }
-
-// export const config = {
-//   matcher: [
-//     "/dashboard/:path*",
-//     "/teacher/:path*",
-//     "/student/:path*",
-//     "/admin/:path*",
-//     "/api/:path*",
-//   ],
-// };
-
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
@@ -58,38 +5,51 @@ import { createServerClient } from "@supabase/ssr";
 export async function middleware(
   request: NextRequest
 ) {
-  const response = NextResponse.next();
+  let response = NextResponse.next({
+    request,
+  });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name) {
-          return request.cookies.get(name)?.value;
+        getAll() {
+          return request.cookies.getAll();
         },
 
-        set(name, value, options) {
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(
+            ({ name, value }) => {
+              request.cookies.set(
+                name,
+                value
+              );
+            }
+          );
 
-        remove(name, options) {
-          response.cookies.set({
-            name,
-            value: "",
-            ...options,
-            maxAge: 0,
+          response = NextResponse.next({
+            request,
           });
+
+          cookiesToSet.forEach(
+            ({
+              name,
+              value,
+              options,
+            }) => {
+              response.cookies.set(
+                name,
+                value,
+                options
+              );
+            }
+          );
         },
       },
     }
   );
 
-  // Refresh session nếu cần
   await supabase.auth.getUser();
 
   return response;
@@ -101,5 +61,6 @@ export const config = {
     "/teacher/:path*",
     "/student/:path*",
     "/admin/:path*",
+    "/api/:path*",
   ],
 };

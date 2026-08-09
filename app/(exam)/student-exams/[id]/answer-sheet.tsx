@@ -365,51 +365,94 @@ useRef<NodeJS.Timeout | null>(
   // Submit
   // ============================
 
-  async function handleSubmit(
-    confirm = true
-  ) {
-  if (submittedRef.current) return;
+ async function handleSubmit(
+  confirm = true
+) {
+  // ==========================================
+  // CHỐNG SUBMIT TRÙNG
+  // ==========================================
 
-  if (submitMutation.isPending) return;
+  if (submittedRef.current) {
+    return;
+  }
 
+  if (submitMutation.isPending) {
+    return;
+  }
+
+  // Đánh dấu NGAY LẬP TỨC
+  // để chặn click / timer / force-submit
   submittedRef.current = true;
 
-    
 
-    try {
-      
-      const payload = {
-        attemptId: attempt.id,
-        answers: {
-          multipleChoice:
-            answersRef.current.multipleChoice,
-          trueFalse:
-            answersRef.current.trueFalse,
-          shortAnswer:
-            answersRef.current.shortAnswer,
-        },
-      };
+  // ==========================================
+  // HỦY AUTOSAVE ĐANG CHỜ
+  // ==========================================
 
-      const data =
-  await submitMutation.mutateAsync(payload);
-
-setResult(data);
-
-setSubmitDialogOpen(false);
-
-window.dispatchEvent(
-  new Event("submit-success")
-);
-
-    } catch (err) {
-      submittedRef.current = false;
-
-      console.error(err);
-
-      alert("Nộp bài thất bại.");
-
-    }
+  if (saveTimeout.current) {
+    clearTimeout(saveTimeout.current);
+    saveTimeout.current = null;
   }
+
+
+  try {
+
+    // ========================================
+    // LẤY ANSWERS MỚI NHẤT
+    // ========================================
+
+    const currentAnswers = {
+      multipleChoice:
+        answersRef.current.multipleChoice,
+
+      trueFalse:
+        answersRef.current.trueFalse,
+
+      shortAnswer:
+        answersRef.current.shortAnswer,
+    };
+
+
+    // ========================================
+    // SUBMIT
+    // ========================================
+
+    const data =
+      await submitMutation.mutateAsync({
+        attemptId: attempt.id,
+        answers: currentAnswers,
+      });
+
+
+    // ========================================
+    // THÀNH CÔNG
+    // ========================================
+
+    setResult(data);
+
+    setSubmitDialogOpen(false);
+
+    window.dispatchEvent(
+      new Event("submit-success")
+    );
+
+  } catch (err) {
+
+    // Cho phép thử lại
+    submittedRef.current = false;
+
+    console.error(
+      "SUBMIT EXAM ERROR:",
+      err
+    );
+
+    alert(
+      err instanceof Error
+        ? err.message
+        : "Nộp bài thất bại."
+    );
+  }
+}
 
 useEffect(() => {
 
@@ -1104,16 +1147,21 @@ const correct =
       </AlertDialogCancel>
 
       <AlertDialogAction
-        onClick={async () => {
+  disabled={submitMutation.isPending}
+  onClick={async (event) => {
+    event.preventDefault();
 
-          setSubmitDialogOpen(false);
+    if (submitMutation.isPending) {
+      return;
+    }
 
-          await handleSubmit(false);
-
-        }}
-      >
-        Nộp bài
-      </AlertDialogAction>
+    await handleSubmit(false);
+  }}
+>
+  {submitMutation.isPending
+    ? "Đang nộp bài..."
+    : "Nộp bài"}
+</AlertDialogAction>
 
     </AlertDialogFooter>
 

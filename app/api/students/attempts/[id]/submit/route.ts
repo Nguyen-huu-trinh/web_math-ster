@@ -13,38 +13,91 @@ export async function POST(
   request: Request,
   { params }: Context
 ) {
-  const student = await requireStudent();
-
-  const { id } = await params;
-
-  const body = await request.json();
-
   try {
+    // ================================
+    // 1. Xác thực học sinh
+    // ================================
+    const student = await requireStudent();
 
-  const result =
-    await studentExamService.submitAttempt(
-      student.id,
-      id,
-      body.answers
+    // ================================
+    // 2. Lấy attempt ID
+    // ================================
+    const { id } = await params;
+
+    // ================================
+    // 3. Đọc request body
+    // ================================
+    const body = await request.json();
+
+    console.log("[SUBMIT] START", {
+      attemptId: id,
+      studentId: student.id,
+    });
+
+    // ================================
+    // 4. Kiểm tra answers
+    // ================================
+    if (!body?.answers) {
+      return NextResponse.json(
+        {
+          error: "Không có dữ liệu đáp án.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    // ================================
+    // 5. Chấm và lưu bài
+    // ================================
+    const result =
+      await studentExamService.submitAttempt(
+        student.id,
+        id,
+        body.answers
+      );
+
+    console.log("[SUBMIT] SUCCESS", {
+      attemptId: id,
+      studentId: student.id,
+    });
+
+    return NextResponse.json(result);
+
+  } catch (err) {
+    console.error(
+      "[SUBMIT] ERROR",
+      err
     );
 
-  return NextResponse.json(result);
+    const message =
+      err instanceof Error
+        ? err.message
+        : String(err);
 
-} catch (err) {
-
-  console.error(err);
-
-  return NextResponse.json(
-    {
-      error:
-        err instanceof Error
-          ? err.message
-          : String(err),
-    },
-    {
-      status: 500,
+    // Unauthorized
+    if (
+      message === "Unauthorized"
+    ) {
+      return NextResponse.json(
+        {
+          error: "Unauthorized",
+        },
+        {
+          status: 401,
+        }
+      );
     }
-  );
 
-}
+    // Các lỗi khác
+    return NextResponse.json(
+      {
+        error: message,
+      },
+      {
+        status: 500,
+      }
+    );
+  }
 }

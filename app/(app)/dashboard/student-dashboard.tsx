@@ -502,26 +502,26 @@ if (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 min-[1800px]:grid-cols-4">
 
             <LeaderboardCard
-                title="😴 Cần cố gắng"
-                description="Top 5 học sinh hoàn thành ít bài học nhất"
+                title="😴 Top làm biếng"
+                description="Top lười biếng học nhất"
                 entries={leaderboard.data?.lazy ?? []}
             />
 
             <LeaderboardCard
-                title="📉 Làm bài ít"
-                description="Top 5 học sinh làm ít bài tập nhất"
+                title="📉 Top học giỏi"
+                description="Top học giỏi nhất"
                 entries={leaderboard.data?.lowHomework ?? []}
             />
 
             <LeaderboardCard
-                title="🔥 Chăm học"
-                description="Top 5 học sinh tích cực học tập nhất"
+                title="🔥 Top ĐỘ TRÂU"
+                description="Top trâu bò"
                 entries={leaderboard.data?.hardworking ?? []}
             />
 
             <LeaderboardCard
-                title="🏆 Học giỏi"
-                description="Top 5 học sinh có điểm trung bình cao nhất"
+                title="🏆 Thợ săn tiền thưởng"
+                description="Top kiếm tiền nhiều nhất lớp"
                 entries={leaderboard.data?.excellent ?? []}
             />
 

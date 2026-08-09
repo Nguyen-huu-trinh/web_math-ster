@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useStudentDashboard, useActiveStudentCount, } from '@/hooks/use-dashboard'
 import { useLeaderboard } from '@/hooks/use-leaderboard'
 
+
 import { StatCard } from '@/components/dashboard/stat-card'
 import { CountdownCard } from '@/components/dashboard/countdown-card'
 import { LeaderboardCard } from '@/components/dashboard/leaderboard-card'
@@ -24,7 +25,9 @@ import {
     Check,
     X,
 } from "lucide-react";
-
+import {
+    useSubmitAttendance,
+} from "@/hooks/use-submit-attendance";
 import {
     useUpdateLearningGoal,
 } from "@/hooks/use-update-learning-goal";
@@ -62,12 +65,16 @@ export default function StudentDashboard() {
     const updateLearningGoal =
     useUpdateLearningGoal();
 
+    const submitAttendance =
+    useSubmitAttendance();
+
     const [editingGoal, setEditingGoal] =
     useState(false);
 
     const [goal, setGoal] =
         useState("");
-
+    const [attendanceCode, setAttendanceCode] =
+    useState("");
     const leaderboard =
         useLeaderboard()
     const announcement =
@@ -83,6 +90,10 @@ export default function StudentDashboard() {
 const learningGoal =
     dashboard?.profile?.learning_goal ?? "";
 
+    const points =
+    dashboard?.profile?.points ??
+    profile?.points ??
+    100;
 
     const activeStudents =
         activeStudentCount.data
@@ -132,6 +143,43 @@ useEffect(() => {
 }, [
     dashboard?.profile?.learning_goal,
 ]);
+
+async function handleSaveAttendance() {
+    const code = attendanceCode.trim();
+
+    if (!code) {
+        toast.error(
+            "Vui lòng nhập mã điểm danh"
+        );
+        return;
+    }
+
+    try {
+        await submitAttendance.mutateAsync(
+            code
+        );
+
+        setAttendanceCode("");
+
+        toast.success(
+            "Đã lưu mã điểm danh"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "SUBMIT ATTENDANCE ERROR:",
+            error
+        );
+
+        toast.error(
+            error instanceof Error
+                ? error.message
+                : "Không thể lưu mã điểm danh"
+        );
+    }
+}
+
 
 async function handleSaveGoal() {
     const value = goal.trim();
@@ -232,9 +280,9 @@ if (
 
             {/* </div> */} 
 
-                <div className="grid gap-4 lg:grid-cols-[1fr_220px]">
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-24">
 
-                <div className="rounded-xl border bg-card p-6 shadow-sm">
+               <div className="col-span-2 rounded-xl border bg-card p-6 shadow-sm lg:col-span-14">
 
                     <p className="text-sm text-muted-foreground">
                         👋 {greeting()}
@@ -246,115 +294,168 @@ if (
                     </h2>
 
                     <div className="mt-3">
-    {!editingGoal ? (
-        <button
-            type="button"
-            onClick={handleStartEditGoal}
-            className="group flex items-center gap-2 text-left"
-        >
-            <span className="text-base font-medium text-muted-foreground transition-colors group-hover:text-foreground">
-                🎯{" "}
-                {learningGoal ||
-                    "Nhấn để đặt mục tiêu học tập"}
-            </span>
+                    {!editingGoal ? (
+                        <button
+                            type="button"
+                            onClick={handleStartEditGoal}
+                            className="group flex items-center gap-2 text-left"
+                        >
+                        <span className="text-base font-medium text-muted-foreground transition-colors group-hover:text-foreground">
+                            🎯{" "}
+                            {learningGoal ||
+                                "Nhấn để đặt mục tiêu học tập"}
+                        </span>
 
-            <Pencil
-                className="
-                    h-4 w-4
-                    text-muted-foreground
-                    opacity-0
-                    transition-all
-                    group-hover:opacity-100
-                "
-            />
-        </button>
-    ) : (
-        <div className="flex max-w-xl items-center gap-2">
-            <span className="text-base">
-                🎯
-            </span>
+                        <Pencil
+                            className="
+                                h-4 w-4
+                                text-muted-foreground
+                                opacity-0
+                                transition-all
+                                group-hover:opacity-100
+                            "
+                        />
+                    </button>
+                ) : (
+                    <div className="flex max-w-xl items-center gap-2">
+                        
+                        <span className="text-lg">
+                            🎯
+                        </span>
 
-            <Input
-                value={goal}
-                onChange={(e) =>
-                    setGoal(e.target.value)
-                }
-                placeholder="Ví dụ: Đạt 9+ môn Toán"
-                maxLength={200}
-                autoFocus
-                className="h-9"
-                onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                        void handleSaveGoal();
-                    }
+                        <Input
+                            value={goal}
+                            onChange={(e) =>
+                                setGoal(e.target.value)
+                            }
+                            placeholder="Ví dụ: Đạt 9+ môn Toán"
+                            maxLength={200}
+                            autoFocus
+                           className="h-9 text-base font-bold text-blue-700 placeholder:font-normal placeholder:text-muted-foreground"
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    void handleSaveGoal();
+                                }
 
-                    if (e.key === "Escape") {
-                        setGoal(learningGoal);
-                        setEditingGoal(false);
-                    }
-                }}
-            />
+                                if (e.key === "Escape") {
+                                    setGoal(learningGoal);
+                                    setEditingGoal(false);
+                                }
+                            }}
+                        />
 
-            <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                disabled={
-                    updateLearningGoal.isPending
-                }
-                onClick={() =>
-                    void handleSaveGoal()
-                }
-            >
-                <Check className="h-4 w-4 text-green-600" />
-            </Button>
+                        <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            disabled={
+                                updateLearningGoal.isPending
+                            }
+                            onClick={() =>
+                                void handleSaveGoal()
+                            }
+                        >
+                            <Check className="h-4 w-4 text-green-600" />
+                        </Button>
 
-            <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                disabled={
-                    updateLearningGoal.isPending
-                }
-                onClick={() => {
-                    setGoal(learningGoal);
-                    setEditingGoal(false);
-                }}
-            >
-                <X className="h-4 w-4 text-muted-foreground" />
-            </Button>
-        </div>
-    )}
-</div>
+                        <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            disabled={
+                                updateLearningGoal.isPending
+                            }
+                            onClick={() => {
+                                setGoal(learningGoal);
+                                setEditingGoal(false);
+                            }}
+                        >
+                            <X className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                    </div>
+                )}
+            </div>
 
                 </div>
 
-                <div className="rounded-xl border bg-card p-6 shadow-sm flex flex-col items-center justify-center">
+                <div className="col-span-1 flex flex-col items-center justify-center rounded-xl border bg-card p-6 shadow-sm lg:col-span-5">
 
-    <div className="flex items-center justify-center gap-2">
+                <div className="flex items-center justify-center gap-2">
 
-        <span className="text-4xl font-bold tabular-nums text-primary">
-            {activeStudentCount.isLoading ||
-            activeStudentCount.isError
-                ? "--"
-                : activeStudents+20}
-        </span>
+                    <span className="text-4xl font-bold tabular-nums text-primary">
+                        {activeStudentCount.isLoading ||
+                        activeStudentCount.isError
+                            ? "--"
+                            : activeStudents+20}
+                    </span>
 
-        <Image
-            src="/trau.png"
-            alt="Trâu đang cày"
-            width={52}
-            height={52}
-            className="object-contain"
-        />
+                    <Image
+                        src="/trau.png"
+                        alt="Trâu đang cày"
+                        width={52}
+                        height={52}
+                        className="object-contain"
+                    />
 
-    </div>
+                </div>
 
-    <p className="mt-1 text-xl font-semibold tracking-wide text-foreground">
-        ĐANG CÀY
-    </p>
+                <p className="mt-1 text-xl font-semibold tracking-wide text-foreground">
+                    ĐANG CÀY
+                </p>
 
-</div>
+            </div>
+            
+           <div className="col-span-1 rounded-xl border bg-card p-4 text-center shadow-sm lg:col-span-5">
+            <p className="mt-1 text-xl font-semibold tracking-wide text-foreground">
+                Điểm tích lũy
+            </p>
+
+            <div className="mt-1">
+                <span className="text-3xl font-bold leading-none tabular-nums text-primary">
+                    {points}
+                </span>
+
+                <span className="ml-1 text-smfont-semibold text-foreground">
+                    điểm
+                </span>
+            </div>
+
+            <div className="mt-3 flex items-center justify-center gap-2">
+                <Input
+                    value={attendanceCode}
+                    onChange={(e) =>
+                        setAttendanceCode(e.target.value)
+                    }
+                    placeholder="Mã điểm danh"
+                    maxLength={100}
+                    disabled={submitAttendance.isPending}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            void handleSaveAttendance();
+                        }
+                    }}
+                    className="h-9 w-[158px] text-center"
+                />
+
+                <Button
+                    type="button"
+                    size="sm"
+                    disabled={
+                        submitAttendance.isPending ||
+                        !attendanceCode.trim()
+                    }
+                    onClick={() =>
+                        void handleSaveAttendance()
+                    }
+                >
+                    {submitAttendance.isPending
+                        ? "..."
+                        : "Lưu"}
+                </Button>
+            </div>
+        </div>
+
+
             </div>
             
             <div className="rounded-xl border border-amber-300 bg-amber-50 p-5 shadow-sm">

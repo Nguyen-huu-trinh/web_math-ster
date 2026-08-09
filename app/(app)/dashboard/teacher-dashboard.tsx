@@ -11,6 +11,8 @@ import {
     useUpdateAnnouncement,
 } from "@/hooks/use-announcement";
 
+import { useProcessAttendance } from "@/hooks/use-process-attendance";
+
 import { Input } from "@/components/ui/input";
 
 import { Textarea } from "@/components/ui/textarea";
@@ -104,7 +106,12 @@ export default function TeacherDashboard() {
     const updateAnnouncement =
     useUpdateAnnouncement();
 
+    const processAttendance =
+    useProcessAttendance();
+
     const [title, setTitle] = useState("");
+
+    const [attendanceCode, setAttendanceCode] =useState("");
 
     const [content, setContent] = useState("");
 
@@ -171,6 +178,43 @@ const activeStudents =
 
 ]
 
+async function handleProcessAttendance() {
+    const code = attendanceCode.trim();
+
+    if (!code) {
+        toast.error(
+            "Vui lòng nhập mã điểm danh đúng."
+        );
+        return;
+    }
+
+    try {
+        const result =
+            await processAttendance.mutateAsync(
+                code
+            );
+
+        toast.success(
+            `Đã điểm danh ${result.correctCount}/${result.totalStudents} học sinh`
+        );
+
+        setAttendanceCode("");
+
+    } catch (error) {
+        console.error(
+            "PROCESS ATTENDANCE ERROR:",
+            error
+        );
+
+        toast.error(
+            error instanceof Error
+                ? error.message
+                : "Không thể xử lý điểm danh"
+        );
+    }
+}
+
+
 async function saveAnnouncement() {
      
 
@@ -208,10 +252,9 @@ async function saveAnnouncement() {
 
         <div className="flex flex-col gap-6">
 
-            <div className="grid gap-4 lg:grid-cols-[1fr_220px]">
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-24">
 
-    <div className="rounded-xl border bg-card p-6 shadow-sm">
-
+    <div className="col-span-2 rounded-xl border bg-card p-6 shadow-sm lg:col-span-14">
         <p className="text-sm text-muted-foreground">
 
             👋 {greeting()}
@@ -232,8 +275,7 @@ async function saveAnnouncement() {
 
             </div>
 
-            <div className="rounded-xl border bg-card p-6 shadow-sm flex flex-col items-center justify-center">
-            
+           <div className="col-span-1 flex flex-col items-center justify-center rounded-xl border bg-card p-6 shadow-sm lg:col-span-5"> 
                 <div className="flex items-center justify-center gap-2">
             
                     <span className="text-4xl font-bold tabular-nums text-primary">
@@ -258,6 +300,58 @@ async function saveAnnouncement() {
                 </p>
             
             </div>
+
+<div className="col-span-1 rounded-xl border bg-card p-4 text-center shadow-sm lg:col-span-5">
+    <div className="text-center">
+
+        <p className="mt-1 text-xl font-semibold tracking-wide text-foreground">
+            Điểm danh
+        </p>
+
+    </div>
+
+    <div className="mt-3 flex items-center gap-2">
+
+        <Input
+            value={attendanceCode}
+            onChange={(e) =>
+                setAttendanceCode(
+                    e.target.value
+                )
+            }
+            placeholder="Mã code"
+            maxLength={100}
+            disabled={
+                processAttendance.isPending
+            }
+            className="h-9 text-center"
+            onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                    void handleProcessAttendance();
+                }
+            }}
+        />
+
+        <Button
+            type="button"
+            size="sm"
+            disabled={
+                processAttendance.isPending ||
+                !attendanceCode.trim()
+            }
+            onClick={() =>
+                void handleProcessAttendance()
+            }
+        >
+            {processAttendance.isPending
+                ? "..."
+                : "Lưu"}
+        </Button>
+
+    </div>
+
+</div>
+
         </div>
 
         <div className="rounded-xl border border-amber-300 bg-amber-50 p-5 shadow-sm">
@@ -317,6 +411,9 @@ async function saveAnnouncement() {
                 />
 
             </div>
+
+
+            
 
         </div>
             <CountdownCard />

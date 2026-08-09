@@ -20,7 +20,8 @@ export const requireProfile = cache(async () => {
                 email,
                 student_code,
                 avatar_url,
-                is_active
+                is_active,
+                points
             `)
             .eq("id", user.id)
             .single();

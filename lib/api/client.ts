@@ -15,17 +15,22 @@ class ApiClient {
       ...options,
     });
 
-    if (!response.ok) {
+if (!response.ok) {
+    let message = `Request failed with status ${response.status}`;
 
-      let message = "Something went wrong";
+    try {
+        const data = await response.json();
 
-      try {
-        const error = await response.json();
-        message = error.message ?? message;
-      } catch {}
-
-      throw new Error(message);
+        message =
+            data?.error ??
+            data?.message ??
+            message;
+    } catch {
+        // Response không phải JSON
     }
+
+    throw new Error(message);
+}
 
     return response.json() as Promise<T>;
   }

@@ -334,8 +334,7 @@ async function saveAnnouncement() {
                     e.preventDefault();
 
                     if (
-                        processAttendance.isPending ||
-                        !attendanceCode.trim()
+                        processAttendance.isPending
                     ) {
                         return;
                     }

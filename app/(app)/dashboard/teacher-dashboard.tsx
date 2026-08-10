@@ -434,30 +434,31 @@ async function saveAnnouncement() {
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
 
-                <LeaderboardCard
-                    title="😴 Cần cố gắng"
-                    description="Top 5 học sinh hoàn thành ít bài học nhất"
-                    entries={leaderboard.data?.lazy ?? []}
-                />
+            <LeaderboardCard
+                title="😴 Top làm biếng"
+                description="Top lười biếng học nhất"
+                entries={leaderboard.data?.lowHomework ?? []}
+            />
 
-                <LeaderboardCard
-                    title="📉 Làm bài ít"
-                    description="Top 5 học sinh làm ít bài tập nhất"
-                    entries={leaderboard.data?.lowHomework ?? []}
-                />
+            <LeaderboardCard
+                title="🏆 Top học giỏi"
+                description="Top học giỏi nhất"
+                entries={leaderboard.data?.excellent ?? []}
+            />
 
-                <LeaderboardCard
-                    title="🔥 Chăm học"
-                    description="Top 5 học sinh tích cực học tập nhất"
-                    entries={leaderboard.data?.hardworking ?? []}
-                />
+            <LeaderboardCard
+                title="💪 Top ĐỘ TRÂU"
+                description="Top trâu bò"
+                entries={leaderboard.data?.dotrau ?? []}
+                valueType="points"
+            />
 
-                <LeaderboardCard
-                    title="🏆 Học giỏi"
-                    description="Top 5 học sinh có điểm trung bình cao nhất"
-                    entries={leaderboard.data?.excellent ?? []}
-                />
-
+            <LeaderboardCard
+                title="💰 Thợ săn tiền thưởng"
+                description="Top kiếm tiền nhiều nhất lớp"
+                entries={leaderboard.data?.rewardMoney ?? []}
+                valueType="money"
+            />
             </div>
 
             <div>

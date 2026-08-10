@@ -530,20 +530,20 @@ if (
             />
 
             <LeaderboardCard
-                title="📉 Top học giỏi"
+                title="🏆 Top học giỏi"
                 description="Top học giỏi nhất"
                 entries={leaderboard.data?.excellent ?? []}
             />
 
             <LeaderboardCard
-                title="🔥 Top ĐỘ TRÂU"
+                title="💪 Top ĐỘ TRÂU"
                 description="Top trâu bò"
                 entries={leaderboard.data?.dotrau ?? []}
                 valueType="points"
             />
 
             <LeaderboardCard
-                title="🏆 Thợ săn tiền thưởng"
+                title="💰 Thợ săn tiền thưởng"
                 description="Top kiếm tiền nhiều nhất lớp"
                 entries={leaderboard.data?.rewardMoney ?? []}
                 valueType="money"

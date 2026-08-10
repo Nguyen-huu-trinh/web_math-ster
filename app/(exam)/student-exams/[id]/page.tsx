@@ -12,30 +12,56 @@ interface Props {
 }
 
 export default async function StudentExamPage({
-  params,
+    params,
 }: Props) {
-  const { id } = await params;
+    const { id } = await params;
 
-  try {
-    const profile = await requireStudent();
+    let studentId = "";
 
-    const session =
-      await studentExamService.getExamSession(
-        profile.id,
-        id
-      );
-     
-    return (
-      <StudentExamLayout
-        session={session}
-      />
-    );
-  } catch (error) {
-    console.error(
-      "StudentExamPage:",
-      error
-    );
+    try {
+        const profile =
+            await requireStudent();
 
-    return notFound();
-  }
+        studentId = profile.id;
+
+        console.log(
+            "[STUDENT EXAM PAGE] START",
+            {
+                attemptId: id,
+                studentId: profile.id,
+            }
+        );
+
+        const session =
+            await studentExamService.getExamSession(
+                profile.id,
+                id
+            );
+
+        console.log(
+            "[STUDENT EXAM PAGE] SESSION FOUND",
+            {
+                attemptId: id,
+                studentId: profile.id,
+            }
+        );
+
+        return (
+            <StudentExamLayout
+                session={session}
+            />
+        );
+
+    } catch (error) {
+        console.error(
+            "[STUDENT EXAM PAGE ERROR]",
+            {
+                attemptId: id,
+                studentId,
+                error,
+            }
+        );
+
+        throw error;
+    }
 }

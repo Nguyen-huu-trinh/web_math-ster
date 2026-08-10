@@ -340,15 +340,12 @@ async getAttemptDetail(
 
   // Attempt
 
-  const {
+const {
     data: attempt,
     error: attemptError,
 } = await supabase
     .from("exam_attempts")
-    .select(`
-        *,
-        exams(*)
-    `)
+    .select("*")
     .eq("id", attemptId)
     .eq("student_id", studentId)
     .maybeSingle();
@@ -359,7 +356,7 @@ if (attemptError) {
 
 if (!attempt) {
     throw new Error(
-        "Phiên làm bài không còn tồn tại. Vui lòng mở lại bài thi."
+        `Không tìm thấy attempt ${attemptId} của student ${studentId}`
     );
 }
  

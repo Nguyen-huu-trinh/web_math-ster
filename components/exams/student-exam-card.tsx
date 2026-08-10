@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -33,6 +33,9 @@ export function StudentExamCard({
   const startExam =
     useStartExam();
 const [isStarting, setIsStarting] = useState(false);
+
+const startLockRef =
+    useRef(false);
   function renderStatus() {
 
     switch (exam.status) {
@@ -65,24 +68,49 @@ const [isStarting, setIsStarting] = useState(false);
   }
 
   async function handleStartExam() {
-    setIsStarting(true);
-    try {
-      const attempt = await startExam.mutateAsync(exam.id);
-
-      router.push(
-        `/student-exams/${attempt.id}`
-      );
-
-    } catch (error: any) {
-
-      alert(
-        error.message ??
-          "Không thể bắt đầu bài làm."
-      );
-
+    // Chặn tuyệt đối việc gửi request lần 2
+    if (startLockRef.current) {
+        return;
     }
 
-  }
+    startLockRef.current = true;
+
+    setIsStarting(true);
+
+    try {
+        const attempt =
+            await startExam.mutateAsync(
+                exam.id
+            );
+
+        console.log(
+            "[STUDENT EXAM] START SUCCESS",
+            {
+                examId: exam.id,
+                attemptId: attempt.id,
+            }
+        );
+
+        router.push(
+            `/student-exams/${attempt.id}`
+        );
+
+    } catch (error: any) {
+        console.error(
+            "[STUDENT EXAM] START ERROR",
+            error
+        );
+
+        // Cho phép thử lại nếu request thất bại
+        startLockRef.current = false;
+        setIsStarting(false);
+
+        alert(
+            error.message ??
+                "Không thể bắt đầu bài làm."
+        );
+    }
+}
 
   function renderButton() {
 

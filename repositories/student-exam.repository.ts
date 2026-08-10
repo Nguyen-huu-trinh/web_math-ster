@@ -197,17 +197,25 @@ async startExam(
   // ===========================
 
   const {
-    data: currentAttempt,
-  } = await supabase
+    data: currentAttempts,
+    error: currentAttemptError,
+} = await supabase
     .from("exam_attempts")
     .select("*")
     .eq("exam_id", examId)
     .eq("student_id", studentId)
     .is("submitted_at", null)
     .order("created_at", {
-      ascending: false,
+        ascending: false,
     })
-    .maybeSingle();
+    .limit(1);
+
+if (currentAttemptError) {
+    throw currentAttemptError;
+}
+
+const currentAttempt =
+    currentAttempts?.[0] ?? null;
 
   if (currentAttempt) {
     console.log(
@@ -315,7 +323,11 @@ async startExam(
   if (error) {
     throw error;
   }
-
+  console.log("[START EXAM] CREATED", {
+    examId,
+    studentId,
+    attemptId: attempt.id,
+});
   return attempt;
 }
 async getAttemptDetail(
@@ -331,21 +343,25 @@ async getAttemptDetail(
   const {
     data: attempt,
     error: attemptError,
-  } = await supabase
-
+} = await supabase
     .from("exam_attempts")
-
-    .select("*")
-
+    .select(`
+        *,
+        exams(*)
+    `)
     .eq("id", attemptId)
-
     .eq("student_id", studentId)
+    .maybeSingle();
 
-    .single();
-
-  if (attemptError) {
+if (attemptError) {
     throw attemptError;
-  }
+}
+
+if (!attempt) {
+    throw new Error(
+        "Phiên làm bài không còn tồn tại. Vui lòng mở lại bài thi."
+    );
+}
  
   // Exam
 
@@ -566,11 +582,16 @@ async submitAttempt(
                 "student_id",
                 studentId
             )
-            .single();
+            .maybeSingle();
 
         if (existingAttemptError) {
             throw existingAttemptError;
         }
+        if (!existingAttempt) {
+        throw new Error(
+            "Phiên làm bài không còn tồn tại."
+        );
+    }
 
         return {
             score:

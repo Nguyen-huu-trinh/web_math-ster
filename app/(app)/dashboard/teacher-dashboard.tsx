@@ -179,8 +179,6 @@ const activeStudents =
 ]
 
 async function handleProcessAttendance() {
-    // Không cho phép gửi lần 2 khi request trước
-    // vẫn đang xử lý
     if (processAttendance.isPending) {
         return;
     }
@@ -219,7 +217,6 @@ async function handleProcessAttendance() {
         );
     }
 }
-
 
 async function saveAnnouncement() {
      

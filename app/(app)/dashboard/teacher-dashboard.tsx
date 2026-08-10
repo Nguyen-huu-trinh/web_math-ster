@@ -179,6 +179,12 @@ const activeStudents =
 ]
 
 async function handleProcessAttendance() {
+    // Không cho phép gửi lần 2 khi request trước
+    // vẫn đang xử lý
+    if (processAttendance.isPending) {
+        return;
+    }
+
     const code = attendanceCode.trim();
 
     if (!code) {
@@ -315,9 +321,7 @@ async function saveAnnouncement() {
         <Input
             value={attendanceCode}
             onChange={(e) =>
-                setAttendanceCode(
-                    e.target.value
-                )
+                setAttendanceCode(e.target.value)
             }
             placeholder="Mã code"
             maxLength={100}
@@ -327,6 +331,15 @@ async function saveAnnouncement() {
             className="h-9 text-center"
             onKeyDown={(e) => {
                 if (e.key === "Enter") {
+                    e.preventDefault();
+
+                    if (
+                        processAttendance.isPending ||
+                        !attendanceCode.trim()
+                    ) {
+                        return;
+                    }
+
                     void handleProcessAttendance();
                 }
             }}
@@ -339,9 +352,13 @@ async function saveAnnouncement() {
                 processAttendance.isPending ||
                 !attendanceCode.trim()
             }
-            onClick={() =>
-                void handleProcessAttendance()
-            }
+            onClick={() => {
+                if (processAttendance.isPending) {
+                    return;
+                }
+
+                void handleProcessAttendance();
+            }}
         >
             {processAttendance.isPending
                 ? "..."

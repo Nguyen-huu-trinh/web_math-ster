@@ -1,21 +1,17 @@
 import { apiClient } from "@/lib/api/client";
 
-export interface ProcessAttendanceResult {
+export interface CreateAttendanceResult {
     success: boolean;
     message: string;
-    correctCount: number;
-    totalStudents: number;
+    studentCount: number;
 }
 
 class AttendanceTeacherClientService {
-
-    async process(
-        correctCode: string
-    ) {
-        return apiClient.post<ProcessAttendanceResult>(
-            "/api/teachers/attendance/process",
+    async process(code: string) {
+        return apiClient.post<CreateAttendanceResult>(
+            "/api/teachers/attendance/create",
             {
-                correctCode,
+                code,
             }
         );
     }

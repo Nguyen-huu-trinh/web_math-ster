@@ -195,7 +195,7 @@ async function handleProcessAttendance() {
             );
 
         toast.success(
-            `Đã điểm danh ${result.correctCount}/${result.totalStudents} học sinh`
+            `Đã tạo lượt điểm danh cho ${result.studentCount} học sinh`
         );
 
         setAttendanceCode("");

@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useStudentDashboard, useActiveStudentCount, } from '@/hooks/use-dashboard'
 import { useLeaderboard } from '@/hooks/use-leaderboard'
 
-
+import { useQueryClient } from "@tanstack/react-query";
 import { StatCard } from '@/components/dashboard/stat-card'
 import { CountdownCard } from '@/components/dashboard/countdown-card'
 import { LeaderboardCard } from '@/components/dashboard/leaderboard-card'
@@ -61,6 +61,8 @@ export default function StudentDashboard() {
 
     const studentDashboard =
         useStudentDashboard()
+    const queryClient =
+        useQueryClient();
 
     const updateLearningGoal =
     useUpdateLearningGoal();
@@ -75,6 +77,8 @@ export default function StudentDashboard() {
         useState("");
     const [attendanceCode, setAttendanceCode] =
     useState("");
+    const [displayPoints, setDisplayPoints] =
+    useState<number | null>(null);
     const leaderboard =
         useLeaderboard()
     const announcement =
@@ -91,9 +95,21 @@ const learningGoal =
     dashboard?.profile?.learning_goal ?? "";
 
     const points =
+    displayPoints ??
     dashboard?.profile?.points ??
     profile?.points ??
     100;
+
+    useEffect(() => {
+    if (dashboard?.profile?.points !== undefined) {
+        setDisplayPoints(
+            dashboard.profile.points
+        );
+    }
+}, [
+    dashboard?.profile?.points,
+]);
+
 
     const activeStudents =
         activeStudentCount.data
@@ -155,18 +171,24 @@ async function handleSaveAttendance() {
     }
 
     try {
-        await submitAttendance.mutateAsync(
-            code
+        const result =
+    await submitAttendance.mutateAsync(code);
+        setDisplayPoints(
+            points +
+            Number(
+                result.pointsAdded ?? 10
+            )
         );
-
+        // Xóa mã đã nhập
         setAttendanceCode("");
 
+await studentDashboard.refetch();
+
         toast.success(
-            "Đã lưu mã điểm danh"
+            "Điểm danh thành công! +10 điểm."
         );
 
     } catch (error) {
-
         console.error(
             "SUBMIT ATTENDANCE ERROR:",
             error
@@ -175,7 +197,7 @@ async function handleSaveAttendance() {
         toast.error(
             error instanceof Error
                 ? error.message
-                : "Không thể lưu mã điểm danh"
+                : "Không thể điểm danh"
         );
     }
 }

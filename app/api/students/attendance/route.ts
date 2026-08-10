@@ -5,9 +5,11 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
     try {
-        const student = await requireStudent();
+        const student =
+            await requireStudent();
 
-        const body = await request.json();
+        const body =
+            await request.json();
 
         const code =
             typeof body.code === "string"
@@ -29,31 +31,77 @@ export async function POST(request: Request) {
         const supabase =
             await createClient();
 
-        const { error } =
-            await supabase
-                .from("attendance")
-                .upsert(
-                    {
-                        student_id:
-                            student.id,
-                        code,
-                    },
-                    {
-                        onConflict:
-                            "student_id",
-                    }
-                );
+        const {
+            data,
+            error,
+        } = await supabase.rpc(
+            "submit_attendance",
+            {
+                p_student_code:
+                    student.student_code,
+
+                p_code: code,
+            }
+        );
 
         if (error) {
             console.error(
-                "ATTENDANCE INSERT ERROR:",
+                "SUBMIT ATTENDANCE ERROR:",
                 error
             );
+
+            if (
+                error.message.includes(
+                    "ATTENDANCE_EXPIRED"
+                )
+            ) {
+                return NextResponse.json(
+                    {
+                        error:
+                            "Đã hết lượt điểm danh.",
+                    },
+                    {
+                        status: 400,
+                    }
+                );
+            }
+
+            if (
+                error.message.includes(
+                    "INVALID_ATTENDANCE_CODE"
+                )
+            ) {
+                return NextResponse.json(
+                    {
+                        error:
+                            "Mã điểm danh không đúng.",
+                    },
+                    {
+                        status: 400,
+                    }
+                );
+            }
+
+            if (
+                error.message.includes(
+                    "STUDENT_NOT_FOUND"
+                )
+            ) {
+                return NextResponse.json(
+                    {
+                        error:
+                            "Không tìm thấy thông tin học sinh.",
+                    },
+                    {
+                        status: 404,
+                    }
+                );
+            }
 
             return NextResponse.json(
                 {
                     error:
-                        "Không thể lưu điểm danh.",
+                        "Không thể điểm danh.",
                 },
                 {
                     status: 500,
@@ -64,12 +112,14 @@ export async function POST(request: Request) {
         return NextResponse.json({
             success: true,
             message:
-                "Đã ghi nhận mã điểm danh.",
+                "Điểm danh thành công! +10 điểm.",
+            pointsAdded:
+                Number(data ?? 10),
         });
 
     } catch (error) {
         console.error(
-            "ATTENDANCE API ERROR:",
+            "STUDENT ATTENDANCE ERROR:",
             error
         );
 

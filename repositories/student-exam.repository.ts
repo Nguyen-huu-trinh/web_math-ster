@@ -330,35 +330,72 @@ const currentAttempt =
 });
   return attempt;
 }
+
+
 async getAttemptDetail(
-  studentId: string,
-  attemptId: string
+    studentId: string,
+    attemptId: string
 ) {
+    const supabase =
+        await createClient();
 
-  const supabase =
-    await createClient();
+    // ==========================
+    // Kiểm tra user thực tế
+    // ==========================
 
-  // Attempt
+    const {
+        data: {
+            user,
+        },
+    } = await supabase.auth.getUser();
 
-const {
-    data: attempt,
-    error: attemptError,
-} = await supabase
-    .from("exam_attempts")
-    .select("*")
-    .eq("id", attemptId)
-    .eq("student_id", studentId)
-    .maybeSingle();
-
-if (attemptError) {
-    throw attemptError;
-}
-
-if (!attempt) {
-    throw new Error(
-        `Không tìm thấy attempt ${attemptId} của student ${studentId}`
+    console.log(
+        "[GET ATTEMPT DETAIL AUTH]",
+        {
+            authUserId: user?.id,
+            studentId,
+            attemptId,
+        }
     );
-}
+
+    // ==========================
+    // Attempt
+    // ==========================
+
+    const {
+        data: attempt,
+        error: attemptError,
+    } = await supabase
+        .from("exam_attempts")
+        .select("*")
+        .eq("id", attemptId)
+        .eq("student_id", studentId)
+        .maybeSingle();
+
+    console.log(
+        "[GET ATTEMPT DETAIL RESULT]",
+        {
+            authUserId: user?.id,
+            studentId,
+            attemptId,
+            found: !!attempt,
+            attemptStudentId:
+                attempt?.student_id ?? null,
+            error: attemptError,
+        }
+    );
+
+    if (attemptError) {
+        throw attemptError;
+    }
+
+    if (!attempt) {
+        throw new Error(
+            `Không tìm thấy attempt ${attemptId} của student ${studentId}`
+        );
+    }
+
+
  
   // Exam
 

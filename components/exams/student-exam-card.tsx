@@ -83,13 +83,10 @@ const startLockRef =
                 exam.id
             );
 
-        console.log(
-            "[STUDENT EXAM] START SUCCESS",
-            {
-                examId: exam.id,
-                attemptId: attempt.id,
-            }
-        );
+       console.log("[START EXAM FRONTEND]", {
+          examId: exam.id,
+          attemptId: attempt.id,
+      });
 
         router.push(
             `/student-exams/${attempt.id}`

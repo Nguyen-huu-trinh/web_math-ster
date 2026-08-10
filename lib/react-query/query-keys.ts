@@ -43,4 +43,17 @@ export const queryKeys = {
     answers: (id: string) => ["attempt", id, "answers"] as const,
   },
 
+  teacherStudents: {
+    all: () => [
+        "teacher",
+        "students",
+    ] as const,
+
+    detail: (id: string) => [
+        "teacher",
+        "students",
+        id,
+    ] as const,
+},
+
 };

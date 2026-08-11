@@ -1,166 +1,217 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-
-import { authService } from "@/services/auth.service";
 
 import {
     authClientService,
 } from "@/services/auth-client.service";
 
+interface UseAuthHeartbeatOptions {
+    enabled: boolean;
+    onSessionInvalid: (
+        message: string
+    ) => void | Promise<void>;
+}
 
-export function useAuthHeartbeat(
-    enabled: boolean
-) {
+const SESSION_MESSAGE_KEY =
+    "mathster_session_message";
+
+export function useAuthHeartbeat({
+    enabled,
+    onSessionInvalid,
+}: UseAuthHeartbeatOptions) {
+    const pathname = usePathname();
 
     useEffect(() => {
-
-        if (!enabled) {
+        /*
+         * ==========================================
+         * KHÔNG CHẠY HEARTBEAT Ở LOGIN
+         * ==========================================
+         */
+        if (
+            !enabled ||
+            pathname === "/login"
+        ) {
             return;
         }
 
         let stopped = false;
 
-        async function heartbeat() {
+        /*
+         * ==========================================
+         * LƯU THÔNG BÁO
+         * ==========================================
+         */
+        function saveSessionMessage(
+            message: string
+        ) {
+            sessionStorage.setItem(
+                SESSION_MESSAGE_KEY,
+                message
+            );
+        }
 
+        /*
+         * ==========================================
+         * FORCE LOGOUT
+         * ==========================================
+         *
+         * Heartbeat KHÔNG tự logout.
+         *
+         * Nó chỉ:
+         *
+         * 1. Dừng heartbeat
+         * 2. Lưu thông báo
+         * 3. Báo cho AuthProvider
+         */
+        function forceLogin(
+            message: string
+        ) {
+            if (stopped) {
+                return;
+            }
+
+            stopped = true;
+
+            saveSessionMessage(
+                message
+            );
+
+            console.warn(
+                "[HEARTBEAT] Session invalid:",
+                message
+            );
+
+            /*
+             * AuthProvider sẽ chịu trách nhiệm:
+             *
+             * - logout Supabase
+             * - setUser(null)
+             * - clear profile cache
+             * - chuyển /login
+             */
+            void onSessionInvalid(
+                message
+            );
+        }
+
+        /*
+         * ==========================================
+         * HEARTBEAT
+         * ==========================================
+         */
+        async function heartbeat() {
             if (stopped) {
                 return;
             }
 
             try {
+                console.log(
+                    "[HEARTBEAT] Checking session:",
+                    new Date().toISOString()
+                );
 
                 await authClientService.heartbeat();
 
-            } catch (error) {
+                if (stopped) {
+                    return;
+                }
 
-                /*
-                 * =====================================================
-                 * SESSION BỊ THIẾT BỊ KHÁC THAY THẾ
-                 * =====================================================
-                 */
+                console.log(
+                    "[HEARTBEAT] Session valid:",
+                    new Date().toISOString()
+                );
+
+            } catch (error) {
+                if (stopped) {
+                    return;
+                }
 
                 const message =
                     error instanceof Error
                         ? error.message
                         : String(error);
 
+                console.error(
+                    "[HEARTBEAT] ERROR:",
+                    message
+                );
+
+                /*
+                 * ======================================
+                 * SESSION REPLACED
+                 * ======================================
+                 */
                 if (
                     message.includes(
                         "SESSION_REPLACED"
                     )
                 ) {
-
-                    console.warn(
-                        "Phiên đăng nhập đã bị thay thế."
-                    );
-
-                    stopped = true;
-
-                    /*
-                     * Logout Supabase.
-                     */
-                    try {
-
-                        await authService.logout();
-
-                    } catch (
-                        logoutError
-                    ) {
-
-                        console.error(
-                            "Logout failed:",
-                            logoutError
-                        );
-
-                    }
-
-                    /*
-                     * Đưa người dùng về Login.
-                     */
-                    window.location.replace(
-                        "/login"
+                    forceLogin(
+                        "Tài khoản của bạn vừa được đăng nhập trên một thiết bị khác."
                     );
 
                     return;
                 }
 
-
                 /*
-                 * =====================================================
-                 * SESSION KHÔNG TỒN TẠI
-                 * =====================================================
+                 * ======================================
+                 * SESSION NOT FOUND
+                 * ======================================
                  */
-
                 if (
                     message.includes(
                         "SESSION_NOT_FOUND"
                     )
                 ) {
-
-                    stopped = true;
-
-                    try {
-
-                        await authService.logout();
-
-                    } catch {}
-
-                    window.location.replace(
-                        "/login"
+                    forceLogin(
+                        "Phiên đăng nhập của bạn không còn tồn tại. Vui lòng đăng nhập lại."
                     );
 
                     return;
                 }
 
-
                 /*
-                 * =====================================================
-                 * ACCOUNT BỊ KHÓA
-                 * =====================================================
+                 * ======================================
+                 * ACCOUNT DISABLED
+                 * ======================================
                  */
-
                 if (
                     message.includes(
                         "ACCOUNT_DISABLED"
                     )
                 ) {
-
-                    stopped = true;
-
-                    try {
-
-                        await authService.logout();
-
-                    } catch {}
-
-                    window.location.replace(
-                        "/login"
+                    forceLogin(
+                        "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ giáo viên."
                     );
 
                     return;
                 }
 
-
                 /*
-                 * Các lỗi heartbeat khác.
+                 * ======================================
+                 * LỖI KHÁC
+                 * ======================================
                  */
-
                 console.error(
-                    "Heartbeat failed:",
+                    "[HEARTBEAT] Unknown error:",
                     error
                 );
             }
         }
 
-
         /*
-         * Heartbeat ngay khi bắt đầu.
+         * ==========================================
+         * CHẠY HEARTBEAT NGAY LẬP TỨC
+         * ==========================================
          */
         void heartbeat();
 
-
         /*
-         * Heartbeat mỗi 60 giây.
+         * ==========================================
+         * CHẠY MỖI 60 GIÂY
+         * ==========================================
          */
         const interval =
             window.setInterval(
@@ -170,16 +221,22 @@ export function useAuthHeartbeat(
                 60 * 1000
             );
 
-
+        /*
+         * ==========================================
+         * CLEANUP
+         * ==========================================
+         */
         return () => {
-
             stopped = true;
 
             window.clearInterval(
                 interval
             );
-
         };
 
-    }, [enabled]);
+    }, [
+        enabled,
+        pathname,
+        onSessionInvalid,
+    ]);
 }

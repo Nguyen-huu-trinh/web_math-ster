@@ -12,8 +12,8 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const STORAGE_KEY =
-    "auth_session_message";
+const SESSION_MESSAGE_KEY =
+    "mathster_session_message";
 
 export function SessionMessageDialog() {
     const [message, setMessage] =
@@ -22,7 +22,7 @@ export function SessionMessageDialog() {
     useEffect(() => {
         const storedMessage =
             sessionStorage.getItem(
-                STORAGE_KEY
+                SESSION_MESSAGE_KEY
             );
 
         if (storedMessage) {
@@ -30,9 +30,9 @@ export function SessionMessageDialog() {
         }
     }, []);
 
-    function handleClose() {
+    function handleOk() {
         sessionStorage.removeItem(
-            STORAGE_KEY
+            SESSION_MESSAGE_KEY
         );
 
         setMessage(null);
@@ -55,9 +55,7 @@ export function SessionMessageDialog() {
 
                 <AlertDialogFooter>
                     <AlertDialogAction
-                        onClick={
-                            handleClose
-                        }
+                        onClick={handleOk}
                     >
                         OK
                     </AlertDialogAction>

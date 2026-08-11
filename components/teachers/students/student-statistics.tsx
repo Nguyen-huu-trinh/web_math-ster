@@ -4,21 +4,28 @@ import {
     BookOpenCheck,
     ClipboardList,
     GraduationCap,
+    CircleCheck,
+    CircleX,
 } from "lucide-react";
 
 interface Props {
     averageScore: number;
     pendingExams: number;
     incompleteLessons: number;
+    passedExercises: number;
+    failedExercises: number;
 }
 
 export function StudentStatistics({
     averageScore,
     pendingExams,
     incompleteLessons,
+    passedExercises,
+    failedExercises,
 }: Props) {
     return (
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
+
             {/* AVG SCORE */}
             <div className="rounded-xl border bg-card p-5">
                 <div className="flex items-center gap-3">
@@ -75,6 +82,45 @@ export function StudentStatistics({
                     </div>
                 </div>
             </div>
+
+            {/* PASSED EXERCISES */}
+            <div className="rounded-xl border bg-card p-5">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-50 text-green-600">
+                        <CircleCheck className="h-5 w-5" />
+                    </div>
+
+                    <div>
+                        <p className="text-sm text-muted-foreground">
+                            Bài tập đã đạt
+                        </p>
+
+                        <p className="mt-1 text-2xl font-bold">
+                            {passedExercises}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* FAILED EXERCISES */}
+            <div className="rounded-xl border bg-card p-5">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 text-red-600">
+                        <CircleX className="h-5 w-5" />
+                    </div>
+
+                    <div>
+                        <p className="text-sm text-muted-foreground">
+                            Bài tập chưa đạt
+                        </p>
+
+                        <p className="mt-1 text-2xl font-bold">
+                            {failedExercises}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
         </div>
     );
 }

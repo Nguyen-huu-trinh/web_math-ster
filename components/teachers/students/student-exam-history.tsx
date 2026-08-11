@@ -1,18 +1,8 @@
 "use client";
 
 import {
-    ChevronDown,
-    ChevronRight,
-    Trash2,
+    MoreHorizontal,
 } from "lucide-react";
-
-import {
-    useState,
-} from "react";
-
-import { Badge } from "@/components/ui/badge";
-
-import { Button } from "@/components/ui/button";
 
 import {
     useDeleteStudentAttempt,
@@ -21,6 +11,21 @@ import {
 import type {
     TeacherStudentExam,
 } from "@/services/teacher-student-client.service";
+
+import {
+    Button,
+} from "@/components/ui/button";
+
+import {
+    Badge,
+} from "@/components/ui/badge";
+
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Props {
     studentId: string;
@@ -31,14 +36,16 @@ export function StudentExamHistory({
     studentId,
     exams,
 }: Props) {
-    const [openExam, setOpenExam] =
-        useState<string | null>(null);
-
     const deleteAttempt =
         useDeleteStudentAttempt(
             studentId
         );
 
+    /*
+     * ==========================================
+     * DELETE ATTEMPT
+     * ==========================================
+     */
     function handleDelete(
         attemptId: string
     ) {
@@ -56,198 +63,404 @@ export function StudentExamHistory({
         );
     }
 
+    /*
+     * ==========================================
+     * FORMAT DATE
+     * ==========================================
+     */
+    function formatDate(
+        value: string | null
+    ) {
+        if (!value) {
+            return "--";
+        }
+
+        return new Date(
+            value
+        ).toLocaleString(
+            "vi-VN"
+        );
+    }
+
+    /*
+     * ==========================================
+     * CALCULATE ATTEMPT DURATION
+     * ==========================================
+     *
+     * Thời gian làm bài =
+     *
+     * submittedAt - startedAt
+     *
+     * Nếu chưa nộp bài thì chưa có
+     * thời gian hoàn thành.
+     */
+    function formatAttemptDuration(
+        startedAt: string | null,
+        submittedAt: string | null
+    ) {
+        if (
+            !startedAt ||
+            !submittedAt
+        ) {
+            return "--";
+        }
+
+        const start =
+            new Date(
+                startedAt
+            ).getTime();
+
+        const end =
+            new Date(
+                submittedAt
+            ).getTime();
+
+        const diff =
+            Math.max(
+                0,
+                end - start
+            );
+
+        const totalMinutes =
+            Math.floor(
+                diff /
+                    (1000 * 60)
+            );
+
+        const hours =
+            Math.floor(
+                totalMinutes / 60
+            );
+
+        const minutes =
+            totalMinutes % 60;
+
+        if (hours > 0) {
+            return `${hours} giờ ${minutes} phút`;
+        }
+
+        return `${minutes} phút`;
+    }
+
+    /*
+     * ==========================================
+     * FORMAT EXAM CATEGORY
+     * ==========================================
+     */
+    function formatCategory(
+        category: string
+    ) {
+        switch (category) {
+            case "ATTENDANCE":
+                return "Điểm danh";
+
+            case "PERIODIC":
+                return "Định kỳ";
+
+            case "PRACTICE":
+                return "Luyện tập";
+
+            default:
+                return category;
+        }
+    }
+
+    /*
+     * ==========================================
+     * CREATE TABLE ROWS
+     * ==========================================
+     *
+     * Mỗi attempt = một dòng.
+     *
+     * Nếu chưa có attempt:
+     * tạo một dòng "Chưa làm".
+     */
+type ExamTableRow = {
+    exam: TeacherStudentExam;
+    attempt:
+        | TeacherStudentExam["attempts"][number]
+        | null;
+};
+
+const rows: ExamTableRow[] =
+    exams.flatMap(
+        (exam): ExamTableRow[] => {
+            if (
+                exam.attempts.length === 0
+            ) {
+                return [
+                    {
+                        exam,
+                        attempt: null,
+                    },
+                ];
+            }
+
+            return exam.attempts.map(
+                (attempt) => ({
+                    exam,
+                    attempt,
+                })
+            );
+        }
+    );
+
     return (
         <div className="rounded-xl border bg-card">
+
+            {/* HEADER */}
             <div className="border-b p-6">
                 <h2 className="text-lg font-semibold">
                     Bài kiểm tra
                 </h2>
 
                 <p className="mt-1 text-sm text-muted-foreground">
-                    Lịch sử các bài kiểm tra và
-                    lượt làm của học sinh.
+                    Lịch sử các bài kiểm tra và lượt làm của học sinh.
                 </p>
             </div>
 
-            <div className="divide-y">
-                {exams.length === 0 ? (
-                    <div className="p-8 text-center text-sm text-muted-foreground">
-                        Chưa có bài kiểm tra.
-                    </div>
-                ) : (
-                    exams.map((exam) => {
-                        const isOpen =
-                            openExam ===
-                            exam.id;
+            {/* EMPTY */}
+            {rows.length === 0 ? (
+                <div className="p-8 text-center text-sm text-muted-foreground">
+                    Chưa có bài kiểm tra.
+                </div>
+            ) : (
+                <div className="overflow-x-auto">
 
-                        return (
-                            <div
-                                key={exam.id}
-                            >
-                                {/* EXAM */}
-                                <button
-                                    type="button"
-                                    className="flex w-full items-center justify-between gap-4 p-5 text-left hover:bg-muted/30"
-                                    onClick={() =>
-                                        setOpenExam(
-                                            isOpen
-                                                ? null
-                                                : exam.id
-                                        )
+                    <table className="w-full text-sm">
+
+                        {/* TABLE HEADER */}
+                        <thead className="border-b bg-muted/30">
+                            <tr className="text-left">
+
+                                <th className="px-5 py-3 font-medium">
+                                    Tên đề
+                                </th>
+
+                                <th className="px-5 py-3 text-center font-medium">
+                                    Loại đề
+                                </th>
+
+                                <th className="px-5 py-3 text-center font-medium">
+                                    Trạng thái
+                                </th>
+
+                                <th className="px-5 py-3 text-center font-medium">
+                                    Điểm
+                                </th>
+
+                                <th className="px-5 py-3 text-center font-medium">
+                                    Thời gian làm bài
+                                </th>
+
+                               <th className="px-5 py-3 text-center font-medium">
+                                    Thời điểm nộp bài
+                                </th>
+
+                                <th className="w-12 px-3 py-3 text-center font-medium">
+                                    Action
+                                </th>
+
+                            </tr>
+                        </thead>
+
+                        {/* TABLE BODY */}
+                        <tbody className="divide-y">
+
+                            {rows.map(
+                                ({
+                                    exam,
+                                    attempt,
+                                }) => {
+
+                                    /*
+                                     * ==================================
+                                     * STATUS
+                                     * ==================================
+                                     *
+                                     * Không có attempt
+                                     *      -> Chưa làm
+                                     *
+                                     * Có attempt nhưng chưa nộp
+                                     *      -> Chưa làm
+                                     *
+                                     * Đã nộp + isPassed true
+                                     *      -> Đạt
+                                     *
+                                     * Đã nộp + isPassed false
+                                     *      -> Chưa đạt
+                                     */
+
+                                    let status:
+                                        | "passed"
+                                        | "failed"
+                                        | "pending";
+
+                                    if (
+                                        !attempt ||
+                                        !attempt.submittedAt
+                                    ) {
+                                        status =
+                                            "pending";
+                                    } else if (
+                                        attempt.isPassed ===
+                                        true
+                                    ) {
+                                        status =
+                                            "passed";
+                                    } else {
+                                        status =
+                                            "failed";
                                     }
-                                >
-                                    <div className="flex min-w-0 items-center gap-3">
-                                        {isOpen ? (
-                                            <ChevronDown className="h-4 w-4 shrink-0" />
-                                        ) : (
-                                            <ChevronRight className="h-4 w-4 shrink-0" />
-                                        )}
 
-                                        <div className="min-w-0">
-                                            <p className="truncate font-medium">
-                                                {
-                                                    exam.title
-                                                }
-                                            </p>
+                                    return (
+                                        <tr
+                                            key={
+                                                attempt
+                                                    ? attempt.id
+                                                    : `${exam.id}-not-attempted`
+                                            }
+                                            className="hover:bg-muted/20"
+                                        >
 
-                                            <div className="mt-1 flex items-center gap-2">
-                                                <Badge variant="outline">
-                                                    {exam.category ===
-                                                    "ATTENDANCE"
-                                                        ? "Điểm danh"
-                                                        : "Định kỳ"}
-                                                </Badge>
+                                            {/* TÊN ĐỀ */}
+                                            <td className="px-5 py-4">
+                                                <div className="min-w-0">
 
-                                                <span className="text-xs text-muted-foreground">
-                                                    {
-                                                        exam.attempts
-                                                            .length
-                                                    }{" "}
-                                                    lượt làm
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
+                                                    <p className="font-medium">
+                                                        {
+                                                            exam.title
+                                                        }
+                                                    </p>
 
-                                    <span className="shrink-0 text-sm text-muted-foreground">
-                                        {
-                                            exam.duration
-                                        }{" "}
-                                        phút
-                                    </span>
-                                </button>
-
-                                {/* ATTEMPTS */}
-                                {isOpen && (
-                                    <div className="border-t bg-muted/20 px-5 py-4">
-                                        {exam
-                                            .attempts
-                                            .length ===
-                                        0 ? (
-                                            <p className="py-3 text-center text-sm text-muted-foreground">
-                                                Học sinh chưa
-                                                làm bài này.
-                                            </p>
-                                        ) : (
-                                            <div className="space-y-2">
-                                                {exam.attempts.map(
-                                                    (
-                                                        attempt
-                                                    ) => (
-                                                        <div
-                                                            key={
-                                                                attempt.id
+                                                    {/* {attempt && (
+                                                        <p className="mt-1 text-xs text-muted-foreground">
+                                                            Lượt làm #
+                                                            {
+                                                                attempt.attemptNumber
                                                             }
-                                                            className="flex flex-col gap-3 rounded-lg border bg-background p-4 sm:flex-row sm:items-center sm:justify-between"
+                                                        </p>
+                                                    )} */}
+
+                                                </div>
+                                            </td>
+
+                                            {/* LOẠI ĐỀ */}
+                                            <td className="px-5 py-4 text-center">
+                                                <Badge
+                                                    variant="outline"
+                                                >
+                                                    {formatCategory(
+                                                        exam.category
+                                                    )}
+                                                </Badge>
+                                            </td>
+
+                                            {/* TRẠNG THÁI */}
+                                            <td className="px-5 py-4 text-center">
+
+                                                {status ===
+                                                "passed" ? (
+                                                    <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+                                                        Đạt
+                                                    </Badge>
+                                                ) : status ===
+                                                  "failed" ? (
+                                                    <Badge
+                                                        variant="destructive"
+                                                    >
+                                                        Chưa đạt
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge variant="secondary">
+                                                        Chưa làm
+                                                    </Badge>
+                                                )}
+
+                                            </td>
+
+                                            {/* ĐIỂM */}
+                                            <td className="px-5 py-4 text-center">
+                                                <span className="font-medium">
+                                                    {attempt?.score ??
+                                                        "--"}
+                                                </span>
+                                            </td>
+
+                                            {/* THỜI GIAN LÀM */}
+                                           <td className="px-5 py-4 text-center text-muted-foreground">
+                                                {attempt
+                                                    ? formatAttemptDuration(
+                                                          attempt.startedAt,
+                                                          attempt.submittedAt
+                                                      )
+                                                    : "--"}
+                                            </td>
+
+                                            {/* THỜI ĐIỂM NỘP */}
+                                            <td className="px-5 py-4 text-center text-muted-foreground">
+                                                {attempt
+                                                    ? formatDate(
+                                                          attempt.submittedAt
+                                                      )
+                                                    : "--"}
+                                            </td>
+
+                                            {/* ACTION */}
+                                            <td className="px-3 py-4 text-center">
+
+                                                {attempt ? (
+                                                    <DropdownMenu>
+
+                                                    <DropdownMenuTrigger
+                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
+                                                        disabled={
+                                                            deleteAttempt.isPending
+                                                        }
+                                                    >
+                                                        <MoreHorizontal className="h-4 w-4" />
+
+                                                        <span className="sr-only">
+                                                            Thao tác
+                                                        </span>
+                                                    </DropdownMenuTrigger>
+
+                                                        <DropdownMenuContent
+                                                            align="end"
                                                         >
-                                                            <div className="grid gap-2 text-sm sm:grid-cols-4">
-                                                                <div>
-                                                                    <p className="text-xs text-muted-foreground">
-                                                                        Lượt
-                                                                    </p>
-
-                                                                    <p className="font-medium">
-                                                                        #
-                                                                        {
-                                                                            attempt.attemptNumber
-                                                                        }
-                                                                    </p>
-                                                                </div>
-
-                                                                <div>
-                                                                    <p className="text-xs text-muted-foreground">
-                                                                        Điểm
-                                                                    </p>
-
-                                                                    <p className="font-medium">
-                                                                        {attempt.score ??
-                                                                            "--"}
-                                                                    </p>
-                                                                </div>
-
-                                                                <div>
-                                                                    <p className="text-xs text-muted-foreground">
-                                                                        Bắt đầu
-                                                                    </p>
-
-                                                                    <p className="font-medium">
-                                                                        {attempt.startedAt
-                                                                            ? new Date(
-                                                                                  attempt.startedAt
-                                                                              ).toLocaleString(
-                                                                                  "vi-VN"
-                                                                              )
-                                                                            : "--"}
-                                                                    </p>
-                                                                </div>
-
-                                                                <div>
-                                                                    <p className="text-xs text-muted-foreground">
-                                                                        Nộp bài
-                                                                    </p>
-
-                                                                    <p className="font-medium">
-                                                                        {attempt.submittedAt
-                                                                            ? new Date(
-                                                                                  attempt.submittedAt
-                                                                              ).toLocaleString(
-                                                                                  "vi-VN"
-                                                                              )
-                                                                            : "Chưa nộp"}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-
-                                                            <Button
+                                                            <DropdownMenuItem
                                                                 variant="destructive"
-                                                                size="sm"
                                                                 onClick={() =>
                                                                     handleDelete(
                                                                         attempt.id
                                                                     )
                                                                 }
-                                                                disabled={
-                                                                    deleteAttempt.isPending
-                                                                }
                                                             >
-                                                                <Trash2 />
+                                                                Xóa lượt làm
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
 
-                                                                {deleteAttempt.isPending
-                                                                    ? "Đang xóa..."
-                                                                    : "Xóa lượt"}
-                                                            </Button>
-                                                        </div>
-                                                    )
+                                                    </DropdownMenu>
+                                                ) : (
+                                                    <span className="text-muted-foreground">
+                                                        —
+                                                    </span>
                                                 )}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })
-                )}
-            </div>
+
+                                            </td>
+
+                                        </tr>
+                                    );
+                                }
+                            )}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            )}
+
         </div>
     );
 }

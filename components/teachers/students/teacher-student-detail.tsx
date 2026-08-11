@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import {
@@ -37,6 +36,7 @@ export function TeacherStudentDetailPage({
     studentId,
 }: Props) {
     const router = useRouter();
+
     const {
         data,
         isLoading,
@@ -46,6 +46,11 @@ export function TeacherStudentDetailPage({
         studentId
     );
 
+    /*
+     * ==========================================
+     * LOADING
+     * ==========================================
+     */
     if (isLoading) {
         return (
             <div className="space-y-6">
@@ -61,6 +66,11 @@ export function TeacherStudentDetailPage({
         );
     }
 
+    /*
+     * ==========================================
+     * ERROR
+     * ==========================================
+     */
     if (isError || !data) {
         return (
             <div className="space-y-6">
@@ -75,10 +85,12 @@ export function TeacherStudentDetailPage({
                         : "Không tìm thấy học sinh."}
                 </div>
 
-                    <Button
+                <Button
                     variant="outline"
                     onClick={() =>
-                        router.push("/students")
+                        router.push(
+                            "/students"
+                        )
                     }
                 >
                     <ArrowLeft />
@@ -88,15 +100,23 @@ export function TeacherStudentDetailPage({
         );
     }
 
+    /*
+     * ==========================================
+     * PAGE
+     * ==========================================
+     */
     return (
         <div className="space-y-6">
+
             {/* BACK */}
             <div>
                 <Button
                     variant="ghost"
                     className="-ml-3"
                     onClick={() =>
-                        router.push("/students")
+                        router.push(
+                            "/students"
+                        )
                     }
                 >
                     <ArrowLeft />
@@ -106,13 +126,17 @@ export function TeacherStudentDetailPage({
 
             {/* HEADER */}
             <PageHeader
-                title={data.profile.fullName}
+                title={
+                    data.profile.fullName
+                }
                 description={`Student Code: ${data.profile.studentCode}`}
             />
 
             {/* PROFILE */}
             <StudentProfileCard
-                profile={data.profile}
+                profile={
+                    data.profile
+                }
             />
 
             {/* STATISTICS */}
@@ -121,13 +145,25 @@ export function TeacherStudentDetailPage({
                     data.statistics
                         .averageScore
                 }
+
                 pendingExams={
                     data.statistics
                         .pendingExams
                 }
+
                 incompleteLessons={
                     data.statistics
                         .incompleteLessons
+                }
+
+                passedExercises={
+                    data.statistics
+                        .passedExercises
+                }
+
+                failedExercises={
+                    data.statistics
+                        .failedExercises
                 }
             />
 
@@ -136,8 +172,11 @@ export function TeacherStudentDetailPage({
                 studentId={
                     data.profile.id
                 }
-                exams={data.exams}
+                exams={
+                    data.exams
+                }
             />
+
         </div>
     );
 }

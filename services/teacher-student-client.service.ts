@@ -18,6 +18,7 @@ export interface TeacherStudentAttempt {
     id: string;
     attemptNumber: number;
     score: number | null;
+    isPassed: boolean | null;
     startedAt: string | null;
     submittedAt: string | null;
     createdAt: string | null;
@@ -49,6 +50,8 @@ export interface TeacherStudentDetail {
         averageScore: number;
         pendingExams: number;
         incompleteLessons: number;
+        passedExercises: number;
+        failedExercises: number;
     };
 
     exams: TeacherStudentExam[];

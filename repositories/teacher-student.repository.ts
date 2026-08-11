@@ -31,6 +31,8 @@ export interface TeacherStudentDetail {
         averageScore: number;
         pendingExams: number;
         incompleteLessons: number;
+        passedExercises: number;
+        failedExercises: number;
     };
 
     exams: TeacherStudentExam[];
@@ -40,6 +42,7 @@ export interface TeacherStudentExamAttempt {
     id: string;
     attemptNumber: number;
     score: number | null;
+    isPassed: boolean | null;
     startedAt: string | null;
     submittedAt: string | null;
     createdAt: string | null;
@@ -195,7 +198,9 @@ export class TeacherStudentRepository {
                 completed_lessons,
                 pending_exams,
                 average_periodic_score,
-                learning_goal
+                learning_goal,
+                passed_exercises,
+                failed_exercises
             `)
             .eq("student_id", studentId)
             .single();
@@ -242,6 +247,7 @@ export class TeacherStudentRepository {
                 exam_id,
                 attempt_number,
                 score,
+                is_passed,
                 started_at,
                 submitted_at,
                 created_at
@@ -285,6 +291,8 @@ export class TeacherStudentRepository {
                     attempt.submitted_at,
                 createdAt:
                     attempt.created_at,
+                isPassed:
+                    attempt.is_passed ?? null,
             });
 
             attemptsByExam.set(
@@ -337,25 +345,29 @@ export class TeacherStudentRepository {
 
             statistics: {
                 averageScore: Number(
-                    dashboard.average_periodic_score ??
-                        0
+                    dashboard.average_periodic_score ?? 0
                 ),
 
                 pendingExams: Number(
-                    dashboard.pending_exams ??
-                        0
+                    dashboard.pending_exams ?? 0
                 ),
 
                 incompleteLessons: Math.max(
                     Number(
-                        dashboard.total_lessons ??
-                            0
+                        dashboard.total_lessons ?? 0
                     ) -
-                        Number(
-                            dashboard.completed_lessons ??
-                                0
-                        ),
+                    Number(
+                        dashboard.completed_lessons ?? 0
+                    ),
                     0
+                ),
+
+                passedExercises: Number(
+                    dashboard.passed_exercises ?? 0
+                ),
+
+                failedExercises: Number(
+                    dashboard.failed_exercises ?? 0
                 ),
             },
 

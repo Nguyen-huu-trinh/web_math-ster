@@ -6,7 +6,6 @@ import {
     useEnableTeacherStudent,
 } from "@/hooks/use-enable-teacher-student";
 import { UserCheck } from "lucide-react";
-import {Check,Pencil, X,} from "lucide-react";
 import {
     Card,
     CardContent,
@@ -490,31 +489,7 @@ export function TeacherStudentsTable({
                                                         }}
                                                     />
 
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            void saveEditing()
-                                                        }
-                                                        disabled={
-                                                            updateFinancial.isPending
-                                                        }
-                                                        className="rounded-md p-1 text-green-600 hover:bg-green-50"
-                                                    >
-                                                        <Check className="h-4 w-4" />
-                                                    </button>
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={
-                                                            cancelEditing
-                                                        }
-                                                        disabled={
-                                                            updateFinancial.isPending
-                                                        }
-                                                        className="rounded-md p-1 text-muted-foreground hover:bg-muted"
-                                                    >
-                                                        <X className="h-4 w-4" />
-                                                    </button>
+                                                   
                                                 </div>
                                             ) : (
                                                 <div className="flex items-center justify-end gap-2">
@@ -573,32 +548,6 @@ export function TeacherStudentsTable({
                                                             }
                                                         }}
                                                     />
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            void saveEditing()
-                                                        }
-                                                        disabled={
-                                                            updateFinancial.isPending
-                                                        }
-                                                        className="rounded-md p-1 text-green-600 hover:bg-green-50"
-                                                    >
-                                                        <Check className="h-4 w-4" />
-                                                    </button>
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={
-                                                            cancelEditing
-                                                        }
-                                                        disabled={
-                                                            updateFinancial.isPending
-                                                        }
-                                                        className="rounded-md p-1 text-muted-foreground hover:bg-muted"
-                                                    >
-                                                        <X className="h-4 w-4" />
-                                                    </button>
                                                 </div>
                                             ) : (
                                                 <div className="flex items-center justify-end gap-2">

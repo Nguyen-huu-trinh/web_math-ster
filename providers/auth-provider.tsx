@@ -46,10 +46,10 @@ const isExamPage =
   const profileQuery = useProfile(user?.id);
   const profile = profileQuery.data ?? null;
 
-// useAuthHeartbeat(
-//   Boolean(user)
-// );
-useAuthHeartbeat(false);
+useAuthHeartbeat(
+  Boolean(user)
+);
+
 useIdleLogout(
   Boolean(user) && !isExamPage
 );

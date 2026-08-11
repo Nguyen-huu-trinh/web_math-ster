@@ -192,40 +192,7 @@ async startExam(
     throw new Error("Đề đã kết thúc.");
   }
 
-  // ===========================
-  // Resume nếu còn bài chưa nộp
-  // ===========================
-
-  const {
-    data: currentAttempts,
-    error: currentAttemptError,
-} = await supabase
-    .from("exam_attempts")
-    .select("*")
-    .eq("exam_id", examId)
-    .eq("student_id", studentId)
-    .is("submitted_at", null)
-    .order("created_at", {
-        ascending: false,
-    })
-    .limit(1);
-
-if (currentAttemptError) {
-    throw currentAttemptError;
-}
-
-const currentAttempt =
-    currentAttempts?.[0] ?? null;
-
-  if (currentAttempt) {
-    console.log(
-      "Resume attempt:",
-      currentAttempt.id
-    );
-
-    return currentAttempt;
-  }
-
+  
   // ===========================
   // Đếm số lần làm
   // ===========================

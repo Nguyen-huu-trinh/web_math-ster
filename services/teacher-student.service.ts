@@ -34,7 +34,25 @@ export class TeacherStudentService {
             studentId
         );
     }
+    async enable(studentId: string) {
+        return teacherStudentRepository.enable(
+            studentId
+        );
+    }
 
+    async updateFinancialInfo(
+        studentId: string,
+        values: {
+            points?: number;
+            rewardMoney?: number;
+        }
+    ) {
+        return teacherStudentRepository
+            .updateFinancialInfo(
+                studentId,
+                values
+            );
+    }
     async delete(
         studentId: string
     ) {

@@ -81,11 +81,12 @@ export class TeacherStudentRepository {
                 avatar_url,
                 points,
                 reward_money,
-                is_active
+                is_active,
+                learning_goal
             `)
             .eq("role", "STUDENT")
             .is("deleted_at", null)
-            .order("full_name", {
+            .order("student_code", {
                 ascending: true,
             });
 
@@ -137,6 +138,7 @@ export class TeacherStudentRepository {
                 ) ?? 0
             ),
             isActive: student.is_active,
+            learningGoal: student.learning_goal,
         }));
     }
 
@@ -427,6 +429,53 @@ export class TeacherStudentRepository {
         return data;
     }
 
+    async updateFinancialInfo(
+        studentId: string,
+        values: {
+            points?: number;
+            rewardMoney?: number;
+        }
+    ) {
+        const supabase =
+            await createClient();
+
+        const updateData: Record<
+            string,
+            number
+        > = {};
+
+        if (
+            values.points !== undefined
+        ) {
+            updateData.points =
+                values.points;
+        }
+
+        if (
+            values.rewardMoney !== undefined
+        ) {
+            updateData.reward_money =
+                values.rewardMoney;
+        }
+
+        const {
+            data,
+            error,
+        } = await supabase
+            .from("profiles")
+            .update(updateData)
+            .eq("id", studentId)
+            .eq("role", "STUDENT")
+            .select()
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        return data;
+    }    
+
     // ==========================================
     // DISABLE
     // ==========================================
@@ -455,7 +504,39 @@ export class TeacherStudentRepository {
 
         return data;
     }
+async enable(studentId: string) {
+    console.log(
+        "[ENABLE REPOSITORY] studentId:",
+        studentId
+    );
 
+    const supabase =
+        await createClient();
+
+    const {
+        data,
+        error,
+    } = await supabase
+        .from("profiles")
+        .update({
+            is_active: true,
+        })
+        .eq("id", studentId)
+        .eq("role", "STUDENT")
+        .select()
+        .single();
+
+    if (error) {
+        console.error(
+            "[ENABLE REPOSITORY ERROR]",
+            error
+        );
+
+        throw error;
+    }
+
+    return data;
+}
     // ==========================================
     // DELETE STUDENT - HARD DELETE
     // ==========================================

@@ -1,12 +1,19 @@
 "use client";
-
+import { useMemo, useState } from "react";
 import { MoreHorizontal, Eye, Ban, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-
+import {
+    useEnableTeacherStudent,
+} from "@/hooks/use-enable-teacher-student";
+import { UserCheck } from "lucide-react";
+import {Check,Pencil, X,} from "lucide-react";
 import {
     Card,
     CardContent,
 } from "@/components/ui/card";
+import {
+    useUpdateTeacherStudentFinancial,
+} from "@/hooks/use-update-teacher-student-financial";
 
 import {
     Avatar,
@@ -40,6 +47,16 @@ import {
     useDeleteTeacherStudent,
 } from "@/hooks/use-delete-teacher-student";
 
+type SortKey =
+    | "studentCode"
+    | "points"
+    | "rewardMoney"
+    | "averageScore";
+
+type SortDirection =
+    | "asc"
+    | "desc";
+
 interface Props {
     students: TeacherStudentListItem[];
 }
@@ -48,12 +65,158 @@ export function TeacherStudentsTable({
     students,
 }: Props) {
     const router = useRouter();
+    const [sortKey, setSortKey] =
+    useState<SortKey | null>(null);
 
+    const [sortDirection, setSortDirection] =
+    useState<SortDirection>("asc");
     const disableStudent =
     useDisableTeacherStudent();
-
+    const enableStudent =
+    useEnableTeacherStudent();
     const deleteStudent =
         useDeleteTeacherStudent();
+    const updateFinancial =
+    useUpdateTeacherStudentFinancial();
+        const [editingCell, setEditingCell] =
+        useState<{
+            studentId: string;
+            field:
+                | "points"
+                | "rewardMoney";
+        } | null>(null);
+
+    const [editValue, setEditValue] =
+        useState("");
+
+    function startEditing(
+        studentId: string,
+        field:
+            | "points"
+            | "rewardMoney",
+        value: number
+    ) {
+        setEditingCell({
+            studentId,
+            field,
+        });
+
+        setEditValue(
+            String(value)
+        );
+    }
+
+    async function saveEditing() {
+        if (!editingCell) {
+            return;
+        }
+
+        const value =
+            Number(editValue);
+
+        if (
+            !Number.isFinite(value) ||
+            value < 0
+        ) {
+            return;
+        }
+
+        try {
+            await updateFinancial.mutateAsync({
+                studentId:
+                    editingCell.studentId,
+
+                values:
+                    editingCell.field ===
+                    "points"
+                        ? {
+                            points: value,
+                        }
+                        : {
+                            rewardMoney:
+                                value,
+                        },
+            });
+
+            setEditingCell(null);
+            setEditValue("");
+        } catch (error) {
+            console.error(
+                "UPDATE FINANCIAL ERROR:",
+                error
+            );
+        }
+    }
+    function cancelEditing() {
+        setEditingCell(null);
+        setEditValue("");
+    }
+
+    function handleSort(
+        key: SortKey
+    ) {
+        if (sortKey === key) {
+            setSortDirection(
+                (current) =>
+                    current === "asc"
+                        ? "desc"
+                        : "asc"
+            );
+
+            return;
+        }
+
+        setSortKey(key);
+        setSortDirection("asc");
+    }
+
+    const sortedStudents = useMemo(() => {
+        if (!sortKey) {
+            return students;
+        }
+
+        return [...students].sort(
+            (a, b) => {
+                let comparison = 0;
+
+                switch (sortKey) {
+                    case "studentCode":
+                        comparison =
+                            a.studentCode.localeCompare(
+                                b.studentCode,
+                                "vi"
+                            );
+                        break;
+
+                    case "points":
+                        comparison =
+                            a.points - b.points;
+                        break;
+
+                    case "rewardMoney":
+                        comparison =
+                            a.rewardMoney -
+                            b.rewardMoney;
+                        break;
+
+                    case "averageScore":
+                        comparison =
+                            a.averageScore -
+                            b.averageScore;
+                        break;
+                }
+
+                return sortDirection ===
+                    "asc"
+                    ? comparison
+                    : -comparison;
+            }
+        );
+    }, [
+        students,
+        sortKey,
+        sortDirection,
+    ]);
 
     function getInitials(
         name: string
@@ -68,26 +231,48 @@ export function TeacherStudentsTable({
             .join("");
     }
 
-function handleDisable(
-    student: TeacherStudentListItem
-) {
-    if (!student.isActive) {
-        return;
-    }
+    function handleDisable(
+        student: TeacherStudentListItem
+    ) {
+        if (!student.isActive) {
+            return;
+        }
 
-    const confirmed =
-        window.confirm(
-            `Bạn có chắc muốn vô hiệu hóa học sinh "${student.fullName}"?`
+        const confirmed =
+            window.confirm(
+                `Bạn có chắc muốn vô hiệu hóa học sinh "${student.fullName}"?`
+            );
+
+        if (!confirmed) {
+            return;
+        }
+
+        disableStudent.mutate(
+            student.id
         );
-
-    if (!confirmed) {
-        return;
     }
 
-    disableStudent.mutate(
-        student.id
-    );
-}
+    function handleEnable(
+        student: TeacherStudentListItem
+    ) {
+        if (student.isActive) {
+            return;
+        }
+
+        const confirmed =
+            window.confirm(
+                `Bạn có chắc muốn kích hoạt lại học sinh "${student.fullName}"?`
+            );
+
+        if (!confirmed) {
+            return;
+        }
+
+        enableStudent.mutate(
+            student.id
+        );
+    }
+
     function handleDelete(
         student: TeacherStudentListItem
     ) {
@@ -117,36 +302,109 @@ function handleDisable(
                     <table className="w-full">
                         <thead>
                             <tr className="border-b bg-muted/40 text-left text-sm text-muted-foreground">
+                            <th className="px-5 py-3 font-medium">
+                                <button
+                                    type="button"
+                                    className="flex items-center gap-1 hover:text-foreground"
+                                    onClick={() =>
+                                        handleSort(
+                                            "studentCode"
+                                        )
+                                    }
+                                >
+                                    Mã HS
+
+                                    {sortKey ===
+                                        "studentCode" && (
+                                        <span className="text-xs">
+                                            {sortDirection ===
+                                            "asc"
+                                                ? "↑"
+                                                : "↓"}
+                                        </span>
+                                    )}
+                                </button>
+                            </th>
                                 <th className="px-5 py-3 font-medium">
-                                    Học sinh
+                                    Họ tên
                                 </th>
 
                                 <th className="px-5 py-3 font-medium">
-                                    Student Code
+                                    Mục tieu
                                 </th>
+                                <th className="px-5 py-3 text-right font-medium">
+                                    <button
+                                        type="button"
+                                        className="ml-auto flex items-center gap-1 hover:text-foreground"
+                                        onClick={() =>
+                                            handleSort("points")
+                                        }
+                                    >
+                                        Độ trâu
 
-                                <th className="px-5 py-3 font-medium">
-                                    Personal Email
+                                        {sortKey === "points" && (
+                                            <span className="text-xs">
+                                                {sortDirection ===
+                                                "asc"
+                                                    ? "↑"
+                                                    : "↓"}
+                                            </span>
+                                        )}
+                                    </button>
+                                </th>
+                                <th className="px-5 py-3 text-right font-medium">
+                                    <button
+                                        type="button"
+                                        className="ml-auto flex items-center gap-1 hover:text-foreground"
+                                        onClick={() =>
+                                            handleSort(
+                                                "rewardMoney"
+                                            )
+                                        }
+                                    >
+                                        Tiền thưởng
+
+                                        {sortKey ===
+                                            "rewardMoney" && (
+                                            <span className="text-xs">
+                                                {sortDirection ===
+                                                "asc"
+                                                    ? "↑"
+                                                    : "↓"}
+                                            </span>
+                                        )}
+                                    </button>
                                 </th>
 
                                 <th className="px-5 py-3 text-right font-medium">
-                                    Points
-                                </th>
+                                    <button
+                                        type="button"
+                                        className="ml-auto flex items-center gap-1 hover:text-foreground"
+                                        onClick={() =>
+                                            handleSort(
+                                                "averageScore"
+                                            )
+                                        }
+                                    >
+                                        ĐTB
 
-                                <th className="px-5 py-3 text-right font-medium">
-                                    Reward
+                                        {sortKey ===
+                                            "averageScore" && (
+                                            <span className="text-xs">
+                                                {sortDirection ===
+                                                "asc"
+                                                    ? "↑"
+                                                    : "↓"}
+                                            </span>
+                                        )}
+                                    </button>
                                 </th>
-
-                                <th className="px-5 py-3 text-right font-medium">
-                                    Avg. Score
-                                </th>
-
                                 <th className="w-12 px-3 py-3" />
                             </tr>
                         </thead>
 
                         <tbody>
-                            {students.map(
+                            {sortedStudents.map(
                                 (student) => (
                                     <tr
                                         key={
@@ -154,43 +412,6 @@ function handleDisable(
                                         }
                                         className="border-b last:border-0 hover:bg-muted/30"
                                     >
-                                        {/* Student */}
-                                        <td className="px-5 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <Avatar className="h-9 w-9">
-                                                    <AvatarImage
-                                                        src={
-                                                            student.avatarUrl ??
-                                                            undefined
-                                                        }
-                                                        alt={
-                                                            student.fullName
-                                                        }
-                                                    />
-
-                                                    <AvatarFallback>
-                                                        {getInitials(
-                                                            student.fullName
-                                                        )}
-                                                    </AvatarFallback>
-                                                </Avatar>
-
-                                                <div className="min-w-0">
-                                                    <p className="truncate font-medium">
-                                                        {
-                                                            student.fullName
-                                                        }
-                                                    </p>
-
-                                                    <p className="truncate text-xs text-muted-foreground">
-                                                        {
-                                                            student.email
-                                                        }
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </td>
-
                                         {/* Code */}
                                         <td className="px-5 py-4">
                                             <span className="font-mono text-sm">
@@ -199,26 +420,206 @@ function handleDisable(
                                                 }
                                             </span>
                                         </td>
+                                    {/* Họ tên */}
+                                    <td className="px-5 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-9 w-9 shrink-0">
+                                                <AvatarImage
+                                                    src={
+                                                        student.avatarUrl ??
+                                                        undefined
+                                                    }
+                                                    alt={student.fullName}
+                                                />
+
+                                                <AvatarFallback>
+                                                    {getInitials(
+                                                        student.fullName
+                                                    )}
+                                                </AvatarFallback>
+                                            </Avatar>
+
+                                            <span className="truncate font-medium">
+                                                {student.fullName}
+                                            </span>
+                                        </div>
+                                    </td>
+                                        
 
                                         {/* Personal Email */}
                                         <td className="px-5 py-4">
                                             <span className="text-sm text-muted-foreground">
-                                                {student.personalEmail ||
+                                                {student.learningGoal  ||
                                                     "—"}
                                             </span>
                                         </td>
 
                                         {/* Points */}
-                                        <td className="px-5 py-4 text-right font-medium">
-                                            {student.points.toLocaleString(
-                                                "vi-VN"
+                                        <td className="px-5 py-4">
+                                            {editingCell?.studentId ===
+                                                student.id &&
+                                            editingCell.field ===
+                                                "points" ? (
+                                                <div className="flex items-center justify-end gap-1">
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        value={editValue}
+                                                        onChange={(e) =>
+                                                            setEditValue(
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                        className="h-8 w-24 rounded-md border px-2 text-right text-sm"
+                                                        autoFocus
+                                                        disabled={
+                                                            updateFinancial.isPending
+                                                        }
+                                                        onKeyDown={(e) => {
+                                                            if (
+                                                                e.key === "Enter"
+                                                            ) {
+                                                                void saveEditing();
+                                                            }
+
+                                                            if (
+                                                                e.key === "Escape"
+                                                            ) {
+                                                                cancelEditing();
+                                                            }
+                                                        }}
+                                                    />
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            void saveEditing()
+                                                        }
+                                                        disabled={
+                                                            updateFinancial.isPending
+                                                        }
+                                                        className="rounded-md p-1 text-green-600 hover:bg-green-50"
+                                                    >
+                                                        <Check className="h-4 w-4" />
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={
+                                                            cancelEditing
+                                                        }
+                                                        disabled={
+                                                            updateFinancial.isPending
+                                                        }
+                                                        className="rounded-md p-1 text-muted-foreground hover:bg-muted"
+                                                    >
+                                                        <X className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center justify-end gap-2">
+                                                    
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            startEditing(
+                                                                student.id,
+                                                                "points",
+                                                                student.points
+                                                            )
+                                                        }
+                                                        className="ml-auto block cursor-pointer rounded-md px-2 py-1 text-sm font-medium hover:bg-muted"
+                                                    >
+                                                        {student.points.toLocaleString(
+                                                            "vi-VN"
+                                                        )}
+                                                    </button>
+                                                </div>
                                             )}
                                         </td>
-
                                         {/* Reward */}
-                                        <td className="px-5 py-4 text-right font-medium">
-                                            {student.rewardMoney.toLocaleString(
-                                                "vi-VN"
+                                        <td className="px-5 py-4">
+                                            {editingCell?.studentId ===
+                                                student.id &&
+                                            editingCell.field ===
+                                                "rewardMoney" ? (
+                                                <div className="flex items-center justify-end gap-1">
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        value={editValue}
+                                                        onChange={(e) =>
+                                                            setEditValue(
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                        className="h-8 w-28 rounded-md border px-2 text-right text-sm"
+                                                        autoFocus
+                                                        disabled={
+                                                            updateFinancial.isPending
+                                                        }
+                                                        onKeyDown={(e) => {
+                                                            if (
+                                                                e.key === "Enter"
+                                                            ) {
+                                                                void saveEditing();
+                                                            }
+
+                                                            if (
+                                                                e.key === "Escape"
+                                                            ) {
+                                                                cancelEditing();
+                                                            }
+                                                        }}
+                                                    />
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            void saveEditing()
+                                                        }
+                                                        disabled={
+                                                            updateFinancial.isPending
+                                                        }
+                                                        className="rounded-md p-1 text-green-600 hover:bg-green-50"
+                                                    >
+                                                        <Check className="h-4 w-4" />
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={
+                                                            cancelEditing
+                                                        }
+                                                        disabled={
+                                                            updateFinancial.isPending
+                                                        }
+                                                        className="rounded-md p-1 text-muted-foreground hover:bg-muted"
+                                                    >
+                                                        <X className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center justify-end gap-2">
+                                                    
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        startEditing(
+                                                            student.id,
+                                                            "rewardMoney",
+                                                            student.rewardMoney
+                                                        )
+                                                    }
+                                                    className="ml-auto block cursor-pointer rounded-md px-2 py-1 text-sm font-medium hover:bg-muted"
+                                                >
+                                                    {student.rewardMoney.toLocaleString(
+                                                        "vi-VN"
+                                                    )}
+                                                </button>
+                                                </div>
                                             )}
                                         </td>
 
@@ -255,22 +656,28 @@ function handleDisable(
                                                         }
                                                     >
                                                         <Eye />
-                                                        Xem
+                                                        View
                                                     </DropdownMenuItem>
 
-                                                    <DropdownMenuItem
-                                                        disabled={
-                                                            !student.isActive
-                                                        }
-                                                        onClick={() =>
-                                                            handleDisable(
-                                                                student
-                                                            )
-                                                        }
-                                                    >
-                                                        <Ban />
-                                                        Vô hiệu hóa
-                                                    </DropdownMenuItem>
+                                                    {student.isActive ? (
+                                                        <DropdownMenuItem
+                                                            onClick={() =>
+                                                                handleDisable(student)
+                                                            }
+                                                        >
+                                                            <Ban />
+                                                            Disable
+                                                        </DropdownMenuItem>
+                                                    ) : (
+                                                        <DropdownMenuItem
+                                                            onClick={() =>
+                                                                handleEnable(student)
+                                                            }
+                                                        >
+                                                            <UserCheck />
+                                                            Enable
+                                                        </DropdownMenuItem>
+                                                    )}
 
                                                     <DropdownMenuSeparator />
 
@@ -283,7 +690,7 @@ function handleDisable(
                                                         }
                                                     >
                                                         <Trash2 />
-                                                        Xóa học sinh
+                                                        Delete
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>

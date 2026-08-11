@@ -11,6 +11,7 @@ export interface TeacherStudentListItem {
     rewardMoney: number;
     averageScore: number;
     isActive: boolean;
+    learningGoal: string | null;
 }
 
 export interface TeacherStudentAttempt {
@@ -90,7 +91,11 @@ export class TeacherStudentClientService {
             `/api/teachers/students/${id}/disable`
         );
     }
-
+    enable(id: string) {
+        return apiClient.post(
+            `/api/teachers/students/${id}/enable`
+        );
+    }
     delete(id: string) {
         return apiClient.delete(
             `/api/teachers/students/${id}`
@@ -103,6 +108,19 @@ export class TeacherStudentClientService {
     ) {
         return apiClient.delete(
             `/api/teachers/students/${studentId}/attempts/${attemptId}`
+        );
+    }
+
+    updateFinancialInfo(
+        studentId: string,
+        values: {
+            points?: number;
+            rewardMoney?: number;
+        }
+    ) {
+        return apiClient.patch(
+            `/api/teachers/students/${studentId}/financial`,
+            values
         );
     }
 }

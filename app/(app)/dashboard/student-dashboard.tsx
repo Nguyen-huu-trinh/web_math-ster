@@ -408,7 +408,7 @@ if (
                         {activeStudentCount.isLoading ||
                         activeStudentCount.isError
                             ? "--"
-                            : activeStudents+20}
+                            : activeStudents+Math.floor(Math.random() * 11) +20}
                     </span>
 
                     <Image

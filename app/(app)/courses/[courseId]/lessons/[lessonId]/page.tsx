@@ -297,6 +297,202 @@ function isCompleted(lesson: any) {
   );
 }
 
+async function checkResourceAccess(
+    resource: any
+) {
+    /*
+     * Giáo viên được xem trực tiếp.
+     */
+    if (role !== "STUDENT") {
+        return true;
+    }
+
+    /*
+     * Không có exam_id
+     * → resource bình thường.
+     */
+    if (!resource.exam_id) {
+        return true;
+    }
+
+    try {
+        const response = await fetch(
+            `/api/student/lesson-contents/${resource.id}/access`,
+            {
+                method: "GET",
+                credentials: "include",
+            }
+        );
+
+        const result =
+            await response.json();
+
+        console.log(
+            "[RESOURCE ACCESS]",
+            {
+                resourceId: resource.id,
+                title: resource.title,
+                examId: resource.exam_id,
+                result,
+            }
+        );
+
+        if (!response.ok) {
+            toast.error(
+                "Bài tập điểm danh chưa hoàn thành",
+                {
+                    description:
+                        result.message ??
+                        "Hãy làm bài tập điểm danh ngay.",
+                }
+            );
+
+            return false;
+        }
+
+        if (!result.allowed) {
+            toast.warning(
+                "Chưa thể xem đáp án",
+                {
+                    description:
+                        result.message ??
+                        "Cần làm đề kiểm tra trước khi xem đáp án.",
+                }
+            );
+
+            return false;
+        }
+
+        return true;
+
+    } catch (error) {
+        console.error(
+            "[RESOURCE ACCESS ERROR]",
+            error
+        );
+
+        toast.error(
+            "BTDD chưa hoàn thành",
+            {
+                description:
+                    "Hãy làm bài tập trước khi xem đáp án",
+            }
+        );
+
+        return false;
+    }
+}
+
+
+async function openResource(resource: any) {
+    /*
+     * Giáo viên được mở trực tiếp.
+     */
+    if (role !== "STUDENT") {
+        window.open(
+            resource.file_links?.url,
+            "_blank",
+            "noopener,noreferrer"
+        );
+
+        return;
+    }
+
+    /*
+     * Resource không yêu cầu làm bài kiểm tra.
+     */
+    if (!resource.exam_id) {
+        window.open(
+            resource.file_links?.url,
+            "_blank",
+            "noopener,noreferrer"
+        );
+
+        await completeLesson();
+
+        return;
+    }
+
+    /*
+     * Resource có liên kết với exam.
+     * Kiểm tra học sinh đã làm bài hay chưa.
+     */
+    try {
+        const response = await fetch(
+            `/api/student/lesson-contents/${resource.id}/access`,
+            {
+                method: "GET",
+                credentials: "include",
+            }
+        );
+
+        const result = await response.json();
+
+        console.log(
+            "[RESOURCE ACCESS]",
+            {
+                resourceId: resource.id,
+                resourceTitle: resource.title,
+                examId: resource.exam_id,
+                result,
+            }
+        );
+
+        if (!response.ok) {
+            toast.error(
+                "Không thể kiểm tra quyền truy cập",
+                {
+                    description:
+                        result.message ??
+                        "Vui lòng thử lại.",
+                }
+            );
+
+            return;
+        }
+
+        /*
+         * Chưa làm bài.
+         */
+        if (!result.allowed) {
+            toast.warning(
+                "Chưa thể xem đáp án",
+                {
+                    description:
+                        result.message ??
+                        "Cần làm đề kiểm tra trước khi xem đáp án.",
+                }
+            );
+
+            return;
+        }
+
+        /*
+         * Đã làm bài.
+         */
+        window.open(
+            resource.file_links?.url,
+            "_blank",
+            "noopener,noreferrer"
+        );
+
+        await completeLesson();
+
+    } catch (error) {
+        console.error(
+            "[RESOURCE ACCESS ERROR]",
+            error
+        );
+
+        toast.error(
+            "Có lỗi xảy ra",
+            {
+                description:
+                    "Không thể kiểm tra quyền xem tài liệu.",
+            }
+        );
+    }
+}
   return (
     <div className="flex flex-col gap-6">
       <Link
@@ -467,42 +663,83 @@ function isCompleted(lesson: any) {
               </span>
             </div>
 
-            {resource.type === "VIDEO" ? (
-              <Button
+{resource.type === "VIDEO" ? (
+    <Button
+        variant="ghost"
+        size="icon"
+        onClick={async () => {
+            console.log(
+                "[VIDEO CLICK]",
+                {
+                    id: resource.id,
+                    title: resource.title,
+                    exam_id: resource.exam_id,
+                }
+            );
+
+            const allowed =
+                await checkResourceAccess(
+                    resource
+                );
+
+            if (!allowed) {
+                return;
+            }
+
+            setCurrentVideo({
+                ...resource,
+            });
+        }}
+    >
+        <Play className="h-4 w-4" />
+    </Button>
+) : (
+    <Button
     variant="ghost"
-    size="icon"
-    onClick={() => {
-        console.log("CLICK", resource);
-        setCurrentVideo({...resource});
+    onClick={async () => {
+        console.log(
+            "[RESOURCE CLICK]",
+            {
+                id: resource.id,
+                title: resource.title,
+                exam_id: resource.exam_id,
+            }
+        );
+
+        const allowed =
+            await checkResourceAccess(
+                resource
+            );
+
+        if (!allowed) {
+            return;
+        }
+
+        const url =
+            resource.file_links?.url;
+
+        if (!url) {
+            toast.error(
+                "Không tìm thấy tài liệu"
+            );
+
+            return;
+        }
+
+        window.open(
+            url,
+            "_blank",
+            "noopener,noreferrer"
+        );
+
+        if (role === "STUDENT") {
+            await completeLesson();
+        }
     }}
 >
-    <Play className="h-4 w-4"/>
+    Mở
 </Button>
-            ) : (
-              <a
-                href={resource.url}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <Button
-                variant="ghost"
-                onClick={async()=>{
-
-                    window.open(
-                        resource.file_links.url,
-                        "_blank"
-                    );
-
-                    if(role==="STUDENT"){
-                        await completeLesson();
-                    }
-
-                }}
-            >
-                Mở
-            </Button>
-              </a>
-            )}
+)}
 
             {role === "TEACHER" && (
               <div className="flex gap-1">

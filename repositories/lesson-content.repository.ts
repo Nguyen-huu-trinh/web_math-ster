@@ -17,23 +17,45 @@ export interface UpdateLessonContentDto {
   order_index?: number;
 }
 
+export interface LessonContent {
+    id: string;
+    lesson_id: string;
+    title: string;
+    type: "VIDEO" | "PDF" | "EXAM";
+    order_index: number;
+    file_link_id: string | null;
+    exam_id: string | null;
+    created_at: string | null;
+    updated_at: string | null;
+    file_links: {
+        id: string;
+        title: string;
+        provider: string;
+        url: string;
+        created_at?: string | null;
+        updated_at?: string | null;
+    } | null;
+}
+
+
 class LessonContentRepository {
   private supabase = createClient();
 
   async getByLesson(lessonId: string) {
-    const { data, error } = await this.supabase
-      .from("lesson_contents")
-      .select(`
-        *,
-        file_links(*)
-      `)
-      .eq("lesson_id", lessonId)
-      .order("order_index");
+    const { data, error } =
+        await this.supabase
+            .from("lesson_contents")
+            .select(`
+                *,
+                file_links(*)
+            `)
+            .eq("lesson_id", lessonId)
+            .order("order_index");
 
     if (error) throw error;
 
-    return data;
-  }
+    return data as LessonContent[];
+}
 
   async create(values: CreateLessonContentDto) {
     console.log("CREATE RESOURCE", values);

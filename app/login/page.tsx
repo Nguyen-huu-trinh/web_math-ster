@@ -83,6 +83,30 @@ async function handleSubmit(
             error
         );
 
+        const message =
+            error instanceof Error
+                ? error.message
+                : String(error);
+
+        if (
+            message.includes(
+                "Tài khoản đã bị vô hiệu hóa"
+            ) ||
+            message.includes(
+                "ACCOUNT_DISABLED"
+            )
+        ) {
+            toast.error(
+                "Tài khoản đã bị khóa",
+                {
+                    description:
+                        "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ giáo viên để được hỗ trợ.",
+                }
+            );
+
+            return;
+        }
+
         toast.error(
             "Đăng nhập thất bại",
             {

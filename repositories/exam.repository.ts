@@ -358,25 +358,19 @@ async update(
   // =========================================================
 
   async softDelete(id: string) {
-
     const supabase = await createClient();
 
     const { data, error } = await supabase
-      .from("exams")
-      .update({
-
-        deleted_at:
-          new Date().toISOString(),
-
-      })
-      .eq("id", id)
-      .select()
-      .single();
+        .from("exams")
+        .delete()
+        .eq("id", id)
+        .select()
+        .single();
 
     if (error) throw error;
 
     return data;
-  }
+}
 
 }
 

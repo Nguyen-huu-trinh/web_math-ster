@@ -23,7 +23,9 @@ export async function GET(
             await createClient();
 
         /*
-         * 1. Lấy lesson_content
+         * =====================================================
+         * 1. Lấy lesson content
+         * =====================================================
          */
         const {
             data: content,
@@ -44,9 +46,11 @@ export async function GET(
         }
 
         /*
+         * =====================================================
          * 2. Resource không liên kết exam
          *
          * → Cho phép xem bình thường.
+         * =====================================================
          */
         if (!content.exam_id) {
             return NextResponse.json({
@@ -55,17 +59,27 @@ export async function GET(
         }
 
         /*
-         * 3. Resource là đáp án
+         * =====================================================
+         * 3. Resource có liên kết exam
          *
-         * Kiểm tra học sinh đã nộp
-         * ít nhất một attempt hay chưa.
+         * Kiểm tra học sinh đã có ít nhất
+         * một attempt của đúng exam hay chưa.
+         *
+         * KHÔNG yêu cầu submitted_at.
+         * =====================================================
          */
         const {
             data: attempt,
             error: attemptError,
         } = await supabase
             .from("exam_attempts")
-            .select("id")
+            .select(`
+                id,
+                exam_id,
+                student_id,
+                attempt_number,
+                submitted_at
+            `)
             .eq(
                 "student_id",
                 student.id
@@ -73,11 +87,6 @@ export async function GET(
             .eq(
                 "exam_id",
                 content.exam_id
-            )
-            .not(
-                "submitted_at",
-                "is",
-                null
             )
             .limit(1)
             .maybeSingle();
@@ -87,7 +96,9 @@ export async function GET(
         }
 
         /*
-         * 4. Đã làm bài
+         * =====================================================
+         * 4. Đã từng làm exam
+         * =====================================================
          */
         if (attempt) {
             return NextResponse.json({
@@ -96,7 +107,9 @@ export async function GET(
         }
 
         /*
-         * 5. Chưa làm bài
+         * =====================================================
+         * 5. Chưa từng làm exam
+         * =====================================================
          */
         return NextResponse.json({
             allowed: false,

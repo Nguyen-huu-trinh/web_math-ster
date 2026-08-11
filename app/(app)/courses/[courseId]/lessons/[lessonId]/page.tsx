@@ -317,7 +317,7 @@ async function checkResourceAccess(
 
     try {
         const response = await fetch(
-            `/api/student/lesson-contents/${resource.id}/access`,
+            `/api/students/lesson-contents/${resource.id}/access`,
             {
                 method: "GET",
                 credentials: "include",

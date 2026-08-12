@@ -7,14 +7,6 @@ export const RESOURCE_TYPES = [
 export const RESOURCE_PROVIDERS = [
   "youtube",
   "google_drive",
-  "onedrive",
-  "dropbox",
-  "vimeo",
-  "pdf",
-  "word",
-  "powerpoint",
-  "excel",
-  "canva",
   "other",
 ] as const;
 
@@ -27,13 +19,5 @@ export type ResourceProvider =
 export const PROVIDER_LABELS = {
   youtube: "YouTube",
   google_drive: "Google Drive",
-  onedrive: "OneDrive",
-  dropbox: "Dropbox",
-  vimeo: "Vimeo",
-  pdf: "PDF",
-  word: "Word",
-  powerpoint: "PowerPoint",
-  excel: "Excel",
-  canva: "Canva",
   other: "Other",
 };

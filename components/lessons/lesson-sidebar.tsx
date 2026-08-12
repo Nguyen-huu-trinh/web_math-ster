@@ -51,12 +51,19 @@ export function LessonSidebar({
    * =========================================================
    */
 
-  const [openChapterId, setOpenChapterId] =
-    useState<string | null>(
-      currentChapter?.id ??
-        course?.chapters?.[0]?.id ??
-        null
+  const [openChapters, setOpenChapters] =
+  useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+
+    course?.chapters?.forEach(
+      (chapter: any) => {
+        initial[chapter.id] =
+          chapter.id === currentChapter?.id;
+      }
     );
+
+    return initial;
+  });
 
   /*
    * =========================================================
@@ -66,11 +73,14 @@ export function LessonSidebar({
    * =========================================================
    */
 
-  useEffect(() => {
-    if (currentChapter?.id) {
-      setOpenChapterId(currentChapter.id);
-    }
-  }, [currentChapter?.id]);
+useEffect(() => {
+  if (!currentChapter?.id) return;
+
+  setOpenChapters((prev) => ({
+    ...prev,
+    [currentChapter.id]: true,
+  }));
+}, [currentChapter?.id]);
 
   /*
    * =========================================================
@@ -80,15 +90,12 @@ export function LessonSidebar({
    * =========================================================
    */
 
-  function toggleChapter(
-    chapterId: string
-  ) {
-    setOpenChapterId((currentId) =>
-      currentId === chapterId
-        ? null
-        : chapterId
-    );
-  }
+function toggleChapter(chapterId: string) {
+  setOpenChapters((prev) => ({
+    ...prev,
+    [chapterId]: !prev[chapterId],
+  }));
+}
 
   /*
    * =========================================================
@@ -197,9 +204,7 @@ export function LessonSidebar({
              * Chương hiện tại có đang mở không?
              */
 
-            const isOpen =
-              openChapterId ===
-              chapter.id;
+           const isOpen =openChapters[chapter.id] ?? false;
 
             /*
              * Chương có chứa bài hiện tại không?

@@ -1,57 +1,100 @@
-'use client'
+"use client";
 
-import { useEffect } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
-import { useAuth } from '@/providers/auth-provider'
-import { SidebarNav } from '@/components/layout/sidebar-nav'
-import { Topbar } from '@/components/layout/topbar'
-import { Spinner } from '@/components/ui/spinner'
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
-const TITLES: Record<string, string> = {
-  "/dashboard": "Trang chủ",
-  "/courses": "Khóa học",
-  "/student-exams": "Bài kiểm tra",
-  "/exams": "Quản lý đề thi",
-  "/exams/create": "Tạo đề thi",
-  "/students": "Quản lý học sinh",
-  "/accounts": "Quản lý tài khoản",
-  "/profile": "Hồ sơ",
-  "/settings": "Cài đặt",
-};
+import { useAuth } from "@/providers/auth-provider";
+import { SidebarNav } from "@/components/layout/sidebar-nav";
+import { Spinner } from "@/components/ui/spinner";
 
-function titleFor(pathname: string) {
-  const match = Object.keys(TITLES).find((k) => pathname === k || pathname.startsWith(k + '/'))
-  return match ? TITLES[match] : 'Math-ster'
-}
+export default function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { user, loading } = useAuth();
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth()
-  const router = useRouter()
-  const pathname = usePathname()
+  const router = useRouter();
+  const pathname = usePathname();
+
+  /*
+   * Trang Lesson cần sử dụng toàn bộ chiều rộng.
+   *
+   * Ví dụ:
+   * /courses/123/lessons/456
+   */
+  const isLessonPage =
+    pathname.startsWith("/courses/") &&
+    pathname.includes("/lessons/");
 
   useEffect(() => {
-    if (!loading && !user) router.replace('/login')
-  }, [loading, user, router])
+    if (!loading && !user) {
+      router.replace("/login");
+    }
+  }, [loading, user, router]);
 
+  /*
+   * Đang kiểm tra authentication
+   */
   if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Spinner className="size-6 text-primary" />
       </div>
-    )
+    );
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 lg:block">
-        <SidebarNav />
-      </aside>
-      <div className="flex min-h-screen flex-1 flex-col lg:pl-72">
-        <Topbar title={titleFor(pathname)} />
-        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mx-auto w-full max-w-7xl animate-fade-in">{children}</div>
-        </main>
-      </div>
+    <div className="min-h-screen bg-background">
+
+      {/* =====================================================
+          NAVIGATION
+      ====================================================== */}
+
+      <SidebarNav />
+
+
+      {/* =====================================================
+          MAIN CONTENT (ĐÃ SỬA: Bỏ hoàn toàn px ở trang Lesson)
+      ====================================================== */}
+
+      <main
+        className={
+          isLessonPage
+            ? "w-full py-4" // ĐÃ SỬA: Xóa bỏ px-4 sm:px-6 lg:px-8 để nội dung chạm mép màn hình
+            : "flex-1 px-4 py-6 sm:px-6 lg:px-8"
+        }
+      >
+
+        {isLessonPage ? (
+
+          /*
+           * LESSON PAGE
+           *
+           * Không dùng max-w-7xl.
+           * Cho phép LessonLayout sử dụng toàn bộ
+           * chiều rộng màn hình.
+           */
+          // ĐÃ SỬA: Bạn có thể thêm một chút px nhẹ ở đây nếu muốn nội dung không dính chặt 100% vào viền (ví dụ: px-2 hoặc px-4)
+          <div className="w-full px-4 animate-fade-in">
+            {children}
+          </div>
+
+        ) : (
+
+          /*
+           * CÁC TRANG KHÁC
+           *
+           * Vẫn giữ layout cũ.
+           */
+          <div className="mx-auto w-full max-w-7xl animate-fade-in">
+            {children}
+          </div>
+
+        )}
+
+      </main>
+
     </div>
-  )
+  );
 }

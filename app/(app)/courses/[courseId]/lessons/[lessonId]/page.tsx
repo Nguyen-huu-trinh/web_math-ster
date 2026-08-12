@@ -1,8 +1,8 @@
 'use client'
 import { ResourceDialog } from "@/components/lesson-resources/resource-dialog";
-
+import { LessonSidebar } from "@/components/lessons/lesson-sidebar";
 import { DeleteResourceDialog } from "@/components/lesson-resources/delete-resource-dialog";
-
+import { LessonLayout } from "@/components/layout/lesson-layout";
 import { use, useEffect, useState } from "react";
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -17,6 +17,8 @@ import {
   ArrowRight,
   Pencil,
 Trash2,
+BookOpen,
+Menu,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -110,6 +112,8 @@ const [selectedResource,setSelectedResource]=
 useState<any>(null);
 const [currentVideo, setCurrentVideo] =
     useState<any>(null);
+  const [showLessonSidebar, setShowLessonSidebar] =
+  useState(false);
 
 
 
@@ -503,7 +507,13 @@ async function openResource(resource: any) {
         {course.name}
       </Link>
     
-      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)_340px]">
+        <div className="hidden lg:block">
+        <LessonSidebar
+          course={course}
+          currentLessonId={lesson.id}
+        />
+      </div>
         <div className="flex flex-col gap-5">
           {/* Video */}
           <div className="relative aspect-video overflow-hidden rounded-xl border bg-foreground">
@@ -626,7 +636,7 @@ async function openResource(resource: any) {
         </div>
 
         {/* Sidebar */}
-        <div className="flex flex-col gap-5">
+       <div className="flex flex-col gap-5">
   <Card>
     <CardHeader>
       <CardTitle className="text-base">
@@ -802,37 +812,7 @@ async function openResource(resource: any) {
             </Card>
           ) : null} */}
 
-          {/* Lesson list */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Khoá học này</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-1">
-              {allLessons.map((l: any, i: number) => (
-                <Link
-                  key={l.id}
-                  href={`/courses/${course.id}/lessons/${l.id}`}
-                  className={cn(
-                    'flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm transition-colors hover:bg-accent',
-                    l.id === lesson.id && 'bg-accent font-medium',
-                  )}
-                >
-                  
-                
-                {
-                  role === "STUDENT" && isCompleted(l) ? (
-                    <CircleCheckBig className="size-4 shrink-0 text-primary" />
-                  ) : (
-                    <span className="w-4 shrink-0 text-center text-xs text-muted-foreground">
-                      {i + 1}
-                    </span>
-                  )
-                }
-                  <span className="truncate">{l.title}</span>
-                </Link>
-              ))}
-            </CardContent>
-          </Card>
+         
         </div>
       </div>
 
@@ -879,6 +859,69 @@ setSelectedResource(null);
 onDelete={deleteResource}
 
 />
+{showLessonSidebar && (
+  <div className="fixed inset-0 z-[100] lg:hidden">
+
+    {/* OVERLAY */}
+
+    <button
+      type="button"
+      aria-label="Đóng danh sách bài học"
+      className="absolute inset-0 bg-black/40"
+      onClick={() =>
+        setShowLessonSidebar(false)
+      }
+    />
+
+    {/* DRAWER */}
+
+    <div className="absolute inset-y-0 left-0 w-[320px] max-w-[85vw] bg-background shadow-2xl">
+
+      <LessonSidebar
+        course={course}
+        currentLessonId={lesson.id}
+        mobile
+        onClose={() =>
+          setShowLessonSidebar(false)
+        }
+      />
+
+    </div>
+
+  </div>
+)}
+{!showLessonSidebar && (
+  <button
+    type="button"
+    onClick={() =>
+      setShowLessonSidebar(true)
+    }
+    className="
+      fixed
+      bottom-5
+      left-5
+      z-50
+      flex
+      items-center
+      gap-2
+      rounded-full
+      bg-primary
+      px-4
+      py-3
+      text-sm
+      font-semibold
+      text-primary-foreground
+      shadow-xl
+      transition-all
+      hover:scale-105
+      active:scale-95
+      lg:hidden
+    "
+  aria-label="Mở danh sách bài học"
+>
+  <Menu className="size-6" />
+  </button>
+)}
     </div>
   )
   }

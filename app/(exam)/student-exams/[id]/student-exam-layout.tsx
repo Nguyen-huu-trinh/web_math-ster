@@ -42,11 +42,13 @@ interface ExamSession {
 }
 
 interface Props {
-  session: ExamSession;
+    session: ExamSession;
+    review?: boolean;
 }
 
 export default function StudentExamLayout({
   session,
+  review = false,
 }: Props) {
   const {
     attempt,
@@ -58,6 +60,8 @@ export default function StudentExamLayout({
 
 const [showExitDialog, setShowExitDialog] =
   useState(false);
+  const [submitted, setSubmitted] =
+    useState(review);
 
 const finishExamRef =
   useRef(false);
@@ -68,41 +72,13 @@ const [exitCountdown, setExitCountdown] =
 const exitTimer =
   useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-  function handleFullscreenChange() {
-
-  if (!document.fullscreenElement) {
-
-    if (finishExamRef.current) {
-
-      return;
-
-    }
-
-    setShowExitDialog(true);
-
-    setExitCountdown(30);
-
-  }
-
-}
-
-  document.addEventListener(
-    "fullscreenchange",
-    handleFullscreenChange
-  );
-
-  return () =>
-    document.removeEventListener(
-      "fullscreenchange",
-      handleFullscreenChange
-    );
-
-}, []);
+ 
 
 useEffect(() => {
 
-  if (!showExitDialog) return;
+  if (review || !showExitDialog) {
+    return;
+  }
 
   exitTimer.current = setInterval(() => {
 
@@ -112,33 +88,27 @@ useEffect(() => {
 
         clearInterval(exitTimer.current!);
 
-      if (!submitted) {
-      window.dispatchEvent(
-        new Event("force-submit")
-      );
-    }
+        if (!submitted) {
+          window.dispatchEvent(
+            new Event("force-submit")
+          );
+        }
 
         return 0;
-
       }
 
       return prev - 1;
-
     });
 
   }, 1000);
 
   return () => {
-
     if (exitTimer.current) {
-
       clearInterval(exitTimer.current);
-
     }
-
   };
 
-}, [showExitDialog]);
+}, [review, showExitDialog, submitted]);
 
 async function resumeExam() {
 
@@ -168,8 +138,22 @@ async function resumeExam() {
     const isDesktop =
   useMediaQuery("(min-width:768px)");
 const [examStarted, setExamStarted] =
-  useState(false);
+  useState(review);
+useEffect(() => {
+  if (review) {
+    setSubmitted(true);
+    setExamStarted(true);
+  }
+}, [review]);
+
 async function startFullscreen() {
+
+  // Review không cần fullscreen
+  if (review) {
+    setExamStarted(true);
+    return;
+  }
+
   try {
     if (document.documentElement.requestFullscreen) {
       await document.documentElement.requestFullscreen();
@@ -188,29 +172,23 @@ useEffect(() => {
   setTimeLeft(remainingSeconds);
 }, [remainingSeconds]);
 
-const [submitted, setSubmitted] =
-  useState(false);
+
 
 useEffect(() => {
-
-    
-  if (submitted) return;
+  if (review || submitted) {
+    return;
+  }
 
   const timer = setInterval(() => {
-
     setTimeLeft((prev) => {
-
       if (prev <= 0) return 0;
 
       return prev - 1;
-
     });
-
   }, 1000);
 
   return () => clearInterval(timer);
-
-}, [submitted]);
+}, [review, submitted]);
 
 const displayTime = useMemo(() => {
   const m = Math.floor(timeLeft / 60);
@@ -222,26 +200,71 @@ const displayTime = useMemo(() => {
 const lowTime = timeLeft <= 300;
 
 useEffect(() => {
+  function handleFullscreenChange() {
 
-  function handleSubmitSuccess() {
-    finishExamRef.current = true;
-
-    if (document.fullscreenElement) {
-
-  document.exitFullscreen();
-
-}
-
-    setSubmitted(true);
-
-    setShowExitDialog(false);
-
-    if (exitTimer.current) {
-
-      clearInterval(exitTimer.current);
-
+    // REVIEW MODE:
+    // Không yêu cầu fullscreen
+    if (review) {
+      return;
     }
 
+    if (!document.fullscreenElement) {
+
+      if (finishExamRef.current) {
+        return;
+      }
+
+      setShowExitDialog(true);
+      setExitCountdown(30);
+    }
+  }
+
+  document.addEventListener(
+    "fullscreenchange",
+    handleFullscreenChange
+  );
+
+  return () =>
+    document.removeEventListener(
+      "fullscreenchange",
+      handleFullscreenChange
+    );
+
+}, [review]);
+
+useEffect(() => {
+  function handleSubmitSuccess() {
+    console.log("[EXAM] SUBMIT SUCCESS");
+
+    // Đánh dấu đã nộp trước
+    finishExamRef.current = true;
+
+    // Đã nộp → không còn popup thoát fullscreen
+    setSubmitted(true);
+    setShowExitDialog(false);
+
+    // Hủy countdown thoát fullscreen nếu đang chạy
+    if (exitTimer.current) {
+      clearInterval(exitTimer.current);
+      exitTimer.current = null;
+    }
+
+    // REVIEW thì không cần thoát fullscreen
+    if (review) {
+      return;
+    }
+
+    // Thoát fullscreen
+    if (document.fullscreenElement) {
+      document
+        .exitFullscreen()
+        .catch((error) => {
+          console.error(
+            "[EXAM] EXIT FULLSCREEN ERROR:",
+            error
+          );
+        });
+    }
   }
 
   window.addEventListener(
@@ -250,23 +273,18 @@ useEffect(() => {
   );
 
   return () => {
-
     window.removeEventListener(
       "submit-success",
       handleSubmitSuccess
     );
-
   };
-
-}, []);
-
-
+}, [review]);
 
   return (
     <div className="h-screen overflow-hidden bg-slate-100">
 
       {
-            !examStarted && (
+           !review && !examStarted && (
 
             <div
             className="
@@ -382,6 +400,7 @@ useEffect(() => {
             exam={exam}
             remainingSeconds={remainingSeconds}
             savedAnswers={savedAnswers}
+            review={review}
           />
 
         </div>
@@ -412,6 +431,7 @@ useEffect(() => {
       {exam.title}
     </span>
 
+  {!review && (
     <span
       className={cn(
         "flex items-center gap-1 rounded-lg px-2 py-1 font-mono text-sm font-bold",
@@ -423,6 +443,7 @@ useEffect(() => {
       <Clock className="size-4" />
       {displayTime}
     </span>
+  )}
 
   </div>
   <PdfViewer
@@ -455,6 +476,7 @@ useEffect(() => {
             exam={exam}
             remainingSeconds={remainingSeconds}
             savedAnswers={savedAnswers}
+            review={review}
           />
 
         </div>

@@ -49,6 +49,7 @@ interface Props {
   exam: any;
   remainingSeconds: number;
   savedAnswers: ExamAnswers;
+  review?: boolean;
 }
 
 const MC = ["A", "B", "C", "D"];
@@ -60,9 +61,11 @@ export default function AnswerSheet({
   exam,
   remainingSeconds,
   savedAnswers,
+  review = false,
 }: Props)  
 
 {
+
 
   const router = useRouter();
 
@@ -128,8 +131,22 @@ useEffect(() => {
   // Result
   // ============================
 
-  const [result, setResult] =
-    useState<any>(null);
+const [result, setResult] =
+    useState<any>(() => {
+        if (!review) {
+            return null;
+        }
+
+        return {
+            score: attempt?.score ?? 0,
+            passed: attempt?.is_passed ?? false,
+            alreadySubmitted: true,
+            showAnswer: exam?.show_answer ?? false,
+            answers: exam?.show_answer
+                ? exam?.answer_key
+                : null,
+        };
+    });
 const [submitDialogOpen, setSubmitDialogOpen] =
   useState(false);
 const saveTimeout =
@@ -155,53 +172,43 @@ useRef<NodeJS.Timeout | null>(
   // Countdown Timer
   // ============================
 
-  useEffect(() => {
-    if (result) return;
+ useEffect(() => {
+    if (review || result) {
+        return;
+    }
 
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          handleSubmit(false);
-          return 0;
-        }
+        setTimeLeft((prev) => {
+            if (prev <= 1) {
+                clearInterval(timer);
+                handleSubmit(false);
+                return 0;
+            }
 
-        return prev - 1;
-      });
+            return prev - 1;
+        });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [result]);
+}, [review, result]);
 
-  function autoSaveAnswers(
+function autoSaveAnswers(
     nextAnswers: typeof answers
 ) {
+    if (review) return;
 
     if (!attempt?.id) return;
 
     if (saveTimeout.current) {
-
-        clearTimeout(
-            saveTimeout.current
-        );
-
+        clearTimeout(saveTimeout.current);
     }
 
-    saveTimeout.current =
-        setTimeout(() => {
-
-            saveAnswerMutation.mutate({
-
-                attemptId:
-                    attempt.id,
-
-                answers:
-                    nextAnswers,
-
-            });
-
-        }, 500);
-
+    saveTimeout.current = setTimeout(() => {
+        saveAnswerMutation.mutate({
+            attemptId: attempt.id,
+            answers: nextAnswers,
+        });
+    }, 500);
 }
   // ============================
   // Display Time
@@ -371,7 +378,9 @@ useRef<NodeJS.Timeout | null>(
   // ==========================================
   // CHỐNG SUBMIT TRÙNG
   // ==========================================
-
+  if (review) {
+        return;
+    }
   if (submittedRef.current) {
     return;
   }

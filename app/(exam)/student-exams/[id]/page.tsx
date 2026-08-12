@@ -6,16 +6,23 @@ import { requireStudent } from "@/lib/auth/student";
 import { studentExamService } from "@/services/student-exam.service";
 
 interface Props {
-  params: Promise<{
-    id: string;
-  }>;
-}
+    params: Promise<{
+        id: string;
+    }>;
 
+    searchParams: Promise<{
+        review?: string;
+    }>;
+}
 export default async function StudentExamPage({
     params,
+    searchParams,
 }: Props) {
     const { id } = await params;
+    const { review } = await searchParams;
 
+    const isReview =
+        review === "true";
     let studentId = "";
 
     try {
@@ -49,6 +56,7 @@ export default async function StudentExamPage({
         return (
             <StudentExamLayout
                 session={session}
+                review={isReview}
             />
         );
 

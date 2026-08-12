@@ -50,11 +50,14 @@ export class StudentExamRepository {
     const examIds = exams.map((e) => e.id);
 
     // 3. Lấy toàn bộ lịch sử làm bài
-    const { data: attempts, error: attemptError } = await supabase
-      .from("exam_attempts")
-      .select("exam_id, score, is_passed, created_at, submitted_at")
-      .eq("student_id", studentId)
-      .in("exam_id", examIds);
+const { data: attempts, error: attemptError } =
+    await supabase
+        .from("exam_attempts")
+        .select(
+            "id, exam_id, score, is_passed, created_at, submitted_at"
+        )
+        .eq("student_id", studentId)
+        .in("exam_id", examIds);
 
     if (attemptError) throw attemptError;
 
@@ -118,11 +121,13 @@ export class StudentExamRepository {
         attempts: attemptCount,
 
         lastScore:
-          lastAttempt?.score ?? null,
+            lastAttempt?.score ?? null,
 
         lastAttemptAt:
-          lastAttempt?.submitted_at ??
-          null,
+            lastAttempt?.submitted_at ?? null,
+
+        lastAttemptId:
+            lastAttempt?.id ?? null,
 
         status,
 

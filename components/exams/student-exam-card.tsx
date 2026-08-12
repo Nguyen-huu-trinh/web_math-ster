@@ -109,36 +109,54 @@ const startLockRef =
     }
 }
 
-  function renderButton() {
-
+function renderButton() {
+    /*
+     * Học sinh đã dùng hết lượt
+     *
+     * Không được gọi startExam()
+     * vì startExam() sẽ tạo attempt mới.
+     *
+     * Chỉ mở attempt cuối cùng để xem lại.
+     */
     if (!exam.canStart) {
+        return (
+            <Button
+                className="w-32"
+                variant="outline"
+                disabled={!exam.lastAttemptId}
+                onClick={() => {
+                    if (!exam.lastAttemptId) {
+                        return;
+                    }
 
-      return (
-        <Button
-          disabled
-          className="w-32"
-        >
-          Hết lượt
-        </Button>
-      );
-
+                    router.push(
+                        `/student-exams/${exam.lastAttemptId}?review=true`
+                    );
+                }}
+            >
+                Xem lại
+            </Button>
+        );
     }
 
     return (
-      <Button
-        className="w-32"
-        disabled={isStarting || startExam.isPending}
-        onClick={handleStartExam}
-      >
-        {isStarting ||startExam.isPending
-          ? "Đang mở..."
-          : exam.attempts === 0
-          ? "Làm bài"
-          : "Làm lại"}
-      </Button>
+        <Button
+            className="w-32"
+            disabled={
+                isStarting ||
+                startExam.isPending
+            }
+            onClick={handleStartExam}
+        >
+            {isStarting ||
+            startExam.isPending
+                ? "Đang mở..."
+                : exam.attempts === 0
+                ? "Làm bài"
+                : "Làm lại"}
+        </Button>
     );
-
-  }
+}
 
   return (
 

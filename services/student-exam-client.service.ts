@@ -40,6 +40,8 @@ export interface StudentExamItem {
   showAnswer: boolean;
 
   examFile: string;
+  
+  lastAttemptId?: string | null;
 }
 
 class StudentExamClientService {

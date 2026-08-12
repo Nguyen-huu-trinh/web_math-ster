@@ -194,7 +194,7 @@ function renderButton() {
 
         {/* CENTER */}
 
-        <div className="flex flex-1 justify-center gap-3">
+       <div className="flex flex-1 justify-end gap-4">
 
           {/* Thời gian */}
 

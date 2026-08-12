@@ -405,12 +405,13 @@ export function TeacherStudentsTable({
                         <tbody>
                             {sortedStudents.map(
                                 (student) => (
-                                    <tr
-                                        key={
-                                            student.id
-                                        }
-                                        className="border-b last:border-0 hover:bg-muted/30"
-                                    >
+                                        <tr
+                                            key={student.id}
+                                            className="border-b last:border-0 cursor-pointer hover:bg-muted/30"
+                                            onClick={() =>
+                                                router.push(`/students/${student.id}`)
+                                            }
+                                        >
                                         {/* Code */}
                                         <td className="px-5 py-4">
                                             <span className="font-mono text-sm">
@@ -460,20 +461,26 @@ export function TeacherStudentsTable({
                                             editingCell.field ===
                                                 "points" ? (
                                                 <div className="flex items-center justify-end gap-1">
+                                                    
                                                     <input
                                                         type="number"
                                                         min="0"
                                                         value={editValue}
+                                                        
                                                         onChange={(e) =>
                                                             setEditValue(
                                                                 e.target.value
                                                             )
+                                                            
                                                         }
+                                                        onClick={(e) => {
+                                                                 e.stopPropagation();}}
                                                         className="h-8 w-24 rounded-md border px-2 text-right text-sm"
                                                         autoFocus
                                                         disabled={
                                                             updateFinancial.isPending
                                                         }
+                                                        
                                                         onKeyDown={(e) => {
                                                             if (
                                                                 e.key === "Enter"
@@ -497,13 +504,15 @@ export function TeacherStudentsTable({
 
                                                     <button
                                                         type="button"
-                                                        onClick={() =>
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+
                                                             startEditing(
                                                                 student.id,
                                                                 "points",
                                                                 student.points
-                                                            )
-                                                        }
+                                                            );
+                                                        }}
                                                         className="ml-auto block cursor-pointer rounded-md px-2 py-1 text-sm font-medium hover:bg-muted"
                                                     >
                                                         {student.points.toLocaleString(
@@ -529,6 +538,9 @@ export function TeacherStudentsTable({
                                                                 e.target.value
                                                             )
                                                         }
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                        }}
                                                         className="h-8 w-28 rounded-md border px-2 text-right text-sm"
                                                         autoFocus
                                                         disabled={
@@ -555,13 +567,14 @@ export function TeacherStudentsTable({
 
                                                 <button
                                                     type="button"
-                                                    onClick={() =>
+                                                    onClick={(e) =>{
+                                                         e.stopPropagation();
                                                         startEditing(
                                                             student.id,
                                                             "rewardMoney",
                                                             student.rewardMoney
-                                                        )
-                                                    }
+                                                        );
+                                                    }}
                                                     className="ml-auto block cursor-pointer rounded-md px-2 py-1 text-sm font-medium hover:bg-muted"
                                                 >
                                                     {student.rewardMoney.toLocaleString(
@@ -584,7 +597,11 @@ export function TeacherStudentsTable({
                                         {/* Actions */}
                                         <td className="px-3 py-4 text-right">
                                             <DropdownMenu>
-                                                <DropdownMenuTrigger>
+                                                <DropdownMenuTrigger
+                                                    onClick={(e) =>
+                                                        e.stopPropagation()
+                                                    }
+                                                >
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
@@ -610,18 +627,20 @@ export function TeacherStudentsTable({
 
                                                     {student.isActive ? (
                                                         <DropdownMenuItem
-                                                            onClick={() =>
+                                                            onClick={(e) => {
+                                                                e.stopPropagation(),
                                                                 handleDisable(student)
-                                                            }
+                                                            }}
                                                         >
                                                             <Ban />
                                                             Disable
                                                         </DropdownMenuItem>
                                                     ) : (
                                                         <DropdownMenuItem
-                                                            onClick={() =>
+                                                            onClick={(e) => {
+                                                                e.stopPropagation(),
                                                                 handleEnable(student)
-                                                            }
+                                                            }}
                                                         >
                                                             <UserCheck />
                                                             Enable
@@ -632,11 +651,12 @@ export function TeacherStudentsTable({
 
                                                     <DropdownMenuItem
                                                         variant="destructive"
-                                                        onClick={() =>
+                                                        onClick={(e) => {
+                                                            e.stopPropagation(),
                                                             handleDelete(
                                                                 student
                                                             )
-                                                        }
+                                                        }}
                                                     >
                                                         <Trash2 />
                                                         Delete

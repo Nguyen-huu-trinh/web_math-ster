@@ -1,5 +1,7 @@
 "use client";
-
+import {
+    Trash2,
+} from "lucide-react";
 import {
     MoreHorizontal,
 } from "lucide-react";
@@ -406,48 +408,31 @@ const rows: ExamTableRow[] =
                                                     : "--"}
                                             </td>
 
-                                            {/* ACTION */}
-                                            <td className="px-3 py-4 text-center">
+{/* ACTION */}
+<td className="px-3 py-4 text-center">
+    {attempt ? (
+        <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600"
+            disabled={deleteAttempt.isPending}
+            onClick={() =>
+                handleDelete(attempt.id)
+            }
+        >
+            <Trash2 className="h-4 w-4" />
 
-                                                {attempt ? (
-                                                    <DropdownMenu>
-
-                                                    <DropdownMenuTrigger
-                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
-                                                        disabled={
-                                                            deleteAttempt.isPending
-                                                        }
-                                                    >
-                                                        <MoreHorizontal className="h-4 w-4" />
-
-                                                        <span className="sr-only">
-                                                            Thao tác
-                                                        </span>
-                                                    </DropdownMenuTrigger>
-
-                                                        <DropdownMenuContent
-                                                            align="end"
-                                                        >
-                                                            <DropdownMenuItem
-                                                                variant="destructive"
-                                                                onClick={() =>
-                                                                    handleDelete(
-                                                                        attempt.id
-                                                                    )
-                                                                }
-                                                            >
-                                                                Xóa lượt làm
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-
-                                                    </DropdownMenu>
-                                                ) : (
-                                                    <span className="text-muted-foreground">
-                                                        —
-                                                    </span>
-                                                )}
-
-                                            </td>
+            <span className="sr-only">
+                Xóa lượt làm
+            </span>
+        </Button>
+    ) : (
+        <span className="text-muted-foreground">
+            —
+        </span>
+    )}
+</td>
 
                                         </tr>
                                     );

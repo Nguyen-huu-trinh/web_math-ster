@@ -40,9 +40,13 @@ interface Props {
 export function StudentProfileCard({
     profile,
 }: Props) {
-    const [editing, setEditing] =
-        useState(false);
-
+    const [editingField, setEditingField] =
+    useState<
+        "personalEmail" |
+        "points" |
+        "rewardMoney" |
+        null
+    >(null);
     const [personalEmail, setPersonalEmail] =
         useState(
             profile.personalEmail ?? ""
@@ -107,45 +111,81 @@ export function StudentProfileCard({
             String(profile.rewardMoney)
         );
 
-        setEditing(false);
+        setEditingField(null);
     }
 
-    function handleSave() {
+  function handleSave() {
+    if (!editingField) {
+        return;
+    }
+
+    if (editingField === "personalEmail") {
+        updateStudent.mutate(
+            {
+                personalEmail:
+                    personalEmail.trim() || null,
+            },
+            {
+                onSuccess: () => {
+                    setEditingField(null);
+                },
+            }
+        );
+
+        return;
+    }
+
+    if (editingField === "points") {
         const parsedPoints =
             Number(points);
 
-        const parsedRewardMoney =
-            Number(rewardMoney);
-
         if (
-            !Number.isFinite(
-                parsedPoints
-            ) ||
-            !Number.isFinite(
-                parsedRewardMoney
-            )
+            !Number.isFinite(parsedPoints) ||
+            parsedPoints < 0
         ) {
             return;
         }
 
         updateStudent.mutate(
             {
-                personalEmail:
-                    personalEmail.trim() ||
-                    null,
-
                 points: parsedPoints,
+            },
+            {
+                onSuccess: () => {
+                    setEditingField(null);
+                },
+            }
+        );
 
+        return;
+    }
+
+    if (editingField === "rewardMoney") {
+        const parsedRewardMoney =
+            Number(rewardMoney);
+
+        if (
+            !Number.isFinite(parsedRewardMoney) ||
+            parsedRewardMoney < 0
+        ) {
+            return;
+        }
+
+        updateStudent.mutate(
+            {
                 rewardMoney:
                     parsedRewardMoney,
             },
             {
                 onSuccess: () => {
-                    setEditing(false);
+                    setEditingField(null);
                 },
             }
         );
     }
+}
+
+        
 
     return (
         <div className="rounded-xl border bg-card">
@@ -189,17 +229,7 @@ export function StudentProfileCard({
                     </div>
                 </div>
 
-                {!editing && (
-                    <Button
-                        variant="outline"
-                        onClick={() =>
-                            setEditing(true)
-                        }
-                    >
-                        <Pencil />
-                        Chỉnh sửa
-                    </Button>
-                )}
+                
             </div>
 
             {/* INFORMATION */}
@@ -234,21 +264,39 @@ export function StudentProfileCard({
                         Personal Email
                     </Label>
 
-                    {editing ? (
-                        <Input
-                            value={
-                                personalEmail
-                            }
-                            onChange={(e) =>
-                                setPersonalEmail(
-                                    e.target
-                                        .value
+                    {editingField === "personalEmail" ? (
+                        <div className="flex gap-2">
+                            <Input
+                                value={personalEmail}
+                                onChange={(e) =>
+                                    setPersonalEmail(
+                                        e.target.value
+                                    )
+                                }
+                                placeholder="Email cá nhân"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        handleSave();
+                                    }
+
+                                    if (e.key === "Escape") {
+                                        handleCancel();
+                                    }
+                                }}
+                            />
+
+                            
+                        </div>
+                    ) : (
+                        <div
+                            className="cursor-pointer rounded-md border bg-muted/30 px-3 py-2 text-sm hover:bg-muted/50"
+                            onClick={() =>
+                                setEditingField(
+                                    "personalEmail"
                                 )
                             }
-                            placeholder="Email cá nhân"
-                        />
-                    ) : (
-                        <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                        >
                             {profile.personalEmail ||
                                 "Chưa cập nhật"}
                         </div>
@@ -275,22 +323,38 @@ export function StudentProfileCard({
                         Points
                     </Label>
 
-                    {editing ? (
+                    {editingField === "points" ? (
                         <Input
                             type="number"
+                            min="0"
                             value={points}
                             onChange={(e) =>
-                                setPoints(
-                                    e.target
-                                        .value
-                                )
+                                setPoints(e.target.value)
                             }
+                            autoFocus
+                            className="
+                                [appearance:textfield]
+                                [&::-webkit-inner-spin-button]:appearance-none
+                                [&::-webkit-outer-spin-button]:appearance-none
+                            "
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    handleSave();
+                                }
+
+                                if (e.key === "Escape") {
+                                    handleCancel();
+                                }
+                            }}
                         />
                     ) : (
-                        <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm font-semibold">
-                            {profile.points.toLocaleString(
-                                "vi-VN"
-                            )}
+                        <div
+                            className="cursor-pointer rounded-md border bg-muted/30 px-3 py-2 text-sm font-semibold hover:bg-muted/50"
+                            onClick={() =>
+                                setEditingField("points")
+                            }
+                        >
+                            {profile.points.toLocaleString("vi-VN")}
                         </div>
                     )}
                 </div>
@@ -301,58 +365,43 @@ export function StudentProfileCard({
                         Reward Money
                     </Label>
 
-                    {editing ? (
+                    {editingField === "rewardMoney" ? (
                         <Input
                             type="number"
-                            value={
-                                rewardMoney
-                            }
+                            min="0"
+                            value={rewardMoney}
                             onChange={(e) =>
-                                setRewardMoney(
-                                    e.target
-                                        .value
-                                )
+                                setRewardMoney(e.target.value)
                             }
+                            autoFocus
+                            className="
+                                [appearance:textfield]
+                                [&::-webkit-inner-spin-button]:appearance-none
+                                [&::-webkit-outer-spin-button]:appearance-none
+                            "
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    handleSave();
+                                }
+
+                                if (e.key === "Escape") {
+                                    handleCancel();
+                                }
+                            }}
                         />
                     ) : (
-                        <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm font-semibold">
-                            {profile.rewardMoney.toLocaleString(
-                                "vi-VN"
-                            )}
+                        <div
+                            className="cursor-pointer rounded-md border bg-muted/30 px-3 py-2 text-sm font-semibold hover:bg-muted/50"
+                            onClick={() =>
+                                setEditingField("rewardMoney")
+                            }
+                        >
+                            {profile.rewardMoney.toLocaleString("vi-VN")}
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* EDIT ACTIONS */}
-            {editing && (
-                <div className="flex justify-end gap-2 border-t p-4">
-                    <Button
-                        variant="outline"
-                        onClick={
-                            handleCancel
-                        }
-                        disabled={
-                            updateStudent.isPending
-                        }
-                    >
-                        Hủy
-                    </Button>
-
-                    <Button
-                        onClick={
-                            handleSave
-                        }
-                        disabled={
-                            updateStudent.isPending
-                        }
-                    >
-                        {updateStudent.isPending
-                            ? "Đang lưu..."
-                            : "Lưu thay đổi"}
-                    </Button>
-                </div>
-            )}
         </div>
     );
 }

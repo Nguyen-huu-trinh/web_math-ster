@@ -362,7 +362,6 @@ function autoSaveAnswers(
     }
 
     answersRef.current = next;
-    console.log(next);
     autoSaveAnswers(next);
 
     return next;

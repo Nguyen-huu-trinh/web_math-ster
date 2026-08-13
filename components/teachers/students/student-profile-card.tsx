@@ -97,6 +97,19 @@ export function StudentProfileCard({
             )
             .join("");
     }
+function getAvatarUrl(url?: string | null) {
+    if (!url) return undefined;
+
+    const match = url.match(
+        /drive\.google\.com\/file\/d\/([^/]+)/
+    );
+
+    if (match?.[1]) {
+        return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
+    }
+
+    return url;
+}
 
     function handleCancel() {
         setPersonalEmail(
@@ -194,13 +207,9 @@ export function StudentProfileCard({
                 <div className="flex items-center gap-4">
                     <Avatar className="h-20 w-20">
                         <AvatarImage
-                            src={
-                                profile.avatarUrl ??
-                                undefined
-                            }
-                            alt={
-                                profile.fullName
-                            }
+                            src={getAvatarUrl(profile.avatarUrl)}
+                            alt={profile.fullName}
+                            className="object-cover"
                         />
 
                         <AvatarFallback className="text-xl">
@@ -211,21 +220,11 @@ export function StudentProfileCard({
                     </Avatar>
 
                     <div>
-                        <h2 className="text-xl font-semibold">
+                        <h2 className="text-3xl font-semibold">
                             {profile.fullName}
                         </h2>
 
-                        <p className="mt-1 font-mono text-sm text-muted-foreground">
-                            {
-                                profile.studentCode
-                            }
-                        </p>
-
-                        <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                            <Mail className="h-4 w-4" />
-
-                            {profile.email}
-                        </div>
+                  
                     </div>
                 </div>
 

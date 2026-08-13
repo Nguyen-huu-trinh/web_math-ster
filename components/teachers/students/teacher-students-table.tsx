@@ -230,6 +230,24 @@ export function TeacherStudentsTable({
             .join("");
     }
 
+
+    function getAvatarUrl(url?: string | null) {
+    if (!url) return undefined;
+
+    // Google Drive:
+    // https://drive.google.com/file/d/FILE_ID/view
+    const match = url.match(
+        /drive\.google\.com\/file\/d\/([^/]+)/
+    );
+
+    if (match?.[1]) {
+        return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
+    }
+
+    // Nếu đã là URL ảnh trực tiếp thì giữ nguyên
+    return url;
+}
+
     function handleDisable(
         student: TeacherStudentListItem
     ) {
@@ -423,26 +441,22 @@ export function TeacherStudentsTable({
                                     {/* Họ tên */}
                                     <td className="px-5 py-4">
                                         <div className="flex items-center gap-3">
-                                            <Avatar className="h-9 w-9 shrink-0">
-                                                <AvatarImage
-                                                    src={
-                                                        student.avatarUrl ??
-                                                        undefined
-                                                    }
-                                                    alt={student.fullName}
-                                                />
+    <Avatar className="h-9 w-9 shrink-0 border">
+       <AvatarImage
+    src={getAvatarUrl(student.avatarUrl)}
+    alt={student.fullName}
+    className="object-cover"
+/>
 
-                                                <AvatarFallback>
-                                                    {getInitials(
-                                                        student.fullName
-                                                    )}
-                                                </AvatarFallback>
-                                            </Avatar>
+        <AvatarFallback className="text-sm font-semibold">
+            {getInitials(student.fullName)}
+        </AvatarFallback>
+    </Avatar>
 
-                                            <span className="truncate font-medium">
-                                                {student.fullName}
-                                            </span>
-                                        </div>
+    <span className="truncate font-medium">
+        {student.fullName}
+    </span>
+</div>
                                     </td>
                                         
 

@@ -124,13 +124,7 @@ export function TeacherStudentDetailPage({
                 </Button>
             </div>
 
-            {/* HEADER */}
-            <PageHeader
-                title={
-                    data.profile.fullName
-                }
-                description={`Student Code: ${data.profile.studentCode}`}
-            />
+            
 
             {/* PROFILE */}
             <StudentProfileCard

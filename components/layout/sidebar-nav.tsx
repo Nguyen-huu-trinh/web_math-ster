@@ -1,5 +1,5 @@
 "use client";
-
+import { getAvatarUrl } from "@/lib/avatar";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -238,16 +238,12 @@ export function SidebarNav({
                   group-hover:border-primary/50
                 "
               >
-                <AvatarImage
-                  src={
-                    profile.avatar_url ||
-                    "/placeholder.svg"
-                  }
-                  alt={
-                    profile.full_name ||
-                    "User"
-                  }
-                />
+              <AvatarImage
+                src={getAvatarUrl(
+                  profile.avatar_url
+                )}
+                alt={profile.full_name}
+              />
 
                 <AvatarFallback className="bg-primary/10 text-primary">
                   {initials(profile.full_name)}

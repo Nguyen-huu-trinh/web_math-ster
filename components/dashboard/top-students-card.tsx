@@ -65,7 +65,7 @@ export function TopStudentsCard({
         <div className="flex items-center justify-center gap-2">
           <Award className="size-5 text-amber-400" />
           <h3 className="text-lg font-black tracking-widest bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200 bg-clip-text text-transparent uppercase drop-shadow-[0_2px_4px_rgba(251,191,36,0.2)] sm:text-xl">
-            TOP 3 HỌC SINH XUẤT SẮT
+            TOP 3 HỌC SINH XUẤT SẮC
           </h3>
           <Award className="size-5 text-amber-400" />
         </div>

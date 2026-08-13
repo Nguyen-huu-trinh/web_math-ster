@@ -12,7 +12,7 @@ import {
 } from "@/hooks/use-announcement";
 import { TopStudentsCard } from '@/components/dashboard/top-students-card'
 import { useProcessAttendance } from "@/hooks/use-process-attendance";
-
+import { useCurrentAttendance } from "@/hooks/use-current-attendance";
 import { Input } from "@/components/ui/input";
 
 import { Textarea } from "@/components/ui/textarea";
@@ -108,6 +108,8 @@ export default function TeacherDashboard() {
 
     const processAttendance =
     useProcessAttendance();
+    const currentAttendance =
+    useCurrentAttendance();
 
     const [title, setTitle] = useState("");
 
@@ -203,6 +205,7 @@ async function handleProcessAttendance() {
         );
 
         setAttendanceCode("");
+        await currentAttendance.refetch();
 
     } catch (error) {
         console.error(
@@ -362,6 +365,14 @@ async function saveAnnouncement() {
         </Button>
 
     </div>
+    {currentAttendance.data?.code && (
+    <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-center">
+
+        <p className="mt-1 font-mono text-sm font-bold tracking-widest text-primary">
+            {currentAttendance.data.code}
+        </p>
+    </div>
+)}
 
 </div>
 

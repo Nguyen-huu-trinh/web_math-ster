@@ -427,7 +427,13 @@ if (
 
             </div>
             
-           <div className="col-span-1 rounded-xl border bg-card p-4 text-center shadow-sm lg:col-span-5">
+           <div
+    className={`col-span-5 rounded-xl border p-4 text-center shadow-sm transition-colors ${
+            points < 50
+                ? "border-red-300 bg-red-100"
+                : "bg-card"
+        }`}
+    >
             <p className="mt-1 text-xl font-semibold tracking-wide text-foreground">
                 Độ trâu
             </p>

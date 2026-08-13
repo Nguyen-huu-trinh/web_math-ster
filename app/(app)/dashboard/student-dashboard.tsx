@@ -5,7 +5,7 @@ import { useAuth } from '@/providers/auth-provider'
 import Image from "next/image";
 import { useStudentDashboard, useActiveStudentCount, } from '@/hooks/use-dashboard'
 import { useLeaderboard } from '@/hooks/use-leaderboard'
-
+import { TopStudentsCard } from '@/components/dashboard/top-students-card'
 import { useQueryClient } from "@tanstack/react-query";
 import { StatCard } from '@/components/dashboard/stat-card'
 import { CountdownCard } from '@/components/dashboard/countdown-card'
@@ -520,20 +520,25 @@ if (
                 ))}
 
             </div>
+            <TopStudentsCard
+                entries={leaderboard.data?.excellent ?? []}
+            />
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 min-[1800px]:grid-cols-4">
-
+            <LeaderboardCard
+                title="🏆 Top học giỏi"
+                description="Top học giỏi nhất"
+                entries={leaderboard.data?.excellent?.slice(3) ?? []}
+                startRank={4}
+            />
             <LeaderboardCard
                 title="😴 Top làm biếng"
                 description="Top lười biếng học nhất"
                 entries={leaderboard.data?.lowHomework ?? []}
+                
             />
 
-            <LeaderboardCard
-                title="🏆 Top học giỏi"
-                description="Top học giỏi nhất"
-                entries={leaderboard.data?.excellent ?? []}
-            />
+            
 
             <LeaderboardCard
                 title="💪 Top ĐỘ TRÂU"

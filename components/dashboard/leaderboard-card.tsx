@@ -15,6 +15,7 @@ interface LeaderboardCardProps {
   description: string;
   entries: LeaderboardStudent[] | RewardMoneyStudent[] | DoTrauStudent[];
  valueType?: "count" | "money" | "points";
+  startRank?: number;
 }
 
 export function LeaderboardCard({
@@ -22,6 +23,7 @@ export function LeaderboardCard({
   description,
   entries,
   valueType = "count",
+  startRank = 1,
 }: LeaderboardCardProps) {
   return (
     <Card className="h-full animate-fade-in-up shadow-sm">
@@ -46,7 +48,7 @@ export function LeaderboardCard({
 
       <CardContent className="space-y-3">
 
-        {entries.map((student, index) => (
+        {entries.map((student, index) => {const rank = startRank + index; return (
 
           <div
             key={student.student_id}
@@ -72,16 +74,16 @@ export function LeaderboardCard({
               className={cn(
                  "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white",
 
-                index === 0 && "bg-yellow-500",
+                rank === 1 && "bg-yellow-500",
 
-                index === 1 && "bg-slate-400",
+                rank === 2 && "bg-slate-400",
 
-                index === 2 && "bg-amber-600",
+                rank === 3 && "bg-amber-600",
 
-                index > 2 && "bg-primary"
+                rank > 3 && "bg-primary"
               )}
             >
-              {index + 1}
+              {rank}
             </div>
 
             {/* Student */}
@@ -149,7 +151,7 @@ export function LeaderboardCard({
 
           </div>
 
-        ))}
+        )})}
 
       </CardContent>
 

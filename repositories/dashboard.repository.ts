@@ -179,7 +179,7 @@ async excellentStudents() {
 
         .select("*")
 
-        .limit(5);
+        .limit(8);
 
     if (error) throw error;
 

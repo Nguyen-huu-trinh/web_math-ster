@@ -10,7 +10,7 @@ import {
     useAnnouncement,
     useUpdateAnnouncement,
 } from "@/hooks/use-announcement";
-
+import { TopStudentsCard } from '@/components/dashboard/top-students-card'
 import { useProcessAttendance } from "@/hooks/use-process-attendance";
 
 import { Input } from "@/components/ui/input";
@@ -444,20 +444,25 @@ async function saveAnnouncement() {
     ))}
 
 </div>
+            <TopStudentsCard
+                entries={leaderboard.data?.excellent ?? []}
+            />
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 min-[1800px]:grid-cols-4">
+            <LeaderboardCard
+                title="🏆 Top học giỏi"
+                description="Top học giỏi nhất"
+                entries={leaderboard.data?.excellent?.slice(3) ?? []}
+                startRank={4}
+            />
             <LeaderboardCard
                 title="😴 Top làm biếng"
                 description="Top lười biếng học nhất"
                 entries={leaderboard.data?.lowHomework ?? []}
+                
             />
 
-            <LeaderboardCard
-                title="🏆 Top học giỏi"
-                description="Top học giỏi nhất"
-                entries={leaderboard.data?.excellent ?? []}
-            />
+            
 
             <LeaderboardCard
                 title="💪 Top ĐỘ TRÂU"

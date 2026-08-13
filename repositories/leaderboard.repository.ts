@@ -83,7 +83,7 @@ export class LeaderboardRepository {
     const { data, error } = await supabase
       .from("v_excellent_students")
       .select("*")
-      .limit(5);
+      .limit(8);
 
     if (error) throw error;
 

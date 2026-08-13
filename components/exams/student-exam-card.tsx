@@ -30,16 +30,13 @@ export function StudentExamCard({
 
   const router = useRouter();
 
-  const startExam =
-    useStartExam();
-const [isStarting, setIsStarting] = useState(false);
+  const startExam = useStartExam();
+  const [isStarting, setIsStarting] = useState(false);
 
-const startLockRef =
-    useRef(false);
+  const startLockRef = useRef(false);
+
   function renderStatus() {
-
     switch (exam.status) {
-
       case "NOT_STARTED":
         return (
           <Badge className="bg-gray-100 text-gray-700 border">
@@ -60,244 +57,179 @@ const startLockRef =
             Chưa đạt
           </Badge>
         );
-
-      
-
     }
-
   }
 
   async function handleStartExam() {
-    // Chặn tuyệt đối việc gửi request lần 2
     if (startLockRef.current) {
-        return;
+      return;
     }
 
     startLockRef.current = true;
-
     setIsStarting(true);
 
     try {
-        const attempt =
-            await startExam.mutateAsync(
-                exam.id
-            );
+      const attempt = await startExam.mutateAsync(
+        exam.id
+      );
 
-       console.log("[START EXAM FRONTEND]", {
-          examId: exam.id,
-          attemptId: attempt.id,
+      console.log("[START EXAM FRONTEND]", {
+        examId: exam.id,
+        attemptId: attempt.id,
       });
 
-        router.push(
-            `/student-exams/${attempt.id}`
-        );
+      router.push(
+        `/student-exams/${attempt.id}`
+      );
 
     } catch (error: any) {
-        console.error(
-            "[STUDENT EXAM] START ERROR",
-            error
-        );
+      console.error(
+        "[STUDENT EXAM] START ERROR",
+        error
+      );
 
-        // Cho phép thử lại nếu request thất bại
-        startLockRef.current = false;
-        setIsStarting(false);
+      startLockRef.current = false;
+      setIsStarting(false);
 
-        alert(
-            error.message ??
-                "Không thể bắt đầu bài làm."
-        );
+      alert(
+        error.message ??
+          "Không thể bắt đầu bài làm."
+      );
     }
-}
+  }
 
-function renderButton() {
-    /*
-     * Học sinh đã dùng hết lượt
-     *
-     * Không được gọi startExam()
-     * vì startExam() sẽ tạo attempt mới.
-     *
-     * Chỉ mở attempt cuối cùng để xem lại.
-     */
+  function renderButton() {
     if (!exam.canStart) {
-        return (
-            <Button
-                className="w-32"
-                variant="outline"
-                disabled={!exam.lastAttemptId}
-                onClick={() => {
-                    if (!exam.lastAttemptId) {
-                        return;
-                    }
+      return (
+        <Button
+          className="w-full md:w-32"
+          variant="outline"
+          disabled={!exam.lastAttemptId}
+          onClick={() => {
+            if (!exam.lastAttemptId) {
+              return;
+            }
 
-                    router.push(
-                        `/student-exams/${exam.lastAttemptId}?review=true`
-                    );
-                }}
-            >
-                Xem lại
-            </Button>
-        );
+            router.push(
+              `/student-exams/${exam.lastAttemptId}?review=true`
+            );
+          }}
+        >
+          Xem lại
+        </Button>
+      );
     }
 
     return (
-        <Button
-            className="w-32"
-            disabled={
-                isStarting ||
-                startExam.isPending
-            }
-            onClick={handleStartExam}
-        >
-            {isStarting ||
-            startExam.isPending
-                ? "Đang mở..."
-                : exam.attempts === 0
-                ? "Làm bài"
-                : "Làm lại"}
-        </Button>
+      <Button
+        className="w-full md:w-32"
+        disabled={
+          isStarting ||
+          startExam.isPending
+        }
+        onClick={handleStartExam}
+      >
+        {isStarting || startExam.isPending
+          ? "Đang mở..."
+          : exam.attempts === 0
+          ? "Làm bài"
+          : "Làm lại"}
+      </Button>
     );
-}
+  }
 
   return (
-
     <Card className="transition-all duration-300 hover:border-primary/40 hover:shadow-md">
+      <CardContent className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between md:gap-6 md:p-5">
 
-      <CardContent className="flex items-center justify-between gap-8 p-5">
-
-        {/* LEFT */}
-
-        <div className="min-w-[260px]">
-
+        {/* LEFT: Tên bài thi & Thông tin khóa học */}
+        <div className="w-full md:min-w-[240px] md:max-w-[320px]">
           <div className="flex flex-wrap items-center gap-2">
-
-            <h3 className="text-lg font-semibold">
+            <h3 className="text-base font-semibold md:text-lg">
               {exam.title}
             </h3>
 
             <Badge variant="outline">
-
               {exam.category === "ATTENDANCE"
                 ? "Điểm danh"
                 : "Định kỳ"}
-
             </Badge>
 
             {renderStatus()}
-
           </div>
 
-          <p className="mt-3 text-sm text-muted-foreground">
+          <p className="mt-1 text-xs text-muted-foreground md:mt-2 md:text-sm">
             {exam.courseName}
           </p>
-
         </div>
 
-        {/* CENTER */}
-
-       <div className="flex flex-1 justify-end gap-4">
+        {/* CENTER: Các chỉ số (Thời gian, Lượt, Điểm, Ngày) */}
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:flex md:flex-1 md:justify-end md:gap-3">
 
           {/* Thời gian */}
-
-          <div className="w-24 rounded-md border border-blue-100 bg-blue-50 px-3 py-2">
-
+          <div className="rounded-md border border-blue-100 bg-blue-50 px-2.5 py-2 md:w-24 md:px-3">
             <div className="flex items-center gap-1 text-blue-700">
-
-              <Clock3 className="h-3.5 w-3.5" />
-
+              <Clock3 className="h-3.5 w-3.5 shrink-0" />
               <span className="text-[10px] uppercase">
                 Thời gian
               </span>
-
             </div>
-
             <p className="mt-1 text-xs font-semibold text-blue-900">
               {exam.duration} phút
             </p>
-
           </div>
 
           {/* Lượt */}
-
-          <div className="w-24 rounded-md border border-purple-100 bg-purple-50 px-3 py-2">
-
+          <div className="rounded-md border border-purple-100 bg-purple-50 px-2.5 py-2 md:w-24 md:px-3">
             <div className="flex items-center gap-1 text-purple-700">
-
-              <GraduationCap className="h-3.5 w-3.5" />
-
+              <GraduationCap className="h-3.5 w-3.5 shrink-0" />
               <span className="text-[10px] uppercase">
                 Lượt
               </span>
-
             </div>
-
             <p className="mt-1 text-xs font-semibold text-purple-900">
               {exam.attempts}/{exam.maxAttempts}
             </p>
-
           </div>
 
           {/* Điểm */}
-
-          <div className="w-24 rounded-md border border-yellow-100 bg-yellow-50 px-3 py-2">
-
+          <div className="rounded-md border border-yellow-100 bg-yellow-50 px-2.5 py-2 md:w-24 md:px-3">
             <div className="flex items-center gap-1 text-yellow-700">
-
-              <Trophy className="h-3.5 w-3.5" />
-
+              <Trophy className="h-3.5 w-3.5 shrink-0" />
               <span className="text-[10px] uppercase">
                 Điểm
               </span>
-
             </div>
-
             <p className="mt-1 text-xs font-semibold text-yellow-900">
               {exam.lastScore ?? "--"}
             </p>
-
           </div>
 
           {/* Gần nhất */}
-
-          <div className="w-28 rounded-md border border-green-100 bg-green-50 px-3 py-2">
-
+          <div className="rounded-md border border-green-100 bg-green-50 px-2.5 py-2 md:w-28 md:px-3">
             <div className="flex items-center gap-1 text-green-700">
-
-              <Calendar className="h-3.5 w-3.5" />
-
+              <Calendar className="h-3.5 w-3.5 shrink-0" />
               <span className="text-[10px] uppercase">
                 Gần nhất
               </span>
-
             </div>
-
             <p className="mt-1 whitespace-nowrap text-[11px] font-semibold text-green-900">
-
               {exam.lastAttemptAt
                 ? new Date(
                     exam.lastAttemptAt
-                  ).toLocaleDateString(
-                    "vi-VN"
-                  )
+                  ).toLocaleDateString("vi-VN")
                 : "Chưa làm"}
-
             </p>
-
           </div>
 
         </div>
 
-        {/* RIGHT */}
-
-        <div className="flex items-center">
-
+        {/* RIGHT: Nút bấm */}
+        <div className="mt-2 flex w-full items-center md:mt-0 md:w-auto">
           {renderButton()}
-
         </div>
 
       </CardContent>
-
     </Card>
-
   );
-
 }

@@ -1,5 +1,5 @@
 "use client";
-
+import { toast } from "sonner";
 import Link from "next/link";
 import { ExamStatusBadge } from "./exam-status-badge";
 import { Button } from "@/components/ui/button";
@@ -87,7 +87,7 @@ const copyExamLink = async (examId: string) => {
 
   await navigator.clipboard.writeText(url);
 
-  alert("Đã sao chép liên kết đề");
+ toast.success("Đã sao chép liên kết đề");
 };
 
 export function ExamTable({

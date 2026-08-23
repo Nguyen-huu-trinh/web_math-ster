@@ -1,6 +1,7 @@
 "use client";
 import {
     Trash2,
+    Eye,
 } from "lucide-react";
 import {
     MoreHorizontal,
@@ -259,7 +260,7 @@ const rows: ExamTableRow[] =
                                     Thời điểm nộp bài
                                 </th>
 
-                                <th className="w-12 px-3 py-3 text-center font-medium">
+                                <th className="w-24 px-3 py-3 text-center font-medium">
                                     Action
                                 </th>
 
@@ -408,31 +409,57 @@ const rows: ExamTableRow[] =
                                                     : "--"}
                                             </td>
 
-{/* ACTION */}
-<td className="px-3 py-4 text-center">
-    {attempt ? (
-        <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600"
-            disabled={deleteAttempt.isPending}
-            onClick={() =>
-                handleDelete(attempt.id)
-            }
-        >
-            <Trash2 className="h-4 w-4" />
+                                            <td className="px-3 py-4 text-center">
+                                                {attempt ? (
+                                                    <div className="flex items-center justify-center gap-1">
 
-            <span className="sr-only">
-                Xóa lượt làm
-            </span>
-        </Button>
-    ) : (
-        <span className="text-muted-foreground">
-            —
-        </span>
-    )}
-</td>
+                                                        {/* XEM BÀI LÀM */}
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
+                                                            onClick={() => {
+                                                            const returnUrl =
+                                                                window.location.pathname +
+                                                                window.location.search;
+
+                                                            window.location.href =
+                                                                `/student-exams/${attempt.id}?review=true&returnUrl=${encodeURIComponent(returnUrl)}`;
+                                                        }}
+                                                        >
+                                                            <Eye className="h-4 w-4" />
+
+                                                            <span className="sr-only">
+                                                                Xem bài làm
+                                                            </span>
+                                                        </Button>
+
+                                                        {/* XÓA */}
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600"
+                                                            disabled={deleteAttempt.isPending}
+                                                            onClick={() =>
+                                                                handleDelete(attempt.id)
+                                                            }
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+
+                                                            <span className="sr-only">
+                                                                Xóa lượt làm
+                                                            </span>
+                                                        </Button>
+
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-muted-foreground">
+                                                        —
+                                                    </span>
+                                                )}
+                                            </td>
 
                                         </tr>
                                     );

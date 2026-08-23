@@ -13,6 +13,7 @@ interface Props {
 
   searchParams: Promise<{
     review?: string;
+    returnUrl?: string;
   }>;
 }
 
@@ -21,7 +22,10 @@ export default async function StudentExamPage({
   searchParams,
 }: Props) {
   const { id } = await params;
-  const { review } = await searchParams;
+ const {
+    review,
+    returnUrl,
+} = await searchParams;
 
   const isReview =
     review === "true";
@@ -47,6 +51,7 @@ export default async function StudentExamPage({
         session={session}
         review={true}
         viewerRole={profile.role}
+        returnUrl={returnUrl}
       />
     );
   }

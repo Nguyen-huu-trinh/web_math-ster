@@ -51,6 +51,7 @@ interface Props {
   savedAnswers: ExamAnswers;
   review?: boolean;
   viewerRole?: "STUDENT" | "TEACHER" | "ADMIN";
+  returnUrl?: string;
 }
 
 const MC = ["A", "B", "C", "D"];
@@ -64,6 +65,7 @@ export default function AnswerSheet({
   savedAnswers,
   review = false,
   viewerRole = "STUDENT",
+  returnUrl,
 }: Props)  
 
 {
@@ -1043,19 +1045,20 @@ const correct =
                 <div className="grid grid-cols-2 gap-3">
 
                   <Button
-                    onClick={() => {
-                      if (viewerRole === "TEACHER") {
-                        router.push(
-                          `/exams/${exam.id}/answers`
-                        );
+                  onClick={() => {
+                      if (returnUrl) {
+                          router.push(returnUrl);
+                      } else if (viewerRole === "TEACHER") {
+                          router.push(
+                              `/exams/${exam.id}/answers`
+                          );
                       } else {
-                        router.push("/student-exams");
+                          router.push("/student-exams");
                       }
-                    }}
-                  >
-                    Quay về danh sách
-                  </Button>
-
+                  }}
+              >
+                  Quay về danh sách
+              </Button>
                   {(exam.max_attempts ?? 1) >
                     attempt.attempt_number && (
 

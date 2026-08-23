@@ -88,6 +88,17 @@ export async function GET(
                 "exam_id",
                 content.exam_id
             )
+            .not(
+                "submitted_at",
+                "is",
+                null
+            )
+            .order(
+                "submitted_at",
+                {
+                    ascending: false,
+                }
+            )
             .limit(1)
             .maybeSingle();
 
@@ -103,6 +114,9 @@ export async function GET(
         if (attempt) {
             return NextResponse.json({
                 allowed: true,
+                hasAttempt: true,
+                attemptId: attempt.id,
+                submittedAt: attempt.submitted_at,
             });
         }
 
@@ -113,8 +127,10 @@ export async function GET(
          */
         return NextResponse.json({
             allowed: false,
+            hasAttempt: false,
+            attemptId: null,
             message:
-                "Cần làm đề kiểm tra trước khi xem đáp án.",
+                "Bạn chưa làm bài kiểm tra này.",
         });
 
     } catch (error) {

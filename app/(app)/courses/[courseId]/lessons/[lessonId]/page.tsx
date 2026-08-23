@@ -308,7 +308,11 @@ async function checkResourceAccess(
      * Giáo viên được xem trực tiếp.
      */
     if (role !== "STUDENT") {
-        return true;
+        return {
+            allowed: true,
+            hasAttempt: false,
+            attemptId: null,
+        };
     }
 
     /*
@@ -316,7 +320,11 @@ async function checkResourceAccess(
      * → resource bình thường.
      */
     if (!resource.exam_id) {
-        return true;
+        return {
+            allowed: true,
+            hasAttempt: false,
+            attemptId: null,
+        };
     }
 
     try {
@@ -343,31 +351,45 @@ async function checkResourceAccess(
 
         if (!response.ok) {
             toast.error(
-                "Bài tập điểm danh chưa hoàn thành",
+                "Không thể kiểm tra quyền truy cập",
                 {
                     description:
                         result.message ??
-                        "Hãy làm bài tập điểm danh ngay.",
+                        "Vui lòng thử lại.",
                 }
             );
 
-            return false;
+            return {
+                allowed: false,
+                hasAttempt: false,
+                attemptId: null,
+            };
         }
 
         if (!result.allowed) {
             toast.warning(
-                "Chưa thể xem đáp án",
+                "Chưa thể mở bài kiểm tra",
                 {
                     description:
                         result.message ??
-                        "Cần làm đề kiểm tra trước khi xem đáp án.",
+                        "Bạn chưa thể mở bài kiểm tra này.",
                 }
             );
 
-            return false;
+            return {
+                allowed: false,
+                hasAttempt: false,
+                attemptId: null,
+            };
         }
 
-        return true;
+        return {
+            allowed: true,
+            hasAttempt:
+                result.hasAttempt ?? false,
+            attemptId:
+                result.attemptId ?? null,
+        };
 
     } catch (error) {
         console.error(
@@ -376,21 +398,27 @@ async function checkResourceAccess(
         );
 
         toast.error(
-            "BTDD chưa hoàn thành",
+            "Có lỗi xảy ra",
             {
                 description:
-                    "Hãy làm bài tập trước khi xem đáp án",
+                    "Không thể kiểm tra quyền truy cập.",
             }
         );
 
-        return false;
+        return {
+            allowed: false,
+            hasAttempt: false,
+            attemptId: null,
+        };
     }
 }
 
-
 async function openResource(resource: any) {
+
     /*
-     * Giáo viên được mở trực tiếp.
+     * =====================================================
+     * 1. Giáo viên
+     * =====================================================
      */
     if (role !== "STUDENT") {
         window.open(
@@ -403,7 +431,9 @@ async function openResource(resource: any) {
     }
 
     /*
-     * Resource không yêu cầu làm bài kiểm tra.
+     * =====================================================
+     * 2. Resource bình thường
+     * =====================================================
      */
     if (!resource.exam_id) {
         window.open(
@@ -418,64 +448,82 @@ async function openResource(resource: any) {
     }
 
     /*
-     * Resource có liên kết với exam.
-     * Kiểm tra học sinh đã làm bài hay chưa.
+     * =====================================================
+     * 3. Resource có liên kết exam
+     * =====================================================
      */
     try {
-        const response = await fetch(
-            `/api/student/lesson-contents/${resource.id}/access`,
-            {
-                method: "GET",
-                credentials: "include",
-            }
-        );
 
-        const result = await response.json();
-
-        console.log(
-            "[RESOURCE ACCESS]",
-            {
-                resourceId: resource.id,
-                resourceTitle: resource.title,
-                examId: resource.exam_id,
-                result,
-            }
-        );
-
-        if (!response.ok) {
-            toast.error(
-                "Không thể kiểm tra quyền truy cập",
-                {
-                    description:
-                        result.message ??
-                        "Vui lòng thử lại.",
-                }
-            );
-
-            return;
-        }
+        const result =
+            await checkResourceAccess(resource);
 
         /*
-         * Chưa làm bài.
+         * Không được phép
          */
         if (!result.allowed) {
-            toast.warning(
-                "Chưa thể xem đáp án",
+            return;
+        }
+
+        /*
+         * =================================================
+         * 4. Đã có bài làm
+         *
+         * → Mở trang xem lại
+         * =================================================
+         */
+        if (
+            result.hasAttempt &&
+            result.attemptId
+        ) {
+
+            console.log(
+                "[OPEN EXAM REVIEW]",
                 {
-                    description:
-                        result.message ??
-                        "Cần làm đề kiểm tra trước khi xem đáp án.",
+                    examId: resource.exam_id,
+                    attemptId:
+                        result.attemptId,
                 }
             );
+
+            window.open(
+                `/student-exams/${result.attemptId}?review=true`,
+                "_blank",
+                "noopener,noreferrer"
+            );
+
+            await completeLesson();
 
             return;
         }
 
         /*
-         * Đã làm bài.
+         * =================================================
+         * 5. Chưa có bài làm
+         *
+         * → Mở trang bắt đầu bài kiểm tra
+         * =================================================
          */
+        const url =
+            resource.file_links?.url;
+
+        if (!url) {
+            toast.error(
+                "Không tìm thấy liên kết bài kiểm tra"
+            );
+
+            return;
+        }
+
+        console.log(
+            "[OPEN EXAM]",
+            {
+                examId: resource.exam_id,
+                url,
+            }
+        );
+
         window.open(
-            resource.file_links?.url,
+            url,
             "_blank",
             "noopener,noreferrer"
         );
@@ -483,8 +531,9 @@ async function openResource(resource: any) {
         await completeLesson();
 
     } catch (error) {
+
         console.error(
-            "[RESOURCE ACCESS ERROR]",
+            "[OPEN RESOURCE ERROR]",
             error
         );
 
@@ -492,7 +541,7 @@ async function openResource(resource: any) {
             "Có lỗi xảy ra",
             {
                 description:
-                    "Không thể kiểm tra quyền xem tài liệu.",
+                    "Không thể mở tài liệu.",
             }
         );
     }
@@ -687,65 +736,28 @@ async function openResource(resource: any) {
                 }
             );
 
-            const allowed =
-                await checkResourceAccess(
-                    resource
-                );
+              const result =
+                  await checkResourceAccess(
+                      resource
+                  );
 
-            if (!allowed) {
-                return;
-            }
+              if (!result.allowed) {
+                  return;
+              }
 
-            setCurrentVideo({
-                ...resource,
-            });
+              setCurrentVideo({
+                  ...resource,
+              });
         }}
     >
         <Play className="h-4 w-4" />
     </Button>
 ) : (
-    <Button
+<Button
     variant="ghost"
-    onClick={async () => {
-        console.log(
-            "[RESOURCE CLICK]",
-            {
-                id: resource.id,
-                title: resource.title,
-                exam_id: resource.exam_id,
-            }
-        );
-
-        const allowed =
-            await checkResourceAccess(
-                resource
-            );
-
-        if (!allowed) {
-            return;
-        }
-
-        const url =
-            resource.file_links?.url;
-
-        if (!url) {
-            toast.error(
-                "Không tìm thấy tài liệu"
-            );
-
-            return;
-        }
-
-        window.open(
-            url,
-            "_blank",
-            "noopener,noreferrer"
-        );
-
-        if (role === "STUDENT") {
-            await completeLesson();
-        }
-    }}
+    onClick={() =>
+        openResource(resource)
+    }
 >
     Mở
 </Button>

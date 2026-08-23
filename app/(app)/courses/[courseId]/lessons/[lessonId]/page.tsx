@@ -434,13 +434,27 @@ async function getStudentExamStatus(
     }
 
     const exams =
-      (await response.json()) as StudentExamItem[];
+  (await response.json()) as StudentExamItem[];
 
-    return (
-      exams.find(
-        (exam) => exam.id === examId
-      ) ?? null
-    );
+const exam = exams.find(
+  (item) => item.id === examId
+);
+
+console.log(
+  "[LESSON EXAM STATUS]",
+  {
+    examId,
+    found: !!exam,
+    attempts: exam?.attempts,
+    maxAttempts: exam?.maxAttempts,
+    canStart: exam?.canStart,
+    canRetake: exam?.canRetake,
+    lastAttemptId: exam?.lastAttemptId,
+    status: exam?.status,
+  }
+);
+
+return exam ?? null;
   } catch (error) {
     console.error(
       "[GET STUDENT EXAM STATUS ERROR]",

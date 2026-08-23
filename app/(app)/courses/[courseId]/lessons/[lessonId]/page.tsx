@@ -6,6 +6,7 @@ import { LessonLayout } from "@/components/layout/lesson-layout";
 import { use, useEffect, useState } from "react";
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import type { StudentExamItem } from "@/services/student-exam-client.service";
 import {
   ChevronLeft,
   FileText,
@@ -413,138 +414,237 @@ async function checkResourceAccess(
     }
 }
 
+async function getStudentExamStatus(
+  examId: string
+): Promise<StudentExamItem | null> {
+  try {
+ const response = await fetch(
+  "/api/students/my-exams",
+  {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  }
+);
+
+    if (!response.ok) {
+      throw new Error(
+        "Không thể lấy danh sách bài kiểm tra."
+      );
+    }
+
+    const exams =
+      (await response.json()) as StudentExamItem[];
+
+    return (
+      exams.find(
+        (exam) => exam.id === examId
+      ) ?? null
+    );
+  } catch (error) {
+    console.error(
+      "[GET STUDENT EXAM STATUS ERROR]",
+      error
+    );
+
+    toast.error(
+      "Không thể kiểm tra trạng thái bài kiểm tra."
+    );
+
+    return null;
+  }
+}
+
+
 async function openResource(resource: any) {
+  /*
+   * =====================================================
+   * 1. Giáo viên
+   * =====================================================
+   */
+  if (role !== "STUDENT") {
+    const url =
+      resource.file_links?.url;
+
+    if (!url) {
+      toast.error(
+        "Không tìm thấy liên kết tài liệu."
+      );
+
+      return;
+    }
+
+    window.open(
+      url,
+      "_blank",
+      "noopener,noreferrer"
+    );
+
+    return;
+  }
+
+  /*
+   * =====================================================
+   * 2. Resource bình thường
+   * =====================================================
+   */
+  if (!resource.exam_id) {
+    const url =
+      resource.file_links?.url;
+
+    if (!url) {
+      toast.error(
+        "Không tìm thấy liên kết tài liệu."
+      );
+
+      return;
+    }
+
+    window.open(
+      url,
+      "_blank",
+      "noopener,noreferrer"
+    );
+
+    await completeLesson();
+
+    return;
+  }
+
+  /*
+   * =====================================================
+   * 3. RESOURCE LÀ EXAM
+   *
+   * Không dùng file_links.url để quyết định
+   * START / REVIEW nữa.
+   *
+   * Sử dụng cùng logic với StudentExamCard:
+   *
+   * canStart
+   * lastAttemptId
+   * =====================================================
+   */
+  try {
+    const exam =
+      await getStudentExamStatus(
+        resource.exam_id
+      );
+
+    if (!exam) {
+      toast.error(
+        "Không tìm thấy bài kiểm tra."
+      );
+
+      return;
+    }
+
+    console.log(
+      "[OPEN LESSON EXAM]",
+      {
+        examId: exam.id,
+        title: exam.title,
+        attempts: exam.attempts,
+        maxAttempts: exam.maxAttempts,
+        canStart: exam.canStart,
+        lastAttemptId:
+          exam.lastAttemptId,
+      }
+    );
 
     /*
-     * =====================================================
-     * 1. Giáo viên
-     * =====================================================
+     * =================================================
+     * 4. CÒN LƯỢT
+     *
+     * → Đi vào START
+     * =================================================
      */
-    if (role !== "STUDENT") {
-        window.open(
-            resource.file_links?.url,
-            "_blank",
-            "noopener,noreferrer"
-        );
+    if (exam.canStart) {
+      const url =
+        `/student-exams/start/${exam.id}`;
 
-        return;
+      console.log(
+        "[OPEN EXAM START]",
+        {
+          examId: exam.id,
+          url,
+        }
+      );
+
+      window.open(
+        url,
+        "_blank",
+        "noopener,noreferrer"
+      );
+
+      await completeLesson();
+
+      return;
     }
 
     /*
-     * =====================================================
-     * 2. Resource bình thường
-     * =====================================================
+     * =================================================
+     * 5. HẾT LƯỢT
+     *
+     * → Đi thẳng tới REVIEW
+     * =================================================
      */
-    if (!resource.exam_id) {
-        window.open(
-            resource.file_links?.url,
-            "_blank",
-            "noopener,noreferrer"
-        );
+    if (
+      !exam.canStart &&
+      exam.lastAttemptId
+    ) {
+      const url =
+        `/student-exams/${exam.lastAttemptId}?review=true`;
 
-        await completeLesson();
+      console.log(
+        "[OPEN EXAM REVIEW]",
+        {
+          examId: exam.id,
+          attemptId:
+            exam.lastAttemptId,
+          url,
+        }
+      );
 
-        return;
+      window.open(
+        url,
+        "_blank",
+        "noopener,noreferrer"
+      );
+
+      await completeLesson();
+
+      return;
     }
 
     /*
-     * =====================================================
-     * 3. Resource có liên kết exam
-     * =====================================================
+     * =================================================
+     * 6. HẾT LƯỢT NHƯNG KHÔNG CÓ ATTEMPT
+     *
+     * Trường hợp dữ liệu bất thường.
+     * Không được tự ý mở START.
+     * =================================================
      */
-    try {
+    toast.warning(
+      "Bạn đã hết lượt làm bài.",
+      {
+        description:
+          "Không tìm thấy bài làm để xem lại.",
+      }
+    );
+  } catch (error) {
+    console.error(
+      "[OPEN RESOURCE ERROR]",
+      error
+    );
 
-        const result =
-            await checkResourceAccess(resource);
-
-        /*
-         * Không được phép
-         */
-        if (!result.allowed) {
-            return;
-        }
-
-        /*
-         * =================================================
-         * 4. Đã có bài làm
-         *
-         * → Mở trang xem lại
-         * =================================================
-         */
-        if (
-            result.hasAttempt &&
-            result.attemptId
-        ) {
-
-            console.log(
-                "[OPEN EXAM REVIEW]",
-                {
-                    examId: resource.exam_id,
-                    attemptId:
-                        result.attemptId,
-                }
-            );
-
-            window.open(
-                `/student-exams/${result.attemptId}?review=true`,
-                "_blank",
-                "noopener,noreferrer"
-            );
-
-            await completeLesson();
-
-            return;
-        }
-
-        /*
-         * =================================================
-         * 5. Chưa có bài làm
-         *
-         * → Mở trang bắt đầu bài kiểm tra
-         * =================================================
-         */
-        const url =
-            resource.file_links?.url;
-
-        if (!url) {
-            toast.error(
-                "Không tìm thấy liên kết bài kiểm tra"
-            );
-
-            return;
-        }
-
-        console.log(
-            "[OPEN EXAM]",
-            {
-                examId: resource.exam_id,
-                url,
-            }
-        );
-
-        window.open(
-            url,
-            "_blank",
-            "noopener,noreferrer"
-        );
-
-        await completeLesson();
-
-    } catch (error) {
-
-        console.error(
-            "[OPEN RESOURCE ERROR]",
-            error
-        );
-
-        toast.error(
-            "Có lỗi xảy ra",
-            {
-                description:
-                    "Không thể mở tài liệu.",
-            }
-        );
-    }
+    toast.error(
+      "Có lỗi xảy ra",
+      {
+        description:
+          "Không thể mở bài kiểm tra.",
+      }
+    );
+  }
 }
   return (
     <div className="flex flex-col gap-6">

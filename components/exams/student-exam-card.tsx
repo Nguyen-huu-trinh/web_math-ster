@@ -1,5 +1,5 @@
 "use client";
-
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useState, useRef } from "react";
 import {
@@ -91,7 +91,7 @@ export function StudentExamCard({
       startLockRef.current = false;
       setIsStarting(false);
 
-      alert(
+      toast.error(
         error.message ??
           "Không thể bắt đầu bài làm."
       );

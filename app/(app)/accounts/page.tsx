@@ -1,5 +1,5 @@
 "use client";
-
+import { toast } from "sonner";
 import { useState } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -76,7 +76,7 @@ export default function AccountsPage() {
       */
       const result = await createStudentMutation.mutateAsync(payload);
 
-      alert(
+      toast.success(
         `Tạo thành công!\n\nEmail: ${result.email}\nPassword: ${result.password}`
       );
     } catch (err: any) {
@@ -111,7 +111,7 @@ export default function AccountsPage() {
   */
   const result = await importStudentsMutation.mutateAsync({ file, courseIds });
 
-  alert(
+ toast.success(
     `Import thành công!
 
 Tạo mới: ${result.success}

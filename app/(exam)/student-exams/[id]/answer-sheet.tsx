@@ -8,6 +8,7 @@ import {
  GraduationCap,
   Send,
 } from "lucide-react";
+import { toast } from "sonner";
 import ExamHeader from "./exam-header";
 import { cn } from "@/lib/utils";
 import {
@@ -476,7 +477,7 @@ function chooseShortAnswer(
       err
     );
 
-    alert(
+    toast.error(
       err instanceof Error
         ? err.message
         : "Nộp bài thất bại."

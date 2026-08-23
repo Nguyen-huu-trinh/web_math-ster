@@ -1,5 +1,5 @@
 "use client";
-
+import { toast } from "sonner";
 import { useState } from "react";
 
 import {
@@ -76,17 +76,17 @@ export function CreateStudentDialog({
 
   async function handleSubmit() {
     if (!studentCode.trim()) {
-      alert("Nhập mã học sinh");
+    toast.error("Nhập mã học sinh");
       return;
     }
 
     if (!fullName.trim()) {
-      alert("Nhập họ tên");
+     toast.error("Nhập họ tên");
       return;
     }
 
     if (selectedCourses.length === 0) {
-      alert("Chọn ít nhất một khóa học");
+     toast.error("Chọn ít nhất một khóa học");
       return;
     }
 
@@ -107,9 +107,9 @@ export function CreateStudentDialog({
 
       setOpen(false);
 
-      alert("Tạo học sinh thành công");
+    toast.success("Tạo học sinh thành công");
     } catch (e: any) {
-      alert(e.message);
+    toast.success(e.message);
     } finally {
       setLoading(false);
     }

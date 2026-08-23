@@ -1,5 +1,5 @@
 "use client";
-
+import { toast } from "sonner";
 import { useState } from "react";
 
 import {
@@ -62,12 +62,12 @@ export default function ImportStudentsDialog({
 
   async function handleImport() {
     if (!file) {
-      alert("Chọn file Excel");
+      toast.error("Chọn file Excel");
       return;
     }
 
     if (courseIds.length === 0) {
-      alert("Chọn ít nhất 1 khóa học");
+      toast.error("Chọn ít nhất 1 khóa học");
       return;
     }
 
@@ -76,7 +76,7 @@ export default function ImportStudentsDialog({
 
       await onImport(file, courseIds);
 
-      alert("Import thành công");
+      toast.success("Import thành công");
 
       onOpenChange(false);
 

@@ -32,7 +32,7 @@ export function ThumbnailUpload({
   ];
 
   if (!allowTypes.includes(file.type)) {
-    alert("Only PNG, JPG, JPEG and WEBP are allowed.");
+    toast.error("Only PNG, JPG, JPEG and WEBP are allowed.");
     return;
   }
 
@@ -40,7 +40,7 @@ export function ThumbnailUpload({
     5 * 1024 * 1024;
 
   if (file.size > maxSize) {
-    alert("Image must be smaller than 5MB.");
+    toast.error("Image must be smaller than 5MB.");
     return;
   }
 
@@ -61,7 +61,7 @@ export function ThumbnailUpload({
 
     console.error(error);
 
-    alert("Upload failed");
+   toast.error("Upload failed");
 
   } finally {
 

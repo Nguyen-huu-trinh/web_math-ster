@@ -6,7 +6,6 @@ import { LessonLayout } from "@/components/layout/lesson-layout";
 import { use, useEffect, useState } from "react";
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import type { StudentExamItem } from "@/services/student-exam-client.service";
 import {
   ChevronLeft,
   FileText,
@@ -309,11 +308,7 @@ async function checkResourceAccess(
      * Giáo viên được xem trực tiếp.
      */
     if (role !== "STUDENT") {
-        return {
-            allowed: true,
-            hasAttempt: false,
-            attemptId: null,
-        };
+        return true;
     }
 
     /*
@@ -321,11 +316,7 @@ async function checkResourceAccess(
      * → resource bình thường.
      */
     if (!resource.exam_id) {
-        return {
-            allowed: true,
-            hasAttempt: false,
-            attemptId: null,
-        };
+        return true;
     }
 
     try {
@@ -352,6 +343,107 @@ async function checkResourceAccess(
 
         if (!response.ok) {
             toast.error(
+                "Bài tập điểm danh chưa hoàn thành",
+                {
+                    description:
+                        result.message ??
+                        "Hãy làm bài tập điểm danh ngay.",
+                }
+            );
+
+            return false;
+        }
+
+        if (!result.allowed) {
+            toast.warning(
+                "Chưa thể xem đáp án",
+                {
+                    description:
+                        result.message ??
+                        "Cần làm đề kiểm tra trước khi xem đáp án.",
+                }
+            );
+
+            return false;
+        }
+
+        return true;
+
+    } catch (error) {
+        console.error(
+            "[RESOURCE ACCESS ERROR]",
+            error
+        );
+
+        toast.error(
+            "BTDD chưa hoàn thành",
+            {
+                description:
+                    "Hãy làm bài tập trước khi xem đáp án",
+            }
+        );
+
+        return false;
+    }
+}
+
+
+async function openResource(resource: any) {
+    /*
+     * Giáo viên được mở trực tiếp.
+     */
+    if (role !== "STUDENT") {
+        window.open(
+            resource.file_links?.url,
+            "_blank",
+            "noopener,noreferrer"
+        );
+
+        return;
+    }
+
+    /*
+     * Resource không yêu cầu làm bài kiểm tra.
+     */
+    if (!resource.exam_id) {
+        window.open(
+            resource.file_links?.url,
+            "_blank",
+            "noopener,noreferrer"
+        );
+
+        await completeLesson();
+
+        return;
+    }
+
+    /*
+     * Resource có liên kết với exam.
+     * Kiểm tra học sinh đã làm bài hay chưa.
+     */
+    try {
+        const response = await fetch(
+            `/api/students/lesson-contents/${resource.id}/access`,
+            {
+                method: "GET",
+                credentials: "include",
+            }
+        );
+
+        const result = await response.json();
+
+        console.log(
+            "[RESOURCE ACCESS]",
+            {
+                resourceId: resource.id,
+                resourceTitle: resource.title,
+                examId: resource.exam_id,
+                result,
+            }
+        );
+
+        if (!response.ok) {
+            toast.error(
                 "Không thể kiểm tra quyền truy cập",
                 {
                     description:
@@ -360,37 +452,36 @@ async function checkResourceAccess(
                 }
             );
 
-            return {
-                allowed: false,
-                hasAttempt: false,
-                attemptId: null,
-            };
+            return;
         }
 
+        /*
+         * Chưa làm bài.
+         */
         if (!result.allowed) {
             toast.warning(
-                "Chưa thể mở bài kiểm tra",
+                "Chưa thể xem đáp án",
                 {
                     description:
                         result.message ??
-                        "Bạn chưa thể mở bài kiểm tra này.",
+                        "Cần làm đề kiểm tra trước khi xem đáp án.",
                 }
             );
 
-            return {
-                allowed: false,
-                hasAttempt: false,
-                attemptId: null,
-            };
+            return;
         }
 
-        return {
-            allowed: true,
-            hasAttempt:
-                result.hasAttempt ?? false,
-            attemptId:
-                result.attemptId ?? null,
-        };
+        /*
+         * Đã làm bài.
+         */
+       window.open(
+    `/student-exams/open/${resource.exam_id}`,
+    "_blank",
+    "noopener,noreferrer"
+);
+        
+
+        await completeLesson();
 
     } catch (error) {
         console.error(
@@ -402,263 +493,10 @@ async function checkResourceAccess(
             "Có lỗi xảy ra",
             {
                 description:
-                    "Không thể kiểm tra quyền truy cập.",
+                    "Không thể kiểm tra quyền xem tài liệu.",
             }
         );
-
-        return {
-            allowed: false,
-            hasAttempt: false,
-            attemptId: null,
-        };
     }
-}
-
-async function getStudentExamStatus(
-  examId: string
-): Promise<StudentExamItem | null> {
-  try {
- const response = await fetch(
-  "/api/students/my-exams",
-  {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-  }
-);
-
-    if (!response.ok) {
-      throw new Error(
-        "Không thể lấy danh sách bài kiểm tra."
-      );
-    }
-
-    const exams =
-  (await response.json()) as StudentExamItem[];
-
-const exam = exams.find(
-  (item) => item.id === examId
-);
-
-console.log(
-  "[LESSON EXAM STATUS]",
-  {
-    examId,
-    found: !!exam,
-    attempts: exam?.attempts,
-    maxAttempts: exam?.maxAttempts,
-    canStart: exam?.canStart,
-    canRetake: exam?.canRetake,
-    lastAttemptId: exam?.lastAttemptId,
-    status: exam?.status,
-  }
-);
-
-return exam ?? null;
-  } catch (error) {
-    console.error(
-      "[GET STUDENT EXAM STATUS ERROR]",
-      error
-    );
-
-    toast.error(
-      "Không thể kiểm tra trạng thái bài kiểm tra."
-    );
-
-    return null;
-  }
-}
-
-
-async function openResource(resource: any) {
-  /*
-   * =====================================================
-   * 1. Giáo viên
-   * =====================================================
-   */
-  if (role !== "STUDENT") {
-    const url =
-      resource.file_links?.url;
-
-    if (!url) {
-      toast.error(
-        "Không tìm thấy liên kết tài liệu."
-      );
-
-      return;
-    }
-
-    window.open(
-      url,
-      "_blank",
-      "noopener,noreferrer"
-    );
-
-    return;
-  }
-
-  /*
-   * =====================================================
-   * 2. Resource bình thường
-   * =====================================================
-   */
-  if (!resource.exam_id) {
-    const url =
-      resource.file_links?.url;
-
-    if (!url) {
-      toast.error(
-        "Không tìm thấy liên kết tài liệu."
-      );
-
-      return;
-    }
-
-    window.open(
-      url,
-      "_blank",
-      "noopener,noreferrer"
-    );
-
-    await completeLesson();
-
-    return;
-  }
-
-  /*
-   * =====================================================
-   * 3. RESOURCE LÀ EXAM
-   *
-   * Không dùng file_links.url để quyết định
-   * START / REVIEW nữa.
-   *
-   * Sử dụng cùng logic với StudentExamCard:
-   *
-   * canStart
-   * lastAttemptId
-   * =====================================================
-   */
-  try {
-    const exam =
-      await getStudentExamStatus(
-        resource.exam_id
-      );
-
-    if (!exam) {
-      toast.error(
-        "Không tìm thấy bài kiểm tra."
-      );
-
-      return;
-    }
-
-    console.log(
-      "[OPEN LESSON EXAM]",
-      {
-        examId: exam.id,
-        title: exam.title,
-        attempts: exam.attempts,
-        maxAttempts: exam.maxAttempts,
-        canStart: exam.canStart,
-        lastAttemptId:
-          exam.lastAttemptId,
-      }
-    );
-
-    /*
-     * =================================================
-     * 4. CÒN LƯỢT
-     *
-     * → Đi vào START
-     * =================================================
-     */
-    if (exam.canStart) {
-      const url =
-        `/student-exams/start/${exam.id}`;
-
-      console.log(
-        "[OPEN EXAM START]",
-        {
-          examId: exam.id,
-          url,
-        }
-      );
-
-      window.open(
-        url,
-        "_blank",
-        "noopener,noreferrer"
-      );
-
-      await completeLesson();
-
-      return;
-    }
-
-    /*
-     * =================================================
-     * 5. HẾT LƯỢT
-     *
-     * → Đi thẳng tới REVIEW
-     * =================================================
-     */
-    if (
-      !exam.canStart &&
-      exam.lastAttemptId
-    ) {
-      const url =
-        `/student-exams/${exam.lastAttemptId}?review=true`;
-
-      console.log(
-        "[OPEN EXAM REVIEW]",
-        {
-          examId: exam.id,
-          attemptId:
-            exam.lastAttemptId,
-          url,
-        }
-      );
-
-      window.open(
-        url,
-        "_blank",
-        "noopener,noreferrer"
-      );
-
-      await completeLesson();
-
-      return;
-    }
-
-    /*
-     * =================================================
-     * 6. HẾT LƯỢT NHƯNG KHÔNG CÓ ATTEMPT
-     *
-     * Trường hợp dữ liệu bất thường.
-     * Không được tự ý mở START.
-     * =================================================
-     */
-    toast.warning(
-      "Bạn đã hết lượt làm bài.",
-      {
-        description:
-          "Không tìm thấy bài làm để xem lại.",
-      }
-    );
-  } catch (error) {
-    console.error(
-      "[OPEN RESOURCE ERROR]",
-      error
-    );
-
-    toast.error(
-      "Có lỗi xảy ra",
-      {
-        description:
-          "Không thể mở bài kiểm tra.",
-      }
-    );
-  }
 }
   return (
     <div className="flex flex-col gap-6">
@@ -850,30 +688,28 @@ async function openResource(resource: any) {
                 }
             );
 
-              const result =
-                  await checkResourceAccess(
-                      resource
-                  );
+            const allowed =
+                await checkResourceAccess(
+                    resource
+                );
 
-              if (!result.allowed) {
-                  return;
-              }
+            if (!allowed) {
+                return;
+            }
 
-              setCurrentVideo({
-                  ...resource,
-              });
+            setCurrentVideo({
+                ...resource,
+            });
         }}
     >
         <Play className="h-4 w-4" />
     </Button>
 ) : (
 <Button
-    variant="ghost"
-    onClick={() =>
-        openResource(resource)
-    }
+  variant="ghost"
+  onClick={() => openResource(resource)}
 >
-    Mở
+  Mở
 </Button>
 )}
 

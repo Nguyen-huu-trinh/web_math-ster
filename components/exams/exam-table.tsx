@@ -83,7 +83,7 @@ interface Props {
 // }
 const copyExamLink = async (examId: string) => {
   const url =
-    `${window.location.origin}/student-exams/start/${examId}`;
+    `${window.location.origin}/student-exams/open/${examId}`;
 
   await navigator.clipboard.writeText(url);
 

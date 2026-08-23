@@ -591,11 +591,10 @@ async submitAttempt(
     } = await supabase
         .from("exam_attempts")
         .update({
-            submitted_at:
-                submittedAt,
+            answers,
+            submitted_at: submittedAt,
             score,
-            is_passed:
-                passed,
+            is_passed: passed,
         })
         .eq(
             "id",
@@ -630,7 +629,7 @@ async submitAttempt(
         } = await supabase
             .from("exam_attempts")
             .select(
-                "score, is_passed, submitted_at"
+                "score, is_passed, submitted_at, answers"
             )
             .eq(
                 "id",
@@ -667,6 +666,10 @@ async submitAttempt(
                 attempt.exams.show_answer,
 
             answers:
+                attempt.exams.show_answer
+                    ? answerKey
+                    : null,
+            answerKey:
                 attempt.exams.show_answer
                     ? answerKey
                     : null,
@@ -709,7 +712,9 @@ if (pointsError) {
         showAnswer:
             attempt.exams.show_answer,
 
-        answers:
+        answers,
+
+        answerKey:
             attempt.exams.show_answer
                 ? answerKey
                 : null,

@@ -147,7 +147,12 @@ const [result, setResult] =
             passed: attempt?.is_passed ?? false,
             alreadySubmitted: true,
             showAnswer: exam?.show_answer ?? false,
-            answers: exam?.show_answer
+
+            // ĐÁP ÁN HỌC SINH
+            answers: attempt?.answers ?? null,
+
+            // ĐÁP ÁN ĐÚNG
+            answerKey: exam?.show_answer
                 ? exam?.answer_key
                 : null,
         };

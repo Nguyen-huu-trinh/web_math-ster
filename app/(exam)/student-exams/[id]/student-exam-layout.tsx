@@ -62,79 +62,13 @@ export default function StudentExamLayout({
     savedAnswers,
   } = session;
 
-const [showExitDialog, setShowExitDialog] =
-  useState(false);
   const [submitted, setSubmitted] =
     useState(review);
 
 const finishExamRef =
   useRef(false);
 
-const [exitCountdown, setExitCountdown] =
-  useState(30);
 
-const exitTimer =
-  useRef<NodeJS.Timeout | null>(null);
-
- 
-
-useEffect(() => {
-
-  if (review || !showExitDialog) {
-    return;
-  }
-
-  exitTimer.current = setInterval(() => {
-
-    setExitCountdown((prev) => {
-
-      if (prev <= 1) {
-
-        clearInterval(exitTimer.current!);
-
-        if (!submitted) {
-          window.dispatchEvent(
-            new Event("force-submit")
-          );
-        }
-
-        return 0;
-      }
-
-      return prev - 1;
-    });
-
-  }, 1000);
-
-  return () => {
-    if (exitTimer.current) {
-      clearInterval(exitTimer.current);
-    }
-  };
-
-}, [review, showExitDialog, submitted]);
-
-async function resumeExam() {
-
-  try {
-
-    await document.documentElement.requestFullscreen();
-
-    setShowExitDialog(false);
-
-    if (exitTimer.current) {
-
-      clearInterval(exitTimer.current);
-
-    }
-
-  } catch {
-
-    // Người dùng từ chối vào fullscreen
-
-  }
-
-}
 
   const [mobileView, setMobileView] =
     useState<"pdf" | "sheet">("pdf");
@@ -205,22 +139,30 @@ const lowTime = timeLeft <= 300;
 
 useEffect(() => {
   function handleFullscreenChange() {
-
-    // REVIEW MODE:
-    // Không yêu cầu fullscreen
+    // Đang xem lại bài thì không cần fullscreen
     if (review) {
       return;
     }
 
-    if (!document.fullscreenElement) {
-
-      if (finishExamRef.current) {
-        return;
-      }
-
-      setShowExitDialog(true);
-      setExitCountdown(30);
+    // Bài đã nộp rồi thì không xử lý nữa
+    if (finishExamRef.current) {
+      return;
     }
+
+    // Vẫn đang fullscreen
+    if (document.fullscreenElement) {
+      return;
+    }
+
+    console.warn(
+      "[EXAM] Fullscreen exited - submitting exam"
+    );
+
+    // Không hiện cảnh báo.
+    // Nộp bài ngay lập tức.
+    window.dispatchEvent(
+      new Event("force-submit")
+    );
   }
 
   document.addEventListener(
@@ -228,12 +170,12 @@ useEffect(() => {
     handleFullscreenChange
   );
 
-  return () =>
+  return () => {
     document.removeEventListener(
       "fullscreenchange",
       handleFullscreenChange
     );
-
+  };
 }, [review]);
 
 useEffect(() => {
@@ -245,15 +187,6 @@ useEffect(() => {
 
     // Đã nộp → không còn popup thoát fullscreen
     setSubmitted(true);
-    setShowExitDialog(false);
-
-    // Hủy countdown thoát fullscreen nếu đang chạy
-    if (exitTimer.current) {
-      clearInterval(exitTimer.current);
-      exitTimer.current = null;
-    }
-
-    // REVIEW thì không cần thoát fullscreen
     if (review) {
       return;
     }
@@ -331,53 +264,6 @@ useEffect(() => {
             )
             }
 
-{showExitDialog && (
-  <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80">
-
-    <div className="w-[420px] rounded-xl bg-white p-8">
-
-      <h2 className="text-xl font-bold text-red-600">
-        Bạn đã thoát khỏi chế độ thi
-      </h2>
-
-      <p className="mt-3 text-gray-600">
-        Bài thi sẽ được kết thúc sau
-      </p>
-
-      <p className="my-5 text-center text-5xl font-bold text-red-600">
-        {exitCountdown}
-      </p>
-
-      <p className="text-gray-600">
-        giây nếu bạn không quay lại chế độ toàn màn hình.
-      </p>
-
-      <div className="mt-8 flex gap-3">
-
-        <Button
-          className="flex-1"
-          onClick={resumeExam}
-        >
-          Quay lại toàn màn hình
-        </Button>
-
-        <Button
-          variant="destructive"
-          onClick={() =>
-          window.dispatchEvent(
-            new Event("force-submit")
-          )
-        }
-        >
-          Nộp bài ngay
-        </Button>
-
-      </div>
-
-    </div>
-
-  </div>
-)}
 
       {/* ==========================================
           DESKTOP

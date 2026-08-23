@@ -113,6 +113,7 @@ const [answers, setAnswers] = useState(() => ({
           () => ["", "", "", ""]
         ),
 }));
+
 const answersRef = useRef(answers);
 
 useEffect(() => {
@@ -168,6 +169,9 @@ useRef<NodeJS.Timeout | null>(
     useSubmitAttempt();
 
     const submittedRef = useRef(false);
+    const submitRef = useRef<
+  ((confirm?: boolean) => void | Promise<void>) | null
+>(null);
     const saveAnswerMutation =
     useSaveAnswer();
   const startExamMutation = useStartExam();
@@ -279,104 +283,102 @@ function autoSaveAnswers(
   // Multiple Choice
   // ============================
 
-  function chooseMultipleChoice(
+ function chooseMultipleChoice(
   index: number,
   value: string
 ) {
   if (result) return;
 
-  setAnswers((prev) => {
-    const next = {
-      ...prev,
-      multipleChoice: [...prev.multipleChoice],
-    };
+  const current = answersRef.current;
 
-    // Click lại đáp án đang chọn → hủy chọn
-    if (next.multipleChoice[index] === value) {
-      next.multipleChoice[index] = "";
-    } else {
-      // Click đáp án khác → chuyển sang đáp án mới
-      next.multipleChoice[index] = value;
-    }
+  const next: ExamAnswers = {
+    ...current,
 
-    answersRef.current = next;
-    autoSaveAnswers(next);
+    multipleChoice: [
+      ...current.multipleChoice,
+    ],
+  };
 
-    return next;
-  });
+  next.multipleChoice[index] =
+    next.multipleChoice[index] === value
+      ? ""
+      : value;
+
+  // Cập nhật ref ngay lập tức
+  answersRef.current = next;
+
+  // Sau đó mới cập nhật UI
+  setAnswers(next);
 }
   // ============================
   // True False
   // ============================
 
-  function chooseTrueFalse(
+ function chooseTrueFalse(
   questionIndex: number,
   columnIndex: number,
   value: string
 ) {
   if (result) return;
 
-  setAnswers((prev) => {
-    const next = {
-      ...prev,
-      trueFalse: prev.trueFalse.map(
+  const current = answersRef.current;
+
+  const next: ExamAnswers = {
+    ...current,
+
+    trueFalse:
+      current.trueFalse.map(
         (row) => [...row]
       ),
-    };
+  };
 
-    // Click lại đáp án đang chọn → hủy chọn
-    if (
-      next.trueFalse[questionIndex][columnIndex] === value
-    ) {
-      next.trueFalse[questionIndex][columnIndex] = "";
-    } else {
-      // Chọn đáp án mới
-      next.trueFalse[questionIndex][columnIndex] = value;
-    }
+  next.trueFalse[
+    questionIndex
+  ][columnIndex] =
+    next.trueFalse[
+      questionIndex
+    ][columnIndex] === value
+      ? ""
+      : value;
 
-    answersRef.current = next;
-    autoSaveAnswers(next);
+  answersRef.current = next;
 
-    return next;
-  });
+  setAnswers(next);
 }
   // ============================
   // Short Answer
   // ============================
-
- function chooseShortAnswer(
+function chooseShortAnswer(
   questionIndex: number,
   columnIndex: number,
   value: string
 ) {
   if (result) return;
 
-  setAnswers((prev) => {
-    const next = {
-      ...prev,
-      shortAnswer:
-        prev.shortAnswer.map(
-          (row) => [...row]
-        ),
-    };
+  const current = answersRef.current;
 
-    // Click lại ký tự đang chọn → hủy ký tự đó
-    if (
-      next.shortAnswer[questionIndex][columnIndex] === value
-    ) {
-      next.shortAnswer[questionIndex][columnIndex] = "";
-    } else {
-      // Chọn ký tự mới
-      next.shortAnswer[questionIndex][columnIndex] = value;
-    }
+  const next: ExamAnswers = {
+    ...current,
 
-    answersRef.current = next;
-    autoSaveAnswers(next);
+    shortAnswer:
+      current.shortAnswer.map(
+        (row) => [...row]
+      ),
+  };
 
-    return next;
-  });
+  next.shortAnswer[
+    questionIndex
+  ][columnIndex] =
+    next.shortAnswer[
+      questionIndex
+    ][columnIndex] === value
+      ? ""
+      : value;
+
+  answersRef.current = next;
+
+  setAnswers(next);
 }
-
   // ============================
   // Submit
   // ============================
@@ -419,16 +421,21 @@ function autoSaveAnswers(
     // LẤY ANSWERS MỚI NHẤT
     // ========================================
 
-    const currentAnswers = {
-      multipleChoice:
-        answersRef.current.multipleChoice,
+    const currentAnswers: ExamAnswers = {
+  multipleChoice: [
+    ...answersRef.current.multipleChoice,
+  ],
 
-      trueFalse:
-        answersRef.current.trueFalse,
+  trueFalse:
+    answersRef.current.trueFalse.map(
+      (row) => [...row]
+    ),
 
-      shortAnswer:
-        answersRef.current.shortAnswer,
-    };
+  shortAnswer:
+    answersRef.current.shortAnswer.map(
+      (row) => [...row]
+    ),
+};
 
 
     // ========================================
@@ -471,15 +478,16 @@ function autoSaveAnswers(
     );
   }
 }
-
 useEffect(() => {
-
+  submitRef.current = handleSubmit;
+});
+useEffect(() => {
   function forceSubmit() {
+    console.log(
+      "[EXAM] FORCE SUBMIT"
+    );
 
-    console.log("force submit");
-
-    handleSubmit(false);
-
+    submitRef.current?.(false);
   }
 
   window.addEventListener(
@@ -488,14 +496,11 @@ useEffect(() => {
   );
 
   return () => {
-
     window.removeEventListener(
       "force-submit",
       forceSubmit
     );
-
   };
-
 }, []);
 
 

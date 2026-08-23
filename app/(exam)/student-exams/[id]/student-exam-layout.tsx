@@ -221,43 +221,58 @@ useEffect(() => {
     <div className="h-screen overflow-hidden bg-slate-100">
 
       {
-           !review && !examStarted && (
+  !review && !examStarted && (
+    <div
+      className="
+        fixed
+        inset-0
+        z-[9999]
+        flex
+        items-center
+        justify-center
+        bg-black
+      "
+    >
 
-            <div
-            className="
-            fixed
-            inset-0
-            z-[9999]
-            flex
-            items-center
-            justify-center
-            bg-black/80
-            "
-            >
+<div className="w-[90%] max-w-md rounded-xl bg-white p-8 text-center shadow-xl">
 
-            <div className="rounded-xl bg-white p-8 shadow-xl">
+  <h2 className="mb-4 text-xl font-bold">
+    Lưu ý
+  </h2>
 
-            <h2 className="mb-3 text-xl font-bold">
+  <div className="mb-6 space-y-3 text-left text-sm leading-6 text-gray-600">
 
-            Bắt đầu làm bài
+    <p>
+      Hệ thống sẽ chuyển sang chế độ
+      <strong className="text-gray-900">
+        {" "}toàn màn hình
+      </strong>
+      {" "}khi bạn bắt đầu làm bài.
+    </p>
 
-            </h2>
+    <p>
+      Học sinh không được sử dụng bàn phím
+      trong quá trình làm bài.
+    </p>
 
-            <p className="mb-6 text-gray-600">
+    <p>
+      Nếu sử dụng phím tắt để thoát khỏi
+      chế độ toàn màn hình, hệ thống sẽ
+      <strong className="text-red-600">
+        {" "}nộp bài ngay lập tức.
+      </strong>
+    </p>
 
-            Hệ thống sẽ chuyển sang chế độ toàn màn hình.
+  </div>
 
-            </p>
+  <Button
+    className="w-full"
+    onClick={startFullscreen}
+  >
+    Bắt đầu
+  </Button>
 
-            <Button
-            onClick={startFullscreen}
-            >
-
-            Bắt đầu
-
-            </Button>
-
-            </div>
+</div>
 
             </div>
 

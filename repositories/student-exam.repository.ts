@@ -178,7 +178,7 @@ async startExam(
   }
 
   if (exam.status !== "OPEN") {
-    throw new Error("Đề đang khóa.");
+    throw new Error("Đề đã khóa.");
   }
 
   const now = new Date();

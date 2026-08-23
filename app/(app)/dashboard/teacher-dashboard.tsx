@@ -467,8 +467,8 @@ async function saveAnnouncement() {
                 startRank={4}
             />
             <LeaderboardCard
-                title="😴 Top làm biếng"
-                description="Top lười biếng học nhất"
+                title="😿 Top học dở"
+                description="Top điểm thấp nhất"
                 entries={leaderboard.data?.lowHomework ?? []}
                 
             />

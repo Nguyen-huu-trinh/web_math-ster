@@ -302,189 +302,154 @@ if (
 
             {/* </div> */} 
 
-                <div className="grid grid-cols-2 gap-4 lg:grid-cols-24">
+<div className="grid grid-cols-2 gap-4 lg:grid-cols-24">
+  {/* KHỐI 1: Lời chào & Mục tiêu */}
+  {/* Mobile: col-span-2 (Chiếm trọn 1 hàng trên cùng) | Desktop: lg:col-span-14 */}
+  <div className="col-span-2 rounded-xl border bg-card p-6 shadow-sm lg:col-span-14">
+    <p className="text-sm text-muted-foreground">👋 {greeting()}</p>
 
-               <div className="col-span-2 rounded-xl border bg-card p-6 shadow-sm lg:col-span-14">
+    <h2 className="mt-2 text-3xl font-bold">
+      {dashboard?.profile?.full_name ?? profile?.full_name}
+    </h2>
 
-                    <p className="text-sm text-muted-foreground">
-                        👋 {greeting()}
-                    </p>
+    <div className="mt-3">
+      {!editingGoal ? (
+        <button
+          type="button"
+          onClick={handleStartEditGoal}
+          className="group flex items-center gap-2 text-left"
+        >
+          <span className="text-base font-medium text-muted-foreground transition-colors group-hover:text-foreground">
+            🎯 {learningGoal || "Nhấn để đặt mục tiêu học tập"}
+          </span>
 
-                    <h2 className="mt-2 text-3xl font-bold">
-                        {dashboard?.profile?.full_name ??
-                            profile?.full_name}
-                    </h2>
+          <Pencil className="h-4 w-4 text-muted-foreground opacity-0 transition-all group-hover:opacity-100" />
+        </button>
+      ) : (
+        <div className="flex max-w-xl items-center gap-2">
+          <span className="text-lg">🎯</span>
 
-                    <div className="mt-3">
-                    {!editingGoal ? (
-                        <button
-                            type="button"
-                            onClick={handleStartEditGoal}
-                            className="group flex items-center gap-2 text-left"
-                        >
-                        <span className="text-base font-medium text-muted-foreground transition-colors group-hover:text-foreground">
-                            🎯{" "}
-                            {learningGoal ||
-                                "Nhấn để đặt mục tiêu học tập"}
-                        </span>
+          <Input
+            value={goal}
+            onChange={(e) => setGoal(e.target.value)}
+            placeholder="Ví dụ: Đạt 9+ môn Toán"
+            maxLength={200}
+            autoFocus
+            className="h-9 text-base font-bold text-blue-700 placeholder:font-normal placeholder:text-muted-foreground"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                void handleSaveGoal();
+              }
 
-                        <Pencil
-                            className="
-                                h-4 w-4
-                                text-muted-foreground
-                                opacity-0
-                                transition-all
-                                group-hover:opacity-100
-                            "
-                        />
-                    </button>
-                ) : (
-                    <div className="flex max-w-xl items-center gap-2">
-                        
-                        <span className="text-lg">
-                            🎯
-                        </span>
+              if (e.key === "Escape") {
+                setGoal(learningGoal);
+                setEditingGoal(false);
+              }
+            }}
+          />
 
-                        <Input
-                            value={goal}
-                            onChange={(e) =>
-                                setGoal(e.target.value)
-                            }
-                            placeholder="Ví dụ: Đạt 9+ môn Toán"
-                            maxLength={200}
-                            autoFocus
-                           className="h-9 text-base font-bold text-blue-700 placeholder:font-normal placeholder:text-muted-foreground"
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                    void handleSaveGoal();
-                                }
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            disabled={updateLearningGoal.isPending}
+            onClick={() => void handleSaveGoal()}
+          >
+            <Check className="h-4 w-4 text-green-600" />
+          </Button>
 
-                                if (e.key === "Escape") {
-                                    setGoal(learningGoal);
-                                    setEditingGoal(false);
-                                }
-                            }}
-                        />
-
-                        <Button
-                            type="button"
-                            size="icon"
-                            variant="ghost"
-                            disabled={
-                                updateLearningGoal.isPending
-                            }
-                            onClick={() =>
-                                void handleSaveGoal()
-                            }
-                        >
-                            <Check className="h-4 w-4 text-green-600" />
-                        </Button>
-
-                        <Button
-                            type="button"
-                            size="icon"
-                            variant="ghost"
-                            disabled={
-                                updateLearningGoal.isPending
-                            }
-                            onClick={() => {
-                                setGoal(learningGoal);
-                                setEditingGoal(false);
-                            }}
-                        >
-                            <X className="h-4 w-4 text-muted-foreground" />
-                        </Button>
-                    </div>
-                )}
-            </div>
-
-                </div>
-
-                <div className="col-span-1 flex flex-col items-center justify-center rounded-xl border bg-card p-6 shadow-sm lg:col-span-5">
-
-                <div className="flex items-center justify-center gap-2">
-
-                    <span className="text-4xl font-bold tabular-nums text-primary">
-                        {activeStudentCount.isLoading ||
-                        activeStudentCount.isError
-                            ? "--"
-                            : activeStudents+Math.floor(Math.random() * 11) +20}
-                    </span>
-
-                    <Image
-                        src="/trau.png"
-                        alt="Trâu đang cày"
-                        width={52}
-                        height={52}
-                        className="object-contain"
-                    />
-
-                </div>
-
-                <p className="mt-1 text-xl font-semibold tracking-wide text-foreground">
-                    ĐANG CÀY
-                </p>
-
-            </div>
-            
-           <div
-    className={`col-span-5 rounded-xl border p-4 text-center shadow-sm transition-colors ${
-            points < 50
-                ? "border-red-300 bg-red-100"
-                : "bg-card"
-        }`}
-    >
-            <p className="mt-1 text-xl font-semibold tracking-wide text-foreground">
-                Độ trâu
-            </p>
-
-            <div className="mt-1">
-                <span className="text-3xl font-bold leading-none tabular-nums text-primary">
-                    {points}
-                </span>
-
-                <span className="ml-1 text-smfont-semibold text-foreground">
-                    máu
-                </span>
-            </div>
-
-            <div className="mt-3 flex items-center justify-center gap-2">
-                <Input
-                    value={attendanceCode}
-                    onChange={(e) =>
-                        setAttendanceCode(e.target.value)
-                    }
-                    placeholder="Mã điểm danh"
-                    maxLength={100}
-                    disabled={submitAttendance.isPending}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            void handleSaveAttendance();
-                        }
-                    }}
-                    className="h-9 w-[158px] text-center"
-                />
-
-                <Button
-                    type="button"
-                    size="sm"
-                    disabled={
-                        submitAttendance.isPending ||
-                        !attendanceCode.trim()
-                    }
-                    onClick={() =>
-                        void handleSaveAttendance()
-                    }
-                >
-                    {submitAttendance.isPending
-                        ? "..."
-                        : "Lưu"}
-                </Button>
-            </div>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            disabled={updateLearningGoal.isPending}
+            onClick={() => {
+              setGoal(learningGoal);
+              setEditingGoal(false);
+            }}
+          >
+            <X className="h-4 w-4 text-muted-foreground" />
+          </Button>
         </div>
+      )}
+    </div>
+  </div>
 
+  {/* KHỐI 2: Số người đang cày */}
+  {/* Mobile: col-span-1 (Nằm ở bên trái hàng thứ 2) | Desktop: lg:col-span-5 */}
+  <div className="col-span-1 flex flex-col items-center justify-center rounded-xl border bg-card p-4 sm:p-6 shadow-sm lg:col-span-5">
+    <div className="flex items-center justify-center gap-2">
+      <span className="text-3xl font-bold tabular-nums text-primary sm:text-4xl">
+        {activeStudentCount.isLoading || activeStudentCount.isError
+          ? "--"
+          : activeStudents + Math.floor(Math.random() * 11) + 20}
+      </span>
 
-            </div>
+      <Image
+        src="/trau.png"
+        alt="Trâu đang cày"
+        width={42}
+        height={42}
+        className="object-contain sm:h-[52px] sm:w-[52px]"
+      />
+    </div>
+
+    <p className="mt-1 text-base font-semibold tracking-wide text-foreground sm:text-xl">
+      ĐANG CÀY
+    </p>
+  </div>
+
+  {/* KHỐI 3: Độ trâu / Mã điểm danh */}
+  {/* Mobile: col-span-1 (Nằm ở bên phải hàng thứ 2) | Desktop: lg:col-span-5 */}
+  <div
+    className={`col-span-1 flex flex-col items-center justify-center rounded-xl border p-4 text-center shadow-sm transition-colors lg:col-span-5 ${
+      points < 50 ? "border-red-300 bg-red-100" : "bg-card"
+    }`}
+  >
+    <p className="text-base font-semibold tracking-wide text-foreground sm:text-xl">
+      Độ trâu
+    </p>
+
+    <div className="mt-1">
+      <span className="text-2xl font-bold leading-none tabular-nums text-primary sm:text-3xl">
+        {points}
+      </span>
+
+      <span className="ml-1 text-xs font-semibold text-foreground sm:text-sm">
+        máu
+      </span>
+    </div>
+
+    {/* Form nhập mã điểm danh co giãn mượt trên mobile */}
+    <div className="mt-3 flex w-full max-w-[200px] items-center justify-center gap-1 sm:gap-2">
+      <Input
+        value={attendanceCode}
+        onChange={(e) => setAttendanceCode(e.target.value)}
+        placeholder="Mã điểm danh"
+        maxLength={100}
+        disabled={submitAttendance.isPending}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            void handleSaveAttendance();
+          }
+        }}
+        className="h-8 w-full text-center text-xs sm:h-9 sm:text-sm"
+      />
+
+      <Button
+        type="button"
+        size="sm"
+        disabled={
+          submitAttendance.isPending || !attendanceCode.trim()
+        }
+        onClick={() => void handleSaveAttendance()}
+        className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm"
+      >
+        {submitAttendance.isPending ? "..." : "Lưu"}
+      </Button>
+    </div>
+  </div>
+</div>
             
             <div className="rounded-xl border border-amber-300 bg-amber-50 p-5 shadow-sm">
 

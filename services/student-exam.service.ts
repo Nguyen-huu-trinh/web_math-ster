@@ -33,6 +33,14 @@ export class StudentExamService {
     );
   }
 
+  async getTeacherExamSession(
+  attemptId: string
+) {
+  return studentExamRepository.getTeacherAttemptDetail(
+    attemptId
+  );
+}
+
   async submitAttempt(
     studentId: string,
     attemptId: string,

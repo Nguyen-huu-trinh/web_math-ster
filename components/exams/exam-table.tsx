@@ -37,6 +37,7 @@ import {
   Search,
   Link2,
   Copy,
+  Users,
 } from "lucide-react";
 
 import { Exam } from "@/types/exam";
@@ -260,7 +261,15 @@ export function ExamTable({
                         Đáp án
 
                         </DropdownMenuItem>
-
+                    <DropdownMenuItem
+                      onClick={() => {
+                        window.location.href =
+                          `/exams/${exam.id}/answers`;
+                      }}
+                    >
+                      <Users className="mr-2 h-4 w-4" />
+                      Xem bài làm
+                    </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() =>
                           onPublish?.(exam.id)

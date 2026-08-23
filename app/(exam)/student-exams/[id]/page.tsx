@@ -1,75 +1,76 @@
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import StudentExamLayout from "./student-exam-layout";
 
-import { requireStudent } from "@/lib/auth/student";
+import { requireProfile } from "@/lib/auth/require-profile";
 import { studentExamService } from "@/services/student-exam.service";
+import { UserRole } from "@/lib/auth/roles";
 
 interface Props {
-    params: Promise<{
-        id: string;
-    }>;
+  params: Promise<{
+    id: string;
+  }>;
 
-    searchParams: Promise<{
-        review?: string;
-    }>;
+  searchParams: Promise<{
+    review?: string;
+  }>;
 }
+
 export default async function StudentExamPage({
-    params,
-    searchParams,
+  params,
+  searchParams,
 }: Props) {
-    const { id } = await params;
-    const { review } = await searchParams;
+  const { id } = await params;
+  const { review } = await searchParams;
 
-    const isReview =
-        review === "true";
-    let studentId = "";
+  const isReview =
+    review === "true";
 
-    try {
-        const profile =
-            await requireStudent();
+  const profile =
+    await requireProfile();
 
-        studentId = profile.id;
+  // =====================================================
+  // GIÁO VIÊN
+  // =====================================================
 
-        console.log(
-            "[STUDENT EXAM PAGE] START",
-            {
-                attemptId: id,
-                studentId: profile.id,
-            }
-        );
+  if (
+    profile.role === UserRole.TEACHER &&
+    isReview
+  ) {
+    const session =
+      await studentExamService.getTeacherExamSession(
+        id
+      );
 
-        const session =
-            await studentExamService.getExamSession(
-                profile.id,
-                id
-            );
+    return (
+      <StudentExamLayout
+        session={session}
+        review={true}
+        viewerRole={profile.role}
+      />
+    );
+  }
 
-        console.log(
-            "[STUDENT EXAM PAGE] SESSION FOUND",
-            {
-                attemptId: id,
-                studentId: profile.id,
-            }
-        );
+  // =====================================================
+  // HỌC SINH
+  // =====================================================
 
-        return (
-            <StudentExamLayout
-                session={session}
-                review={isReview}
-            />
-        );
+  if (
+    profile.role !== UserRole.STUDENT
+  ) {
+    redirect("/dashboard");
+  }
 
-    } catch (error) {
-        console.error(
-            "[STUDENT EXAM PAGE ERROR]",
-            {
-                attemptId: id,
-                studentId,
-                error,
-            }
-        );
+  const session =
+    await studentExamService.getExamSession(
+      profile.id,
+      id
+    );
 
-        throw error;
-    }
+  return (
+    <StudentExamLayout
+      session={session}
+      review={isReview}
+    />
+  );
 }

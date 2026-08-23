@@ -50,6 +50,7 @@ interface Props {
   remainingSeconds: number;
   savedAnswers: ExamAnswers;
   review?: boolean;
+  viewerRole?: "STUDENT" | "TEACHER" | "ADMIN";
 }
 
 const MC = ["A", "B", "C", "D"];
@@ -62,6 +63,7 @@ export default function AnswerSheet({
   remainingSeconds,
   savedAnswers,
   review = false,
+  viewerRole = "STUDENT",
 }: Props)  
 
 {
@@ -192,23 +194,28 @@ useRef<NodeJS.Timeout | null>(
     return () => clearInterval(timer);
 }, [review, result]);
 
+// function autoSaveAnswers(
+//     nextAnswers: typeof answers
+// ) {
+//     if (review) return;
+
+//     if (!attempt?.id) return;
+
+//     if (saveTimeout.current) {
+//         clearTimeout(saveTimeout.current);
+//     }
+
+//     saveTimeout.current = setTimeout(() => {
+//         saveAnswerMutation.mutate({
+//             attemptId: attempt.id,
+//             answers: nextAnswers,
+//         });
+//     }, 500);
+// }
 function autoSaveAnswers(
-    nextAnswers: typeof answers
+  _nextAnswers: typeof answers
 ) {
-    if (review) return;
-
-    if (!attempt?.id) return;
-
-    if (saveTimeout.current) {
-        clearTimeout(saveTimeout.current);
-    }
-
-    saveTimeout.current = setTimeout(() => {
-        saveAnswerMutation.mutate({
-            attemptId: attempt.id,
-            answers: nextAnswers,
-        });
-    }, 500);
+  return;
 }
   // ============================
   // Display Time
@@ -1036,13 +1043,17 @@ const correct =
                 <div className="grid grid-cols-2 gap-3">
 
                   <Button
-                    onClick={() =>
-                      router.push("/student-exams")
-                    }
+                    onClick={() => {
+                      if (viewerRole === "TEACHER") {
+                        router.push(
+                          `/exams/${exam.id}/answers`
+                        );
+                      } else {
+                        router.push("/student-exams");
+                      }
+                    }}
                   >
-
                     Quay về danh sách
-
                   </Button>
 
                   {(exam.max_attempts ?? 1) >

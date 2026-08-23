@@ -44,11 +44,13 @@ interface ExamSession {
 interface Props {
     session: ExamSession;
     review?: boolean;
+    viewerRole?: "STUDENT" | "TEACHER" | "ADMIN";
 }
 
 export default function StudentExamLayout({
   session,
   review = false,
+  viewerRole = "STUDENT",
 }: Props) {
   const {
     attempt,
@@ -401,6 +403,7 @@ useEffect(() => {
             remainingSeconds={remainingSeconds}
             savedAnswers={savedAnswers}
             review={review}
+            viewerRole={viewerRole}
           />
 
         </div>

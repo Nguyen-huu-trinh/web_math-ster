@@ -302,7 +302,59 @@ async startExam(
 });
   return attempt;
 }
+async getTeacherAttemptDetail(
+  attemptId: string
+) {
+  const supabase =
+    await createClient();
 
+  const {
+    data: attempt,
+    error: attemptError,
+  } = await supabase
+    .from("exam_attempts")
+    .select("*")
+    .eq("id", attemptId)
+    .maybeSingle();
+
+  if (attemptError) {
+    throw attemptError;
+  }
+
+  if (!attempt) {
+    throw new Error(
+      `Không tìm thấy bài làm ${attemptId}`
+    );
+  }
+
+  const {
+    data: exam,
+    error: examError,
+  } = await supabase
+    .from("exams")
+    .select("*")
+    .eq("id", attempt.exam_id)
+    .single();
+
+  if (examError) {
+    throw examError;
+  }
+
+  const savedAnswers =
+    attempt.answers ?? {
+      multipleChoice: [],
+      trueFalse: [],
+      shortAnswer: [],
+    };
+
+  return {
+    attempt,
+    exam,
+    pdfUrl: exam.exam_file_url,
+    remainingSeconds: 0,
+    savedAnswers,
+  };
+}
 
 async getAttemptDetail(
     studentId: string,

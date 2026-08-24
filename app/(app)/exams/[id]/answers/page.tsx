@@ -119,6 +119,11 @@ export default function ExamAnswersPage() {
 const [sortBy, setSortBy] = useState<
   "student_code" | "score_desc" | "score_asc"
 >("student_code");
+
+const [statusFilter, setStatusFilter] = useState<
+  "all" | "passed" | "failed" | "not_started"
+>("all");
+
   const {
     data: attempts = [],
     isLoading,
@@ -132,8 +137,36 @@ const submittedCount = useMemo(
     ).length,
   [attempts]
 );
+
+const filteredAttempts = useMemo(() => {
+  switch (statusFilter) {
+    case "passed":
+      return attempts.filter(
+        (item) =>
+          item.id !== null &&
+          item.is_passed === true
+      );
+
+    case "failed":
+      return attempts.filter(
+        (item) =>
+          item.id !== null &&
+          item.is_passed === false
+      );
+
+    case "not_started":
+      return attempts.filter(
+        (item) => item.id === null
+      );
+
+    case "all":
+    default:
+      return attempts;
+  }
+}, [attempts, statusFilter]);
+
 const sortedAttempts = useMemo(() => {
-  const result = [...attempts];
+  const result = [...filteredAttempts];
 
   if (sortBy === "student_code") {
     return result.sort((a, b) =>
@@ -161,7 +194,7 @@ const sortedAttempts = useMemo(() => {
   }
 
   return result;
-}, [attempts, sortBy]);
+}, [filteredAttempts, sortBy]);
 
   if (isLoading) {
     return (
@@ -345,12 +378,56 @@ const sortedAttempts = useMemo(() => {
       <Card>
 <CardHeader>
 
-  <div className="flex items-center justify-between gap-4">
+  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 
-    <CardTitle>
-      Danh sách bài làm
-    </CardTitle>
+  <CardTitle>
+    Danh sách bài làm
+  </CardTitle>
 
+  <div className="flex flex-wrap items-center gap-2">
+
+    {/* BỘ LỌC TRẠNG THÁI */}
+    <select
+      value={statusFilter}
+      onChange={(e) =>
+        setStatusFilter(
+          e.target.value as
+            | "all"
+            | "passed"
+            | "failed"
+            | "not_started"
+        )
+      }
+      className="
+        h-9
+        rounded-md
+        border
+        bg-background
+        px-3
+        text-sm
+        outline-none
+        focus:ring-2
+        focus:ring-primary/30
+      "
+    >
+      <option value="all">
+        Tất cả
+      </option>
+
+      <option value="passed">
+        Đạt
+      </option>
+
+      <option value="failed">
+        Chưa đạt
+      </option>
+
+      <option value="not_started">
+        Chưa làm
+      </option>
+    </select>
+
+    {/* SẮP XẾP */}
     <select
       value={sortBy}
       onChange={(e) =>
@@ -388,11 +465,13 @@ const sortedAttempts = useMemo(() => {
 
   </div>
 
+</div>
+
 </CardHeader>
 
         <CardContent>
 
-          {submittedCount === 0 ? (
+          {sortedAttempts.length === 0 ? (
 
             <div className="py-12 text-center">
 

@@ -68,6 +68,7 @@ function formatDuration(
     )
   );
 
+  
   const hours = Math.floor(
     seconds / 3600
   );
@@ -124,7 +125,13 @@ const [sortBy, setSortBy] = useState<
     isError,
     error,
   } = useExamAttempts(examId);
-
+const submittedCount = useMemo(
+  () =>
+    attempts.filter(
+      (item) => item.id !== null
+    ).length,
+  [attempts]
+);
 const sortedAttempts = useMemo(() => {
   const result = [...attempts];
 
@@ -237,7 +244,7 @@ const sortedAttempts = useMemo(() => {
               </p>
 
               <p className="text-2xl font-bold">
-                {attempts.length}
+                {submittedCount}
               </p>
 
             </div>
@@ -262,16 +269,20 @@ const sortedAttempts = useMemo(() => {
 
               <p className="text-2xl font-bold">
 
-                {attempts.length
-                  ? Math.max(
-                      ...attempts.map(
-                        (item) =>
-                          Number(
-                            item.score ?? 0
-                          )
-                      )
+            {submittedCount
+              ? Math.max(
+                  ...attempts
+                    .filter(
+                      (item) => item.id !== null
                     )
-                  : 0}
+                    .map(
+                      (item) =>
+                        Number(
+                          item.score ?? 0
+                        )
+                    )
+                )
+              : 0}
 
               </p>
 
@@ -381,7 +392,7 @@ const sortedAttempts = useMemo(() => {
 
         <CardContent>
 
-          {attempts.length === 0 ? (
+          {submittedCount === 0 ? (
 
             <div className="py-12 text-center">
 
@@ -445,13 +456,21 @@ const sortedAttempts = useMemo(() => {
                     (attempt) => (
 
                     <TableRow
-                        key={attempt.id}
-                        className="cursor-pointer hover:bg-accent/50"
-                        onClick={() => {
-                            window.location.href =
-                            `/student-exams/${attempt.id}?review=true`;
-                        }}
-                        >
+                      key={attempt.student_id}
+                      className={
+                        attempt.id
+                          ? "cursor-pointer hover:bg-accent/50"
+                          : ""
+                      }
+                      onClick={() => {
+                        if (!attempt.id) {
+                          return;
+                        }
+
+                        window.location.href =
+                          `/student-exams/${attempt.id}?review=true`;
+                      }}
+                    >
 
                         <TableCell>
 
@@ -471,10 +490,15 @@ const sortedAttempts = useMemo(() => {
 
                         <TableCell>
 
+                        {attempt.id ? (
                           <Badge variant="outline">
-                            Lần{" "}
-                            {attempt.attempt_number}
+                            Lần {attempt.attempt_number}
                           </Badge>
+                        ) : (
+                          <Badge variant="secondary">
+                            Chưa làm
+                          </Badge>
+                        )}
 
                         </TableCell>
 

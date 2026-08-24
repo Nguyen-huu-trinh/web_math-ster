@@ -4,6 +4,14 @@ import Link from "next/link";
 import { ExamStatusBadge } from "./exam-status-badge";
 import { Button } from "@/components/ui/button";
 import {
+  FileText,
+  Pencil,
+  KeyRound,
+  Unlock,
+  Lock,
+  Trash2,
+} from "lucide-react";
+import {
   Card,
   CardContent,
 } from "@/components/ui/card";
@@ -45,7 +53,7 @@ import { Exam } from "@/types/exam";
 interface Props {
   exams: Exam[];
   onPublish?: (id: string) => void;
-  onClose?: (id: string) => void;
+  onDeactivate?: (id: string) => void;
   onDuplicate?: (id: string) => void;
   onDelete?: (id: string) => void;
 }
@@ -93,7 +101,7 @@ const copyExamLink = async (examId: string) => {
 export function ExamTable({
   exams,
   onPublish,
-  onClose,
+  onDeactivate,
   onDuplicate,
   onDelete,
 }: Props)
@@ -228,7 +236,7 @@ export function ExamTable({
                             window.location.href = `/exams/${exam.id}`;
                         }}
                         >
-
+                        <FileText className="mr-2 h-4 w-4 shrink-0" />
                         Chi tiết
 
                         </DropdownMenuItem>
@@ -236,7 +244,7 @@ export function ExamTable({
                           onClick={() => copyExamLink(exam.id)}
                         >
                           <Link2 className="mr-2 h-4 w-4" />
-                          Sao chép liên kết
+                          Copy link
                         </DropdownMenuItem>
 
                         
@@ -246,7 +254,7 @@ export function ExamTable({
                             window.location.href = `/exams/${exam.id}/edit`;
                         }}
                         >
-
+                          <Pencil className="mr-2 h-4 w-4 shrink-0" />
                         Chỉnh sửa
 
                         </DropdownMenuItem>
@@ -257,7 +265,7 @@ export function ExamTable({
                             `/exams/${exam.id}/answer-key`;
                         }}
                         >
-
+                          <KeyRound className="mr-2 h-4 w-4 shrink-0" />
                         Đáp án
 
                         </DropdownMenuItem>
@@ -270,38 +278,46 @@ export function ExamTable({
                       <Users className="mr-2 h-4 w-4" />
                       Xem bài làm
                     </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() =>
-                          onPublish?.(exam.id)
+                    <DropdownMenuItem
+                      onClick={() => {
+                        if (exam.status === "LOCKED") {
+                          onPublish?.(exam.id);
+                        } else if (exam.status === "OPEN") {
+                          onDeactivate?.(exam.id);
                         }
-                      >
-                        Publish
-                      </DropdownMenuItem>
+                      }}
+                    >
+                    {exam.status === "LOCKED" ? (
+                      <>
+                        <Unlock className="mr-2 h-4 w-4 shrink-0" />
+                        Open
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="mr-2 h-4 w-4 shrink-0" />
+                        Lock
+                      </>
+                    )}
+                  </DropdownMenuItem>
 
-                      <DropdownMenuItem
-                        onClick={() =>
-                          onClose?.(exam.id)
-                        }
-                      >
-                        Close
-                      </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      onDuplicate?.(exam.id)
+                    }
+                  >
+                    <Copy className="mr-2 h-4 w-4 shrink-0" />
+                    Nhân bản
+                  </DropdownMenuItem>
 
-                      <DropdownMenuItem
-                        onClick={() =>
-                          onDuplicate?.(exam.id)
-                        }
-                      >
-                        Nhân bản
-                      </DropdownMenuItem>
-
-                      <DropdownMenuItem
-                        className="text-red-600"
-                        onClick={() =>
-                          onDelete?.(exam.id)
-                        }
-                      >
-                        Xóa
-                      </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-red-600"
+                    onClick={() =>
+                      onDelete?.(exam.id)
+                    }
+                  >
+                    <Trash2 className="mr-2 h-4 w-4 shrink-0" />
+                    Xóa
+                  </DropdownMenuItem>
 
                     </DropdownMenuContent>
 

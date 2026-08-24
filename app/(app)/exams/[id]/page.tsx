@@ -14,7 +14,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 import {
-  useCloseExam,
+  useDeactivateExam,
   useDuplicateExam,
   useExam,
   usePublishExam,
@@ -37,7 +37,7 @@ export default function ExamDetailPage() {
 
   const publish = usePublishExam();
 
-  const close = useCloseExam();
+  const close = useDeactivateExam();
 
   const duplicate =
     useDuplicateExam();
@@ -59,7 +59,16 @@ export default function ExamDetailPage() {
   }
 
   const exam = examQuery.data;
+function handleToggleStatus() {
+  if (exam.status === "LOCKED") {
+    publish.mutate(id);
+    return;
+  }
 
+  if (exam.status === "OPEN") {
+    close.mutate(id);
+  }
+}
   return (
     <div className="space-y-6">
 
@@ -259,20 +268,17 @@ export default function ExamDetailPage() {
         <CardContent className="flex gap-3">
 
           <Button
-            onClick={() =>
-              publish.mutate(id)
+            onClick={handleToggleStatus}
+            disabled={
+              publish.isPending ||
+              close.isPending
             }
           >
-            Publish
-          </Button>
-
-          <Button
-            variant="secondary"
-            onClick={() =>
-              close.mutate(id)
-            }
-          >
-            Close
+            {publish.isPending || close.isPending
+              ? "Đang xử lý..."
+              : exam.status === "LOCKED"
+              ? "Open"
+              : "Locked"}
           </Button>
 
           <Button

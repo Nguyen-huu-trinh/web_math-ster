@@ -90,14 +90,12 @@ export class ExamClientService {
     );
   }
 
-  close(id: string) {
-    return apiClient.post(
-      `/api/exams/${id}/close`,
-      {}
-    );
-  }
-
+ deactivate(id: string) {
+  return apiClient.post(
+    `/api/exams/${id}/deactivate`,
+    {}
+  );
 }
-
+}
 export const examClientService =
   new ExamClientService();

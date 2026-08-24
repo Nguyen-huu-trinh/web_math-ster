@@ -167,17 +167,14 @@ export function usePublishExam() {
 
 }
 
-export function useCloseExam() {
-
+export function useDeactivateExam() {
   const qc = useQueryClient();
 
   return useMutation({
-
     mutationFn: (id: string) =>
-      examClientService.close(id),
+      examClientService.deactivate(id),
 
     onSuccess(_, id) {
-
       qc.invalidateQueries({
         queryKey: queryKeys.exam.all,
       });
@@ -185,11 +182,8 @@ export function useCloseExam() {
       qc.invalidateQueries({
         queryKey: queryKeys.exam.detail(id),
       });
-
     },
-
   });
-
 }
 
 export function useDuplicateExam() {

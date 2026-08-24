@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 
 import {
-  useCloseExam,
+  useDeactivateExam,
   useDeleteExam,
   useDuplicateExam,
   useExams,
@@ -17,7 +17,7 @@ export default function ExamsPage() {
   const examsQuery = useExams();
 
   const publish = usePublishExam();
-  const close = useCloseExam();
+  const close = useDeactivateExam();
   const duplicate = useDuplicateExam();
   const remove = useDeleteExam();
 
@@ -118,7 +118,7 @@ export default function ExamsPage() {
       <ExamTable
         exams={exams}
         onPublish={(id) => publish.mutate(id)}
-        onClose={(id) => close.mutate(id)}
+        onDeactivate={(id) => close.mutate(id)}
         onDuplicate={(id) => duplicate.mutate(id)}
         onDelete={(id) => remove.mutate(id)}
       />

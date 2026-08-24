@@ -16,7 +16,6 @@ export async function GET(
   request: NextRequest,
   { params }: Props
 ) {
-
   await requireTeacher();
 
   const { id } = await params;
@@ -27,11 +26,10 @@ export async function GET(
   return NextResponse.json(key);
 }
 
-export async function PATCH(
+export async function PUT(
   request: NextRequest,
   { params }: Props
 ) {
-
   await requireTeacher();
 
   const { id } = await params;

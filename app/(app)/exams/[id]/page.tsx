@@ -59,6 +59,10 @@ export default function ExamDetailPage() {
   }
 
   const exam = examQuery.data;
+  console.log("[EXAM PDF]", {
+  examId: exam.id,
+  examFileUrl: exam.exam_file_url,
+});
 function handleToggleStatus() {
   if (exam.status === "LOCKED") {
     publish.mutate(id);

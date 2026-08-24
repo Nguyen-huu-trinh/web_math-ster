@@ -4,8 +4,8 @@ import {
 } from "@/repositories/course.repository";
 
 class CourseService {
-  async getAll() {
-    return await courseRepository.getAll();
+  async getAll(studentId?: string) {
+    return courseRepository.getAll(studentId);
   }
 
   async getById(id: string) {
@@ -20,7 +20,10 @@ class CourseService {
     id: string,
     data: Partial<CreateCourseDto>
   ) {
-    return await courseRepository.update(id, data);
+    return await courseRepository.update(
+      id,
+      data
+    );
   }
 
   async delete(id: string) {
@@ -32,4 +35,5 @@ class CourseService {
   }
 }
 
-export const courseService = new CourseService();
+export const courseService =
+  new CourseService();

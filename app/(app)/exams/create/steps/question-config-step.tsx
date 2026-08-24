@@ -6,21 +6,27 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card";
-
+import {
+  CreateExamDto,
+  QuestionConfig,
+} from "@/types/exam";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
-import { CreateExamDto } from "@/types/exam";
 
 interface Props {
   form: CreateExamDto;
   setForm: Dispatch<SetStateAction<CreateExamDto>>;
+  onConfigChange: (
+    config: QuestionConfig
+  ) => void;
 }
 
 export function QuestionConfigStep({
   form,
   setForm,
+  onConfigChange,
 }: Props) {
   const config = form.question_config;
 
@@ -28,32 +34,34 @@ export function QuestionConfigStep({
   form.exam_type === "MOET";
 
   // Tự động áp cấu trúc THPT
-  useEffect(() => {
-    if (!isTHPT) return;
+ useEffect(() => {
+  if (!isTHPT) return;
 
-    if (
-      config.multipleChoice === 12 &&
-      config.trueFalse === 4 &&
-      config.shortAnswer === 6
-    ) {
-      return;
-    }
+  const fixedConfig: QuestionConfig = {
+    multipleChoice: 12,
+    trueFalse: 4,
+    shortAnswer: 6,
+  };
 
-    setForm((prev) => ({
-      ...prev,
-      question_config: {
-        multipleChoice: 12,
-        trueFalse: 4,
-        shortAnswer: 6,
-      },
-    }));
-  }, [
-    isTHPT,
-    config.multipleChoice,
-    config.trueFalse,
-    config.shortAnswer,
-    setForm,
-  ]);
+  if (
+    config.multipleChoice ===
+      fixedConfig.multipleChoice &&
+    config.trueFalse ===
+      fixedConfig.trueFalse &&
+    config.shortAnswer ===
+      fixedConfig.shortAnswer
+  ) {
+    return;
+  }
+
+  onConfigChange(fixedConfig);
+}, [
+  isTHPT,
+  config.multipleChoice,
+  config.trueFalse,
+  config.shortAnswer,
+  onConfigChange,
+]);
 
   const totalQuestions =
     config.multipleChoice +
@@ -68,22 +76,20 @@ export function QuestionConfigStep({
     return Number((10 / totalQuestions).toFixed(2));
   }, [isTHPT, totalQuestions]);
 
-  function update(
-    key:
-      | "multipleChoice"
-      | "trueFalse"
-      | "shortAnswer",
-    value: number
-  ) {
-    setForm((prev) => ({
-      ...prev,
-      question_config: {
-        ...prev.question_config,
-        [key]: value,
-      },
-    }));
-  }
+ function update(
+  key:
+    | "multipleChoice"
+    | "trueFalse"
+    | "shortAnswer",
+  value: number
+) {
+  const newConfig: QuestionConfig = {
+    ...form.question_config,
+    [key]: value,
+  };
 
+  onConfigChange(newConfig);
+}
   return (
     <Card>
       <CardContent className="space-y-8 p-6">

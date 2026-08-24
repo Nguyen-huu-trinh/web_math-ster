@@ -15,6 +15,7 @@ import {
   CreateExamDto,
   Exam,
   QuestionConfig,
+  AnswerKey,
 } from "@/types/exam";
 
 import { BasicInfoStep } from "./steps/basic-info-step";
@@ -32,6 +33,42 @@ const defaultQuestionConfig: QuestionConfig = {
   trueFalse: 4,
   shortAnswer: 6,
 };
+
+function resizeAnswerKey(
+  answerKey: AnswerKey,
+  config: QuestionConfig
+): AnswerKey {
+  return {
+    multipleChoice: Array.from(
+      {
+        length: config.multipleChoice,
+      },
+      (_, index) =>
+        answerKey.multipleChoice?.[index] ?? ""
+    ),
+
+    trueFalse: Array.from(
+      {
+        length: config.trueFalse,
+      },
+      (_, index) =>
+        answerKey.trueFalse?.[index] ?? [
+          "",
+          "",
+          "",
+          "",
+        ]
+    ),
+
+    shortAnswer: Array.from(
+      {
+        length: config.shortAnswer,
+      },
+      (_, index) =>
+        answerKey.shortAnswer?.[index] ?? ""
+    ),
+  };
+}
 
 export function CreateExamWizard({
   mode = "create",
@@ -88,6 +125,21 @@ export function CreateExamWizard({
       teacherId: "",
     };
   });
+
+function updateQuestionConfig(
+  newConfig: QuestionConfig
+) {
+  setForm((prev) => ({
+    ...prev,
+
+    question_config: newConfig,
+
+    answer_key: resizeAnswerKey(
+      prev.answer_key,
+      newConfig
+    ),
+  }));
+}
 
   function next() {
     setStep((s) => Math.min(4, s + 1));
@@ -155,11 +207,12 @@ export function CreateExamWizard({
         )}
 
         {step === 2 && (
-          <QuestionConfigStep
-            form={form}
-            setForm={setForm}
-          />
-        )}
+        <QuestionConfigStep
+          form={form}
+          setForm={setForm}
+          onConfigChange={updateQuestionConfig}
+        />
+      )}
 
         {step === 3 && (
           <ScoringStep

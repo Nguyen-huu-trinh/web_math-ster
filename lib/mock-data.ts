@@ -30,7 +30,7 @@ export const MOCK_USERS: Record<string, User> = {
 }
 
 // Countdown target: Vietnam High School Graduation Exam 2027 (late June)
-export const EXAM_DATE = new Date('2027-06-26T07:00:00')
+export const EXAM_DATE = new Date('2027-06-11T07:00:00')
 
 export const STUDENT_STATS = [
   { label: 'Lessons Learned', value: 142, total: 180, icon: 'BookOpen', trend: '+8 this week' },

@@ -79,105 +79,97 @@ export class ExamRepository {
   // CREATE
   // =========================================================
 
-  async create(
-    teacherId: string,
-    values: CreateExamDto
-  ) {
+ async create(
+  teacherId: string,
+  values: CreateExamDto
+) {
+  const supabase = await createClient();
 
-    const supabase = await createClient();
+  let questionConfig: QuestionConfig;
 
-    let questionConfig: QuestionConfig;
-
-    if (values.exam_type === "MOET")  {
-
-      questionConfig = {
-
-        multipleChoice: 12,
-
-        trueFalse: 4,
-
-        shortAnswer: 6,
-
-      };
-
-    } else {
-
-      questionConfig = values.question_config;
-
-    }
-
-    const emptyAnswerKey: AnswerKey = {
-
-      multipleChoice: Array(
-        questionConfig.multipleChoice
-      ).fill(""),
-
-      trueFalse: Array.from(
-        {
-          length: questionConfig.trueFalse,
-        },
-        () => ["", "", "", ""]
-      ),
-
-      shortAnswer: Array(
-        questionConfig.shortAnswer
-      ).fill(""),
-
+  if (values.exam_type === "MOET") {
+    questionConfig = {
+      multipleChoice: 12,
+      trueFalse: 4,
+      shortAnswer: 6,
     };
-
-    const { data, error } = await supabase
-      .from("exams")
-      .insert({
-
-        title: values.title,
-
-        description: values.description,
-
-        course_id: values.course_id,
-
-        exam_file_url: values.exam_file_url,
-
-        exam_type: values.exam_type,
-
-        category: values.category,
-
-        duration_minutes:
-          values.duration_minutes,
-
-        attendance_min_score:
-          values.attendance_min_score,
-
-        show_answer:
-          values.show_answer,
-
-        max_attempts:
-          values.max_attempts,
-
-        start_at:
-          values.start_at,
-
-        end_at:
-          values.end_at,
-
-        question_config:
-          questionConfig,
-
-        answer_key:
-          emptyAnswerKey,
-
-       status: "LOCKED",
-        is_active: true,
-
-        created_by: teacherId,
-
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return data;
+  } else {
+    questionConfig = values.question_config;
   }
+
+  // Answer key mặc định nếu chưa nhập
+  const emptyAnswerKey: AnswerKey = {
+    multipleChoice: Array(
+      questionConfig.multipleChoice
+    ).fill(""),
+
+    trueFalse: Array.from(
+      {
+        length: questionConfig.trueFalse,
+      },
+      () => ["", "", "", ""]
+    ),
+
+    shortAnswer: Array(
+      questionConfig.shortAnswer
+    ).fill(""),
+  };
+
+  const { data, error } = await supabase
+    .from("exams")
+    .insert({
+      title: values.title,
+
+      description: values.description,
+
+      course_id: values.course_id,
+
+      exam_file_url: values.exam_file_url,
+
+      exam_type: values.exam_type,
+
+      category: values.category,
+
+      duration_minutes:
+        values.duration_minutes,
+
+      attendance_min_score:
+        values.attendance_min_score,
+
+      show_answer:
+        values.show_answer,
+
+      max_attempts:
+        values.max_attempts,
+
+      start_at:
+        values.start_at,
+
+      end_at:
+        values.end_at,
+
+      question_config:
+        questionConfig,
+
+      // QUAN TRỌNG:
+      // Lưu đáp án người dùng đã nhập.
+      // Nếu chưa có thì dùng answer key rỗng.
+      answer_key:
+        values.answer_key ?? emptyAnswerKey,
+
+      status: "LOCKED",
+
+      is_active: true,
+
+      created_by: teacherId,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return data;
+}
 
   // =========================================================
   // UPDATE

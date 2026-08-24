@@ -26,7 +26,11 @@ interface Props {
   form: CreateExamDto;
   setForm: Dispatch<SetStateAction<CreateExamDto>>;
 }
-
+const preventWheelChange = (
+  e: React.WheelEvent<HTMLInputElement>
+) => {
+  e.currentTarget.blur();
+};
 export function BasicInfoStep(
   {
   
@@ -218,7 +222,10 @@ export function BasicInfoStep(
                   duration_minutes: Number(e.target.value),
                 })
               }
+              onWheel={preventWheelChange}
+
             />
+            
           </div>
 
           <div>
@@ -233,30 +240,32 @@ export function BasicInfoStep(
                   max_attempts: Number(e.target.value),
                 })
               }
+              onWheel={preventWheelChange}
             />
           </div>
 
         </div>
 
-        {/* Attendance */}
+        {/* Điểm đạt */}
 
-        {form.category === "ATTENDANCE" && (
-          <div>
-            <Label>Điểm đạt</Label>
+<div>
+  <Label>Điểm đạt tối thiểu</Label>
 
-            <Input
-              type="number"
-              step="0.25"
-              value={form.attendance_min_score ?? 0}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  attendance_min_score: Number(e.target.value),
-                })
-              }
-            />
-          </div>
-        )}
+  <Input
+    type="number"
+    min={0}
+    max={10}
+    step="0.25"
+    value={form.attendance_min_score ?? 0}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        attendance_min_score: Number(e.target.value),
+      })
+    }
+    onWheel={preventWheelChange}
+  />
+</div>
 
         {/* Show Answer */}
 

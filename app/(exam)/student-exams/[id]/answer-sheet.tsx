@@ -630,8 +630,8 @@ return (
     }
     className={cn(
       "flex h-7 w-7 items-center justify-center rounded-md font-bold transition-colors",
-     isMarked
-  ? "bg-purple-100 text-purple-800 ring-2 ring-purple-400 hover:bg-purple-200"
+ isMarked
+  ? "bg-red-100 text-red-700 ring-2 ring-red-400 hover:bg-red-200"
   : "text-foreground hover:bg-muted"
     )}
   >
@@ -721,8 +721,8 @@ className="rounded-lg border p-3"
   }
   className={cn(
     "flex h-7 min-w-fit px-2 items-center justify-center rounded-full font-bold whitespace-nowrap transition-colors",
-    isMarked
-  ? "bg-purple-100 text-purple-800 ring-2 ring-purple-400 hover:bg-purple-200"
+isMarked
+  ? "bg-red-100 text-red-700 ring-2 ring-red-400 hover:bg-red-200"
   : "text-foreground hover:bg-muted"
   )}
 >
@@ -781,8 +781,8 @@ className="flex justify-between items-center mb-2"
   }
   className={cn(
     "rounded-md px-2 py-1 font-semibold transition-colors",
-   isMarked
-  ? "bg-purple-100 text-purple-800 ring-2 ring-purple-400 hover:bg-purple-200"
+ isMarked
+  ? "bg-red-100 text-red-700 ring-2 ring-red-400 hover:bg-red-200"
   : "text-foreground hover:bg-muted"
   )}
 >
@@ -916,8 +916,8 @@ className="rounded-lg border p-3"
   }
   className={cn(
     "flex h-7 min-w-fit px-2 items-center justify-center rounded-full font-bold whitespace-nowrap transition-colors",
-   isMarked
-  ? "bg-purple-100 text-purple-800 ring-2 ring-purple-400 hover:bg-purple-200"
+isMarked
+  ? "bg-red-100 text-red-700 ring-2 ring-red-400 hover:bg-red-200"
   : "text-foreground hover:bg-muted"
   )}
 >

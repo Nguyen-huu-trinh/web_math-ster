@@ -4,7 +4,7 @@ import { SessionMessageDialog } from "@/components/auth/session-message-dialog";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-
+import Link from "next/link";
 import {
     Mail,
     Lock,
@@ -170,19 +170,18 @@ async function handleSubmit(
                                 </Field>
 
                                 <Field>
-                                    <div className="flex items-center justify-between">
-                                        <FieldLabel htmlFor="password">
-                                            Password
-                                        </FieldLabel>
+{/* <div className="flex items-center justify-between">
+  <FieldLabel htmlFor="password">
+    Password
+  </FieldLabel>
 
-                                        <button
-                                            type="button"
-                                            className="text-xs font-medium text-primary hover:underline"
-                                        >
-                                            Forgot password?
-                                        </button>
-                                    </div>
-
+  <Link
+    href="/forgot-password"
+    className="text-xs font-medium text-primary hover:underline"
+  >
+    Forgot password?
+  </Link>
+</div> */}
                                     <InputGroup>
                                         <InputGroupAddon>
                                             <Lock />

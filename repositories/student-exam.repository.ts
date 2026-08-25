@@ -31,6 +31,8 @@ export class StudentExamRepository {
         attendance_min_score,
         show_answer,
         exam_file_url,
+        status,
+        is_active,
         courses(
           id,
           name
@@ -38,7 +40,7 @@ export class StudentExamRepository {
       `)
       .in("course_id", courseIds)
       .is("deleted_at", null)
-      .eq("is_active", true)
+      .in("status", ["OPEN", "LOCKED"])
       .order("created_at", {
         ascending: false,
       });
@@ -81,9 +83,11 @@ const { data: attempts, error: attemptError } =
 
       const attemptCount = examAttempts.length;
 
-      const canStart =
-        attemptCount <
-        (exam.max_attempts ?? 1);
+const canStart =
+  exam.status === "OPEN" &&
+  exam.is_active === true &&
+  attemptCount <
+    (exam.max_attempts ?? 1);
 
       let status = "NOT_STARTED";
 

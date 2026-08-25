@@ -599,14 +599,23 @@ export function TeacherStudentsTable({
                                             )}
                                         </td>
 
-                                        {/* Avg */}
-                                        <td className="px-5 py-4 text-right">
-                                            <Badge variant="secondary">
-                                                {student.averageScore.toFixed(
-                                                    2
-                                                )}
-                                            </Badge>
-                                        </td>
+ {/* Avg */}
+<td className="px-5 py-4 text-right">
+    <Badge
+        variant="secondary"
+        className={
+            student.isActive
+                ? ""
+                : "border-zinc-300 bg-zinc-200 text-zinc-700"
+        }
+    >
+        {student.averageScore.toFixed(2)}
+
+        {!student.isActive && (
+            <Ban className="ml-1.5 h-3 w-3" />
+        )}
+    </Badge>
+</td>
 
                                         {/* Actions */}
                                         <td className="px-3 py-4 text-right">

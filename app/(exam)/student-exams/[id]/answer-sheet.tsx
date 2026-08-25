@@ -7,6 +7,7 @@ import {
   FileText,
  GraduationCap,
   Send,
+  Bookmark,
 } from "lucide-react";
 import { toast } from "sonner";
 import ExamHeader from "./exam-header";
@@ -521,7 +522,8 @@ async function handleRetry() {
     alert(err.message);
   }
 }
-
+const [markedQuestions, setMarkedQuestions] =
+  useState<Set<string>>(new Set());
 const submitted = !!result;
 const lowTime = timeLeft <= 300;
 
@@ -532,7 +534,19 @@ const answerKey = exam.answer_key ?? {
   trueFalse: [],
   shortAnswer: [],
 };
+function toggleMarkQuestion(key: string) {
+  setMarkedQuestions((prev) => {
+    const next = new Set(prev);
 
+    if (next.has(key)) {
+      next.delete(key);
+    } else {
+      next.add(key);
+    }
+
+    return next;
+  });
+}
 
 
     return (
@@ -583,27 +597,47 @@ const answerKey = exam.answer_key ?? {
       {Array.from({ length: questionConfig.multipleChoice }).map((_, index) => {
         const selected = answers.multipleChoice[index];
         const correct = answerKey.multipleChoice[index];
+const questionKey = `mc-${index}`;
+const isMarked = markedQuestions.has(questionKey);
 
-        return (
-          <div
-            key={index}
-            /* Đã đổi justify-between thành justify-start và thêm gap-3 */
-            className="mb-3 flex items-center justify-start gap-3 break-inside-avoid rounded-lg px-2 py-1.5"
-          >
+return (
+<div
+  key={index}
+  className="mb-3 flex items-center justify-start gap-3 break-inside-avoid rounded-lg px-2 py-1.5"
+>
+  
             {/* Cụm Icon + STT đứng sát nhau */}
-            <div className="flex items-center gap-1.5">
-              {/* Vùng chứa Icon (cố định độ rộng để không bị lệch hàng khi chưa có icon) */}
-              <div className="flex h-6 w-5 items-center justify-center text-base font-bold">
-                {showAnswer && (
-                  <span className={selected === correct ? "text-green-600" : "text-red-600"}>
-                    {selected === correct ? "✓" : "✕"}
-                  </span>
-                )}
-              </div>
+<div className="flex items-center gap-1.5">
+  <div className="flex h-6 w-5 items-center justify-center text-base font-bold">
+    {showAnswer && (
+      <span
+        className={
+          selected === correct
+            ? "text-green-600"
+            : "text-red-600"
+        }
+      >
+        {selected === correct ? "✓" : "✕"}
+      </span>
+    )}
+  </div>
 
-              {/* Số thứ tự */}
-              <span className="w-5 text-right font-bold">{index + 1}</span>
-            </div>
+  <button
+    type="button"
+    disabled={submitted}
+    onClick={() =>
+      toggleMarkQuestion(questionKey)
+    }
+    className={cn(
+      "flex h-7 w-7 items-center justify-center rounded-md font-bold transition-colors",
+     isMarked
+  ? "bg-purple-100 text-purple-800 ring-2 ring-purple-400 hover:bg-purple-200"
+  : "text-foreground hover:bg-muted"
+    )}
+  >
+    {index + 1}
+  </button>
+</div>
 
             {/* Các nút A, B, C, D nằm ngay liền sau STT */}
             <div className="flex gap-2">
@@ -669,17 +703,31 @@ const answerKey = exam.answer_key ?? {
 
 {Array.from({
 length: questionConfig.trueFalse,
-}).map((_, questionIndex) => (
-
+}).map((_, questionIndex) => {
+const questionKey = `tf-${questionIndex}`;
+const isMarked = markedQuestions.has(questionKey);
+ return (
 <div
 key={questionIndex}
 className="rounded-lg border p-3"
 >
 <div className="mb-3 flex items-center justify-between">
 
-  <p className="font-semibold">
+<button
+  type="button"
+  disabled={submitted}
+  onClick={() =>
+    toggleMarkQuestion(questionKey)
+  }
+  className={cn(
+    "flex h-7 min-w-fit px-2 items-center justify-center rounded-full font-bold whitespace-nowrap transition-colors",
+    isMarked
+  ? "bg-purple-100 text-purple-800 ring-2 ring-purple-400 hover:bg-purple-200"
+  : "text-foreground hover:bg-muted"
+  )}
+>
   Câu {questionConfig.multipleChoice + questionIndex + 1}
-</p>
+</button>
 
   {showAnswer && (() => {
 
@@ -700,12 +748,24 @@ className="rounded-lg border p-3"
 
 </div>
 
-{["a", "b", "c", "d"].map((label, columnIndex) => {
+{["a", "b", "c", "d"].map(
+  (label, columnIndex) => {
 
- const selected =
-    answers.trueFalse?.[questionIndex]?.[columnIndex] ?? "";
-  const correct =
-    answerKey.trueFalse?.[questionIndex]?.[columnIndex];
+    const selected =
+      answers.trueFalse?.[
+        questionIndex
+      ]?.[columnIndex] ?? "";
+
+    const correct =
+      answerKey.trueFalse?.[
+        questionIndex
+      ]?.[columnIndex];
+
+    const markKey =
+      `tf-${questionIndex}-${columnIndex}`;
+
+    const isMarked =
+      markedQuestions.has(markKey);
 
   return (
 <div
@@ -713,8 +773,21 @@ key={columnIndex}
 className="flex justify-between items-center mb-2"
 >
 
-<span>{label})</span>
-
+<button
+  type="button"
+  disabled={submitted}
+  onClick={() =>
+    toggleMarkQuestion(markKey)
+  }
+  className={cn(
+    "rounded-md px-2 py-1 font-semibold transition-colors",
+   isMarked
+  ? "bg-purple-100 text-purple-800 ring-2 ring-purple-400 hover:bg-purple-200"
+  : "text-foreground hover:bg-muted"
+  )}
+>
+  {label})
+</button>
 <div className="flex gap-2">
 
 <Button
@@ -778,11 +851,12 @@ className="flex justify-between items-center mb-2"
 
 </div>
 
-);})}
+);
+})}
 
 </div>
 
-))}
+)})}
 
 </div>
 
@@ -809,7 +883,8 @@ Trả lời ngắn
 {Array.from({
   length: questionConfig.shortAnswer,
 }).map((_, index) => {
-
+const questionKey = `short-${index}`;
+const isMarked = markedQuestions.has(questionKey);
   const studentAnswer = answers.shortAnswer[index]
   .join("")
   .replace(/\s/g, "")
@@ -833,9 +908,24 @@ className="rounded-lg border p-3"
 >
 <div className="mb-3 flex items-center justify-between">
 
-  <p className="font-semibold">
-    Câu {questionConfig.multipleChoice + questionConfig.trueFalse + index + 1}
-  </p>
+<button
+  type="button"
+  disabled={submitted}
+  onClick={() =>
+    toggleMarkQuestion(questionKey)
+  }
+  className={cn(
+    "flex h-7 min-w-fit px-2 items-center justify-center rounded-full font-bold whitespace-nowrap transition-colors",
+   isMarked
+  ? "bg-purple-100 text-purple-800 ring-2 ring-purple-400 hover:bg-purple-200"
+  : "text-foreground hover:bg-muted"
+  )}
+>
+  Câu {questionConfig.multipleChoice +
+    questionConfig.trueFalse +
+    index +
+    1}
+</button>
 
   {showAnswer && (
 

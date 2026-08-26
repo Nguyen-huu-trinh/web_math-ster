@@ -795,6 +795,7 @@ async function deleteAttempt(
   type="button"
   size="icon"
   variant="outline"
+  className="h-7 w-7 p-0"
   disabled={
     adjustingAttemptId === attempt.student_id
   }
@@ -807,13 +808,14 @@ async function deleteAttempt(
     );
   }}
 >
-  <Plus className="size-4" />
+  <Plus className="size-3" />
 </Button>
 
 <Button
   type="button"
   size="icon"
   variant="outline"
+  className="h-7 w-7 p-0"
   disabled={
     adjustingAttemptId === attempt.student_id
   }
@@ -826,7 +828,7 @@ async function deleteAttempt(
     );
   }}
 >
-  <Minus className="size-4" />
+  <Minus className="size-3" />
 </Button>
 
                           <Button

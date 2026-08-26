@@ -34,20 +34,20 @@ import { CountdownCard } from '@/components/dashboard/countdown-card'
 
 import dynamic from "next/dynamic";
 
-const TeacherActivityChart = dynamic(
-  () =>
-    import("@/components/dashboard/dashboard-charts").then(
-      (m) => ({
-        default: m.TeacherActivityChart,
-      })
-    ),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-[320px] rounded-xl border animate-pulse bg-muted" />
-    ),
-  }
-);
+// const TeacherActivityChart = dynamic(
+//   () =>
+//     import("@/components/dashboard/dashboard-charts").then(
+//       (m) => ({
+//         default: m.TeacherActivityChart,
+//       })
+//     ),
+//   {
+//     ssr: false,
+//     loading: () => (
+//       <div className="h-[320px] rounded-xl border animate-pulse bg-muted" />
+//     ),
+//   }
+// );
 
 const LeaderboardCard = dynamic(
   () =>
@@ -490,11 +490,11 @@ async function saveAnnouncement() {
             />
             </div>
 
-            <div>
+            {/* <div>
 
     <TeacherActivityChart />
 
-</div>
+</div> */}
         </div>
 
     )

@@ -481,6 +481,85 @@ async getTeacherAttemptDetail(
   };
 }
 
+async getPeriodicProgress(
+  studentId: string
+) {
+  const supabase = await createClient();
+
+  // 1. Lấy các bài kiểm tra định kỳ
+  const {
+    data: exams,
+    error: examsError,
+  } = await supabase
+    .from("exams")
+    .select(`
+      id,
+      title,
+      category
+    `)
+    .eq("category", "PERIODIC")
+    .is("deleted_at", null);
+
+  if (examsError) {
+    throw examsError;
+  }
+
+  if (!exams || exams.length === 0) {
+    return [];
+  }
+
+  const examIds = exams.map(
+    (exam) => exam.id
+  );
+
+  // 2. Lấy các lượt làm của học sinh
+  const {
+    data: attempts,
+    error: attemptsError,
+  } = await supabase
+    .from("exam_attempts")
+    .select(`
+      id,
+      exam_id,
+      score,
+      submitted_at,
+      created_at
+    `)
+    .eq("student_id", studentId)
+    .in("exam_id", examIds)
+    .not("score", "is", null)
+    .order("submitted_at", {
+      ascending: true,
+    });
+
+  if (attemptsError) {
+    throw attemptsError;
+  }
+
+  // 3. Ghép thông tin bài thi
+  return (attempts ?? []).map(
+    (attempt, index) => {
+      const exam = exams.find(
+        (item) =>
+          item.id === attempt.exam_id
+      );
+
+      return {
+        attemptId: attempt.id,
+        examId: attempt.exam_id,
+        examTitle:
+          exam?.title ?? "Bài kiểm tra",
+        score: Number(attempt.score),
+        date:
+          attempt.submitted_at ??
+          attempt.created_at,
+        attemptNumber: index + 1,
+      };
+    }
+  );
+}
+
+
 async getAttemptDetail(
     studentId: string,
     attemptId: string

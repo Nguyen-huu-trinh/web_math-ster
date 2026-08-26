@@ -9,7 +9,11 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { STUDENT_PROGRESS_CHART, TEACHER_ACTIVITY_CHART } from '@/lib/mock-data'
+import {
+  TEACHER_ACTIVITY_CHART,
+} from "@/lib/mock-data";
+
+import { useStudentProgress } from "@/hooks/use-student-progress";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   ChartContainer,
@@ -25,66 +29,170 @@ const studentConfig = {
 } satisfies ChartConfig
 
 export function StudentProgressChart() {
+  const {
+    data: progress = [],
+    isLoading,
+    isError,
+  } = useStudentProgress();
+
+  if (isLoading) {
+    return (
+      <Card className="animate-fade-in-up">
+        <CardHeader>
+          <CardTitle>
+            Tiến bộ điểm số
+          </CardTitle>
+
+          <CardDescription>
+            Điểm các bài kiểm tra định kỳ
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          <div className="flex h-[280px] items-center justify-center text-sm text-muted-foreground">
+            Đang tải dữ liệu...
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className="animate-fade-in-up">
+        <CardHeader>
+          <CardTitle>
+            Tiến bộ điểm số
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          <div className="flex h-[280px] items-center justify-center text-sm text-destructive">
+            Không thể tải dữ liệu điểm.
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const chartData = progress.map(
+    (item) => ({
+      attempt: `Lần ${item.attemptNumber}`,
+      score: item.score,
+      examTitle: item.examTitle,
+    })
+  );
+
   return (
     <Card className="animate-fade-in-up">
       <CardHeader>
-        <CardTitle>Score Progression</CardTitle>
-        <CardDescription>Your monthly average score over the school year</CardDescription>
+        <CardTitle>
+          Tiến bộ điểm số
+        </CardTitle>
+
+        <CardDescription>
+          Điểm các bài kiểm tra định kỳ
+        </CardDescription>
       </CardHeader>
+
       <CardContent>
-        <ChartContainer config={studentConfig} className="h-[280px] w-full">
-          <AreaChart data={STUDENT_PROGRESS_CHART} margin={{ left: -16, right: 8, top: 8 }}>
-            <defs>
-              <linearGradient id="fillScore" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-score)" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="var(--color-score)" stopOpacity={0.02} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={10} />
-            <YAxis domain={[0, 10]} tickLine={false} axisLine={false} tickMargin={8} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Area
-              dataKey="score"
-              type="monotone"
-              stroke="var(--color-score)"
-              strokeWidth={2.5}
-              fill="url(#fillScore)"
-              dot={{ r: 3, fill: 'var(--color-score)' }}
-              activeDot={{ r: 5 }}
-            />
-          </AreaChart>
-        </ChartContainer>
+        {chartData.length === 0 ? (
+          <div className="flex h-[280px] items-center justify-center text-sm text-muted-foreground">
+            Chưa có bài kiểm tra định kỳ.
+          </div>
+        ) : (
+          <ChartContainer
+            config={studentConfig}
+            className="h-[280px] w-full"
+          >
+            <AreaChart
+              data={chartData}
+              margin={{
+                left: -16,
+                right: 8,
+                top: 8,
+              }}
+            >
+              <defs>
+                <linearGradient
+                  id="fillScore"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop
+                    offset="5%"
+                    stopColor="var(--color-score)"
+                    stopOpacity={0.35}
+                  />
+
+                  <stop
+                    offset="95%"
+                    stopColor="var(--color-score)"
+                    stopOpacity={0.02}
+                  />
+                </linearGradient>
+              </defs>
+
+              <CartesianGrid
+                vertical={false}
+                strokeDasharray="3 3"
+              />
+
+              <XAxis
+                dataKey="attempt"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={10}
+              />
+
+              <YAxis
+                domain={[0, 10]}
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+              />
+
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    labelFormatter={(
+                      value,
+                      payload
+                    ) => {
+                      const item =
+                        payload?.[0]
+                          ?.payload;
+
+                      return (
+                        item?.examTitle ??
+                        value
+                      );
+                    }}
+                  />
+                }
+              />
+
+              <Area
+                dataKey="score"
+                type="monotone"
+                stroke="var(--color-score)"
+                strokeWidth={2.5}
+                fill="url(#fillScore)"
+                dot={{
+                  r: 3,
+                  fill: "var(--color-score)",
+                }}
+                activeDot={{
+                  r: 5,
+                }}
+              />
+            </AreaChart>
+          </ChartContainer>
+        )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
-const teacherConfig = {
-  submissions: { label: 'Submissions', color: 'var(--chart-1)' },
-  active: { label: 'Active Students', color: 'var(--chart-3)' },
-} satisfies ChartConfig
-
-export function TeacherActivityChart() {
-  return (
-    <Card className="animate-fade-in-up">
-      <CardHeader>
-        <CardTitle>Platform Activity</CardTitle>
-        <CardDescription>Assignment submissions and active students per month</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ChartContainer config={teacherConfig} className="h-[280px] w-full">
-          <BarChart data={TEACHER_ACTIVITY_CHART} margin={{ left: -16, right: 8, top: 8 }}>
-            <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={10} />
-            <YAxis tickLine={false} axisLine={false} tickMargin={8} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <ChartLegend content={<ChartLegendContent />} />
-            <Bar dataKey="submissions" fill="var(--color-submissions)" radius={[6, 6, 0, 0]} />
-            <Bar dataKey="active" fill="var(--color-active)" radius={[6, 6, 0, 0]} />
-          </BarChart>
-        </ChartContainer>
-      </CardContent>
-    </Card>
-  )
-}

@@ -1,7 +1,7 @@
 "use client";
-
+import { toast } from "sonner";
 import Link from "next/link";
-
+import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
   Clock,
@@ -9,7 +9,12 @@ import {
   Trophy,
   CheckCircle2,
   XCircle,
+  Plus,
+  Minus,
+  Trash2,
 } from "lucide-react";
+
+import { useQueryClient } from "@tanstack/react-query";
 
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -116,6 +121,9 @@ export default function ExamAnswersPage() {
 
   const examId =
     params.id as string;
+const queryClient = useQueryClient();
+
+
 const [sortBy, setSortBy] = useState<
   "student_code" | "score_desc" | "score_asc"
 >("student_code");
@@ -123,6 +131,12 @@ const [sortBy, setSortBy] = useState<
 const [statusFilter, setStatusFilter] = useState<
   "all" | "passed" | "failed" | "not_started"
 >("all");
+
+const [adjustingAttemptId, setAdjustingAttemptId] =
+  useState<string | null>(null);
+
+const [deletingAttemptId, setDeletingAttemptId] =
+  useState<string | null>(null);
 
   const {
     data: attempts = [],
@@ -195,6 +209,133 @@ const sortedAttempts = useMemo(() => {
 
   return result;
 }, [filteredAttempts, sortBy]);
+
+async function adjustPoints(
+  studentId: string,
+  action: "increase" | "decrease"
+) {
+  try {
+    setAdjustingAttemptId(studentId);
+
+    const response = await fetch(
+      `/api/exams/${examId}/points`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          studentId,
+          action,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data?.message ||
+          "Không thể cập nhật điểm."
+      );
+    }
+
+    const oldPoints = Number(
+      data.oldPoints ?? 0
+    );
+
+    const newPoints = Number(
+      data.newPoints ?? 0
+    );
+
+    const amount = Math.abs(
+      Number(data.change ?? 0)
+    );
+
+    toast.success(
+      action === "increase"
+        ? `Đã cộng ${amount} điểm`
+        : `Đã trừ ${amount} điểm`,
+      {
+        description:
+          `Điểm: ${oldPoints} → ${newPoints}`,
+      }
+    );
+
+  } catch (error) {
+    console.error(
+      "[ADJUST POINTS ERROR]",
+      error
+    );
+
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : "Không thể cập nhật điểm."
+    );
+
+  } finally {
+    setAdjustingAttemptId(null);
+  }
+}
+
+
+async function deleteAttempt(
+  studentId: string,
+  attemptId: string
+) {
+  try {
+    setDeletingAttemptId(attemptId);
+
+    const response = await fetch(
+      `/api/teachers/students/${studentId}/attempts/${attemptId}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data?.error ||
+          data?.message ||
+          "Không thể xóa lượt làm bài."
+      );
+    }
+
+    console.log(
+      "[DELETE ATTEMPT SUCCESS]",
+      data
+    );
+
+    await queryClient.invalidateQueries({
+      queryKey: [
+        "exam-attempts",
+        examId,
+      ],
+    });
+
+    toast.success(
+      "Đã xóa lượt làm bài."
+    );
+
+  } catch (error) {
+    console.error(
+      "[DELETE ATTEMPT ERROR]",
+      error
+    );
+
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : "Không thể xóa lượt làm bài."
+    );
+
+  } finally {
+    setDeletingAttemptId(null);
+  }
+}
 
   if (isLoading) {
     return (
@@ -646,6 +787,73 @@ const sortedAttempts = useMemo(() => {
 
                           </span>
 
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-1">
+
+<Button
+  type="button"
+  size="icon"
+  variant="outline"
+  disabled={
+    adjustingAttemptId === attempt.student_id
+  }
+  onClick={(e) => {
+    e.stopPropagation();
+
+    adjustPoints(
+      attempt.student_id,
+      "increase"
+    );
+  }}
+>
+  <Plus className="size-4" />
+</Button>
+
+<Button
+  type="button"
+  size="icon"
+  variant="outline"
+  disabled={
+    adjustingAttemptId === attempt.student_id
+  }
+  onClick={(e) => {
+    e.stopPropagation();
+
+    adjustPoints(
+      attempt.student_id,
+      "decrease"
+    );
+  }}
+>
+  <Minus className="size-4" />
+</Button>
+
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="destructive"
+                            disabled={
+                              !attempt.id ||
+                              deletingAttemptId === attempt.id
+                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+
+                              if (!attempt.id) {
+                                return;
+                              }
+
+                              deleteAttempt(
+                                attempt.student_id,
+                                attempt.id
+                              );
+                            }}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+
+                          </div>
                         </TableCell>
 
                       </TableRow>

@@ -1,6 +1,127 @@
 import { createClient } from "@/lib/supabase/server";
 
 export class StudentExamRepository {
+
+async adjustStudentPoints(
+  examId: string,
+  studentId: string,
+  action: "increase" | "decrease"
+) {
+  const supabase = await createClient();
+
+  // =====================================================
+  // 1. LẤY THÔNG TIN ĐỀ
+  // =====================================================
+
+  const { data: exam, error: examError } =
+    await supabase
+      .from("exams")
+      .select(`
+        id,
+        category
+      `)
+      .eq("id", examId)
+      .is("deleted_at", null)
+      .single();
+
+  if (examError) {
+    throw examError;
+  }
+
+  if (!exam) {
+    throw new Error(
+      "Không tìm thấy đề thi."
+    );
+  }
+
+  // =====================================================
+  // 2. XÁC ĐỊNH MỨC ĐIỂM
+  // =====================================================
+
+  const delta =
+    exam.category === "ATTENDANCE"
+      ? 10
+      : exam.category === "PERIODIC"
+      ? 50
+      : 0;
+
+  if (delta === 0) {
+    throw new Error(
+      "Đề thi không thuộc loại được cộng/trừ điểm."
+    );
+  }
+
+  // =====================================================
+  // 3. LẤY PROFILE HỌC SINH
+  // =====================================================
+
+  const { data: profile, error: profileError } =
+    await supabase
+      .from("profiles")
+      .select(`
+        id,
+        points
+      `)
+      .eq("id", studentId)
+      .single();
+
+  if (profileError) {
+    throw profileError;
+  }
+
+  if (!profile) {
+    throw new Error(
+      "Không tìm thấy hồ sơ học sinh."
+    );
+  }
+
+  // =====================================================
+  // 4. TÍNH ĐIỂM MỚI
+  // =====================================================
+
+  const change =
+    action === "increase"
+      ? delta
+      : -delta;
+
+  const newPoints = Math.max(
+    0,
+    profile.points + change
+  );
+
+  // =====================================================
+  // 5. UPDATE PROFILE
+  // =====================================================
+
+  const {
+    data: updatedProfile,
+    error: updateError,
+  } = await supabase
+    .from("profiles")
+    .update({
+      points: newPoints,
+    })
+    .eq("id", studentId)
+    .select(`
+      id,
+      points
+    `)
+    .single();
+
+  if (updateError) {
+    throw updateError;
+  }
+
+  return {
+    studentId,
+    oldPoints: profile.points,
+    newPoints: updatedProfile.points,
+    change,
+    category: exam.category,
+  };
+}
+
+
   async getMyExams(studentId: string) {
     const supabase = await createClient();
 

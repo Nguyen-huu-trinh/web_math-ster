@@ -806,11 +806,11 @@ async submitAttempt(
     // ==========================
 // CỘNG / TRỪ POINTS
 // ==========================
-const pointDelta = passed ? 10 : -10;
-// const pointDelta =
-//     attempt.exams.category === "ATTENDANCE"
-//         ? (passed ? 10 : -10)
-//         : (passed ? 50 : -50);
+// const pointDelta = passed ? 10 : -10;
+const pointDelta =
+    attempt.exams.category === "ATTENDANCE"
+        ? (passed ? 10 : -10)
+        : (passed ? 50 : -50);
 
 const { error: pointsError } = await supabase.rpc(
     "adjust_student_points",

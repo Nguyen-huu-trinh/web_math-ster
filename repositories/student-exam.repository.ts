@@ -678,25 +678,7 @@ const remainingSeconds =
     duration - elapsed,
     0
   );
-  if (
-  remainingSeconds <= 0 &&
-  !attempt.submitted_at
-) {
 
-  await supabase
-    .from("exam_attempts")
-    .update({
-
-      submitted_at:
-        new Date().toISOString(),
-
-    })
-    .eq(
-      "id",
-      attempt.id
-    );
-
-}
 
 
 
@@ -745,6 +727,27 @@ async submitAttempt(
     }
 
     // ==========================
+    // Kiểm tra thời gian làm bài
+    // ==========================
+
+    const startedAt =
+        new Date(
+            attempt.started_at
+        ).getTime();
+
+    const duration =
+        attempt.duration_seconds ??
+        attempt.exams.duration_minutes * 60;
+
+    const expiresAt =
+        startedAt + duration * 1000;
+
+    const now =
+        Date.now();
+
+    const isExpired =
+        now >= expiresAt;
+    // ==========================
     // Answer key
     // ==========================
 
@@ -786,8 +789,12 @@ async submitAttempt(
     // Atomic submit
     // ==========================
 
-    const submittedAt =
-        new Date().toISOString();
+const submittedAt =
+    isExpired
+        ? new Date(
+            expiresAt
+          ).toISOString()
+        : new Date().toISOString();
 
     const {
         data: updatedAttempt,

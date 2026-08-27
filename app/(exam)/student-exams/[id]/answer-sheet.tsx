@@ -188,25 +188,32 @@ useRef<NodeJS.Timeout | null>(
   // ============================
 
  useEffect(() => {
-    if (review || result) {
-        return;
-    }
+  if (review || result) {
+    return;
+  }
 
-    const timer = setInterval(() => {
-        setTimeLeft((prev) => {
-            if (prev <= 1) {
-                clearInterval(timer);
-                handleSubmit(false);
-                return 0;
-            }
+  const timer = setInterval(() => {
+    setTimeLeft((prev) => {
+      if (prev <= 1) {
+        clearInterval(timer);
 
-            return prev - 1;
-        });
-    }, 1000);
+        console.log(
+          "[EXAM] TIME UP - AUTO SUBMIT"
+        );
 
-    return () => clearInterval(timer);
+        handleSubmit(false);
+
+        return 0;
+      }
+
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => {
+    clearInterval(timer);
+  };
 }, [review, result]);
-
 // function autoSaveAnswers(
 //     nextAnswers: typeof answers
 // ) {

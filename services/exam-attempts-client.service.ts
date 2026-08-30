@@ -20,6 +20,7 @@ export interface ExamAttemptStudent {
   submitted_at: string | null;
 
   duration_seconds: number | null;
+  class_joined_at: string | null;
 }
 
 export interface ExamAttemptsResponse {

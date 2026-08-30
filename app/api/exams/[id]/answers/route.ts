@@ -82,18 +82,19 @@ export async function GET(
     // 3. LẤY TẤT CẢ HỌC SINH
     // =====================================================
 
-    const {
-      data: profiles,
-      error: profileError,
-    } = await supabase
-      .from("profiles")
-      .select(`
-        id,
-        student_code,
-        full_name
-      `)
-      .eq("role", "STUDENT")
-      .eq("is_active", true);
+const {
+  data: profiles,
+  error: profileError,
+} = await supabase
+  .from("profiles")
+  .select(`
+    id,
+    student_code,
+    full_name,
+    created_at
+  `)
+  .eq("role", "STUDENT")
+  .eq("is_active", true);
       
 
     if (profileError) {
@@ -169,7 +170,8 @@ export async function GET(
               full_name:
                 student.full_name ??
                 "Học sinh",
-
+              class_joined_at:
+                  student.created_at,
               attempt_number: 0,
 
               score: null,
@@ -218,6 +220,9 @@ export async function GET(
 
             duration_seconds:
               attempt.duration_seconds,
+
+            class_joined_at:
+              student.created_at,
           };
         }
       );

@@ -52,6 +52,18 @@ function formatDate(
   );
 }
 
+function formatClassDate(
+  value: string | null
+) {
+  if (!value) return "—";
+
+  return new Date(
+    value
+  ).toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+  });
+}
 function formatDuration(
   startedAt: string | null,
   submittedAt: string | null
@@ -646,9 +658,6 @@ async function deleteAttempt(
                       Họ tên
                     </TableHead>
 
-                    <TableHead>
-                      Lần làm
-                    </TableHead>
 
                     <TableHead>
                       Điểm
@@ -665,6 +674,10 @@ async function deleteAttempt(
                     <TableHead>
                       Thời gian làm
                     </TableHead>
+
+                    <TableHead>
+                      Vào lớp
+                    </TableHead>                    
 
                   </TableRow>
 
@@ -705,20 +718,6 @@ async function deleteAttempt(
                           <span className="font-medium">
                             {attempt.full_name}
                           </span>
-
-                        </TableCell>
-
-                        <TableCell>
-
-                        {attempt.id ? (
-                          <Badge variant="outline">
-                            Lần {attempt.attempt_number}
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary">
-                            Chưa làm
-                          </Badge>
-                        )}
 
                         </TableCell>
 
@@ -788,48 +787,56 @@ async function deleteAttempt(
                           </span>
 
                         </TableCell>
+
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">
+                            {formatClassDate(
+                              attempt.class_joined_at
+                            )}
+                          </span>
+                        </TableCell>                        
                         <TableCell>
                           <div className="flex justify-end gap-1">
 
-<Button
-  type="button"
-  size="icon"
-  variant="outline"
-  className="h-7 w-7 p-0"
-  disabled={
-    adjustingAttemptId === attempt.student_id
-  }
-  onClick={(e) => {
-    e.stopPropagation();
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="outline"
+                            className="h-7 w-7 p-0"
+                            disabled={
+                              adjustingAttemptId === attempt.student_id
+                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
 
-    adjustPoints(
-      attempt.student_id,
-      "increase"
-    );
-  }}
->
-  <Plus className="size-3" />
-</Button>
+                              adjustPoints(
+                                attempt.student_id,
+                                "increase"
+                              );
+                            }}
+                          >
+                            <Plus className="size-3" />
+                          </Button>
 
-<Button
-  type="button"
-  size="icon"
-  variant="outline"
-  className="h-7 w-7 p-0"
-  disabled={
-    adjustingAttemptId === attempt.student_id
-  }
-  onClick={(e) => {
-    e.stopPropagation();
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="outline"
+                            className="h-7 w-7 p-0"
+                            disabled={
+                              adjustingAttemptId === attempt.student_id
+                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
 
-    adjustPoints(
-      attempt.student_id,
-      "decrease"
-    );
-  }}
->
-  <Minus className="size-3" />
-</Button>
+                              adjustPoints(
+                                attempt.student_id,
+                                "decrease"
+                              );
+                            }}
+                          >
+                            <Minus className="size-3" />
+                          </Button>
 
                           <Button
                             type="button"

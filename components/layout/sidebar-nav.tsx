@@ -6,6 +6,7 @@ import {
   ChevronDown,
   LogOut,
   User,
+  BookOpen,
 } from "lucide-react";
 
 import { useAuth } from "@/providers/auth-provider";

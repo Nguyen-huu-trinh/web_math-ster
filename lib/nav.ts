@@ -22,12 +22,20 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ["teacher", "student"],
   },
 
+
   {
     label: "Bài Kiểm Tra",
     href: "/student-exams",
     icon: "FileText",
     roles: ["student"],
   },
+    {
+  label: "Nội Quy",
+  href: "/student-rules",
+  icon: "BookOpen",
+  roles: ["teacher", "student"],
+},
+
 
   {
     label: "Quản Lý Bài Kiểm Tra",

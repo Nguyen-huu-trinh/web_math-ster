@@ -174,7 +174,7 @@ export default function StudentRulesPage({ role }: Props) {
   }
 
   return (
-    <div className="min-h-full bg-slate-50 p-4 md:p-6 lg:p-8">
+    <div className="min-h-full bg-background text-foreground p-4 md:p-6 lg:p-8">
       <div className="mx-auto max-w-4xl">
         {/* HEADER */}
         <div className="mb-6 flex items-start justify-between gap-4">
@@ -347,7 +347,7 @@ export default function StudentRulesPage({ role }: Props) {
                   {isOpen && (
                     <CardContent className="border-t bg-muted/20 px-4 py-4 md:px-5 md:py-5">
 <div
-  className="text-sm leading-7 text-slate-800 md:text-base"
+  className="text-sm leading-7 text-foreground md:text-base [&_*]:!text-foreground [&_a]:!text-primary"
   dangerouslySetInnerHTML={{
     __html: rule.content,
   }}

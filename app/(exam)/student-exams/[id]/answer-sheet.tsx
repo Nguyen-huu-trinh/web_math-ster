@@ -435,21 +435,7 @@ function chooseShortAnswer(
     // LẤY ANSWERS MỚI NHẤT
     // ========================================
 
-    const currentAnswers: ExamAnswers = {
-  multipleChoice: [
-    ...answersRef.current.multipleChoice,
-  ],
-
-  trueFalse:
-    answersRef.current.trueFalse.map(
-      (row) => [...row]
-    ),
-
-  shortAnswer:
-    answersRef.current.shortAnswer.map(
-      (row) => [...row]
-    ),
-};
+   const currentAnswers: ExamAnswers = answers;
 
 
     // ========================================

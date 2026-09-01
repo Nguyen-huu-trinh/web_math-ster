@@ -40,6 +40,31 @@ export async function GET(
     // 2. LẤY CÁC ATTEMPT ĐÃ NỘP CỦA ĐỀ
     // =====================================================
 
+const {
+  data: exam,
+  error: examError,
+} = await supabase
+  .from("exams")
+  .select("title")
+  .eq("id", examId)
+  .single();
+
+if (examError) {
+  console.error(
+    "GET EXAM INFO ERROR:",
+    examError
+  );
+
+  return NextResponse.json(
+    {
+      error: examError.message,
+    },
+    {
+      status: 500,
+    }
+  );
+}
+
     const {
       data: attempts,
       error: attemptError,
@@ -231,10 +256,11 @@ const {
     // 6. TRẢ KẾT QUẢ
     // =====================================================
 
-    return NextResponse.json({
-      success: true,
-      data,
-    });
+   return NextResponse.json({
+  success: true,
+  examTitle: exam?.title ?? "Bài kiểm tra",
+  data,
+});
 
   } catch (error) {
     console.error(

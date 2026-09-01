@@ -25,7 +25,7 @@ export interface ExamAttemptStudent {
 
 export interface ExamAttemptsResponse {
   success: boolean;
-
+   examTitle: string;
   data: ExamAttemptStudent[];
 }
 
@@ -33,14 +33,11 @@ class ExamAttemptsClientService {
 
   async getByExam(
     examId: string
-  ): Promise<ExamAttemptStudent[]> {
+  ): Promise<ExamAttemptsResponse> {
 
-    const response =
-      await apiClient.get<ExamAttemptsResponse>(
-        `/api/exams/${examId}/answers`
-      );
-
-    return response.data ?? [];
+    return apiClient.get<ExamAttemptsResponse>(
+      `/api/exams/${examId}/answers`
+    );
   }
 }
 

@@ -150,12 +150,19 @@ const [adjustingAttemptId, setAdjustingAttemptId] =
 const [deletingAttemptId, setDeletingAttemptId] =
   useState<string | null>(null);
 
-  const {
-    data: attempts = [],
-    isLoading,
-    isError,
-    error,
-  } = useExamAttempts(examId);
+const {
+  data: response,
+  isLoading,
+  isError,
+  error,
+} = useExamAttempts(examId);
+
+const attempts =
+  response?.data ?? [];
+
+const examTitle =
+  response?.examTitle ??
+  "Bài kiểm tra";
 const submittedCount = useMemo(
   () =>
     attempts.filter(
@@ -402,6 +409,10 @@ async function deleteAttempt(
           <h1 className="text-3xl font-bold">
             Bài làm học sinh
           </h1>
+
+          <p className="mt-1 text-lg font-semibold text-primary">
+              {examTitle}
+            </p>
 
           <p className="mt-1 text-muted-foreground">
             Danh sách học sinh đã nộp bài kiểm tra

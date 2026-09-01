@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import StudentExamLayout from "./student-exam-layout";
 
 import { requireProfile } from "@/lib/auth/require-profile";
-import { studentExamService } from "@/services/student-exam.service";
+// import { studentExamService } from "@/services/student-exam.service";
+
+import { examSessionService } from "@/lib/exam/session/service";
 import { UserRole } from "@/lib/auth/roles";
 
 interface Props {
@@ -42,9 +44,9 @@ export default async function StudentExamPage({
     isReview
   ) {
     const session =
-      await studentExamService.getTeacherExamSession(
-        id
-      );
+  await examSessionService.getTeacherExamSession(
+    id
+  );
 
     return (
       <StudentExamLayout
@@ -66,11 +68,11 @@ export default async function StudentExamPage({
     redirect("/dashboard");
   }
 
-  const session =
-    await studentExamService.getExamSession(
-      profile.id,
-      id
-    );
+const session =
+  await examSessionService.getStudentExamSession(
+    profile.id,
+    id
+  );
 
   return (
     <StudentExamLayout

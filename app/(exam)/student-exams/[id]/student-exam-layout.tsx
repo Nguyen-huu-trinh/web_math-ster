@@ -6,6 +6,7 @@ import {
   FileText,
   ListChecks,
 } from "lucide-react";
+import type { ExamSession } from "@/lib/exam/session/types";
 import { Clock } from "lucide-react";
 import {
   useEffect,
@@ -14,7 +15,7 @@ import {
   useState,
 } from "react";
 import { cn } from "@/lib/utils";
-import AnswerSheet from "./answer-sheet";
+import AnswerSheetNew from "@/components/exams/answer-sheet/answer-sheet-new";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 const PdfViewer = dynamic(
@@ -27,19 +28,19 @@ const PdfViewer = dynamic(
   }
 );
 
-interface ExamAnswers {
-  multipleChoice: string[];
-  trueFalse: string[][];
-  shortAnswer: string[][];
-}
+// interface ExamAnswers {
+//   multipleChoice: string[];
+//   trueFalse: string[][];
+//   shortAnswer: string[][];
+// }
 
-interface ExamSession {
-  attempt: any;
-  exam: any;
-  pdfUrl: string;
-  remainingSeconds: number;
-  savedAnswers: ExamAnswers;
-}
+// interface ExamSession {
+//   attempt: any;
+//   exam: any;
+//   pdfUrl: string;
+//   remainingSeconds: number;
+//   savedAnswers: ExamAnswers;
+// }
 
 interface Props {
     session: ExamSession;
@@ -54,13 +55,14 @@ export default function StudentExamLayout({
   viewerRole = "STUDENT",
   returnUrl,
 }: Props) {
-  const {
-    attempt,
-    exam,
-    pdfUrl,
-    remainingSeconds,
-    savedAnswers,
-  } = session;
+const {
+  attempt,
+  exam,
+  pdfUrl,
+  remainingSeconds,
+  expiresAt,
+  savedAnswers,
+} = session;
 
   const [submitted, setSubmitted] =
     useState(review);
@@ -103,30 +105,59 @@ async function startFullscreen() {
   setExamStarted(true);
 }
 
-  const [timeLeft, setTimeLeft] =
+const [timeLeft, setTimeLeft] =
   useState(remainingSeconds);
-
-useEffect(() => {
-  setTimeLeft(remainingSeconds);
-}, [remainingSeconds]);
-
-
 
 useEffect(() => {
   if (review || submitted) {
     return;
   }
 
-  const timer = setInterval(() => {
-    setTimeLeft((prev) => {
-      if (prev <= 0) return 0;
+function updateTimer() {
+  const remaining =
+    Math.max(
+      0,
+      Math.ceil(
+        (expiresAt - Date.now()) /
+          1000
+      )
+    );
 
-      return prev - 1;
-    });
-  }, 1000);
+  setTimeLeft(remaining);
 
-  return () => clearInterval(timer);
-}, [review, submitted]);
+  if (
+    remaining === 0 &&
+    !finishExamRef.current
+  ) {
+    console.warn(
+      "[EXAM] DEADLINE REACHED - FORCE SUBMIT"
+    );
+
+    finishExamRef.current = true;
+
+    window.dispatchEvent(
+      new Event("force-submit")
+    );
+  }
+}
+
+  // Đồng bộ ngay khi effect chạy
+  updateTimer();
+
+  const timer =
+    window.setInterval(
+      updateTimer,
+      1000
+    );
+
+  return () => {
+    window.clearInterval(timer);
+  };
+}, [
+  expiresAt,
+  review,
+  submitted,
+]);
 
 const displayTime = useMemo(() => {
   const m = Math.floor(timeLeft / 60);
@@ -300,10 +331,11 @@ useEffect(() => {
 
         <div className="w-1/2 overflow-y-auto bg-[#f8f6ef]">
 
-          <AnswerSheet
+          <AnswerSheetNew
             attempt={attempt}
             exam={exam}
             remainingSeconds={remainingSeconds}
+            expiresAt={expiresAt}
             savedAnswers={savedAnswers}
             review={review}
             viewerRole={viewerRole}
@@ -378,10 +410,11 @@ useEffect(() => {
           )}
         >
 
-          <AnswerSheet
+          <AnswerSheetNew
             attempt={attempt}
             exam={exam}
             remainingSeconds={remainingSeconds}
+            expiresAt={expiresAt}
             savedAnswers={savedAnswers}
             review={review}
           />

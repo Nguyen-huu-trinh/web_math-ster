@@ -50,7 +50,7 @@ export function gradeExam(
   // ==========================================================
 
   if (
-    examType === "THPT"
+    examType === "MOET" 
   ) {
     return gradeTHPT({
       answers,

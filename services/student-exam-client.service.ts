@@ -29,7 +29,8 @@ export interface StudentExamItem {
     | "NOT_STARTED"
     | "PASSED"
     | "FAILED"
-    | "DONE";
+    | "DONE"
+    | "LOCKED";
 
   canStart: boolean;
 
@@ -40,7 +41,7 @@ export interface StudentExamItem {
   showAnswer: boolean;
 
   examFile: string;
-  
+
   lastAttemptId?: string | null;
 }
 
@@ -52,14 +53,13 @@ class StudentExamClientService {
   }
 
   startExam(id: string) {
-  return apiClient.post<{
-    id: string;
-  }>(
-    `/api/students/my-exams/${id}/start`
-  );
+    return apiClient.post<{
+      id: string;
+    }>(
+      `/api/students/my-exams/${id}/start`
+    );
+  }
 }
-}
-
 
 export const studentExamClientService =
   new StudentExamClientService();

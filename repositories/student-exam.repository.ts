@@ -204,23 +204,55 @@ const { data: attempts, error: attemptError } =
 
       const attemptCount = examAttempts.length;
 
+const hasUnsubmittedAttempt =
+  examAttempts.some(
+    (attempt) =>
+      attempt.submitted_at === null
+  );
+
 const canStart =
   exam.status === "OPEN" &&
   exam.is_active === true &&
+  !hasUnsubmittedAttempt &&
   attemptCount <
     (exam.max_attempts ?? 1);
 
-      let status = "NOT_STARTED";
+let status:
+  | "NOT_STARTED"
+  | "PASSED"
+  | "FAILED"
+  | "DONE"
+  | "LOCKED" = "NOT_STARTED";
 
-      if (lastAttempt) {
-        if (exam.category === "ATTENDANCE") {
-          status = lastAttempt.is_passed
-            ? "PASSED"
-            : "FAILED";
-        } else {
-          status = "DONE";
-        }
-      }
+// =====================================================
+// ĐỀ ĐANG KHÓA
+// =====================================================
+
+if (exam.status === "LOCKED") {
+  status = "LOCKED";
+}
+
+// =====================================================
+// ĐANG CÓ MỘT ATTEMPT CHƯA NỘP
+// =====================================================
+
+else if (hasUnsubmittedAttempt) {
+  status = "LOCKED";
+}
+
+// =====================================================
+// ĐÃ CÓ LỊCH SỬ LÀM BÀI
+// =====================================================
+
+else if (lastAttempt) {
+  if (exam.category === "ATTENDANCE") {
+    status = lastAttempt.is_passed
+      ? "PASSED"
+      : "FAILED";
+  } else {
+    status = "DONE";
+  }
+}
 
       return {
         id: exam.id,

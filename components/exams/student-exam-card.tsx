@@ -35,30 +35,47 @@ export function StudentExamCard({
 
   const startLockRef = useRef(false);
 
-  function renderStatus() {
-    switch (exam.status) {
-      case "NOT_STARTED":
-        return (
-          <Badge className="bg-gray-100 text-gray-700 border">
-            Chưa làm
-          </Badge>
-        );
+function renderStatus() {
+  switch (exam.status) {
+    case "LOCKED":
+      return (
+        <Badge className="border-orange-200 bg-orange-100 text-orange-700">
+          Đang khóa
+        </Badge>
+      );
 
-      case "PASSED":
-        return (
-          <Badge className="bg-green-100 text-green-700 border-green-200">
-            Đạt
-          </Badge>
-        );
+    case "NOT_STARTED":
+      return (
+        <Badge className="bg-gray-100 text-gray-700 border">
+          Chưa làm
+        </Badge>
+      );
 
-      case "FAILED":
-        return (
-          <Badge className="bg-red-100 text-red-700 border-red-200">
-            Chưa đạt
-          </Badge>
-        );
-    }
+    case "PASSED":
+      return (
+        <Badge className="bg-green-100 text-green-700 border-green-200">
+          Đạt
+        </Badge>
+      );
+
+    case "FAILED":
+      return (
+        <Badge className="bg-red-100 text-red-700 border-red-200">
+          Chưa đạt
+        </Badge>
+      );
+
+    case "DONE":
+      return (
+        <Badge variant="outline">
+          Đã làm
+        </Badge>
+      );
+
+    default:
+      return null;
   }
+}
 
   async function handleStartExam() {
     if (startLockRef.current) {
@@ -120,45 +137,57 @@ export function StudentExamCard({
       );
     }
   }
-  function renderButton() {
-    if (!exam.canStart) {
-      return (
-        <Button
-          className="w-full md:w-32"
-          variant="outline"
-          disabled={!exam.lastAttemptId}
-          onClick={() => {
-            if (!exam.lastAttemptId) {
-              return;
-            }
-
-            router.push(
-              `/student-exams/${exam.lastAttemptId}?review=true`
-            );
-          }}
-        >
-          Xem lại
-        </Button>
-      );
-    }
-
+function renderButton() {
+  if (exam.status === "LOCKED") {
     return (
       <Button
         className="w-full md:w-32"
-        disabled={
-          isStarting ||
-          startExam.isPending
-        }
-        onClick={handleStartExam}
+        variant="outline"
+        disabled
       >
-        {isStarting || startExam.isPending
-          ? "Đang mở..."
-          : exam.attempts === 0
-          ? "Làm bài"
-          : "Làm lại"}
+        Đang khóa
       </Button>
     );
   }
+
+  if (!exam.canStart) {
+    return (
+      <Button
+        className="w-full md:w-32"
+        variant="outline"
+        disabled={!exam.lastAttemptId}
+        onClick={() => {
+          if (!exam.lastAttemptId) {
+            return;
+          }
+
+          router.push(
+            `/student-exams/${exam.lastAttemptId}?review=true`
+          );
+        }}
+      >
+        Xem lại
+      </Button>
+    );
+  }
+
+  return (
+    <Button
+      className="w-full md:w-32"
+      disabled={
+        isStarting ||
+        startExam.isPending
+      }
+      onClick={handleStartExam}
+    >
+      {isStarting || startExam.isPending
+        ? "Đang mở..."
+        : exam.attempts === 0
+        ? "Làm bài"
+        : "Làm lại"}
+    </Button>
+  );
+}
 
   return (
     <Card className="transition-all duration-300 hover:border-primary/40 hover:shadow-md">

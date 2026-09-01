@@ -91,13 +91,35 @@ export function StudentExamCard({
       startLockRef.current = false;
       setIsStarting(false);
 
+      // =====================================================
+      // ĐÃ CÓ MỘT LƯỢT ĐANG LÀM
+      // =====================================================
+
+      if (
+        error?.status === 409 &&
+        error?.code === "EXAM_IN_PROGRESS"
+      ) {
+        toast.warning(
+          "Bài thi đang được diễn ra",
+          {
+            description:
+              "Bạn đã có một lượt làm bài chưa nộp. Vui lòng tiếp tục lượt làm bài hiện tại.",
+          }
+        );
+
+        return;
+      }
+
+      // =====================================================
+      // LỖI KHÁC
+      // =====================================================
+
       toast.error(
-        error.message ??
+        error?.message ??
           "Không thể bắt đầu bài làm."
       );
     }
   }
-
   function renderButton() {
     if (!exam.canStart) {
       return (

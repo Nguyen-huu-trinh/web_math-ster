@@ -1,10 +1,8 @@
 class ApiClient {
-
   private async request<T>(
     url: string,
     options?: RequestInit
   ): Promise<T> {
-
     const response = await fetch(url, {
       credentials: "include",
       cache: "no-store",
@@ -15,22 +13,35 @@ class ApiClient {
       ...options,
     });
 
-if (!response.ok) {
-    let message = `Request failed with status ${response.status}`;
+    if (!response.ok) {
+      let message =
+        `Request failed with status ${response.status}`;
 
-    try {
+      let code: string | undefined;
+
+      try {
         const data = await response.json();
 
         message =
-            data?.error ??
-            data?.message ??
-            message;
-    } catch {
-        // Response không phải JSON
-    }
+          data?.error ??
+          data?.message ??
+          message;
 
-    throw new Error(message);
-}
+        code = data?.code;
+      } catch {
+        // Response không phải JSON
+      }
+
+      const error = new Error(message) as Error & {
+        status?: number;
+        code?: string;
+      };
+
+      error.status = response.status;
+      error.code = code;
+
+      throw error;
+    }
 
     return response.json() as Promise<T>;
   }
@@ -43,7 +54,6 @@ if (!response.ok) {
     url: string,
     body?: unknown
   ): Promise<T> {
-
     return this.request<T>(url, {
       method: "POST",
       body:
@@ -51,14 +61,12 @@ if (!response.ok) {
           ? JSON.stringify(body)
           : undefined,
     });
-
   }
 
   put<T>(
     url: string,
     body?: unknown
   ): Promise<T> {
-
     return this.request<T>(url, {
       method: "PUT",
       body:
@@ -66,14 +74,12 @@ if (!response.ok) {
           ? JSON.stringify(body)
           : undefined,
     });
-
   }
 
   patch<T>(
     url: string,
     body?: unknown
   ): Promise<T> {
-
     return this.request<T>(url, {
       method: "PATCH",
       body:
@@ -81,17 +87,13 @@ if (!response.ok) {
           ? JSON.stringify(body)
           : undefined,
     });
-
   }
 
   delete<T>(url: string): Promise<T> {
-
     return this.request<T>(url, {
       method: "DELETE",
     });
-
   }
-
 }
 
 export const apiClient = new ApiClient();

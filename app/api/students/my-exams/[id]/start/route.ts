@@ -27,12 +27,51 @@ export async function POST(
     return NextResponse.json(attempt);
 
   } catch (e: any) {
+    console.error(
+      "START EXAM ERROR:",
+      e
+    );
 
-    console.error("START EXAM ERROR:", e);
+    const message =
+      e?.message ?? String(e);
+
+    // =====================================================
+    // ĐÃ CÓ MỘT ATTEMPT CHƯA NỘP
+    // =====================================================
+
+    if (
+      message.includes(
+        "exam_attempts_one_unsubmitted_per_student_exam"
+      ) ||
+      message.includes(
+        "duplicate key value violates unique constraint"
+      )
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          code: "EXAM_IN_PROGRESS",
+          message:
+            "Bài thi đang được diễn ra. Bạn đã có một lượt làm bài chưa nộp.",
+        },
+        {
+          status: 409,
+        }
+      );
+    }
+
+    // =====================================================
+    // LỖI KHÁC
+    // =====================================================
 
     return NextResponse.json(
-      { message: e.message },
-      { status: 500 }
+      {
+        success: false,
+        message,
+      },
+      {
+        status: 500,
+      }
     );
   }
 }

@@ -276,32 +276,30 @@ export function StudentExamCard({
     <>
       <Card className="transition-all duration-300 hover:border-primary/40 hover:shadow-md">
 
-        <CardContent className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between md:gap-6 md:p-5">
+        <CardContent className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between md:gap-6 md:px-5 md:py-3">
 
-          {/* LEFT */}
-          <div className="w-full md:min-w-[240px] md:max-w-[320px]">
+{/* LEFT */}
+<div className="flex-1 min-w-0">
+  {/* Tiêu đề bài thi - Tự động xuống dòng khi tên đề dài */}
+  <h3 className="text-base font-bold leading-snug text-foreground md:text-lg">
+    {exam.title}
+  </h3>
 
-            <div className="flex flex-wrap items-center gap-2">
+  {/* Hàng chứa thông tin phụ: Tên khóa học & Các Badge trạng thái */}
+  <div className="mt-2 flex flex-wrap items-center gap-2">
+    <span className="text-xs font-medium text-muted-foreground md:text-sm">
+      {exam.courseName}
+    </span>
 
-              <h3 className="text-base font-semibold md:text-lg">
-                {exam.title}
-              </h3>
+    <span className="text-muted-foreground/40">•</span>
 
-              <Badge variant="outline">
-                {exam.category === "ATTENDANCE"
-                  ? "Điểm danh"
-                  : "Định kỳ"}
-              </Badge>
+    <Badge variant="outline" className="text-xs">
+      {exam.category === "ATTENDANCE" ? "Điểm danh" : "Định kỳ"}
+    </Badge>
 
-              {renderStatus()}
-
-            </div>
-
-            <p className="mt-1 text-xs text-muted-foreground md:mt-2 md:text-sm">
-              {exam.courseName}
-            </p>
-
-          </div>
+    {renderStatus()}
+  </div>
+</div>
 
 
           {/* CENTER */}

@@ -245,13 +245,9 @@ else if (hasUnsubmittedAttempt) {
 // =====================================================
 
 else if (lastAttempt) {
-  if (exam.category === "ATTENDANCE") {
-    status = lastAttempt.is_passed
-      ? "PASSED"
-      : "FAILED";
-  } else {
-    status = "DONE";
-  }
+  status = lastAttempt.is_passed
+    ? "PASSED"
+    : "FAILED";
 }
 
       return {

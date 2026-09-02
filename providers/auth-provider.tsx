@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-
+import { createClient } from "@/lib/supabase/client";
 import {
     createContext,
     useContext,
@@ -15,9 +15,9 @@ import {
     useIdleLogout,
 } from "@/hooks/use-idle-logout";
 
-import {
-    useAuthHeartbeat,
-} from "@/hooks/use-auth-heartbeat";
+// import {
+//     useAuthHeartbeat,
+// } from "@/hooks/use-auth-heartbeat";
 
 import { User } from "@supabase/supabase-js";
 
@@ -59,6 +59,8 @@ export function AuthProvider({
 
     const [loading, setLoading] =
         useState(true);
+    const [sessionId, setSessionId] =
+    useState<string | null>(null);
 
     const queryClient =
         useQueryClient();
@@ -91,12 +93,18 @@ export function AuthProvider({
      */
     const handleSessionInvalid =
         useCallback(
-            async () => {
+            async (message?: string) => {
 
                 /*
                  * Lưu userId trước khi
                  * setUser(null).
                  */
+                if (message) {
+                    sessionStorage.setItem(
+                        "mathster_session_message",
+                        message
+                    );
+                }
                 const currentUserId =
                     userId;
 
@@ -148,23 +156,90 @@ export function AuthProvider({
                 queryClient,
             ]
         );
+/*
+ * ==========================================
+ * REALTIME SESSION
+ * ==========================================
+ *
+ * Phát hiện tài khoản đăng nhập trên
+ * thiết bị khác.
+ */
+useEffect(() => {
 
+    if (
+        !userId ||
+        !sessionId ||
+        isLoginPage
+    ) {
+        return;
+    }
+
+    const supabase =
+        createClient();
+
+    const channel =
+        supabase
+            .channel(
+                `profile-session-${userId}`
+            )
+            .on(
+                "postgres_changes",
+                {
+                    event: "UPDATE",
+                    schema: "public",
+                    table: "profiles",
+                    filter: `id=eq.${userId}`,
+                },
+                (payload) => {
+
+                    const newSessionId =
+                        payload.new
+                            .session_id;
+
+                    if (
+                        newSessionId &&
+                        newSessionId !==
+                            sessionId
+                    ) {
+
+                        void handleSessionInvalid("Tài khoản của bạn vừa được đăng nhập trên một thiết bị khác.");
+
+                    }
+
+                }
+            )
+            .subscribe();
+
+    return () => {
+
+        void supabase.removeChannel(
+            channel
+        );
+
+    };
+
+}, [
+    userId,
+    sessionId,
+    isLoginPage,
+    handleSessionInvalid,
+]);
 
     /*
      * ==========================================
      * HEARTBEAT
      * ==========================================
      */
-    useAuthHeartbeat({
+    // useAuthHeartbeat({
 
-        enabled:
-            Boolean(user) &&
-            !isLoginPage,
+    //     enabled:
+    //         Boolean(user) &&
+    //         !isLoginPage,
 
-        onSessionInvalid:
-            handleSessionInvalid,
+    //     onSessionInvalid:
+    //         handleSessionInvalid,
 
-    });
+    // });
 
 
     /*
@@ -253,19 +328,23 @@ export function AuthProvider({
      * LOGIN
      * ==========================================
      */
-    async function login(
-        email: string,
-        password: string
-    ) {
+async function login(
+    email: string,
+    password: string
+) {
 
+    const result =
         await authService.login({
             email,
             password,
         });
 
-        await refresh();
+    setSessionId(
+        result.sessionId
+    );
 
-    }
+    await refresh();
+}
 
 
     /*
@@ -278,7 +357,9 @@ export function AuthProvider({
         const currentUserId =
             user?.id;
 
-        await authService.logout();
+       await authService.logout();
+
+        setSessionId(null);
 
         setUser(null);
 

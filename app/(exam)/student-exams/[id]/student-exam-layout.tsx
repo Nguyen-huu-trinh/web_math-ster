@@ -69,7 +69,8 @@ const {
 
 const finishExamRef =
   useRef(false);
-
+const wakeLockRef =
+  useRef<WakeLockSentinel | null>(null);
 
 
   const [mobileView, setMobileView] =
@@ -86,6 +87,36 @@ useEffect(() => {
   }
 }, [review]);
 
+async function requestWakeLock() {
+  if (review || submitted) {
+    return;
+  }
+
+  if (!("wakeLock" in navigator)) {
+    console.warn(
+      "[EXAM] Screen Wake Lock is not supported."
+    );
+    return;
+  }
+
+  try {
+    wakeLockRef.current =
+      await navigator.wakeLock.request(
+        "screen"
+      );
+
+    console.log(
+      "[EXAM] Screen Wake Lock enabled"
+    );
+
+  } catch (error) {
+    console.warn(
+      "[EXAM] Wake Lock request failed:",
+      error
+    );
+  }
+}
+
 async function startFullscreen() {
 
   // Review không cần fullscreen
@@ -101,12 +132,50 @@ async function startFullscreen() {
   } catch (e) {
     console.error(e);
   }
+  await requestWakeLock();
 
   setExamStarted(true);
 }
 
 const [timeLeft, setTimeLeft] =
   useState(remainingSeconds);
+
+
+  useEffect(() => {
+
+  if (review || submitted) {
+    return;
+  }
+
+  async function handleVisibilityChange() {
+
+    if (
+      document.visibilityState !==
+      "visible"
+    ) {
+      return;
+    }
+
+    if (
+      wakeLockRef.current === null
+    ) {
+      await requestWakeLock();
+    }
+  }
+
+  document.addEventListener(
+    "visibilitychange",
+    handleVisibilityChange
+  );
+
+  return () => {
+    document.removeEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
+  };
+
+}, [review, submitted]);
 
 useEffect(() => {
   if (review || submitted) {
@@ -210,7 +279,7 @@ useEffect(() => {
 }, [review]);
 
 useEffect(() => {
-  function handleSubmitSuccess() {
+  async function handleSubmitSuccess() {
     console.log("[EXAM] SUBMIT SUCCESS");
 
     // Đánh dấu đã nộp trước
@@ -218,6 +287,10 @@ useEffect(() => {
 
     // Đã nộp → không còn popup thoát fullscreen
     setSubmitted(true);
+    if (wakeLockRef.current) {
+  await wakeLockRef.current.release();
+  wakeLockRef.current = null;
+}
     if (review) {
       return;
     }
@@ -247,6 +320,15 @@ useEffect(() => {
     );
   };
 }, [review]);
+
+useEffect(() => {
+  return () => {
+    if (wakeLockRef.current) {
+      void wakeLockRef.current.release();
+      wakeLockRef.current = null;
+    }
+  };
+}, []);
 
   return (
     <div className="h-screen overflow-hidden bg-slate-100">

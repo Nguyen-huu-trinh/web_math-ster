@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react";
 import {
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import {
   BookOpen,
   ChevronDown,
   ChevronUp,
@@ -30,41 +34,47 @@ interface Props {
 }
 
 export default function StudentRulesPage({ role }: Props) {
-  const [rules, setRules] = useState<StudentRule[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
   const [openRuleId, setOpenRuleId] = useState<string | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [editingRule, setEditingRule] = useState<StudentRule | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+const queryClient = useQueryClient();
 
-  useEffect(() => {
-    loadRules();
-  }, []);
+const STUDENT_RULES_QUERY_KEY =
+  ["student-rules"] as const;
 
-  async function loadRules() {
-    try {
-      setLoading(true);
-      setError(null);
+const {
+  data: rules = [],
+  isLoading: loading,
+  error: queryError,
+} = useQuery<StudentRule[]>({
+  queryKey: STUDENT_RULES_QUERY_KEY,
+  queryFn: () =>
+    studentRulesClientService.getAll(),
 
-      const data = await studentRulesClientService.getAll();
+  staleTime: 5 * 60 * 1000,
 
-      setRules(data);
+  gcTime: 30 * 60 * 1000,
+});
 
-      if (data.length > 0) {
-        setOpenRuleId(data[0].id);
-      }
-    } catch (error) {
-      console.error("[STUDENT RULES PAGE ERROR]", error);
-
-      setError(
-        error instanceof Error ? error.message : "Không thể tải nội quy."
-      );
-    } finally {
-      setLoading(false);
-    }
+const error =
+  queryError instanceof Error
+    ? queryError.message
+    : queryError
+      ? "Không thể tải nội quy."
+      : null;
+useEffect(() => {
+  if (
+    rules.length > 0 &&
+    openRuleId === null
+  ) {
+    setOpenRuleId(rules[0].id);
   }
+}, [rules, openRuleId]);
+
+  
 
   function toggleRule(id: string) {
     setOpenRuleId((current) => (current === id ? null : id));
@@ -79,7 +89,10 @@ export default function StudentRulesPage({ role }: Props) {
         content,
       });
 
-      setRules((current) => [...current, newRule]);
+      queryClient.setQueryData<StudentRule[]>(
+  STUDENT_RULES_QUERY_KEY,
+  (current = []) => [...current, newRule]
+);
       setShowEditor(false);
       setOpenRuleId(newRule.id);
 
@@ -116,10 +129,14 @@ export default function StudentRulesPage({ role }: Props) {
         }
       );
 
-      setRules((current) =>
-        current.map((rule) =>
-          rule.id === updatedRule.id ? updatedRule : rule
-        )
+      queryClient.setQueryData<StudentRule[]>(
+        STUDENT_RULES_QUERY_KEY,
+        (current = []) =>
+          current.map((rule) =>
+            rule.id === updatedRule.id
+              ? updatedRule
+              : rule
+          )
       );
 
       setEditingRule(null);
@@ -143,7 +160,13 @@ export default function StudentRulesPage({ role }: Props) {
 
       await studentRulesClientService.remove(id);
 
-      setRules((current) => current.filter((rule) => rule.id !== id));
+queryClient.setQueryData<StudentRule[]>(
+  STUDENT_RULES_QUERY_KEY,
+  (current = []) =>
+    current.filter(
+      (rule) => rule.id !== id
+    )
+);
 
       if (openRuleId === id) {
         setOpenRuleId(null);

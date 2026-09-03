@@ -43,7 +43,7 @@ export const queryKeys = {
     answers: (id: string) => ["attempt", id, "answers"] as const,
   },
 
-  teacherStudents: {
+teacherStudents: {
     all: () => [
         "teacher",
         "students",
@@ -53,6 +53,13 @@ export const queryKeys = {
         "teacher",
         "students",
         id,
+    ] as const,
+
+    byCourse: (courseId: string) => [
+        "teacher",
+        "students",
+        "course",
+        courseId,
     ] as const,
 },
 

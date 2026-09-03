@@ -9,6 +9,14 @@ export class TeacherStudentService {
         return teacherStudentRepository.getAll();
     }
 
+    async getByCourse(
+        courseId: string
+    ) {
+        return teacherStudentRepository.getByCourse(
+            courseId
+        );
+    }
+
     async getById(
         studentId: string
     ) {
@@ -34,6 +42,7 @@ export class TeacherStudentService {
             studentId
         );
     }
+
     async enable(studentId: string) {
         return teacherStudentRepository.enable(
             studentId
@@ -53,6 +62,7 @@ export class TeacherStudentService {
                 values
             );
     }
+
     async delete(
         studentId: string
     ) {
@@ -68,6 +78,23 @@ export class TeacherStudentService {
         return teacherStudentRepository.deleteAttempt(
             studentId,
             attemptId
+        );
+    }
+
+addToCourse(courseId: string, studentIds: string[]) {
+    return teacherStudentRepository.addToCourse(
+        courseId,
+        studentIds
+    );
+}
+
+    async removeFromCourse(
+        courseId: string,
+        studentId: string
+    ) {
+        return teacherStudentRepository.removeFromCourse(
+            courseId,
+            studentId
         );
     }
 }

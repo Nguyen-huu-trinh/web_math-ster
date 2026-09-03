@@ -27,6 +27,10 @@ import {
 } from "@/components/ui/button";
 
 import {
+    useRemoveTeacherCourseStudent,
+} from "@/hooks/use-remove-teacher-course-student";
+
+import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
@@ -58,10 +62,12 @@ type SortDirection =
 
 interface Props {
     students: TeacherStudentListItem[];
+    courseId?: string;
 }
 
 export function TeacherStudentsTable({
     students,
+    courseId,
 }: Props) {
     const router = useRouter();
     const [sortKey, setSortKey] =
@@ -75,6 +81,8 @@ export function TeacherStudentsTable({
     useEnableTeacherStudent();
     const deleteStudent =
         useDeleteTeacherStudent();
+    const removeFromCourse =
+    useRemoveTeacherCourseStudent();
     const updateFinancial =
     useUpdateTeacherStudentFinancial();
         const [editingCell, setEditingCell] =
@@ -311,7 +319,27 @@ export function TeacherStudentsTable({
             }
         );
     }
+function handleRemoveFromCourse(
+    student: TeacherStudentListItem
+) {
+    if (!courseId) {
+        return;
+    }
 
+    const confirmed =
+        window.confirm(
+            `Bạn có chắc muốn xóa học sinh "${student.fullName}" khỏi khóa học này?`
+        );
+
+    if (!confirmed) {
+        return;
+    }
+
+    removeFromCourse.mutate({
+        courseId,
+        studentId: student.id,
+    });
+}
     return (
         <Card>
             <CardContent className="p-0">
@@ -427,7 +455,11 @@ export function TeacherStudentsTable({
                                             key={student.id}
                                             className="border-b last:border-0 cursor-pointer hover:bg-muted/30"
                                             onClick={() =>
-                                                router.push(`/students/${student.id}`)
+                                                router.push(
+                                                    courseId
+                                                        ? `/students/${student.id}?courseId=${courseId}`
+                                                        : `/students/${student.id}`
+                                                )
                                             }
                                         >
                                         {/* Code */}
@@ -640,7 +672,9 @@ export function TeacherStudentsTable({
                                                     <DropdownMenuItem
                                                         onClick={() =>
                                                             router.push(
-                                                                `/students/${student.id}`
+                                                                courseId
+                                                                    ? `/students/${student.id}?courseId=${courseId}`
+                                                                    : `/students/${student.id}`
                                                             )
                                                         }
                                                     >
@@ -684,6 +718,20 @@ export function TeacherStudentsTable({
                                                         <Trash2 />
                                                         Delete
                                                     </DropdownMenuItem>
+                                                    {courseId && (
+                                                        <DropdownMenuItem
+                                                            variant="destructive"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleRemoveFromCourse(
+                                                                    student
+                                                                );
+                                                            }}
+                                                        >
+                                                            <Trash2 />
+                                                            Xóa khỏi khóa học
+                                                        </DropdownMenuItem>
+                                                    )}
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </td>

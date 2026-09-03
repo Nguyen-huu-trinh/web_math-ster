@@ -15,7 +15,10 @@ import {
   Pencil,
   Trash2,
   ChevronLeft,
+   Users
 } from 'lucide-react'
+
+
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
@@ -398,6 +401,12 @@ async function updateLesson(values: LessonFormValues) {
                 Edit Course
 
               </Button>
+              <Link href={`/courses/${course.id}/students`}>
+                <Button variant="outline">
+                  <Users />
+                  Học sinh
+                </Button>
+              </Link>
 
             </div>
 

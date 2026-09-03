@@ -67,6 +67,35 @@ export class TeacherStudentClientService {
         );
     }
 
+        getByCourse(courseId: string) {
+        return apiClient.get<
+            TeacherStudentListItem[]
+        >(
+            `/api/teachers/courses/${courseId}/students`
+        );
+    }
+
+addToCourse(courseId: string, studentIds: string[]) {
+    return apiClient.post(
+        `/api/teachers/courses/${courseId}/students`,
+        { studentIds }
+    );
+}
+
+    removeFromCourse(
+        courseId: string,
+        studentId: string
+    ) {
+        return apiClient.delete(
+            `/api/teachers/courses/${courseId}/students`,
+            {
+                studentId,
+            }
+        );
+    }
+
+    
+
     getById(id: string) {
         return apiClient.get<
             TeacherStudentDetail

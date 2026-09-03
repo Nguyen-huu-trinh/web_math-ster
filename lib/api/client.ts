@@ -89,11 +89,18 @@ class ApiClient {
     });
   }
 
-  delete<T>(url: string): Promise<T> {
+delete<T>(
+    url: string,
+    body?: unknown
+): Promise<T> {
     return this.request<T>(url, {
-      method: "DELETE",
+        method: "DELETE",
+        body:
+            body !== undefined
+                ? JSON.stringify(body)
+                : undefined,
     });
-  }
+}
 }
 
 export const apiClient = new ApiClient();

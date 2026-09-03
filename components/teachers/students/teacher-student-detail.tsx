@@ -30,10 +30,12 @@ import {
 
 interface Props {
     studentId: string;
+    courseId?: string;
 }
 
 export function TeacherStudentDetailPage({
     studentId,
+    courseId,
 }: Props) {
     const router = useRouter();
 
@@ -88,8 +90,10 @@ export function TeacherStudentDetailPage({
                 <Button
                     variant="outline"
                     onClick={() =>
-                        router.push(
-                            "/students"
+                    router.push(
+                                courseId
+                                    ? `/courses/${courseId}/students`
+                                    : "/students"
                         )
                     }
                 >
@@ -114,8 +118,10 @@ export function TeacherStudentDetailPage({
                     variant="ghost"
                     className="-ml-3"
                     onClick={() =>
-                        router.push(
-                            "/students"
+                       router.push(
+                        courseId
+                            ? `/courses/${courseId}/students`
+                            : "/students"
                         )
                     }
                 >

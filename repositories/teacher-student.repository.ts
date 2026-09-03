@@ -145,6 +145,152 @@ export class TeacherStudentRepository {
         }));
     }
 
+
+    async getByCourse(courseId: string) {
+    const supabase = await createClient();
+
+    const {
+        data: memberships,
+        error: membershipError,
+    } = await supabase
+        .from("course_students")
+        .select("student_id")
+        .eq("course_id", courseId);
+
+    if (membershipError) {
+        throw membershipError;
+    }
+
+    const studentIds =
+        (memberships ?? []).map(
+            (item) => item.student_id
+        );
+
+    if (studentIds.length === 0) {
+        return [];
+    }
+
+    const {
+        data,
+        error,
+    } = await supabase
+        .from("profiles")
+        .select(`
+            id,
+            full_name,
+            student_code,
+            email,
+            personal_email,
+            avatar_url,
+            points,
+            reward_money,
+            is_active,
+            learning_goal
+        `)
+        .eq("role", "STUDENT")
+        .is("deleted_at", null)
+        .in("id", studentIds)
+        .order("student_code", {
+            ascending: true,
+        });
+
+    if (error) {
+        throw error;
+    }
+
+    const {
+        data: dashboardData,
+        error: dashboardError,
+    } = await supabase
+        .from("v_student_dashboard")
+        .select(`
+            student_id,
+            average_periodic_score
+        `)
+        .in("student_id", studentIds);
+
+    if (dashboardError) {
+        throw dashboardError;
+    }
+
+    const dashboardMap = new Map(
+        (dashboardData ?? []).map(
+            (item) => [
+                item.student_id,
+                item.average_periodic_score,
+            ]
+        )
+    );
+
+    return (data ?? []).map((student) => ({
+        id: student.id,
+        fullName: student.full_name,
+        studentCode: student.student_code,
+        email: student.email,
+        personalEmail:
+            student.personal_email,
+        avatarUrl: student.avatar_url,
+        points: Number(
+            student.points ?? 0
+        ),
+        rewardMoney: Number(
+            student.reward_money ?? 0
+        ),
+        averageScore: Number(
+            dashboardMap.get(
+                student.id
+            ) ?? 0
+        ),
+        isActive: student.is_active,
+        learningGoal:
+            student.learning_goal,
+    }));
+}
+
+    // ==========================================
+    // COURSE STUDENTS
+    // ==========================================
+
+async addToCourse(
+    courseId: string,
+    studentIds: string[]
+) {
+    const supabase = await createClient();
+
+    const rows = studentIds.map((studentId) => ({
+        course_id: courseId,
+        student_id: studentId,
+    }));
+
+    const { data, error } = await supabase
+        .from("course_students")
+        .insert(rows)
+        .select();
+
+    if (error) {
+        throw error;
+    }
+
+    return data;
+}
+    async removeFromCourse(
+        courseId: string,
+        studentId: string
+    ) {
+        const supabase = await createClient();
+
+        const {
+            error,
+        } = await supabase
+            .from("course_students")
+            .delete()
+            .eq("course_id", courseId)
+            .eq("student_id", studentId);
+
+        if (error) {
+            throw error;
+        }
+    }
     // ==========================================
     // CHI TIẾT HỌC SINH
     // ==========================================

@@ -1229,6 +1229,39 @@ private normalizeShortAnswer(value: any): string {
         .replace(/\s/g, "")
         .trim();
 }
+// ============================================================
+// GET SUBMITTED ATTEMPTS FOR REGRADE
+// ============================================================
+
+async getSubmittedAttemptsForRegrade(
+  examId: string
+) {
+  const supabase =
+    await createClient();
+
+  const {
+    data,
+    error,
+  } = await supabase
+    .from("exam_attempts")
+    .select(`
+      id,
+      exam_id,
+      student_id,
+      answers,
+      score,
+      is_passed,
+      submitted_at
+    `)
+    .eq("exam_id", examId)
+    .not("submitted_at", "is", null);
+
+  if (error) {
+    throw error;
+  }
+
+  return data ?? [];
+}
 
 }
 

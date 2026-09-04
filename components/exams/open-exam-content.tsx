@@ -370,7 +370,7 @@ export function OpenExamContent({
                   "{exam.title}"
                 </span>
                 , bạn cần làm các bài kiểm tra
-                sau ít nhất một lần:
+                sau :
               </p>
 
               {/* Scrollable list */}
@@ -399,11 +399,6 @@ export function OpenExamContent({
                                 prerequisite.title
                               }
                             </p>
-
-                            <p className="mt-0.5 text-[11px] text-muted-foreground">
-                              Chưa có lượt làm
-                              bài đã nộp
-                            </p>
                           </div>
 
                           <span className="shrink-0 rounded-full bg-orange-100 px-2 py-1 text-[10px] font-medium text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
@@ -426,14 +421,6 @@ export function OpenExamContent({
               <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-3 text-xs leading-5 text-blue-800 dark:border-blue-900/50 dark:bg-blue-950/20 dark:text-blue-300">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
 
-                <p>
-                  Bạn chỉ cần{" "}
-                  <strong>
-                    làm và nộp bài
-                  </strong>
-                  . Không yêu cầu phải đạt
-                  điểm ở các bài tiên quyết.
-                </p>
               </div>
             </div>
 

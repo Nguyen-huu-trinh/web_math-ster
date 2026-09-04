@@ -225,6 +225,8 @@ export interface ExamInfo {
   question_config: ExamQuestionConfig;
 
   answer_key: ExamAnswerKey;
+
+  exam_duration_days?: number | null;
 }
 
 // ============================================================

@@ -10,6 +10,7 @@ import {
   AnswerKey,
   CreateExamDto,
   UpdateExamDto,
+  ExamPrerequisite,
 } from "@/types/exam";
 
 import { queryKeys } from "@/lib/react-query/query-keys";
@@ -43,11 +44,88 @@ export function useAnswerKey(id: string) {
     staleTime: 1000 * 60 * 5,
   });
 }
+// =========================
+// Prerequisites
+// =========================
 
+export function useExamPrerequisites(
+  examId: string
+) {
+  return useQuery({
+    enabled: !!examId,
+
+    queryKey: [
+      "exam",
+      "prerequisites",
+      examId,
+    ],
+
+    queryFn: () =>
+      examClientService.getPrerequisites(
+        examId
+      ) as Promise<ExamPrerequisite[]>,
+
+    staleTime: 1000 * 60 * 5,
+  });
+}
 // =========================
 // Mutations
 // =========================
+export function useAddExamPrerequisite() {
+  const qc = useQueryClient();
 
+  return useMutation({
+    mutationFn: ({
+      examId,
+      prerequisiteExamId,
+    }: {
+      examId: string;
+      prerequisiteExamId: string;
+    }) =>
+      examClientService.addPrerequisite(
+        examId,
+        prerequisiteExamId
+      ),
+
+    onSuccess(_, variables) {
+      qc.invalidateQueries({
+        queryKey: [
+          "exam",
+          "prerequisites",
+          variables.examId,
+        ],
+      });
+    },
+  });
+}
+
+export function useRemoveExamPrerequisite() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      examId,
+      prerequisiteExamId,
+    }: {
+      examId: string;
+      prerequisiteExamId: string;
+    }) =>
+      examClientService.removePrerequisite(
+        examId,
+        prerequisiteExamId
+      ),
+
+    onSuccess(_, variables) {
+      qc.invalidateQueries({
+        queryKey: [
+          "exam",
+          "prerequisites",
+          variables.examId,
+        ],
+      });
+    },
+  });
+}
 export function useCreateExam() {
 
   const qc = useQueryClient();

@@ -61,6 +61,28 @@ export async function POST(
     }
 
     // =====================================================
+// CHƯA HOÀN THÀNH ĐỀ TIÊN QUYẾT
+// =====================================================
+
+if (
+  e?.code ===
+  "PREREQUISITE_NOT_COMPLETED"
+) {
+  return NextResponse.json(
+    {
+      success: false,
+      code: "PREREQUISITE_NOT_COMPLETED",
+      message:
+        "Bạn cần làm các bài kiểm tra tiên quyết trước khi làm bài này.",
+      missingPrerequisites:
+        e.missingPrerequisites ?? [],
+    },
+    {
+      status: 403,
+    }
+  );
+}
+    // =====================================================
     // LỖI KHÁC
     // =====================================================
 

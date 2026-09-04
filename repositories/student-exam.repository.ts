@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-
+import { adminClient } from "@/lib/supabase/admin";
 export class StudentExamRepository {
 
 async adjustStudentPoints(
@@ -349,6 +349,99 @@ async startExam(
   ) {
     throw new Error("Đề đã kết thúc.");
   }
+
+  // ===========================
+// KIỂM TRA ĐỀ TIÊN QUYẾT
+// ===========================
+
+const {
+  data: prerequisites,
+  error: prerequisiteError,
+} = await adminClient
+  .from("exam_prerequisites")
+  .select(`
+    prerequisite_exam_id,
+    prerequisite_exam:exams!exam_prerequisites_prerequisite_exam_id_fkey (
+      id,
+      title
+    )
+  `)
+  .eq("exam_id", examId);
+
+if (prerequisiteError) {
+  throw prerequisiteError;
+}
+
+if (prerequisites && prerequisites.length > 0) {
+  const prerequisiteExamIds =
+    prerequisites.map(
+      (item) => item.prerequisite_exam_id
+    );
+
+  // Lấy các prerequisite mà học sinh
+  // đã TỪNG NỘP BÀI
+  const {
+    data: completedAttempts,
+    error: completedAttemptsError,
+  } = await adminClient
+    .from("exam_attempts")
+    .select("exam_id")
+    .eq("student_id", studentId)
+    .in("exam_id", prerequisiteExamIds)
+    .not("submitted_at", "is", null);
+
+  if (completedAttemptsError) {
+    throw completedAttemptsError;
+  }
+
+  const completedExamIds = new Set(
+    (completedAttempts ?? []).map(
+      (attempt) => attempt.exam_id
+    )
+  );
+
+  const missingPrerequisites =
+    prerequisites
+      .filter(
+        (item) =>
+          !completedExamIds.has(
+            item.prerequisite_exam_id
+          )
+      )
+      .map((item) => {
+        const prerequisiteExam =
+          Array.isArray(item.prerequisite_exam)
+            ? item.prerequisite_exam[0]
+            : item.prerequisite_exam;
+
+        return {
+          id: item.prerequisite_exam_id,
+          title:
+            prerequisiteExam?.title ??
+            "Bài kiểm tra tiên quyết",
+        };
+      });
+
+  if (missingPrerequisites.length > 0) {
+    const error = new Error(
+      "Bạn cần hoàn thành các bài kiểm tra tiên quyết trước khi làm bài này."
+    ) as Error & {
+      code?: string;
+      missingPrerequisites?: {
+        id: string;
+        title: string;
+      }[];
+    };
+
+    error.code =
+      "PREREQUISITE_NOT_COMPLETED";
+
+    error.missingPrerequisites =
+      missingPrerequisites;
+
+    throw error;
+  }
+}
 
   
   // ===========================

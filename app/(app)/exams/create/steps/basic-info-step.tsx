@@ -1,12 +1,15 @@
 "use client";
 
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { useCourses } from "@/hooks/use-courses";
+import { useExams } from "@/hooks/use-exams";
 import {
   Card,
   CardContent,
 } from "@/components/ui/card";
 
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -25,20 +28,44 @@ import { CreateExamDto } from "@/types/exam";
 interface Props {
   form: CreateExamDto;
   setForm: Dispatch<SetStateAction<CreateExamDto>>;
+  selectedPrerequisiteIds: string[];
+  setSelectedPrerequisiteIds: Dispatch<SetStateAction<string[]>>;
+  currentExamId?: string;
 }
 const preventWheelChange = (
   e: React.WheelEvent<HTMLInputElement>
 ) => {
   e.currentTarget.blur();
 };
-export function BasicInfoStep(
-  {
-  
+export function BasicInfoStep({
   form,
   setForm,
+  selectedPrerequisiteIds,
+  setSelectedPrerequisiteIds,
+  currentExamId,
 }: Props) {
   const { courses, loading } = useCourses();
-  console.log("courses =", courses);
+  const { data: exams = [], isLoading: examsLoading } = useExams();
+
+  const [prerequisiteSearch, setPrerequisiteSearch] = useState("");
+
+  const availableExams = exams.filter(
+    (exam) => exam.id !== currentExamId
+  );
+
+  const filteredExams = availableExams.filter((exam) =>
+    exam.title
+      .toLowerCase()
+      .includes(prerequisiteSearch.toLowerCase())
+  );
+
+  const togglePrerequisite = (examId: string) => {
+    setSelectedPrerequisiteIds((prev) =>
+      prev.includes(examId)
+        ? prev.filter((id) => id !== examId)
+        : [...prev, examId]
+    );
+  };
    return (
     <Card>
       <CardContent className="grid gap-6 p-6">
@@ -121,6 +148,80 @@ export function BasicInfoStep(
 
   </Select>
 
+</div>
+
+{/* Prerequisite Exams */}
+
+<div>
+  <Label>Đề thi tiên quyết</Label>
+
+  <p className="mt-1 text-sm text-muted-foreground">
+    Học sinh phải từng nộp bài các đề được chọn trước khi làm đề này.
+    Không yêu cầu phải đạt.
+  </p>
+
+  <Input
+    className="mt-3"
+    placeholder="Tìm kiếm đề thi..."
+    value={prerequisiteSearch}
+    onChange={(e) => setPrerequisiteSearch(e.target.value)}
+  />
+
+  <div className="mt-3 max-h-64 space-y-2 overflow-y-auto rounded-lg border p-2">
+    {examsLoading ? (
+      <p className="p-3 text-sm text-muted-foreground">
+        Đang tải danh sách đề thi...
+      </p>
+    ) : filteredExams.length === 0 ? (
+      <p className="p-3 text-sm text-muted-foreground">
+        Không tìm thấy đề thi.
+      </p>
+    ) : (
+      filteredExams.map((exam) => {
+        const selected = selectedPrerequisiteIds.includes(exam.id);
+
+        return (
+          <button
+            key={exam.id}
+            type="button"
+            onClick={() => togglePrerequisite(exam.id)}
+            className={`flex w-full items-center justify-between rounded-md border p-3 text-left transition ${
+              selected
+                ? "border-primary bg-muted"
+                : "hover:bg-muted/50"
+            }`}
+          >
+            <div className="min-w-0">
+              <p className="truncate font-medium">
+                {exam.title}
+              </p>
+
+              <p className="text-xs text-muted-foreground">
+                {exam.category === "ATTENDANCE"
+                  ? "Điểm danh"
+                  : "Kiểm tra định kỳ"}{" "}
+                · {exam.exam_type === "MOET"
+                  ? "THPT 2025"
+                  : "Tự do"}
+              </p>
+            </div>
+
+            {selected && (
+            <span className="ml-3 shrink-0 text-xs font-medium text-primary">
+              ✓ Đã chọn
+            </span>
+            )}
+          </button>
+        );
+      })
+    )}
+  </div>
+
+  {selectedPrerequisiteIds.length > 0 && (
+    <p className="mt-2 text-sm text-muted-foreground">
+      Đã chọn {selectedPrerequisiteIds.length} đề tiên quyết.
+    </p>
+  )}
 </div>
 
         {/* PDF URL */}
@@ -206,45 +307,79 @@ export function BasicInfoStep(
 
         </div>
 
-        {/* Duration */}
+          {/* Duration */}
 
-        <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
 
-          <div>
-            <Label>Thời gian (phút)</Label>
+            {/* Thời gian làm bài */}
 
-            <Input
-              type="number"
-              value={form.duration_minutes}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  duration_minutes: Number(e.target.value),
-                })
-              }
-              onWheel={preventWheelChange}
+            <div>
+              <Label>Thời gian (phút)</Label>
 
-            />
-            
+              <Input
+                type="number"
+                min={1}
+                value={form.duration_minutes}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    duration_minutes: Number(e.target.value),
+                  })
+                }
+                onWheel={preventWheelChange}
+              />
+            </div>
+
+            {/* Số ngày được phép làm */}
+
+            <div>
+              <Label>Số ngày được phép làm</Label>
+
+              <Input
+                type="number"
+                min={1}
+                step={1}
+                placeholder="Không giới hạn"
+                value={form.exam_duration_days ?? ""}
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  setForm({
+                    ...form,
+                    exam_duration_days:
+                      value === ""
+                        ? null
+                        : Number(value),
+                  });
+                }}
+                onWheel={preventWheelChange}
+              />
+
+              <p className="mt-1 text-xs text-muted-foreground">
+                Để trống nếu không giới hạn.
+              </p>
+            </div>
+
+            {/* Số lượt làm */}
+
+            <div>
+              <Label>Số lượt làm</Label>
+
+              <Input
+                type="number"
+                min={1}
+                value={form.max_attempts ?? 1}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    max_attempts: Number(e.target.value),
+                  })
+                }
+                onWheel={preventWheelChange}
+              />
+            </div>
+
           </div>
-
-          <div>
-            <Label>Số lượt làm</Label>
-
-            <Input
-              type="number"
-              value={form.max_attempts ?? 1}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  max_attempts: Number(e.target.value),
-                })
-              }
-              onWheel={preventWheelChange}
-            />
-          </div>
-
-        </div>
 
         {/* Điểm đạt */}
 

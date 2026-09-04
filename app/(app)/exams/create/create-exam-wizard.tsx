@@ -1,6 +1,5 @@
 "use client";
-
-import { useState } from "react";
+import { useState,useEffect, } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   useCreateExam,
   useUpdateExam,
+  useExamPrerequisites,
+  useAddExamPrerequisite,
+  useRemoveExamPrerequisite,
 } from "@/hooks/use-exams";
 
 import {
@@ -81,6 +83,44 @@ export function CreateExamWizard({
 
   const [step, setStep] = useState(1);
 
+  const [
+  selectedPrerequisiteIds,
+  setSelectedPrerequisiteIds,
+] = useState<string[]>([]);
+
+const { data: existingPrerequisites = [] } =
+  useExamPrerequisites(
+    mode === "edit" && initialData
+      ? initialData.id
+      : ""
+  );
+
+const addPrerequisite =
+  useAddExamPrerequisite();
+
+const removePrerequisite =
+  useRemoveExamPrerequisite();
+
+  useEffect(() => {
+  if (
+    mode !== "edit" ||
+    !initialData
+  ) {
+    return;
+  }
+
+  setSelectedPrerequisiteIds(
+    existingPrerequisites.map(
+      (item) =>
+        item.prerequisite_exam_id
+    )
+  );
+}, [
+  mode,
+  initialData,
+  existingPrerequisites,
+]);
+
   const [form, setForm] = useState<CreateExamDto>(() => {
     if (mode === "edit" && initialData) {
       return {
@@ -91,6 +131,7 @@ export function CreateExamWizard({
         exam_type: initialData.exam_type,
         category: initialData.category,
         duration_minutes: initialData.duration_minutes,
+        exam_duration_days:initialData.exam_duration_days,
         attendance_min_score:
           initialData.attendance_min_score,
         show_answer: initialData.show_answer,
@@ -110,6 +151,7 @@ export function CreateExamWizard({
       exam_file_url: "",
       exam_type: "MOET",
       category: "PERIODIC",
+      exam_duration_days: null,
       duration_minutes: 90,
       attendance_min_score: 8,
       show_answer: false,
@@ -149,26 +191,102 @@ function updateQuestionConfig(
     setStep((s) => Math.max(1, s - 1));
   }
 
-  async function submit() {
-    try {
-      if (mode === "edit" && initialData) {
-        await updateExam.mutateAsync({
-          id: initialData.id,
-          values: form,
-        });
+async function submit() {
+  try {
+    // ======================================================
+    // EDIT
+    // ======================================================
 
-        router.push(`/exams/${initialData.id}`);
-        return;
+    if (
+      mode === "edit" &&
+      initialData
+    ) {
+      await updateExam.mutateAsync({
+        id: initialData.id,
+        values: form,
+      });
+
+      const oldIds =
+        existingPrerequisites.map(
+          (item) =>
+            item.prerequisite_exam_id
+        );
+
+      const oldSet =
+        new Set(oldIds);
+
+      const newSet =
+        new Set(
+          selectedPrerequisiteIds
+        );
+
+      // ------------------------------
+      // Thêm prerequisite mới
+      // ------------------------------
+
+      for (
+        const prerequisiteExamId
+        of selectedPrerequisiteIds
+      ) {
+        if (!oldSet.has(
+          prerequisiteExamId
+        )) {
+          await addPrerequisite.mutateAsync({
+            examId: initialData.id,
+            prerequisiteExamId,
+          });
+        }
       }
 
-      const exam = await createExam.mutateAsync(form);
+      // ------------------------------
+      // Xóa prerequisite đã bỏ chọn
+      // ------------------------------
 
-      // KHÔNG còn sang trang answer-key nữa
-      router.push(`/exams/${exam.id}`);
-    } catch (err) {
-      console.error(err);
+      for (
+        const prerequisiteExamId
+        of oldIds
+      ) {
+        if (!newSet.has(
+          prerequisiteExamId
+        )) {
+          await removePrerequisite.mutateAsync({
+            examId: initialData.id,
+            prerequisiteExamId,
+          });
+        }
+      }
+
+      router.push(
+        `/exams/${initialData.id}`
+      );
+
+      return;
     }
+
+    // ======================================================
+    // CREATE
+    // ======================================================
+
+    const exam =
+      await createExam.mutateAsync(form);
+
+    for (
+      const prerequisiteExamId
+      of selectedPrerequisiteIds
+    ) {
+      await addPrerequisite.mutateAsync({
+        examId: exam.id,
+        prerequisiteExamId,
+      });
+    }
+
+    router.push(
+      `/exams/${exam.id}`
+    );
+  } catch (err) {
+    console.error(err);
   }
+}
 
   return (
     <Card>
@@ -203,6 +321,9 @@ function updateQuestionConfig(
           <BasicInfoStep
             form={form}
             setForm={setForm}
+            selectedPrerequisiteIds={selectedPrerequisiteIds}
+            setSelectedPrerequisiteIds={setSelectedPrerequisiteIds}
+            currentExamId={initialData?.id}
           />
         )}
 

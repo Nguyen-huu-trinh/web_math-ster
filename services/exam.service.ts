@@ -34,6 +34,11 @@ export class ExamService {
     return examRepository.getAnswerKey(id);
   }
 
+   async getPrerequisites(examId: string) {
+    return examRepository.getPrerequisites(
+      examId
+    );
+  }
   // =========================
   // Commands
   // =========================
@@ -58,6 +63,25 @@ export class ExamService {
     );
   }
 
+    async addPrerequisite(
+    examId: string,
+    prerequisiteExamId: string
+  ) {
+    return examRepository.addPrerequisite(
+      examId,
+      prerequisiteExamId
+    );
+  }
+
+  async removePrerequisite(
+    examId: string,
+    prerequisiteExamId: string
+  ) {
+    return examRepository.removePrerequisite(
+      examId,
+      prerequisiteExamId
+    );
+  }
   // =========================
   // UPDATE ANSWER KEY
   // =========================

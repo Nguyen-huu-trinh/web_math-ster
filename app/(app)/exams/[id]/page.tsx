@@ -18,6 +18,7 @@ import {
   useDuplicateExam,
   useExam,
   usePublishExam,
+  useExamPrerequisites,
 } from "@/hooks/use-exams";
 
 const PdfViewer = dynamic(
@@ -34,6 +35,9 @@ export default function ExamDetailPage() {
   const id = params.id as string;
 
   const examQuery = useExam(id);
+
+const prerequisitesQuery =
+  useExamPrerequisites(id);
 
   const publish = usePublishExam();
 
@@ -153,6 +157,17 @@ function handleToggleStatus() {
       </div>
 
       <div>
+  <p className="text-sm text-muted-foreground">
+    Số ngày được phép làm
+  </p>
+
+  <p className="font-medium">
+    {exam.exam_duration_days ?? "Không giới hạn"}
+    {exam.exam_duration_days != null && " ngày"}
+  </p>
+</div>
+
+      <div>
 
         <p className="text-sm text-muted-foreground">
           Loại đề
@@ -253,6 +268,53 @@ function handleToggleStatus() {
       </CardContent>
 
     </Card>
+
+    <Card>
+  <CardHeader>
+    <CardTitle>
+      Đề thi tiên quyết
+    </CardTitle>
+  </CardHeader>
+
+  <CardContent>
+    {prerequisitesQuery.isLoading ? (
+      <p className="text-sm text-muted-foreground">
+        Đang tải...
+      </p>
+    ) : prerequisitesQuery.data?.length ? (
+      <div className="space-y-3">
+        {prerequisitesQuery.data.map(
+          (prerequisite) => (
+            <div
+              key={prerequisite.id}
+              className="rounded-lg border p-4"
+            >
+              <p className="font-medium">
+                {prerequisite.prerequisite_exam.title}
+              </p>
+
+              <p className="mt-1 text-sm text-muted-foreground">
+                {prerequisite.prerequisite_exam.category ===
+                "ATTENDANCE"
+                  ? "Điểm danh"
+                  : "Kiểm tra định kỳ"}
+                {" · "}
+                {prerequisite.prerequisite_exam.exam_type ===
+                "MOET"
+                  ? "THPT 2025"
+                  : "Tự do"}
+              </p>
+            </div>
+          )
+        )}
+      </div>
+    ) : (
+      <p className="text-sm text-muted-foreground">
+        Không có đề thi tiên quyết.
+      </p>
+    )}
+  </CardContent>
+</Card>
 
   </div>
 

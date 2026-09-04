@@ -42,6 +42,8 @@ export interface Exam {
 
   duration_minutes: number;
 
+  exam_duration_days: number | null;
+
   attendance_min_score: number | null;
 
   show_answer: boolean;
@@ -82,6 +84,8 @@ export interface CreateExamDto {
 
   duration_minutes: number;
 
+  exam_duration_days?: number | null;
+
   attendance_min_score?: number | null;
 
   show_answer: boolean;
@@ -99,6 +103,23 @@ export interface CreateExamDto {
   teacherId: string;
 }
 
+export interface ExamPrerequisite {
+  id: string;
+
+  exam_id: string;
+
+  prerequisite_exam_id: string;
+
+  created_at: string;
+
+  prerequisite_exam: {
+    id: string;
+    title: string;
+    category: ExamCategory;
+    exam_type: ExamType;
+  };
+}
+
 export interface UpdateExamDto {
   title?: string;
 
@@ -111,6 +132,8 @@ export interface UpdateExamDto {
   exam_type?: ExamType;
 
   category?: ExamCategory;
+
+  exam_duration_days?: number | null;
 
   duration_minutes?: number;
 

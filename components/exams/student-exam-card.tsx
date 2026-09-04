@@ -47,7 +47,16 @@ export function StudentExamCard({
 
   const startLockRef =
     useRef(false);
+const [showPrerequisiteDialog, setShowPrerequisiteDialog] =
+  useState(false);
 
+const [missingPrerequisites, setMissingPrerequisites] =
+  useState<
+    {
+      id: string;
+      title: string;
+    }[]
+  >([]);
 
   /*
    * ==========================================
@@ -197,15 +206,35 @@ export function StudentExamCard({
         return;
       }
 
-      /*
-       * ======================================
-       * LỖI KHÁC
-       * ======================================
-       */
-      toast.error(
-        error?.message ??
-          "Không thể bắt đầu bài làm."
-      );
+/*
+ * ======================================
+ * THIẾU BÀI KIỂM TRA TIÊN QUYẾT
+ * ======================================
+ */
+if (
+  error?.status === 403 &&
+  error?.code === "PREREQUISITE_NOT_COMPLETED"
+) {
+  setShowStartDialog(false);
+
+  setMissingPrerequisites(
+    error?.missingPrerequisites ?? []
+  );
+
+  setShowPrerequisiteDialog(true);
+
+  return;
+}
+
+/*
+ * ======================================
+ * LỖI KHÁC
+ * ======================================
+ */
+toast.error(
+  error?.message ??
+    "Không thể bắt đầu bài làm."
+);
     }
   }
 
@@ -512,6 +541,114 @@ export function StudentExamCard({
         </div>
       )}
 
+
+
+            {/* ==========================================
+          PREREQUISITE DIALOG
+      ========================================== */}
+      {showPrerequisiteDialog && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={() => setShowPrerequisiteDialog(false)}
+          />
+
+          {/* Modal */}
+          <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-border/50 bg-background shadow-2xl animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="border-b bg-orange-50/70 px-6 py-5 dark:bg-orange-950/20">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-6 w-6"
+                  >
+                    <path d="M12 9v4" />
+                    <path d="M12 17h.01" />
+                    <path d="M10.3 3.3 2.7 17a2 2 0 0 0 1.7 3h15.2a2 2 0 0 0 1.7-3L13.7 3.3a2 2 0 0 0-3.4 0Z" />
+                  </svg>
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-bold tracking-tight text-foreground">
+                    Chưa thể bắt đầu bài thi
+                  </h2>
+
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Bạn cần hoàn thành các bài kiểm tra tiên quyết trước.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-5">
+              <p className="text-sm leading-6 text-muted-foreground">
+                Để làm bài{" "}
+                <span className="font-semibold text-foreground">
+                  "{exam.title}"
+                </span>
+                , bạn cần làm các bài kiểm tra sau:
+              </p>
+
+{/* Danh sách prerequisite */}
+<div className="mt-4 max-h-[280px] overflow-y-auto pr-1">
+  <div className="space-y-2">
+    {missingPrerequisites.length > 0 ? (
+      missingPrerequisites.map((prerequisite, index) => (
+        <div
+          key={prerequisite.id}
+          className="flex items-center gap-3 rounded-xl border bg-muted/30 px-4 py-3"
+        >
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-sm font-bold text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
+            {index + 1}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-foreground">
+              {prerequisite.title}
+            </p>
+          </div>
+
+          <div className="shrink-0">
+            <span className="rounded-full bg-orange-100 px-2.5 py-1 text-xs font-medium text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
+              Cần làm
+            </span>
+          </div>
+        </div>
+      ))
+    ) : (
+      <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-800 dark:border-orange-900/50 dark:bg-orange-950/20 dark:text-orange-300">
+        Bạn chưa hoàn thành bài kiểm tra tiên quyết cần thiết.
+      </div>
+    )}
+  </div>
+</div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end border-t bg-muted/20 px-6 py-4">
+              <Button
+                type="button"
+                size="lg"
+                onClick={() => setShowPrerequisiteDialog(false)}
+                className="rounded-xl px-6 font-semibold"
+              >
+                Đã hiểu
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </>
   );
 }
+

@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { examService } from "@/services/exam.service";
+
 import { requireTeacher } from "@/lib/auth/teacher";
+
+import {
+  UpdateExamSchema,
+} from "@/validators/exam.schema";
 
 interface Props {
   params: Promise<{
@@ -23,6 +28,7 @@ export async function GET(
 }
 
 // ===== PUT =====
+
 export async function PUT(
   request: NextRequest,
   { params }: Props
@@ -31,14 +37,22 @@ export async function PUT(
 
   const { id } = await params;
 
-  const body = await request.json();
+  const body =
+    await request.json();
+
+  const validatedData =
+    UpdateExamSchema.parse(body);
 
   return NextResponse.json(
-    await examService.update(id, body)
+    await examService.update(
+      id,
+      validatedData
+    )
   );
 }
 
 // ===== PATCH =====
+
 export async function PATCH(
   request: NextRequest,
   { params }: Props
@@ -47,14 +61,22 @@ export async function PATCH(
 
   const { id } = await params;
 
-  const body = await request.json();
+  const body =
+    await request.json();
+
+  const validatedData =
+    UpdateExamSchema.parse(body);
 
   return NextResponse.json(
-    await examService.update(id, body)
+    await examService.update(
+      id,
+      validatedData
+    )
   );
 }
 
 // ===== DELETE =====
+
 export async function DELETE(
   request: NextRequest,
   { params }: Props

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-
+import { adminClient } from "@/lib/supabase/admin";
 import {
   AnswerKey,
   CreateExamDto,
@@ -132,6 +132,9 @@ export class ExamRepository {
 
       duration_minutes:
         values.duration_minutes,
+      
+      exam_duration_days:
+        values.exam_duration_days,
 
       attendance_min_score:
         values.attendance_min_score,
@@ -312,6 +315,9 @@ async update(
         attendance_min_score:
           exam.attendance_min_score,
 
+        exam_duration_days:
+          exam.exam_duration_days,
+
         show_answer:
           exam.show_answer,
 
@@ -348,6 +354,78 @@ async update(
   // =========================================================
   // SOFT DELETE
   // =========================================================
+// =========================================================
+// PREREQUISITES
+// =========================================================
+
+async getPrerequisites(examId: string) {
+ const supabase = adminClient;
+
+  const { data, error } = await supabase
+    .from("exam_prerequisites")
+    .select(`
+      id,
+      exam_id,
+      prerequisite_exam_id,
+      created_at,
+      prerequisite_exam:exams!exam_prerequisites_prerequisite_exam_id_fkey (
+        id,
+        title,
+        category,
+        exam_type
+      )
+    `)
+    .eq("exam_id", examId)
+    .order("created_at", {
+      ascending: true,
+    });
+
+  if (error) throw error;
+
+  return data;
+}
+
+async addPrerequisite(
+  examId: string,
+  prerequisiteExamId: string
+) {
+  const supabase = adminClient;
+
+  const { data, error } = await supabase
+    .from("exam_prerequisites")
+    .insert({
+      exam_id: examId,
+      prerequisite_exam_id: prerequisiteExamId,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return data;
+}
+
+async removePrerequisite(
+  examId: string,
+  prerequisiteExamId: string
+) {
+  const supabase = adminClient;
+
+  const { data, error } = await supabase
+    .from("exam_prerequisites")
+    .delete()
+    .eq("exam_id", examId)
+    .eq(
+      "prerequisite_exam_id",
+      prerequisiteExamId
+    )
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return data;
+}
 
   async softDelete(id: string) {
     const supabase = await createClient();

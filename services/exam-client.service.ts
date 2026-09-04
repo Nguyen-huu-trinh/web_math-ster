@@ -96,6 +96,34 @@ export class ExamClientService {
     {}
   );
 }
+
+  getPrerequisites(id: string) {
+    return apiClient.get(
+      `/api/exams/${id}/prerequisites`
+    );
+  }
+
+  addPrerequisite(
+    examId: string,
+    prerequisiteExamId: string
+  ) {
+    return apiClient.post(
+      `/api/exams/${examId}/prerequisites`,
+      {
+        prerequisiteExamId,
+      }
+    );
+  }
+
+  removePrerequisite(
+    examId: string,
+    prerequisiteExamId: string
+  ) {
+    return apiClient.delete(
+      `/api/exams/${examId}/prerequisites/${prerequisiteExamId}`
+    );
+  }
+
 }
 export const examClientService =
   new ExamClientService();

@@ -19,6 +19,13 @@ class ApiClient {
 
       let code: string | undefined;
 
+      let missingPrerequisites:
+        | {
+            id: string;
+            title: string;
+          }[]
+        | undefined;
+
       try {
         const data = await response.json();
 
@@ -28,6 +35,7 @@ class ApiClient {
           message;
 
         code = data?.code;
+        missingPrerequisites = data?.missingPrerequisites;
       } catch {
         // Response không phải JSON
       }
@@ -35,10 +43,15 @@ class ApiClient {
       const error = new Error(message) as Error & {
         status?: number;
         code?: string;
+        missingPrerequisites?: {
+          id: string;
+          title: string;
+        }[];
       };
 
       error.status = response.status;
       error.code = code;
+      error.missingPrerequisites = missingPrerequisites;
 
       throw error;
     }
@@ -89,18 +102,18 @@ class ApiClient {
     });
   }
 
-delete<T>(
+  delete<T>(
     url: string,
     body?: unknown
-): Promise<T> {
+  ): Promise<T> {
     return this.request<T>(url, {
-        method: "DELETE",
-        body:
-            body !== undefined
-                ? JSON.stringify(body)
-                : undefined,
+      method: "DELETE",
+      body:
+        body !== undefined
+          ? JSON.stringify(body)
+          : undefined,
     });
-}
+  }
 }
 
 export const apiClient = new ApiClient();

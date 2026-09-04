@@ -1,6 +1,5 @@
-import Link from "next/link";
-
 import { requireStudent } from "@/lib/auth/student";
+
 import { studentExamService } from "@/services/student-exam.service";
 
 import {
@@ -16,7 +15,8 @@ import {
 } from "@/components/ui/card";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+
+import { OpenExamContent } from "@/components/exams/open-exam-content";
 
 interface Props {
   params: Promise<{
@@ -61,24 +61,13 @@ export default async function OpenExamPage({
       </div>
     );
   }
-const currentExam = exam;
-  console.log("[OPEN EXAM]", {
-    urlExamId: examId,
-    examId: exam.id,
-    title: exam.title,
-    attempts: exam.attempts,
-    maxAttempts: exam.maxAttempts,
-    canStart: exam.canStart,
-    lastAttemptId: exam.lastAttemptId,
-    status: exam.status,
-  });
 
   // =====================================================
   // STATUS
   // =====================================================
 
   function renderStatus() {
-    switch (currentExam.status) {
+    switch (exam?.status) {
       case "NOT_STARTED":
         return (
           <Badge className="border bg-gray-100 text-gray-700">
@@ -100,78 +89,10 @@ const currentExam = exam;
           </Badge>
         );
 
-      case "DONE":
-        return (
-          <Badge className="border-blue-200 bg-blue-100 text-blue-700">
-            Đã hoàn thành
-          </Badge>
-        );
-
+      
       default:
         return null;
     }
-  }
-
-  // =====================================================
-  // BUTTON
-  // =====================================================
-
-  function renderButton() {
-    /*
-     * CÒN LƯỢT
-     *
-     * Không gọi startExam ở đây.
-     *
-     * Chỉ chuyển sang /start/[examId].
-     */
-    if (currentExam.canStart) {
-      return (
-        <Link
-          href={`/student-exams/start/${currentExam.id}`}
-          className="w-full md:w-32"
-        >
-          <Button className="w-full">
-            {currentExam.attempts === 0
-              ? "Làm bài"
-              : "Làm lại"}
-          </Button>
-        </Link>
-      );
-    }
-
-    /*
-     * HẾT LƯỢT
-     *
-     * Có attempt → xem lại.
-     */
-    if (currentExam.lastAttemptId) {
-      return (
-        <Link
-          href={`/student-exams/${currentExam.lastAttemptId}?review=true`}
-          className="w-full md:w-32"
-        >
-          <Button
-            className="w-full"
-            variant="outline"
-          >
-            Xem lại
-          </Button>
-        </Link>
-      );
-    }
-
-    /*
-     * HẾT LƯỢT NHƯNG KHÔNG CÓ ATTEMPT
-     */
-    return (
-      <Button
-        className="w-full md:w-32"
-        variant="outline"
-        disabled
-      >
-        Không thể mở
-      </Button>
-    );
   }
 
   // =====================================================
@@ -316,9 +237,7 @@ const currentExam = exam;
             ================================================= */}
 
             <div className="mt-2 flex w-full items-center md:mt-0 md:w-auto">
-
-              {renderButton()}
-
+              <OpenExamContent exam={exam} />
             </div>
 
           </CardContent>

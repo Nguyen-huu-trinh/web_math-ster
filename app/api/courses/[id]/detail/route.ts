@@ -19,7 +19,7 @@ export async function GET(
     ) ?? undefined;
 
   return NextResponse.json(
-    await courseDetailService.get(
+    await courseDetailService.getCourseDetail(
       id,
       studentId
     )

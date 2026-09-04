@@ -271,12 +271,25 @@ export function CourseTable({
 
       </CardContent>
 
-      <CourseDialog
-        open={open}
-        onOpenChange={setOpen}
-        course={editing}
-        onSuccess={refresh}
-      />
+<CourseDialog
+  open={open}
+  course={editing}
+  onClose={() => {
+    setOpen(false);
+    setEditing(null);
+  }}
+  onSubmit={async (values) => {
+    if (editing) {
+      await updateCourse(values);
+    } else {
+      await createCourse(values);
+    }
+
+    await refresh();
+    setOpen(false);
+    setEditing(null);
+  }}
+/>
 
     </Card>
   );

@@ -31,7 +31,7 @@ import {
 import {
     useUpdateLearningGoal,
 } from "@/hooks/use-update-learning-goal";
-
+import { useStudentExams } from "@/hooks/use-student-exams";
 
 const StudentProgressChart = dynamic(
   () =>
@@ -85,7 +85,8 @@ export default function StudentDashboard() {
     useAnnouncement()
     const activeStudentCount =
     useActiveStudentCount()
-    
+    const studentExams =
+    useStudentExams();
 
     const dashboard =
         studentDashboard.data
@@ -248,7 +249,12 @@ if (
         )
     }
 
-
+const periodicNotifications =
+    (studentExams.data ?? []).filter(
+        (exam) =>
+            exam.category === "PERIODIC" &&
+            exam.periodicDaysRemaining !== null
+    );
 
     return (
 
@@ -450,29 +456,63 @@ if (
     </div>
   </div>
 </div>
-            
-            <div className="rounded-xl border border-amber-300 bg-amber-50 p-5 shadow-sm">
+<div className="rounded-xl border border-amber-300 bg-amber-50 p-5 shadow-sm">
+  {/* GIỮ NGUYÊN HOÀN TOÀN PHẦN TRÊN */}
+  <div className="flex items-center gap-2">
+    <span className="text-xl">📢</span>
+    <h3 className="font-semibold text-amber-900">
+      {announcement.data?.title ?? "Thông báo"}
+    </h3>
+  </div>
 
-    <div className="flex items-center gap-2">
+  <p className="mt-3 whitespace-pre-line text-sm leading-7 text-amber-800">
+    {announcement.data?.content ?? "Chưa có thông báo."}
+  </p>
 
-        <span className="text-xl">📢</span>
+{periodicNotifications.length > 0 && (
+  <div className="mt-4 pt-4 border-t border-amber-200/80 space-y-2">
+    {periodicNotifications.map((exam) => {
+      const days = exam.periodicDaysRemaining;
 
-        <h3 className="font-semibold text-amber-900">
+      if (days === null) return null;
 
-            {announcement.data?.title ?? "Thông báo"}
+      const isOverdue = days < 0;
+      const isToday = days === 0;
 
-        </h3>
+      return (
+        <div
+          key={exam.id}
+          className="flex items-center gap-3 rounded-xl bg-red-100/70 border border-red-200/80 px-3.5 py-2.5 text-sm text-red-950 shadow-sm"
+        >
+          {/* Badge Icon đỏ đồng bộ */}
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-500 text-white font-bold text-xs">
+            🚨
+          </span>
 
-    </div>
-
-    <p className="mt-3 whitespace-pre-line text-sm leading-7 text-amber-800">
-
-        {announcement.data?.content ??
-            "Chưa có thông báo."}
-
-    </p>
-
+          {/* Nội dung thông báo màu đỏ */}
+          <div className="flex-1 font-medium leading-snug">
+            Bài thi <strong className="font-bold underline underline-offset-2">{exam.title}</strong>{" "}
+            {isOverdue ? (
+              <span className="font-extrabold text-red-700">
+                đã quá hạn {Math.abs(days)} ngày!
+              </span>
+            ) : isToday ? (
+              <span className="font-extrabold text-red-700 uppercase tracking-wide">
+                sẽ HẾT HẠN trong HÔM NAY!
+              </span>
+            ) : (
+              <span className="font-bold text-red-600">
+                sẽ hết hạn sau {days} ngày
+              </span>
+            )}
+          </div>
+        </div>
+      );
+    })}
+  </div>
+)}
 </div>
+
 
 
 

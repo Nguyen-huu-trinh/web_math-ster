@@ -125,6 +125,19 @@ async adjustStudentPoints(
   async getMyExams(studentId: string) {
     const supabase = await createClient();
 
+    const { data: studentProfile, error: studentProfileError } =
+  await supabase
+    .from("profiles")
+    .select("created_at")
+    .eq("id", studentId)
+    .single();
+
+if (studentProfileError) throw studentProfileError;
+
+if (!studentProfile) {
+  throw new Error("Không tìm thấy hồ sơ học sinh.");
+}
+
     // 1. Lấy danh sách khóa học học sinh đang học
     const { data: enrollments, error: enrollError } = await supabase
       .from("course_students")
@@ -152,6 +165,7 @@ async adjustStudentPoints(
         attendance_min_score,
         show_answer,
         exam_file_url,
+        exam_duration_days,
         status,
         is_active,
         courses(
@@ -184,6 +198,32 @@ const { data: attempts, error: attemptError } =
 
     if (attemptError) throw attemptError;
 
+const getCalendarDateVN = (date: Date) => {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+};
+
+const getDaysBetween = (
+  fromDate: string,
+  toDate: Date
+) => {
+  const from = new Date(`${getCalendarDateVN(new Date(fromDate))}T00:00:00+07:00`);
+
+  const toDateVN = getCalendarDateVN(toDate);
+  const to = new Date(`${toDateVN}T00:00:00+07:00`);
+
+  return Math.floor(
+    (to.getTime() - from.getTime()) /
+      (1000 * 60 * 60 * 24)
+  );
+};
+
+const today = new Date();
+
     return exams.map((exam) => {
       const course = Array.isArray(exam.courses)
         ? exam.courses[0]
@@ -203,6 +243,27 @@ const { data: attempts, error: attemptError } =
           : null;
 
       const attemptCount = examAttempts.length;
+
+const hasSubmittedAttempt = examAttempts.some(
+  (attempt) => attempt.submitted_at !== null
+);
+
+let periodicDaysRemaining: number | null = null;
+
+if (
+  exam.category === "PERIODIC" &&
+  exam.status === "OPEN" &&
+  exam.exam_duration_days !== null &&
+  !hasSubmittedAttempt
+) {
+  const daysElapsed = getDaysBetween(
+    studentProfile.created_at,
+    today
+  );
+
+  periodicDaysRemaining =
+    exam.exam_duration_days - daysElapsed;
+}
 
 const hasUnsubmittedAttempt =
   examAttempts.some(
@@ -296,6 +357,7 @@ else if (lastAttempt) {
 
         examFile:
           exam.exam_file_url,
+        periodicDaysRemaining,
       };
     });
   }

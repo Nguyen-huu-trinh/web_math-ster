@@ -41,6 +41,7 @@ export interface StudentExamItem {
   showAnswer: boolean;
 
   examFile: string;
+  periodicDaysRemaining: number | null;
 
   lastAttemptId?: string | null;
 }

@@ -416,12 +416,6 @@ export function OpenExamContent({
                   )}
                 </div>
               </div>
-
-              {/* Note */}
-              <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-3 text-xs leading-5 text-blue-800 dark:border-blue-900/50 dark:bg-blue-950/20 dark:text-blue-300">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-
-              </div>
             </div>
 
             {/* Footer */}

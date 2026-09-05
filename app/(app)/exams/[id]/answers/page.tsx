@@ -19,7 +19,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useExamAttempts } from "@/hooks/use-exam-attempts";
-
+import type { ExamAttemptStudent } from "@/services/exam-attempts-client.service";
 import {
   Card,
   CardContent,
@@ -127,6 +127,45 @@ function getDurationSeconds(
     )
   );
 }
+
+function isOverdue(
+  attempt: ExamAttemptStudent,
+  examDurationDays: number | null,
+  category: string | null
+) {
+  if (attempt.id !== null) return false;
+
+  // Chỉ áp dụng cho category cần tính quá hạn
+  if (category !== "PERIODIC") return false;
+
+  if (examDurationDays === null || examDurationDays === undefined) {
+    return false;
+  }
+
+  if (!attempt.class_joined_at) return false;
+
+  const created = new Date(attempt.class_joined_at);
+  const now = new Date();
+
+  const createdVN = new Date(
+    created.toLocaleDateString("en-CA", {
+      timeZone: "Asia/Ho_Chi_Minh",
+    })
+  );
+
+  const todayVN = new Date(
+    now.toLocaleDateString("en-CA", {
+      timeZone: "Asia/Ho_Chi_Minh",
+    })
+  );
+
+  const daysElapsed = Math.floor(
+    (todayVN.getTime() - createdVN.getTime()) /
+      (1000 * 60 * 60 * 24)
+  );
+
+  return daysElapsed > examDurationDays;
+}
 export default function ExamAnswersPage() {
 
   const params = useParams();
@@ -159,6 +198,12 @@ const {
 
 const attempts =
   response?.data ?? [];
+
+const examDurationDays =
+  response?.examDurationDays ?? null;
+
+const category = response?.category ?? null;
+
 
 const examTitle =
   response?.examTitle ??
@@ -702,9 +747,15 @@ async function deleteAttempt(
                     <TableRow
                       key={attempt.student_id}
                       className={
-                        attempt.id
-                          ? "cursor-pointer hover:bg-accent/50"
-                          : ""
+                        isOverdue(
+                          attempt,
+                          examDurationDays,
+                          category
+                        )
+                          ? "bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/30"
+                          : attempt.id
+                            ? "cursor-pointer hover:bg-accent/50"
+                            : ""
                       }
                       onClick={() => {
                         if (!attempt.id) {

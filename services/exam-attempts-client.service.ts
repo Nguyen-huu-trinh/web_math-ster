@@ -26,6 +26,8 @@ export interface ExamAttemptStudent {
 export interface ExamAttemptsResponse {
   success: boolean;
    examTitle: string;
+   examDurationDays: number | null;
+  category: string | null;
   data: ExamAttemptStudent[];
 }
 

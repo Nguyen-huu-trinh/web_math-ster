@@ -45,7 +45,7 @@ const {
   error: examError,
 } = await supabase
   .from("exams")
-  .select("title")
+  .select("title, exam_duration_days, category")
   .eq("id", examId)
   .single();
 
@@ -256,9 +256,11 @@ const {
     // 6. TRẢ KẾT QUẢ
     // =====================================================
 
-   return NextResponse.json({
+return NextResponse.json({
   success: true,
   examTitle: exam?.title ?? "Bài kiểm tra",
+  examDurationDays: exam?.exam_duration_days ?? null,
+  category: exam?.category ?? null,
   data,
 });
 

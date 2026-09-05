@@ -66,6 +66,29 @@ export function BasicInfoStep({
         : [...prev, examId]
     );
   };
+
+  const allFilteredSelected =
+  filteredExams.length > 0 &&
+  filteredExams.every((exam) =>
+    selectedPrerequisiteIds.includes(exam.id)
+  );
+
+const toggleSelectAll = () => {
+  setSelectedPrerequisiteIds((prev) => {
+    if (allFilteredSelected) {
+      // Bỏ chọn tất cả các đề đang hiển thị
+      return prev.filter(
+        (id) => !filteredExams.some((exam) => exam.id === id)
+      );
+    }
+
+    // Chọn tất cả các đề đang hiển thị
+    const newIds = filteredExams.map((exam) => exam.id);
+
+    return Array.from(new Set([...prev, ...newIds]));
+  });
+};
+
    return (
     <Card>
       <CardContent className="grid gap-6 p-6">
@@ -160,12 +183,25 @@ export function BasicInfoStep({
     Không yêu cầu phải đạt.
   </p>
 
+<div className="mt-3 flex gap-2">
   <Input
-    className="mt-3"
+    className="flex-1"
     placeholder="Tìm kiếm đề thi..."
     value={prerequisiteSearch}
     onChange={(e) => setPrerequisiteSearch(e.target.value)}
   />
+
+  <Button
+    type="button"
+    variant="outline"
+    onClick={toggleSelectAll}
+    disabled={filteredExams.length === 0}
+  >
+    {allFilteredSelected
+      ? "Bỏ chọn tất cả"
+      : "Chọn tất cả"}
+  </Button>
+</div>
 
   <div className="mt-3 max-h-64 space-y-2 overflow-y-auto rounded-lg border p-2">
     {examsLoading ? (

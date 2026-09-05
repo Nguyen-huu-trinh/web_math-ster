@@ -228,8 +228,6 @@ const nextLesson =
     : null;
 
 const resources = lesson?.contents ?? [];
-useEffect(() => {
-}, [currentVideo]);
 
 const firstVideo =
   resources.find(
@@ -521,7 +519,7 @@ async function openResource(resource: any) {
             <span aria-hidden>·</span>
               Bài học {lessonIndex + 1} trong {allLessons.length}
             </div>
-            <h1 className="font-serif text-2xl font-semibold tracking-tight text-balance">
+            <h1 className="text-2xl font-semibold tracking-tight text-balance">
               {lesson.title}
             </h1>
             <p className="text-muted-foreground">

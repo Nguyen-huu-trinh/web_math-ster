@@ -8,6 +8,7 @@ import {
     useEffect,
     useCallback,
     useState,
+    useRef,
     ReactNode,
 } from "react";
 
@@ -84,7 +85,8 @@ export function AuthProvider({
 
     const userId =
         user?.id;
-
+const lastSeenUpdateRef =
+    useRef(0);
 
     /*
      * ==========================================
@@ -225,6 +227,201 @@ useEffect(() => {
     handleSessionInvalid,
 ]);
 
+/*
+ * ==========================================
+ * REALTIME PRESENCE
+ * ==========================================
+ *
+ * Theo dõi học sinh đang kết nối.
+ *
+ * KHÔNG heartbeat.
+ * Chỉ touch last_seen_at khi Presence
+ * kết nối thành công.
+ */
+useEffect(() => {
+    if (
+        !userId ||
+        !sessionId ||
+        isLoginPage ||
+        profile?.role !== "STUDENT"
+    ) {
+        return;
+    }
+
+    const supabase = createClient();
+
+    const channel = supabase.channel(
+        "mathster-online-users",
+        {
+            config: {
+                presence: {
+                    key: userId,
+                },
+            },
+        }
+    );
+
+    channel.subscribe(async (status) => {
+        if (status !== "SUBSCRIBED") {
+            return;
+        }
+
+        /*
+         * Đánh dấu học sinh vừa hoạt động.
+         * Đây là 1 RPC khi kết nối Presence,
+         * KHÔNG phải heartbeat.
+         */
+        const { error } =
+            await supabase.rpc(
+                "touch_last_seen"
+            );
+
+        if (error) {
+            console.error(
+                "[PRESENCE] Không thể cập nhật last_seen_at:",
+                error
+            );
+        }
+
+        /*
+         * Đăng ký Presence.
+         */
+await channel.track({
+    user_id: userId,
+    online_at: new Date().toISOString(),
+});
+    });
+
+    return () => {
+        void channel.untrack();
+
+        void supabase.removeChannel(
+            channel
+        );
+    };
+}, [
+    userId,
+    sessionId,
+    isLoginPage,
+    profile?.role,
+]);
+
+/*
+ * ==========================================
+ * ACTIVITY TRACKING
+ * ==========================================
+ *
+ * Không heartbeat.
+ *
+ * Theo dõi hoạt động thực tế của người dùng:
+ * - click
+ * - keydown
+ * - focus
+ * - chuyển trang
+ *
+ * Chỉ cập nhật last_seen_at tối đa
+ * 1 lần trong mỗi 2 phút.
+ */
+useEffect(() => {
+    if (
+        !userId ||
+        !sessionId ||
+        isLoginPage ||
+        profile?.role !== "STUDENT"
+    ) {
+        return;
+    }
+
+    const touchLastSeen = () => {
+        const now = Date.now();
+
+        /*
+         * Chưa đủ 2 phút kể từ lần cập nhật
+         * trước → không làm gì.
+         */
+        if (
+            now - lastSeenUpdateRef.current <
+            2 * 60 * 1000
+        ) {
+            return;
+        }
+
+        /*
+         * Cập nhật ref ngay lập tức để tránh
+         * nhiều event cùng lúc gọi RPC.
+         */
+        lastSeenUpdateRef.current = now;
+
+        const supabase = createClient();
+
+        void supabase
+            .rpc("touch_last_seen")
+            .then(({ error }) => {
+                if (error) {
+                    console.error(
+                        "[LAST SEEN] Update failed:",
+                        error
+                    );
+                }
+            });
+    };
+
+    /*
+     * Hoạt động của người dùng.
+     *
+     * Không dùng mousemove vì event này
+     * phát sinh quá nhiều lần.
+     */
+    window.addEventListener(
+        "click",
+        touchLastSeen
+    );
+
+    window.addEventListener(
+        "keydown",
+        touchLastSeen
+    );
+
+    window.addEventListener(
+        "focus",
+        touchLastSeen
+    );
+
+    /*
+     * Khi chuyển route trong Next.js.
+     */
+   const now = Date.now();
+
+if (
+    now - lastSeenUpdateRef.current >=
+    2 * 60 * 1000
+) {
+    touchLastSeen();
+}
+
+    return () => {
+        window.removeEventListener(
+            "click",
+            touchLastSeen
+        );
+
+        window.removeEventListener(
+            "keydown",
+            touchLastSeen
+        );
+
+        window.removeEventListener(
+            "focus",
+            touchLastSeen
+        );
+    };
+}, [
+    pathname,
+    userId,
+    sessionId,
+    isLoginPage,
+    profile?.role,
+]);
     /*
      * ==========================================
      * HEARTBEAT

@@ -24,6 +24,7 @@ import {
     Pencil,
     Check,
     X,
+     Video,
 } from "lucide-react";
 import {
     useSubmitAttendance,
@@ -312,11 +313,27 @@ const periodicNotifications =
   {/* KHỐI 1: Lời chào & Mục tiêu */}
   {/* Mobile: col-span-2 (Chiếm trọn 1 hàng trên cùng) | Desktop: lg:col-span-14 */}
   <div className="col-span-2 rounded-xl border bg-card p-6 shadow-sm lg:col-span-14">
-    <p className="text-sm text-muted-foreground">👋 {greeting()}</p>
+ <div className="flex items-center justify-between">
+  <p className="text-sm text-muted-foreground">
+    👋 {greeting()}
+  </p>
 
-    <h2 className="mt-2 text-3xl font-bold">
-      {dashboard?.profile?.full_name ?? profile?.full_name}
-    </h2>
+  {profile?.link_zoom && (
+    <a
+      href={profile.link_zoom}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300 dark:hover:bg-blue-950/50"
+    >
+      <Video className="h-3.5 w-3.5" />
+      Zoom
+    </a>
+  )}
+</div>
+
+<h2 className="mt-2 text-3xl font-bold">
+  {dashboard?.profile?.full_name ?? profile?.full_name}
+</h2>
 
     <div className="mt-3">
       {!editingGoal ? (

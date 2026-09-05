@@ -21,7 +21,8 @@ export const requireProfile = cache(async () => {
                 student_code,
                 avatar_url,
                 is_active,
-                points
+                points,
+                link_zoom
             `)
             .eq("id", user.id)
             .single();

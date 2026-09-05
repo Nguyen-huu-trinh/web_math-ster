@@ -65,10 +65,16 @@ export default function ProfilePage() {
   const changePasswordMutation = useChangePassword()
 
 
- const [avatarUrl, setAvatarUrl] =
+const [avatarUrl, setAvatarUrl] =
   useState("");
 
 const [savingAvatar, setSavingAvatar] =
+  useState(false);
+
+const [zoomLink, setZoomLink] =
+  useState("");
+
+const [savingZoom, setSavingZoom] =
   useState(false);
 
 const [successOpen, setSuccessOpen] =
@@ -81,13 +87,93 @@ useEffect(() => {
     setAvatarUrl(
       profile.avatar_url ?? ""
     );
+
+    setZoomLink(
+      profile.link_zoom ?? ""
+    );
   }
 }, [profile]);
 
 if (!user || !profile) {
   return null;
 }
+async function handleZoomUpdate() {
+  const url = zoomLink.trim();
 
+  if (!url) {
+    toast.error(
+      "Vui lòng nhập link Zoom."
+    );
+    return;
+  }
+
+  try {
+    const parsedUrl = new URL(url);
+
+    if (
+      parsedUrl.protocol !== "https:" ||
+      !parsedUrl.hostname.includes("zoom.us")
+    ) {
+      toast.error(
+        "Vui lòng nhập đường link Zoom hợp lệ."
+      );
+      return;
+    }
+  } catch {
+    toast.error(
+      "Vui lòng nhập đường link Zoom hợp lệ."
+    );
+    return;
+  }
+
+  setSavingZoom(true);
+
+  try {
+    const response = await fetch(
+      "/api/profile/zoom",
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type":
+            "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          link_zoom: url,
+        }),
+      }
+    );
+
+    const result =
+      await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        result.message ??
+          "Không thể cập nhật link Zoom."
+      );
+    }
+
+    await refresh();
+
+    toast.success(
+      "Đã cập nhật link Zoom."
+    );
+  } catch (error) {
+    console.error(
+      "[UPDATE ZOOM ERROR]",
+      error
+    );
+
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : "Không thể cập nhật link Zoom."
+    );
+  } finally {
+    setSavingZoom(false);
+  }
+}
 
 async function handleAvatarUpdate() {
   const url = avatarUrl.trim();
@@ -402,6 +488,50 @@ function getGoogleDriveImageUrl(
             </CardContent>
 
           </Card>
+
+          <Card>
+  <CardHeader>
+    <CardTitle>
+      Lớp học Zoom
+    </CardTitle>
+
+    <CardDescription>
+      Nhập đường link Zoom để tham gia lớp học.
+    </CardDescription>
+  </CardHeader>
+
+  <CardContent>
+    <div className="flex flex-col gap-4">
+      <div className="space-y-2">
+        <Label htmlFor="zoom_link">
+          Link Zoom
+        </Label>
+
+        <Input
+          id="zoom_link"
+          type="url"
+          value={zoomLink}
+          onChange={(e) =>
+            setZoomLink(e.target.value)
+          }
+          placeholder="https://zoom.us/j/..."
+        />
+      </div>
+
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          onClick={handleZoomUpdate}
+          disabled={savingZoom}
+        >
+          {savingZoom
+            ? "Đang lưu..."
+            : "Lưu link Zoom"}
+        </Button>
+      </div>
+    </div>
+  </CardContent>
+</Card>
 
           <Card>
 

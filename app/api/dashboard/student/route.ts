@@ -8,8 +8,6 @@ export async function GET(){
 
     const profile =
         await requireStudent();
-     console.log("PROFILE:", profile);
-    console.log("PROFILE.ID:", profile.id);
     return NextResponse.json(
 
         await dashboardService.studentDashboard(

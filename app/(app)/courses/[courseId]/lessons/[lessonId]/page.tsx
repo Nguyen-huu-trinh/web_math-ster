@@ -6,6 +6,7 @@ import { LessonLayout } from "@/components/layout/lesson-layout";
 import { use, useEffect, useState, useRef, } from "react";
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+
 import {
   ChevronLeft,
   FileText,
@@ -49,21 +50,24 @@ import {
 function getYoutubeEmbedUrl(url?: string) {
   if (!url) return "";
 
+  let videoId = "";
+
   // https://youtu.be/VIDEO_ID
   if (url.includes("youtu.be/")) {
-    const id = url.split("youtu.be/")[1].split("?")[0];
-    return `https://www.youtube.com/embed/${id}`;
-  }
-
+    videoId = url.split("youtu.be/")[1].split("?")[0];
+  } 
   // https://www.youtube.com/watch?v=VIDEO_ID
-  if (url.includes("watch?v=")) {
-    const id = new URL(url).searchParams.get("v");
-    return `https://www.youtube.com/embed/${id}`;
+  else if (url.includes("watch?v=")) {
+    videoId = new URL(url).searchParams.get("v") || "";
+  } 
+  // Link embed đã có sẵn: https://www.youtube.com/embed/VIDEO_ID
+  else if (url.includes("/embed/")) {
+    videoId = url.split("/embed/")[1].split("?")[0];
   }
 
-  // Đã là link embed
-  if (url.includes("/embed/")) {
-    return url;
+  if (videoId) {
+    // Thêm rel=0 (chỉ gợi ý video cùng kênh) và modestbranding=1 (rút gọn logo YT)
+    return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`;
   }
 
   return url;
@@ -477,7 +481,7 @@ async function openResource(resource: any) {
 
 {currentVideo ? (
     <>
-  <p className="text-white absolute top-2 left-2 z-50">
+  <p className="text-white absolute top-2 left-2 z-50 pointer-events-none">
     {currentVideo?.title}
 </p>
 

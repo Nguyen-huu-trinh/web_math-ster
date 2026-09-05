@@ -22,6 +22,8 @@
     "next": "16.2.6",
     "next-themes": "^0.4.6",
     "pdfjs-dist": "^6.1.200",
+    "plyr": "^3.8.4",
+    "plyr-react": "^6.0.0",
     "react": "^19",
     "react-dom": "^19",
     "react-dropzone": "^19.1.1",

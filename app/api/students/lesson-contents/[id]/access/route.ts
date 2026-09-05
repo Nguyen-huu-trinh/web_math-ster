@@ -10,7 +10,7 @@ interface Context {
 }
 
 export async function GET(
-    request: Request,
+    _request: Request,
     { params }: Context
 ) {
     try {
@@ -68,28 +68,16 @@ export async function GET(
          * KHÔNG yêu cầu submitted_at.
          * =====================================================
          */
-        const {
-            data: attempt,
-            error: attemptError,
-        } = await supabase
-            .from("exam_attempts")
-            .select(`
-                id,
-                exam_id,
-                student_id,
-                attempt_number,
-                submitted_at
-            `)
-            .eq(
-                "student_id",
-                student.id
-            )
-            .eq(
-                "exam_id",
-                content.exam_id
-            )
-            .limit(1)
-            .maybeSingle();
+const {
+    data: attempt,
+    error: attemptError,
+} = await supabase
+    .from("exam_attempts")
+    .select("id")
+    .eq("student_id", student.id)
+    .eq("exam_id", content.exam_id)
+    .limit(1)
+    .maybeSingle();
 
         if (attemptError) {
             throw attemptError;

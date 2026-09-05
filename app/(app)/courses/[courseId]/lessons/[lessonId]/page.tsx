@@ -3,7 +3,7 @@ import { ResourceDialog } from "@/components/lesson-resources/resource-dialog";
 import { LessonSidebar } from "@/components/lessons/lesson-sidebar";
 import { DeleteResourceDialog } from "@/components/lesson-resources/delete-resource-dialog";
 import { LessonLayout } from "@/components/layout/lesson-layout";
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, useRef, } from "react";
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import {
@@ -114,7 +114,9 @@ const [currentVideo, setCurrentVideo] =
     useState<any>(null);
   const [showLessonSidebar, setShowLessonSidebar] =
   useState(false);
-
+const resourceAccessCache = useRef<
+  Record<string, boolean>
+>({});
 
 
 /* Legacy manual loading replaced by useCourseDetail above.
@@ -222,12 +224,7 @@ const nextLesson =
     : null;
 
 const resources = lesson?.contents ?? [];
-console.log("RESOURCES", resources);
 useEffect(() => {
-   console.log(
-    "CURRENT VIDEO FULL",
-    JSON.stringify(currentVideo, null, 2)
-);
 }, [currentVideo]);
 
 const firstVideo =
@@ -302,201 +299,153 @@ function isCompleted(lesson: any) {
 }
 
 async function checkResourceAccess(
-    resource: any
+  resource: any
 ) {
-    /*
-     * Giáo viên được xem trực tiếp.
-     */
-    if (role !== "STUDENT") {
-        return true;
-    }
+  /*
+   * Giáo viên được xem trực tiếp.
+   */
+  if (role !== "STUDENT") {
+    return true;
+  }
 
-    /*
-     * Không có exam_id
-     * → resource bình thường.
-     */
-    if (!resource.exam_id) {
-        return true;
-    }
+  /*
+   * Resource không liên kết exam
+   * → Cho phép xem bình thường.
+   */
+  if (!resource.exam_id) {
+    return true;
+  }
 
-    try {
-        const response = await fetch(
-            `/api/students/lesson-contents/${resource.id}/access`,
-            {
-                method: "GET",
-                credentials: "include",
-            }
-        );
+  /*
+   * Đã kiểm tra resource này trước đó.
+   *
+   * Không gọi lại Vercel API.
+   */
+  const cached =
+    resourceAccessCache.current[resource.id];
 
-        const result =
-            await response.json();
+  if (cached !== undefined) {
+    return cached;
+  }
 
-        console.log(
-            "[RESOURCE ACCESS]",
-            {
-                resourceId: resource.id,
-                title: resource.title,
-                examId: resource.exam_id,
-                result,
-            }
-        );
+  try {
+    const response = await fetch(
+      `/api/students/lesson-contents/${resource.id}/access`,
+      {
+        method: "GET",
+        credentials: "include",
+      }
+    );
 
-        if (!response.ok) {
-            toast.error(
-                "Bài tập điểm danh chưa hoàn thành",
-                {
-                    description:
-                        result.message ??
-                        "Hãy làm bài tập điểm danh ngay.",
-                }
-            );
+    const result = await response.json();
 
-            return false;
+    if (!response.ok) {
+      toast.error(
+        "Không thể kiểm tra quyền truy cập",
+        {
+          description:
+            result.message ??
+            "Vui lòng thử lại.",
         }
+      );
 
-        if (!result.allowed) {
-            toast.warning(
-                "Chưa thể xem đáp án",
-                {
-                    description:
-                        result.message ??
-                        "Cần làm đề kiểm tra trước khi xem đáp án.",
-                }
-            );
-
-            return false;
-        }
-
-        return true;
-
-    } catch (error) {
-        console.error(
-            "[RESOURCE ACCESS ERROR]",
-            error
-        );
-
-        toast.error(
-            "BTDD chưa hoàn thành",
-            {
-                description:
-                    "Hãy làm bài tập trước khi xem đáp án",
-            }
-        );
-
-        return false;
+      return false;
     }
+
+    const allowed =
+      result.allowed === true;
+
+    /*
+     * Cache kết quả.
+     */
+    resourceAccessCache.current[resource.id] =
+      allowed;
+
+    if (!allowed) {
+      toast.warning(
+        "Chưa thể xem đáp án",
+        {
+          description:
+            result.message ??
+            "Cần làm đề kiểm tra trước khi xem đáp án.",
+        }
+      );
+    }
+
+    return allowed;
+
+  } catch (error) {
+    console.error(
+      "[RESOURCE ACCESS ERROR]",
+      error
+    );
+
+    toast.error(
+      "Có lỗi xảy ra",
+      {
+        description:
+          "Không thể kiểm tra quyền xem tài liệu.",
+      }
+    );
+
+    return false;
+  }
 }
 
 
 async function openResource(resource: any) {
-    /*
-     * Giáo viên được mở trực tiếp.
-     */
-    if (role !== "STUDENT") {
-        window.open(
-            resource.file_links?.url,
-            "_blank",
-            "noopener,noreferrer"
-        );
+  /*
+   * Giáo viên được mở trực tiếp.
+   */
+  if (role !== "STUDENT") {
+    window.open(
+      resource.file_links?.url,
+      "_blank",
+      "noopener,noreferrer"
+    );
 
-        return;
-    }
+    return;
+  }
 
-    /*
-     * Resource không yêu cầu làm bài kiểm tra.
-     */
-    if (!resource.exam_id) {
-        window.open(
-            resource.file_links?.url,
-            "_blank",
-            "noopener,noreferrer"
-        );
+  /*
+   * Resource không yêu cầu làm bài kiểm tra.
+   */
+  if (!resource.exam_id) {
+    window.open(
+      resource.file_links?.url,
+      "_blank",
+      "noopener,noreferrer"
+    );
 
-        await completeLesson();
+    await completeLesson();
 
-        return;
-    }
+    return;
+  }
 
-    /*
-     * Resource có liên kết với exam.
-     * Kiểm tra học sinh đã làm bài hay chưa.
-     */
-    try {
-        const response = await fetch(
-            `/api/students/lesson-contents/${resource.id}/access`,
-            {
-                method: "GET",
-                credentials: "include",
-            }
-        );
+  /*
+   * Resource có liên kết với exam.
+   *
+   * Dùng chung checkResourceAccess().
+   * Hàm này tự cache nên không tạo request
+   * nếu resource đã được kiểm tra trước đó.
+   */
+  const allowed =
+    await checkResourceAccess(resource);
 
-        const result = await response.json();
+  if (!allowed) {
+    return;
+  }
 
-        console.log(
-            "[RESOURCE ACCESS]",
-            {
-                resourceId: resource.id,
-                resourceTitle: resource.title,
-                examId: resource.exam_id,
-                result,
-            }
-        );
-
-        if (!response.ok) {
-            toast.error(
-                "Không thể kiểm tra quyền truy cập",
-                {
-                    description:
-                        result.message ??
-                        "Vui lòng thử lại.",
-                }
-            );
-
-            return;
-        }
-
-        /*
-         * Chưa làm bài.
-         */
-        if (!result.allowed) {
-            toast.warning(
-                "Chưa thể xem đáp án",
-                {
-                    description:
-                        result.message ??
-                        "Cần làm đề kiểm tra trước khi xem đáp án.",
-                }
-            );
-
-            return;
-        }
-
-        /*
-         * Đã làm bài.
-         */
-       window.open(
+  /*
+   * Đã được phép → mở bài kiểm tra.
+   */
+  window.open(
     `/student-exams/open/${resource.exam_id}`,
     "_blank",
     "noopener,noreferrer"
-);
-        
+  );
 
-        await completeLesson();
-
-    } catch (error) {
-        console.error(
-            "[RESOURCE ACCESS ERROR]",
-            error
-        );
-
-        toast.error(
-            "Có lỗi xảy ra",
-            {
-                description:
-                    "Không thể kiểm tra quyền xem tài liệu.",
-            }
-        );
-    }
+  await completeLesson();
 }
   return (
     <div className="flex flex-col gap-6">
@@ -528,8 +477,6 @@ async function openResource(resource: any) {
 
 {currentVideo ? (
     <>
-      {console.log("Video URL:", currentVideo?.file_links?.url)}
-      {console.log("Embed URL:", getYoutubeEmbedUrl(currentVideo?.file_links?.url))}
   <p className="text-white absolute top-2 left-2 z-50">
     {currentVideo?.title}
 </p>
@@ -679,14 +626,6 @@ async function openResource(resource: any) {
         variant="ghost"
         size="icon"
         onClick={async () => {
-            console.log(
-                "[VIDEO CLICK]",
-                {
-                    id: resource.id,
-                    title: resource.title,
-                    exam_id: resource.exam_id,
-                }
-            );
 
             const allowed =
                 await checkResourceAccess(

@@ -14,7 +14,7 @@ export function useCourseDetail(
     queryKey: queryKeys.course.detail(courseId, studentId),
     queryFn: () => courseDetailService.getCourseDetail(courseId, studentId),
     enabled: Boolean(courseId),
-    staleTime: 1000 * 60 * 10,
+    staleTime: 1000 * 60 * 60,
   });
 
   return { ...query, course: query.data ?? null, loading: query.isLoading };

@@ -582,7 +582,7 @@ toast.error(
                   </h2>
 
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Bạn cần hoàn thành các bài kiểm tra tiên quyết trước.
+                    Bạn cần đạt các bài kiểm tra tiên quyết trước khi làm bài này.
                   </p>
                 </div>
               </div>

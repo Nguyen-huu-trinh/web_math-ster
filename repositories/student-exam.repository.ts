@@ -450,7 +450,8 @@ if (prerequisites && prerequisites.length > 0) {
     .select("exam_id")
     .eq("student_id", studentId)
     .in("exam_id", prerequisiteExamIds)
-    .not("submitted_at", "is", null);
+    .not("submitted_at", "is", null)
+    .eq("is_passed", true);
 
   if (completedAttemptsError) {
     throw completedAttemptsError;
@@ -486,7 +487,7 @@ if (prerequisites && prerequisites.length > 0) {
 
   if (missingPrerequisites.length > 0) {
     const error = new Error(
-      "Bạn cần hoàn thành các bài kiểm tra tiên quyết trước khi làm bài này."
+      "Bạn cần đạt các bài kiểm tra tiên quyết trước khi làm bài này."
     ) as Error & {
       code?: string;
       missingPrerequisites?: {

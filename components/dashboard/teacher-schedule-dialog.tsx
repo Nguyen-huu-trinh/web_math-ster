@@ -41,7 +41,7 @@ interface ScheduleForm {
   reminder: string;
   is_active: boolean;
 }
-
+const NOTE_OPTIONS = ["Bài giảng", "Chữa bài", "Chữa đề"] as const;
 const DAYS = [
   { key: 1, label: "Thứ 2" },
   { key: 2, label: "Thứ 3" },
@@ -112,8 +112,8 @@ function createEmptyForm(sessionDate: string): ScheduleForm {
   return {
     session_date: sessionDate,
     content: "",
-    start_time: "20:00",
-    note: "",
+    start_time: "21:00",
+    note: "Bài giảng",
     reminder: "",
     is_active: true,
   };
@@ -157,17 +157,23 @@ export function TeacherScheduleDialog({
     setForm(createEmptyForm(sessionDate));
   }
 
-  function startEdit(schedule: (typeof schedules)[number]) {
-    setEditingId(schedule.id);
-    setForm({
-      session_date: schedule.session_date,
-      content: schedule.content,
-      start_time: formatTime(schedule.start_time),
-      note: schedule.note ?? "",
-      reminder: schedule.reminder ?? "",
-      is_active: schedule.is_active,
-    });
-  }
+function startEdit(schedule: (typeof schedules)[number]) {
+  setEditingId(schedule.id);
+  
+  // Kiểm tra xem ghi chú cũ có thuộc 3 lựa chọn không, nếu không thì lấy "Bài giảng"
+  const validNote = NOTE_OPTIONS.includes(schedule.note as any)
+    ? schedule.note!
+    : NOTE_OPTIONS[0];
+
+  setForm({
+    session_date: schedule.session_date,
+    content: schedule.content,
+    start_time: formatTime(schedule.start_time),
+    note: validNote,
+    reminder: schedule.reminder ?? "",
+    is_active: schedule.is_active,
+  });
+}
 
   function closeEditor() {
     setEditingId(null);
@@ -175,55 +181,55 @@ export function TeacherScheduleDialog({
   }
 
   async function handleSave() {
-    if (!form) return;
+  if (!form) return;
 
-    if (!form.content.trim()) {
-      toast.error("Vui lòng nhập nội dung buổi học.");
-      return;
-    }
+  if (!form.content.trim()) {
+    toast.error("Vui lòng nhập nội dung buổi học.");
+    return;
+  }
 
-    if (!form.session_date) {
-      toast.error("Vui lòng chọn ngày học.");
-      return;
-    }
+  if (!form.session_date) {
+    toast.error("Vui lòng chọn ngày học.");
+    return;
+  }
 
-    if (!form.start_time) {
-      toast.error("Vui lòng nhập giờ vào lớp.");
-      return;
-    }
+  if (!form.start_time) {
+    toast.error("Vui lòng nhập giờ vào lớp.");
+    return;
+  }
 
-    try {
-      if (editingId) {
-        await updateMutation.mutateAsync({
-          id: editingId,
-          input: {
-            session_date: form.session_date,
-            content: form.content.trim(),
-            start_time: form.start_time,
-            note: form.note.trim() || null,
-            reminder: form.reminder.trim() || null,
-            is_active: form.is_active,
-          },
-        });
-        toast.success("Đã cập nhật lịch học.");
-      } else {
-        await createMutation.mutateAsync({
+  try {
+    if (editingId) {
+      await updateMutation.mutateAsync({
+        id: editingId,
+        input: {
           session_date: form.session_date,
           content: form.content.trim(),
           start_time: form.start_time,
-          note: form.note.trim() || null,
+          note: form.note || NOTE_OPTIONS[0], // Luôn đảm bảo có giá trị ghi chú
           reminder: form.reminder.trim() || null,
           is_active: form.is_active,
-        });
-        toast.success("Đã thêm lịch học.");
-      }
-      closeEditor();
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Không thể lưu lịch học."
-      );
+        },
+      });
+      toast.success("Đã cập nhật lịch học.");
+    } else {
+      await createMutation.mutateAsync({
+        session_date: form.session_date,
+        content: form.content.trim(),
+        start_time: form.start_time,
+        note: form.note || NOTE_OPTIONS[0], // Luôn đảm bảo có giá trị ghi chú
+        reminder: form.reminder.trim() || null,
+        is_active: form.is_active,
+      });
+      toast.success("Đã thêm lịch học.");
     }
+    closeEditor();
+  } catch (error) {
+    toast.error(
+      error instanceof Error ? error.message : "Không thể lưu lịch học."
+    );
   }
+}
 
   async function handleDelete(id: string) {
     const confirmed = window.confirm("Bạn có chắc muốn xóa lịch học này không?");
@@ -422,20 +428,24 @@ if (items.length === 0) {
         </td>
 
         {/* Ghi chú */}
-        <td className="px-4 py-4 align-top">
-          <input
-            type="text"
-            value={form.note}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                note: e.target.value,
-              })
-            }
-            placeholder="Ghi chú..."
-            className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-          />
-        </td>
+<td className="px-4 py-4 align-top">
+  <select
+    value={form.note}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        note: e.target.value,
+      })
+    }
+    className="h-9 w-full rounded-md border bg-background px-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+  >
+    {NOTE_OPTIONS.map((option) => (
+      <option key={option} value={option}>
+        {option}
+      </option>
+    ))}
+  </select>
+</td>
 
         {/* Lưu ý */}
         <td className="px-4 py-4 align-top">
@@ -615,39 +625,44 @@ if (items.length === 0) {
                             )}
                           </td>
 
-                          <td className="px-4 py-4 align-top">
-                            {isEditing && form ? (
-                              <input
-                                type="text"
-                                value={form.note}
-                                onChange={(e) =>
-                                  setForm({
-                                    ...form,
-                                    note: e.target.value,
-                                  })
-                                }
-                                placeholder="Ghi chú..."
-                                className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-                              />
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => startEdit(item)}
-                                className="flex w-full items-start gap-1.5 text-left text-xs text-muted-foreground"
-                              >
-                                {item.note ? (
-                                  <>
-                                    <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                                    <span>{item.note}</span>
-                                  </>
-                                ) : (
-                                  <span className="text-muted-foreground/40">
-                                    + Ghi chú
-                                  </span>
-                                )}
-                              </button>
-                            )}
-                          </td>
+                          {/* Ghi chú - Form chỉnh sửa */}
+<td className="px-4 py-4 align-top">
+  {isEditing && form ? (
+    <select
+      value={form.note}
+      onChange={(e) =>
+        setForm({
+          ...form,
+          note: e.target.value,
+        })
+      }
+      className="h-9 w-full rounded-md border bg-background px-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+    >
+      {NOTE_OPTIONS.map((option) => (
+        <option key={option} value={option}>
+          {option}
+        </option>
+      ))}
+    </select>
+  ) : (
+    <button
+      type="button"
+      onClick={() => startEdit(item)}
+      className="flex w-full items-start gap-1.5 text-left text-xs text-muted-foreground"
+    >
+      {item.note ? (
+        <>
+          <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>{item.note}</span>
+        </>
+      ) : (
+        <span className="text-muted-foreground/40">
+          + Chọn ghi chú
+        </span>
+      )}
+    </button>
+  )}
+</td>
 
                           <td className="px-4 py-4 align-top">
                             {isEditing && form ? (

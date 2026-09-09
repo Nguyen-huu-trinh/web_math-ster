@@ -412,7 +412,7 @@ async startExam(
     throw new Error("Đề đã kết thúc.");
   }
 
-  // ===========================
+// ===========================
 // KIỂM TRA ĐỀ TIÊN QUYẾT
 // ===========================
 
@@ -425,7 +425,8 @@ const {
     prerequisite_exam_id,
     prerequisite_exam:exams!exam_prerequisites_prerequisite_exam_id_fkey (
       id,
-      title
+      title,
+      category
     )
   `)
   .eq("exam_id", examId);
@@ -440,40 +441,75 @@ if (prerequisites && prerequisites.length > 0) {
       (item) => item.prerequisite_exam_id
     );
 
-  // Lấy các prerequisite mà học sinh
-  // đã TỪNG NỘP BÀI
+  // =====================================================
+  // ATTENDANCE:
+  // Chỉ cần đã TỪNG NỘP bài tiên quyết
+  // Không yêu cầu is_passed = true
+  // =====================================================
+
+  const isAttendance =
+    exam.category === "ATTENDANCE";
+
   const {
-    data: completedAttempts,
-    error: completedAttemptsError,
+    data: prerequisiteAttempts,
+    error: prerequisiteAttemptsError,
   } = await adminClient
     .from("exam_attempts")
-    .select("exam_id")
+    .select(`
+      exam_id,
+      is_passed,
+      submitted_at
+    `)
     .eq("student_id", studentId)
     .in("exam_id", prerequisiteExamIds)
-    .not("submitted_at", "is", null)
-    .eq("is_passed", true);
+    .not("submitted_at", "is", null);
 
-  if (completedAttemptsError) {
-    throw completedAttemptsError;
+  if (prerequisiteAttemptsError) {
+    throw prerequisiteAttemptsError;
   }
 
   const completedExamIds = new Set(
-    (completedAttempts ?? []).map(
+    (prerequisiteAttempts ?? []).map(
       (attempt) => attempt.exam_id
     )
   );
 
+  // =====================================================
+  // Nếu KHÔNG phải ATTENDANCE:
+  // prerequisite phải ĐẠT
+  // =====================================================
+
+  const passedExamIds = new Set(
+    (prerequisiteAttempts ?? [])
+      .filter(
+        (attempt) =>
+          attempt.is_passed === true
+      )
+      .map(
+        (attempt) => attempt.exam_id
+      )
+  );
+
   const missingPrerequisites =
     prerequisites
-      .filter(
-        (item) =>
-          !completedExamIds.has(
+      .filter((item) => {
+        if (isAttendance) {
+          // Điểm danh → chỉ cần đã làm/nộp
+          return !completedExamIds.has(
             item.prerequisite_exam_id
-          )
-      )
+          );
+        }
+
+        // Các đề khác → phải đạt
+        return !passedExamIds.has(
+          item.prerequisite_exam_id
+        );
+      })
       .map((item) => {
         const prerequisiteExam =
-          Array.isArray(item.prerequisite_exam)
+          Array.isArray(
+            item.prerequisite_exam
+          )
             ? item.prerequisite_exam[0]
             : item.prerequisite_exam;
 
@@ -487,7 +523,9 @@ if (prerequisites && prerequisites.length > 0) {
 
   if (missingPrerequisites.length > 0) {
     const error = new Error(
-      "Bạn cần đạt các bài kiểm tra tiên quyết trước khi làm bài này."
+      isAttendance
+        ? "Bạn cần làm các bài kiểm tra tiên quyết trước khi điểm danh."
+        : "Bạn cần đạt các bài kiểm tra tiên quyết trước khi làm bài này."
     ) as Error & {
       code?: string;
       missingPrerequisites?: {

@@ -58,12 +58,12 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ["teacher"],
   },
 
-  {
-    label: "Tài Khoản",
-    href: "/accounts",
-    icon: "UserCog",
-    roles: ["teacher"],
-  },
+  // {
+  //   label: "Tài Khoản",
+  //   href: "/accounts",
+  //   icon: "UserCog",
+  //   roles: ["teacher"],
+  // },
 ]
 
 export const SECONDARY_NAV: NavItem[] = [

@@ -369,7 +369,7 @@ export function OpenExamContent({
                 <span className="font-semibold text-foreground">
                   "{exam.title}"
                 </span>
-                , bạn cần làm các bài kiểm tra
+                , bạn cần làm hoặc cần đạt các bài kiểm tra
                 sau :
               </p>
 

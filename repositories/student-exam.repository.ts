@@ -448,7 +448,7 @@ if (prerequisites && prerequisites.length > 0) {
   // =====================================================
 
   const isAttendance =
-    exam.category === "ATTENDANCE";
+    exam.category === "PERIODIC";
 
   const {
     data: prerequisiteAttempts,

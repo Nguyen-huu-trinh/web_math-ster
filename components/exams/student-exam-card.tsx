@@ -595,7 +595,7 @@ toast.error(
                 <span className="font-semibold text-foreground">
                   "{exam.title}"
                 </span>
-                , bạn cần làm các bài kiểm tra sau:
+                , bạn cần làm hoặc đạt các bài kiểm tra sau:
               </p>
 
 {/* Danh sách prerequisite */}

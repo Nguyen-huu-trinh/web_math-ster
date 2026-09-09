@@ -253,52 +253,54 @@ const [showSchedule, setShowSchedule] = useState(false);
 
     return (
         <div className="flex flex-col gap-6">
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-24">
-                <div className="relative col-span-2 rounded-xl border bg-card p-6 shadow-sm lg:col-span-14">
-                    <div className="flex items-start justify-between">
-                        <div>
-                            <p className="text-sm text-muted-foreground">
-                                👋 {greeting()}
-                            </p>
-                            <h2 className="mt-2 text-3xl font-bold">Giáo viên</h2>
-                            <p className="mt-2 text-muted-foreground">
-                                Chúc bạn có một ngày giảng dạy hiệu quả!
-                            </p>
-                        </div>
+<div className="grid grid-cols-2 gap-4 lg:grid-cols-24">
+  <div className="relative col-span-2 rounded-xl border bg-card p-6 shadow-sm lg:col-span-14">
+    <div className="flex items-start justify-between gap-4">
+      {/* Khối lời chào & thông tin giáo viên */}
+      <div className="space-y-1">
+        <p className="text-sm font-medium text-muted-foreground">
+          👋 {greeting()}
+        </p>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          Giáo viên
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Chúc bạn có một ngày giảng dạy hiệu quả!
+        </p>
+      </div>
 
+      {/* Khối nút hành động: Thời khóa biểu + Quả chuông thông báo */}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setShowTeacherSchedule(true)}
+          className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-xs font-semibold text-emerald-700 transition-all hover:bg-emerald-100 hover:shadow-sm dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
+          title="Thời khóa biểu"
+        >
+          <CalendarDays className="h-4 w-4" />
+          <span className="hidden sm:inline">Thời khóa biểu</span>
+        </button>
 
+        {/* Nút quả chuông có Badge thông báo */}
+        <div className="relative">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="relative h-9 w-9 rounded-lg"
+          >
+            <Bell className="h-4 w-4 text-muted-foreground" />
+            {examAlerts.length > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground shadow-sm">
+                {examAlerts.length > 99 ? "99+" : examAlerts.length}
+              </span>
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-
-                        <div className="relative">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="relative h-9 w-9 rounded-full cursor-default"
-                            >
- <div className="flex items-center gap-2">
-  <button
-    type="button"
-    onClick={() => setShowTeacherSchedule(true)}
-    className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition hover:bg-muted"
-    title="Thời khóa biểu"
-  >
-    <CalendarDays className="h-4 w-4" />
-    <span className="hidden sm:inline">
-      Thời khóa biểu
-    </span>
-  </button>                               
-                                <Bell className="h-5 w-5" />
-                                </div>
-                                {examAlerts.length > 0 && (
-                                    <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-                                        {examAlerts.length > 99 ? "99+" : examAlerts.length}
-                                    </span>
-                                )}
-                            </Button>
-                        </div>
-                    </div>
-                </div>
 
                 <div className="col-span-1 flex flex-col items-center justify-center rounded-xl border bg-card p-6 shadow-sm lg:col-span-5">
                     <div className="flex items-center justify-center gap-2">

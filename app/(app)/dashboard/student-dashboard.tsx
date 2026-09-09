@@ -326,102 +326,102 @@ const periodicNotifications =
 <div className="grid grid-cols-2 gap-4 lg:grid-cols-24">
   {/* KHỐI 1: Lời chào & Mục tiêu */}
   {/* Mobile: col-span-2 (Chiếm trọn 1 hàng trên cùng) | Desktop: lg:col-span-14 */}
-  <div className="col-span-2 rounded-xl border bg-card p-6 shadow-sm lg:col-span-14">
- <div className="flex items-start justify-between gap-4">
-  <p className="text-sm text-muted-foreground">
-    👋 {greeting()}
-  </p>
+<div className="col-span-2 rounded-xl border bg-card p-6 shadow-sm lg:col-span-14">
+  <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
+    {/* Khối bên trái: Lời chào, Tên & Mục tiêu học tập */}
+    <div className="space-y-2">
+      <p className="text-sm font-medium text-muted-foreground">
+        👋 {greeting()}
+      </p>
 
-  <div className="flex shrink-0 flex-col items-end gap-2">
-    {profile?.link_zoom && (
-      <a
-        href={profile.link_zoom}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300 dark:hover:bg-blue-950/50"
-      >
-        <Video className="h-3.5 w-3.5" />
-        Zoom
-      </a>
-    )}
+      <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+        {dashboard?.profile?.full_name ?? profile?.full_name}
+      </h2>
 
-    <button
-      type="button"
-      onClick={() => setShowSchedule(true)}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-2.5 py-1.5 text-xs font-semibold text-green-700 transition-colors hover:bg-green-100 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300 dark:hover:bg-green-950/50"
-    >
-      <CalendarDays className="h-3.5 w-3.5" />
-      Thời khóa biểu
-    </button>
-  </div>
-</div>
-
-<h2 className="mt-2 text-3xl font-bold">
-  {dashboard?.profile?.full_name ?? profile?.full_name}
-</h2>
-
-    <div className="mt-3">
-      {!editingGoal ? (
-        <button
-          type="button"
-          onClick={handleStartEditGoal}
-          className="group flex items-center gap-2 text-left"
-        >
-          <span className="text-base font-medium text-muted-foreground transition-colors group-hover:text-foreground">
-            🎯 {learningGoal || "Nhấn để đặt mục tiêu học tập"}
-          </span>
-
-          <Pencil className="h-4 w-4 text-muted-foreground opacity-0 transition-all group-hover:opacity-100" />
-        </button>
-      ) : (
-        <div className="flex max-w-xl items-center gap-2">
-          <span className="text-lg">🎯</span>
-
-          <Input
-            value={goal}
-            onChange={(e) => setGoal(e.target.value)}
-            placeholder="Ví dụ: Đạt 9+ môn Toán"
-            maxLength={200}
-            autoFocus
-            className="h-9 text-base font-bold text-blue-700 placeholder:font-normal placeholder:text-muted-foreground"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                void handleSaveGoal();
-              }
-
-              if (e.key === "Escape") {
+      {/* Chỉnh sửa mục tiêu học tập */}
+      <div className="pt-1">
+        {!editingGoal ? (
+          <button
+            type="button"
+            onClick={handleStartEditGoal}
+            className="group flex items-center gap-2 text-left"
+          >
+            <span className="text-base font-medium text-muted-foreground transition-colors group-hover:text-foreground">
+              🎯 {learningGoal || "Nhấn để đặt mục tiêu học tập"}
+            </span>
+            <Pencil className="h-4 w-4 text-muted-foreground opacity-0 transition-all group-hover:opacity-100" />
+          </button>
+        ) : (
+          <div className="flex max-w-md items-center gap-2">
+            <span className="text-lg">🎯</span>
+            <Input
+              value={goal}
+              onChange={(e) => setGoal(e.target.value)}
+              placeholder="Ví dụ: Đạt 9+ môn Toán"
+              maxLength={200}
+              autoFocus
+              className="h-9 text-base font-semibold text-blue-700 dark:text-blue-400 placeholder:font-normal placeholder:text-muted-foreground"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  void handleSaveGoal();
+                }
+                if (e.key === "Escape") {
+                  setGoal(learningGoal);
+                  setEditingGoal(false);
+                }
+              }}
+            />
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              disabled={updateLearningGoal.isPending}
+              onClick={() => void handleSaveGoal()}
+            >
+              <Check className="h-4 w-4 text-green-600" />
+            </Button>
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              disabled={updateLearningGoal.isPending}
+              onClick={() => {
                 setGoal(learningGoal);
                 setEditingGoal(false);
-              }
-            }}
-          />
+              }}
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
 
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            disabled={updateLearningGoal.isPending}
-            onClick={() => void handleSaveGoal()}
-          >
-            <Check className="h-4 w-4 text-green-600" />
-          </Button>
-
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            disabled={updateLearningGoal.isPending}
-            onClick={() => {
-              setGoal(learningGoal);
-              setEditingGoal(false);
-            }}
-          >
-            <X className="h-4 w-4 text-muted-foreground" />
-          </Button>
-        </div>
+    {/* Khối bên phải: Nhóm nút bấm xếp hàng ngang */}
+    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+      {profile?.link_zoom && (
+        <a
+          href={profile.link_zoom}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3.5 py-2 text-xs font-semibold text-blue-700 transition-all hover:bg-blue-100 hover:shadow-sm dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/50"
+        >
+          <Video className="h-4 w-4" />
+          <span>Zoom</span>
+        </a>
       )}
+
+      <button
+        type="button"
+        onClick={() => setShowSchedule(true)}
+        className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-xs font-semibold text-emerald-700 transition-all hover:bg-emerald-100 hover:shadow-sm dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
+      >
+        <CalendarDays className="h-4 w-4" />
+        <span>Thời khóa biểu</span>
+      </button>
     </div>
   </div>
+</div>
 
   {/* KHỐI 2: Số người đang cày */}
   {/* Mobile: col-span-1 (Nằm ở bên trái hàng thứ 2) | Desktop: lg:col-span-5 */}

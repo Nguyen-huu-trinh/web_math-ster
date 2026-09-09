@@ -360,7 +360,7 @@ function formatDisplayDate(dateString: string) {
   const date = new Date(`${dateString}T00:00:00`);
 
   return new Intl.DateTimeFormat("vi-VN", {
-    weekday: "short",
+   
     day: "2-digit",
     month: "2-digit",
   }).format(date);

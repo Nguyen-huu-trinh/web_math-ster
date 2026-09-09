@@ -1,6 +1,3 @@
-
-
-
 "use client";
 
 import { useMemo, useState } from "react";
@@ -94,7 +91,7 @@ function formatDisplayDate(dateString: string) {
   const date = new Date(`${dateString}T00:00:00`);
 
   return new Intl.DateTimeFormat("vi-VN", {
-    weekday: "short",
+  
     day: "2-digit",
     month: "2-digit",
   }).format(date);
@@ -115,7 +112,7 @@ function createEmptyForm(sessionDate: string): ScheduleForm {
   return {
     session_date: sessionDate,
     content: "",
-    start_time: "08:00",
+    start_time: "20:00",
     note: "",
     reminder: "",
     is_active: true,
@@ -364,36 +361,178 @@ export function TeacherScheduleDialog({
                     const date = getDateForDay(week.monday, day.key);
                     const items = schedulesByDate.get(date) ?? [];
 
-                    if (items.length === 0) {
-                      return (
-                        <tr
-                          key={date}
-                          className="group transition-colors hover:bg-muted/20"
-                        >
-                          <td className="px-4 py-4 align-top">
-                            <div className="flex items-start gap-2">
-                              <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                              <div>
-                                <div className="font-semibold">{day.label}</div>
-                                <div className="mt-0.5 text-xs text-muted-foreground">
-                                  {formatDisplayDate(date)}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td colSpan={6} className="p-0">
-                            <button
-                              type="button"
-                              onClick={() => startCreate(date)}
-                              className="flex min-h-[64px] w-full items-center justify-center gap-2 px-4 text-sm text-muted-foreground transition hover:bg-primary/5 hover:text-primary"
-                            >
-                              <Plus className="h-4 w-4" />
-                              Nhấn vào đây để thêm lịch
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    }
+if (items.length === 0) {
+  const isCreating =
+    editingId === null &&
+    form?.session_date === date;
+
+  if (isCreating && form) {
+    return (
+      <tr
+        key={date}
+        className="bg-primary/5"
+      >
+        {/* Thứ / Ngày */}
+        <td className="px-4 py-4 align-top">
+          <div className="flex items-start gap-2">
+            <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+
+            <div>
+              <div className="font-semibold">
+                {day.label}
+              </div>
+
+              <div className="mt-0.5 text-xs text-muted-foreground">
+                {formatDisplayDate(date)}
+              </div>
+            </div>
+          </div>
+        </td>
+
+        {/* Giờ */}
+        <td className="px-4 py-4 align-top">
+          <input
+            type="time"
+            value={form.start_time}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                start_time: e.target.value,
+              })
+            }
+            className="h-9 w-full rounded-md border bg-background px-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+          />
+        </td>
+
+        {/* Nội dung */}
+        <td className="px-4 py-4 align-top">
+          <input
+            type="text"
+            autoFocus
+            value={form.content}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                content: e.target.value,
+              })
+            }
+            placeholder="Nội dung bài học..."
+            className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+          />
+        </td>
+
+        {/* Ghi chú */}
+        <td className="px-4 py-4 align-top">
+          <input
+            type="text"
+            value={form.note}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                note: e.target.value,
+              })
+            }
+            placeholder="Ghi chú..."
+            className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+          />
+        </td>
+
+        {/* Lưu ý */}
+        <td className="px-4 py-4 align-top">
+          <input
+            type="text"
+            value={form.reminder}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                reminder: e.target.value,
+              })
+            }
+            placeholder="Lưu ý..."
+            className="h-9 w-full rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+          />
+        </td>
+
+        {/* Actions */}
+        <td className="px-4 py-4 align-top">
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={
+                createMutation.isPending ||
+                updateMutation.isPending
+              }
+              className="rounded-md p-1.5 text-emerald-600 transition hover:bg-emerald-500/10 disabled:opacity-50"
+              title="Lưu"
+            >
+              <Check className="h-4 w-4" />
+            </button>
+
+            <button
+              type="button"
+              onClick={closeEditor}
+              disabled={
+                createMutation.isPending ||
+                updateMutation.isPending
+              }
+              className="rounded-md p-1.5 text-muted-foreground transition hover:bg-muted disabled:opacity-50"
+              title="Hủy"
+            >
+              <Trash2 className="hidden h-4 w-4" />
+              <span className="text-xs font-medium">
+                Hủy
+              </span>
+            </button>
+          </div>
+        </td>
+      </tr>
+    );
+  }
+
+  return (
+    <tr
+      key={date}
+      className="group transition-colors hover:bg-muted/20"
+    >
+      <td className="px-4 py-4 align-top">
+        <div className="flex items-start gap-2">
+          <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+
+          <div>
+            <div className="font-semibold">
+              {day.label}
+            </div>
+
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              {formatDisplayDate(date)}
+            </div>
+          </div>
+        </div>
+      </td>
+
+      <td
+        colSpan={5}
+        className="p-0"
+      >
+        <button
+          type="button"
+          onClick={() => startCreate(date)}
+          className="flex min-h-[64px] w-full items-center justify-center gap-2 px-4 text-sm text-muted-foreground transition hover:bg-primary/5 hover:text-primary"
+        >
+          <Plus className="h-4 w-4" />
+          Nhấn vào đây để thêm lịch
+        </button>
+      </td>
+
+      <td className="px-4 py-4">
+        <span className="text-xs text-muted-foreground/40">
+          —
+        </span>
+      </td>
+    </tr>
+  );
+}
 
                     return items.map((item, index) => {
                       const isEditing = editingId === item.id;

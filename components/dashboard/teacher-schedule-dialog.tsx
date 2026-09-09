@@ -10,6 +10,7 @@ import {
   Pencil,
   Plus,
   Trash2,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -337,28 +338,23 @@ function startEdit(schedule: (typeof schedules)[number]) {
               <table className="w-full min-w-[800px] border-collapse text-left text-sm">
  <thead>
   <tr className="border-b bg-muted/50">
-    {/* 📍 Sửa w-[150px] -> w-[130px] */}
-    <th className="w-[130px] whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase text-muted-foreground">
+    <th className="w-[120px] whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase text-muted-foreground">
       Thứ / Ngày
     </th>
-    {/* 📍 Sửa w-[130px] -> w-[110px] */}
     <th className="w-[110px] whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase text-muted-foreground">
       Giờ vào lớp
     </th>
-    {/* 📍 Tăng tỉ lệ rộng cho Nội dung bằng w-[35%] */}
-    <th className="w-[55%] px-4 py-3 text-xs font-semibold uppercase text-muted-foreground">
+    <th className="px-4 py-3 text-xs font-semibold uppercase text-muted-foreground">
       Nội dung
     </th>
-    {/* 📍 Tăng tỉ lệ rộng cho Ghi chú bằng w-[25%] */}
-    <th className="w-[15%] px-4 py-3 text-xs font-semibold uppercase text-muted-foreground">
+    <th className="w-[140px] px-4 py-3 text-xs font-semibold uppercase text-muted-foreground">
       Ghi chú
     </th>
-    {/* 📍 Tăng tỉ lệ rộng cho Lưu ý bằng w-[25%] */}
-    <th className="w-[15%] px-4 py-3 text-xs font-semibold uppercase text-muted-foreground">
+    <th className="w-[140px] px-4 py-3 text-xs font-semibold uppercase text-muted-foreground">
       Lưu ý
     </th>
-    {/* 📍 Ô hành động (Sửa/Xóa) */}
-    <th className="w-[80px] px-4 py-3" />
+    {/* 📍 Thêm text-right và cố định độ rộng cho ô thao tác */}
+    <th className="w-[80px] px-4 py-3 text-right" />
   </tr>
 </thead>
 
@@ -464,38 +460,35 @@ if (items.length === 0) {
         </td>
 
         {/* Actions */}
-        <td className="px-4 py-4 align-top">
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={
-                createMutation.isPending ||
-                updateMutation.isPending
-              }
-              className="rounded-md p-1.5 text-emerald-600 transition hover:bg-emerald-500/10 disabled:opacity-50"
-              title="Lưu"
-            >
-              <Check className="h-4 w-4" />
-            </button>
+        <td className="px-4 py-4 align-top text-right">
+  <div className="flex items-center justify-end gap-1">
+    <button
+      type="button"
+      onClick={handleSave}
+      disabled={
+        createMutation.isPending ||
+        updateMutation.isPending
+      }
+      className="rounded-md p-1.5 text-emerald-600 transition hover:bg-emerald-500/10 disabled:opacity-50"
+      title="Lưu"
+    >
+      <Check className="h-4 w-4" />
+    </button>
 
-            <button
-              type="button"
-              onClick={closeEditor}
-              disabled={
-                createMutation.isPending ||
-                updateMutation.isPending
-              }
-              className="rounded-md p-1.5 text-muted-foreground transition hover:bg-muted disabled:opacity-50"
-              title="Hủy"
-            >
-              <Trash2 className="hidden h-4 w-4" />
-              <span className="text-xs font-medium">
-                Hủy
-              </span>
-            </button>
-          </div>
-        </td>
+    <button
+      type="button"
+      onClick={closeEditor}
+      disabled={
+        createMutation.isPending ||
+        updateMutation.isPending
+      }
+      className="rounded-md p-1.5 text-muted-foreground transition hover:bg-muted disabled:opacity-50"
+      title="Hủy"
+    >
+      <X className="h-4 w-4" />
+    </button>
+  </div>
+</td>
       </tr>
     );
   }

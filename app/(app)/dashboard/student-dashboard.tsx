@@ -20,11 +20,22 @@ import {
     useEffect,
     useState,
 } from "react";
+
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+
 import {
     Pencil,
     Check,
     X,
-     Video,
+    Video,
+    CalendarDays,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 import {
     useSubmitAttendance,
@@ -33,7 +44,7 @@ import {
     useUpdateLearningGoal,
 } from "@/hooks/use-update-learning-goal";
 import { useStudentExams } from "@/hooks/use-student-exams";
-
+import { StudentScheduleCard } from "@/components/dashboard/student-schedule-card";
 const StudentProgressChart = dynamic(
   () =>
     import('@/components/dashboard/dashboard-charts').then(
@@ -80,6 +91,9 @@ export default function StudentDashboard() {
     useState("");
     const [displayPoints, setDisplayPoints] =
     useState<number | null>(null);
+
+    const [showSchedule, setShowSchedule] =
+    useState(false);
     const leaderboard =
         useLeaderboard()
     const announcement =
@@ -313,22 +327,33 @@ const periodicNotifications =
   {/* KHỐI 1: Lời chào & Mục tiêu */}
   {/* Mobile: col-span-2 (Chiếm trọn 1 hàng trên cùng) | Desktop: lg:col-span-14 */}
   <div className="col-span-2 rounded-xl border bg-card p-6 shadow-sm lg:col-span-14">
- <div className="flex items-center justify-between">
+ <div className="flex items-start justify-between gap-4">
   <p className="text-sm text-muted-foreground">
     👋 {greeting()}
   </p>
 
-  {profile?.link_zoom && (
-    <a
-      href={profile.link_zoom}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300 dark:hover:bg-blue-950/50"
+  <div className="flex shrink-0 flex-col items-end gap-2">
+    {profile?.link_zoom && (
+      <a
+        href={profile.link_zoom}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300 dark:hover:bg-blue-950/50"
+      >
+        <Video className="h-3.5 w-3.5" />
+        Zoom
+      </a>
+    )}
+
+    <button
+      type="button"
+      onClick={() => setShowSchedule(true)}
+      className="inline-flex items-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-2.5 py-1.5 text-xs font-semibold text-green-700 transition-colors hover:bg-green-100 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300 dark:hover:bg-green-950/50"
     >
-      <Video className="h-3.5 w-3.5" />
-      Zoom
-    </a>
-  )}
+      <CalendarDays className="h-3.5 w-3.5" />
+      Thời khóa biểu
+    </button>
+  </div>
 </div>
 
 <h2 className="mt-2 text-3xl font-bold">
@@ -589,8 +614,26 @@ const periodicNotifications =
         <StudentProgressChart />
 
     </div>      
+<Dialog
+  open={showSchedule}
+  onOpenChange={setShowSchedule}
+>
+<DialogContent className="sm:max-w-4xl w-full">
+  <DialogHeader>
+    <DialogTitle>Thời khóa biểu</DialogTitle>
+  </DialogHeader>
 
+  <div className="max-h-[75vh] overflow-y-auto pr-1">
+    <StudentScheduleCard />
+  </div>
+</DialogContent>
+</Dialog>
      </div>
+
+     
     )
+
+
+    
 }
 

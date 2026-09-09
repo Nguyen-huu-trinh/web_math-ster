@@ -5,22 +5,30 @@ import {
     useTeacherDashboard,
     useActiveStudentCount,
 } from '@/hooks/use-dashboard'
+import { TeacherScheduleDialog } from "@/components/dashboard/teacher-schedule-dialog";
 import {
     useAnnouncement,
     useUpdateAnnouncement,
 } from "@/hooks/use-announcement";
+
 import { TopStudentsCard } from '@/components/dashboard/top-students-card'
 import { useProcessAttendance } from "@/hooks/use-process-attendance";
 import { useCurrentAttendance } from "@/hooks/use-current-attendance";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Save, Bell, Check } from "lucide-react";
+import { Save, Bell, Check, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { useLeaderboard } from '@/hooks/use-leaderboard'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { CountdownCard } from '@/components/dashboard/countdown-card'
 import dynamic from "next/dynamic";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
     Table,
     TableBody,
@@ -89,11 +97,12 @@ export default function TeacherDashboard() {
     const updateAnnouncement = useUpdateAnnouncement();
     const processAttendance = useProcessAttendance();
     const currentAttendance = useCurrentAttendance();
-
+const [showTeacherSchedule, setShowTeacherSchedule] =
+  useState(false);
     const [title, setTitle] = useState("");
     const [attendanceCode, setAttendanceCode] = useState("");
     const [content, setContent] = useState("");
-
+const [showSchedule, setShowSchedule] = useState(false);
     const [examAlerts, setExamAlerts] = useState<ExamAlert[]>([]);
     const [loadingExamAlerts, setLoadingExamAlerts] = useState(false);
     const [readingAlertId, setReadingAlertId] = useState<string | null>(null);
@@ -257,6 +266,9 @@ export default function TeacherDashboard() {
                             </p>
                         </div>
 
+
+
+
                         <div className="relative">
                             <Button
                                 type="button"
@@ -264,7 +276,20 @@ export default function TeacherDashboard() {
                                 size="icon"
                                 className="relative h-9 w-9 rounded-full cursor-default"
                             >
+ <div className="flex items-center gap-2">
+  <button
+    type="button"
+    onClick={() => setShowTeacherSchedule(true)}
+    className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition hover:bg-muted"
+    title="Thời khóa biểu"
+  >
+    <CalendarDays className="h-4 w-4" />
+    <span className="hidden sm:inline">
+      Thời khóa biểu
+    </span>
+  </button>                               
                                 <Bell className="h-5 w-5" />
+                                </div>
                                 {examAlerts.length > 0 && (
                                     <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
                                         {examAlerts.length > 99 ? "99+" : examAlerts.length}
@@ -502,6 +527,13 @@ export default function TeacherDashboard() {
                     valueType="money"
                 />
             </div>
+
+<TeacherScheduleDialog
+  open={showTeacherSchedule}
+  onOpenChange={setShowTeacherSchedule}
+/>
+
+
         </div>
     );
 }

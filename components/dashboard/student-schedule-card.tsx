@@ -76,20 +76,20 @@ function NoteBadge({ note }: { note: string | null | undefined }) {
   let Icon = FileText;
 
   if (note.includes("Bài giảng")) {
-    badgeStyle = "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border-blue-200/60";
+    badgeStyle = "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800";
     Icon = BookOpen;
   } else if (note.includes("Chữa bài")) {
-    badgeStyle = "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border-emerald-200/60";
+    badgeStyle = "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800";
     Icon = CheckCircle2;
   } else if (note.includes("Chữa đề")) {
-    badgeStyle = "bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border-purple-200/60";
+    badgeStyle = "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800";
     Icon = GraduationCap;
   }
 
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium ${badgeStyle}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${badgeStyle}`}>
       <Icon className="h-3.5 w-3.5 shrink-0" />
-      {note}
+      <span>{note}</span>
     </span>
   );
 }

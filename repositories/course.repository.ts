@@ -105,8 +105,6 @@ export class CourseRepository {
       throw error;
     }
 
-    console.log("Supabase data:", data);
-
     return (data ?? []).map((course) => ({
       ...course,
 

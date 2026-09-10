@@ -46,12 +46,12 @@ function getWeekRange(weekType: WeekType) {
 }
 
 function formatDisplayDate(dateString: string) {
-  const date = new Date(`${dateString}T00:00:00`);
+  // Tách trực tiếp chuỗi "YYYY-MM-DD" để tránh lỗi lệch múi giờ (timezone offset)
+  const [year, month, day] = dateString.split("-").map(Number);
+  
+  if (!day || !month) return dateString;
 
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-  }).format(date);
+  return `${day}/${month}`;
 }
 
 function formatTime(time: string) {

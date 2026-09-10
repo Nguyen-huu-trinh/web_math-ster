@@ -441,14 +441,9 @@ if (prerequisites && prerequisites.length > 0) {
       (item) => item.prerequisite_exam_id
     );
 
+   // =====================================================
+  // Kiểm tra trạng thái của TỪNG đề tiên quyết
   // =====================================================
-  // ATTENDANCE:
-  // Chỉ cần đã TỪNG NỘP bài tiên quyết
-  // Không yêu cầu is_passed = true
-  // =====================================================
-
-  const isAttendance =
-    exam.category === "PERIODIC";
 
   const {
     data: prerequisiteAttempts,
@@ -468,17 +463,14 @@ if (prerequisites && prerequisites.length > 0) {
     throw prerequisiteAttemptsError;
   }
 
+  // Những đề tiên quyết học sinh đã nộp
   const completedExamIds = new Set(
     (prerequisiteAttempts ?? []).map(
       (attempt) => attempt.exam_id
     )
   );
 
-  // =====================================================
-  // Nếu KHÔNG phải ATTENDANCE:
-  // prerequisite phải ĐẠT
-  // =====================================================
-
+  // Những đề tiên quyết học sinh đã đạt
   const passedExamIds = new Set(
     (prerequisiteAttempts ?? [])
       .filter(
@@ -493,14 +485,46 @@ if (prerequisites && prerequisites.length > 0) {
   const missingPrerequisites =
     prerequisites
       .filter((item) => {
-        if (isAttendance) {
-          // Điểm danh → chỉ cần đã làm/nộp
+        const prerequisiteExam =
+          Array.isArray(
+            item.prerequisite_exam
+          )
+            ? item.prerequisite_exam[0]
+            : item.prerequisite_exam;
+
+        // ==========================================
+        // Đề tiên quyết là ĐỊNH KỲ
+        // → chỉ cần đã hoàn thành / đã nộp
+        // ==========================================
+
+        if (
+          prerequisiteExam?.category ===
+          "PERIODIC"
+        ) {
           return !completedExamIds.has(
             item.prerequisite_exam_id
           );
         }
 
-        // Các đề khác → phải đạt
+        // ==========================================
+        // Đề tiên quyết là ĐIỂM DANH
+        // → bắt buộc phải đạt
+        // ==========================================
+
+        if (
+          prerequisiteExam?.category ===
+          "ATTENDANCE"
+        ) {
+          return !passedExamIds.has(
+            item.prerequisite_exam_id
+          );
+        }
+
+        // ==========================================
+        // Các loại đề khác
+        // → mặc định phải đạt
+        // ==========================================
+
         return !passedExamIds.has(
           item.prerequisite_exam_id
         );
@@ -523,9 +547,7 @@ if (prerequisites && prerequisites.length > 0) {
 
   if (missingPrerequisites.length > 0) {
     const error = new Error(
-      isAttendance
-        ? "Bạn cần làm các bài kiểm tra tiên quyết trước khi điểm danh."
-        : "Bạn cần đạt các bài kiểm tra tiên quyết trước khi làm bài này."
+      "Bạn chưa hoàn thành đủ các bài kiểm tra tiên quyết."
     ) as Error & {
       code?: string;
       missingPrerequisites?: {

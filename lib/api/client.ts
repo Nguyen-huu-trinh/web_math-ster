@@ -18,7 +18,7 @@ class ApiClient {
         `Request failed with status ${response.status}`;
 
       let code: string | undefined;
-
+      let attemptId: string | undefined;
       let missingPrerequisites:
         | {
             id: string;
@@ -35,22 +35,25 @@ class ApiClient {
           message;
 
         code = data?.code;
+        attemptId = data?.attemptId;
         missingPrerequisites = data?.missingPrerequisites;
       } catch {
         // Response không phải JSON
       }
 
-      const error = new Error(message) as Error & {
-        status?: number;
-        code?: string;
-        missingPrerequisites?: {
-          id: string;
-          title: string;
-        }[];
-      };
+const error = new Error(message) as Error & {
+  status?: number;
+  code?: string;
+  attemptId?: string;
+  missingPrerequisites?: {
+    id: string;
+    title: string;
+  }[];
+};
 
       error.status = response.status;
       error.code = code;
+      error.attemptId = attemptId;
       error.missingPrerequisites = missingPrerequisites;
 
       throw error;

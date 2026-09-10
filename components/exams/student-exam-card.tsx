@@ -182,29 +182,24 @@ const [missingPrerequisites, setMissingPrerequisites] =
 
       startLockRef.current = false;
       setIsStarting(false);
+if (
+  error?.status === 409 &&
+  error?.code === "EXAM_IN_PROGRESS"
+) {
+  setShowStartDialog(false);
 
-      /*
-       * ======================================
-       * ĐÃ CÓ MỘT LƯỢT ĐANG LÀM
-       * ======================================
-       */
-      if (
-        error?.status === 409 &&
-        error?.code === "EXAM_IN_PROGRESS"
-      ) {
+  if (error?.attemptId) {
+    router.push(
+      `/student-exams/${error.attemptId}`
+    );
+  } else {
+    toast.error(
+      "Không tìm thấy lượt làm bài đang diễn ra."
+    );
+  }
 
-        setShowStartDialog(false);
-
-        toast.warning(
-          "Bài thi đang được diễn ra",
-          {
-            description:
-              "Bạn đã có một lượt làm bài chưa nộp. Vui lòng tiếp tục lượt làm bài hiện tại.",
-          }
-        );
-
-        return;
-      }
+  return;
+}
 
 /*
  * ======================================
@@ -244,61 +239,81 @@ toast.error(
    * BUTTON
    * ==========================================
    */
-  function renderButton() {
-
-    if (exam.status === "LOCKED") {
-
-      return (
-        <Button
-          className="w-full md:w-32"
-          variant="outline"
-          disabled
-        >
-          Đang khóa
-        </Button>
-      );
-    }
-
-    if (!exam.canStart) {
-
-      return (
-        <Button
-          className="w-full md:w-32"
-          variant="outline"
-          disabled={!exam.lastAttemptId}
-          onClick={() => {
-
-            if (!exam.lastAttemptId) {
-              return;
-            }
-
-            router.push(
-              `/student-exams/${exam.lastAttemptId}?review=true`
-            );
-          }}
-        >
-          Xem lại
-        </Button>
-      );
-    }
-
+function renderButton() {
+  if (exam.status === "LOCKED" && !exam.inProgress) {
     return (
       <Button
         className="w-full md:w-32"
-        disabled={
-          isStarting ||
-          startExam.isPending
-        }
-        onClick={
-          handleOpenStartDialog
-        }
+        variant="outline"
+        disabled
       >
-        {exam.attempts === 0
-          ? "Làm bài"
-          : "Làm lại"}
+        Đang khóa
       </Button>
     );
   }
+
+  // ==========================================
+  // CÓ BÀI ĐANG LÀM DỞ
+  // → HIỆN "LÀM LẠI" NHƯNG MỞ LẠI BÀI CŨ
+  // ==========================================
+  if (exam.inProgress) {
+    return (
+      <Button
+        className="w-full md:w-32"
+        onClick={() => {
+          if (!exam.lastAttemptId) {
+            toast.error(
+              "Không tìm thấy lượt làm bài đang diễn ra."
+            );
+            return;
+          }
+
+          router.push(
+            `/student-exams/${exam.lastAttemptId}`
+          );
+        }}
+      >
+        Làm lại
+      </Button>
+    );
+  }
+
+  if (!exam.canStart) {
+    return (
+      <Button
+        className="w-full md:w-32"
+        variant="outline"
+        disabled={!exam.lastAttemptId}
+        onClick={() => {
+          if (!exam.lastAttemptId) {
+            return;
+          }
+
+          router.push(
+            `/student-exams/${exam.lastAttemptId}?review=true`
+          );
+        }}
+      >
+        Xem lại
+      </Button>
+    );
+  }
+
+  return (
+    <Button
+      className="w-full md:w-32"
+      disabled={
+        isStarting ||
+        startExam.isPending
+      }
+      onClick={handleOpenStartDialog}
+    >
+      {exam.attempts === 0
+        ? "Làm bài"
+        : "Làm lại"}
+    </Button>
+  );
+}
 
 
   return (

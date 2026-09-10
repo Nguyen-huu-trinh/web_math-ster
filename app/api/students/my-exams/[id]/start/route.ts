@@ -34,31 +34,37 @@ export async function POST(
 
     const message =
       e?.message ?? String(e);
+/*
+ * =====================================================
+ * ĐÃ CÓ MỘT ATTEMPT CHƯA NỘP
+ * → TRẢ VỀ ATTEMPT CŨ ĐỂ MỞ LẠI
+ * =====================================================
+ */
 
-    // =====================================================
-    // ĐÃ CÓ MỘT ATTEMPT CHƯA NỘP
-    // =====================================================
-
-    if (
-      message.includes(
-        "exam_attempts_one_unsubmitted_per_student_exam"
-      ) ||
-      message.includes(
-        "duplicate key value violates unique constraint"
-      )
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          code: "EXAM_IN_PROGRESS",
-          message:
-            "Bài thi đang được diễn ra. Bạn đã có một lượt làm bài chưa nộp.",
-        },
-        {
-          status: 409,
-        }
-      );
+if (
+  e?.code === "EXAM_IN_PROGRESS" ||
+  message.includes(
+    "exam_attempts_one_unsubmitted_per_student_exam"
+  ) ||
+  message.includes(
+    "duplicate key value violates unique constraint"
+  )
+) {
+  return NextResponse.json(
+    {
+      success: false,
+      code: "EXAM_IN_PROGRESS",
+      message:
+        "Bạn đã có một lượt làm bài chưa nộp.",
+      attemptId:
+        e?.attemptId ?? null,
+    },
+    {
+      status: 409,
     }
+  );
+}
+    
 
     // =====================================================
 // CHƯA HOÀN THÀNH ĐỀ TIÊN QUYẾT

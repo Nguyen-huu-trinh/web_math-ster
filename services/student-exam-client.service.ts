@@ -25,6 +25,8 @@ export interface StudentExamItem {
 
   lastAttemptAt: string | null;
 
+  inProgress: boolean;
+
   status:
     | "NOT_STARTED"
     | "PASSED"

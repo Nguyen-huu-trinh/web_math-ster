@@ -324,6 +324,8 @@ else if (lastAttempt) {
 
         duration: exam.duration_minutes,
 
+        inProgress: hasUnsubmittedAttempt,
+
         courseId: exam.course_id,
 
         courseName:
@@ -412,6 +414,39 @@ async startExam(
     throw new Error("Đề đã kết thúc.");
   }
 
+    // ===========================
+  // KIỂM TRA ATTEMPT ĐANG LÀM
+  // ===========================
+
+  const {
+    data: existingAttempt,
+    error: existingAttemptError,
+  } = await adminClient
+    .from("exam_attempts")
+    .select("id, exam_id, student_id, submitted_at")
+    .eq("exam_id", examId)
+    .eq("student_id", studentId)
+    .is("submitted_at", null)
+    .maybeSingle();
+
+  if (existingAttemptError) {
+    throw existingAttemptError;
+  }
+
+  if (existingAttempt) {
+    const error = new Error(
+      "Bạn đã có một lượt làm bài chưa nộp."
+    ) as Error & {
+      code?: string;
+      attemptId?: string;
+    };
+
+    error.code = "EXAM_IN_PROGRESS";
+    error.attemptId = existingAttempt.id;
+
+    throw error;
+  }
+
 // ===========================
 // KIỂM TRA ĐỀ TIÊN QUYẾT
 // ===========================
@@ -440,6 +475,8 @@ if (prerequisites && prerequisites.length > 0) {
     prerequisites.map(
       (item) => item.prerequisite_exam_id
     );
+
+
 
    // =====================================================
   // Kiểm tra trạng thái của TỪNG đề tiên quyết

@@ -111,15 +111,7 @@ export async function POST(
     // 5. SUBMIT ENGINE
     // ========================================================
 
-    console.log(
-      "[SUBMIT] START",
-      {
-        attemptId,
-        studentId:
-          student.id,
-        reason,
-      }
-    );
+ 
 
     const result =
       await submitExam(
@@ -142,24 +134,7 @@ export async function POST(
     // 6. SUCCESS
     // ========================================================
 
-    console.log(
-      "[SUBMIT] SUCCESS",
-      {
-        attemptId,
-
-        studentId:
-          student.id,
-
-        score:
-          result.grading.score,
-
-        alreadySubmitted:
-          result.alreadySubmitted,
-
-        reason:
-          result.reason,
-      }
-    );
+    
 
     return NextResponse.json({
       success: true,
@@ -188,10 +163,7 @@ export async function POST(
     // ERROR
     // ========================================================
 
-    console.error(
-      "[SUBMIT] ERROR",
-      error
-    );
+   
 
     const message =
       error instanceof Error

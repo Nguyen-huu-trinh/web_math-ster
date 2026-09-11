@@ -253,11 +253,11 @@ export function StudentExamCard({
       );
     }
 
-    // 2. Đang có bài thi dở dang (in progress) -> Mở lại lượt cũ
+    // 2. Đang có bài thi dở dang (in progress) -> Đồng bộ màu xanh neon làm bài
     if (exam.inProgress) {
       return (
         <Button
-          className="w-full md:w-32"
+          className="w-full bg-[#39FF14] text-black font-bold hover:bg-[#32e012] active:bg-[#2bc40f] md:w-32"
           onClick={() => {
             if (!exam.lastAttemptId) {
               toast.error(
@@ -284,9 +284,7 @@ export function StudentExamCard({
           variant="outline"
           disabled={!exam.lastAttemptId}
           onClick={() => {
-            if (!exam.lastAttemptId) {
-              return;
-            }
+            if (!exam.lastAttemptId) return;
 
             router.push(
               `/student-exams/${exam.lastAttemptId}?review=true`
@@ -298,11 +296,11 @@ export function StudentExamCard({
       );
     }
 
-    // 4. Chưa từng làm (chưa có lượt nào) -> Chỉ hiện "Làm bài"
+    // 4. Chưa từng làm (chưa có lượt nào) -> Nút "Làm bài" màu xanh neon tươi
     if (exam.attempts === 0) {
       return (
         <Button
-          className="w-full md:w-32"
+          className="w-full bg-[#39FF14] text-black font-bold hover:bg-[#32e012] active:bg-[#2bc40f] md:w-32"
           disabled={isStarting || startExam.isPending}
           onClick={handleOpenStartDialog}
         >
@@ -311,11 +309,11 @@ export function StudentExamCard({
       );
     }
 
-// 5. Đã từng làm VÀ vẫn còn lượt làm -> Nút Làm lại màu xanh cốm tươi
+    // 5. Đã từng làm VÀ vẫn còn lượt làm -> Nút "Làm lại" màu vàng đượm + "Xem lại"
     return (
       <div className="flex w-full flex-col gap-2 md:w-32">
         <Button
-          className="w-full bg-[#88D64C] text-black hover:bg-[#78bf41] active:bg-[#68a838]"
+          className="w-full bg-[#FCD34D] text-black border border-[#F59E0B] hover:bg-[#F59E0B] hover:text-white active:bg-[#D97706] font-semibold"
           disabled={isStarting || startExam.isPending}
           onClick={handleOpenStartDialog}
         >
@@ -514,12 +512,12 @@ export function StudentExamCard({
       {exam.title}
     </span>
   </p>
-  {exam.description && (
-    <p className="text-sm text-muted-foreground leading-snug">
-      <span className="font-semibold text-foreground">
-        Bài thi gồm kiến thức:
+{exam.description && (
+    <p className="text-sm leading-snug text-muted-foreground">
+      <span className="inline-flex items-center rounded-md bg-[#88D64C]/20 px-2 py-0.5 text-xs font-bold text-[#457c1c] dark:bg-[#88D64C]/30 dark:text-[#a0f262]">
+        Bài thi gồm kiến thức
       </span>{" "}
-      {exam.description}
+      <span className="font-semibold text-foreground">{exam.description}</span>
     </p>
   )}
 

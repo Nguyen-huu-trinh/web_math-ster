@@ -118,24 +118,24 @@ export function OpenExamContent({
       // =================================================
       // ĐANG CÓ LƯỢT LÀM BÀI
       // =================================================
-if (
-  error?.status === 409 &&
-  error?.code === "EXAM_IN_PROGRESS"
-) {
-  setShowStartDialog(false);
+      if (
+        error?.status === 409 &&
+        error?.code === "EXAM_IN_PROGRESS"
+      ) {
+        setShowStartDialog(false);
 
-  if (error?.attemptId) {
-    router.push(
-      `/student-exams/${error.attemptId}`
-    );
-  } else {
-    toast.error(
-      "Không tìm thấy lượt làm bài đang diễn ra."
-    );
-  }
+        if (error?.attemptId) {
+          router.push(
+            `/student-exams/${error.attemptId}`
+          );
+        } else {
+          toast.error(
+            "Không tìm thấy lượt làm bài đang diễn ra."
+          );
+        }
 
-  return;
-}
+        return;
+      }
 
       // =================================================
       // THIẾU BÀI KIỂM TRA TIÊN QUYẾT
@@ -168,19 +168,29 @@ if (
     }
   }
 
-// =====================================================
+  // =====================================================
   // BUTTON
   // =====================================================
 
   function renderButton() {
-    // ==========================================
-    // ĐANG CÓ BÀI LÀM DỞ
-    // → TIẾP TỤC ATTEMPT CŨ
-    // ==========================================
+    // 1. Đề đang bị khóa
+    if (exam.status === "LOCKED" && !exam.inProgress) {
+      return (
+        <Button
+          className="w-full md:w-32"
+          variant="outline"
+          disabled
+        >
+          Đang khóa
+        </Button>
+      );
+    }
+
+    // 2. Đang có bài thi dở dang (in progress) -> Mở lại lượt cũ
     if (exam.inProgress) {
       return (
         <Button
-          className="w-full bg-[#88D64C] text-white hover:bg-[#78bf41] active:bg-[#68a838] md:w-32"
+          className="w-full bg-[#39FF14] text-black font-bold hover:bg-[#32e012] active:bg-[#2bc40f] md:w-32"
           onClick={() => {
             if (!exam.lastAttemptId) {
               toast.error(
@@ -194,98 +204,69 @@ if (
             );
           }}
         >
-          Làm tiếp
+          Tiếp tục làm
         </Button>
       );
     }
 
-    // ==========================================
-    // ĐỀ BỊ KHÓA THỰC SỰ
-    // ==========================================
-    if (exam.status === "LOCKED") {
+    // 3. Đã hết lượt làm (không thể làm thêm) -> Chỉ hiện nút "Xem lại"
+    if (!exam.canStart) {
       return (
         <Button
           className="w-full md:w-32"
           variant="outline"
-          disabled
-        >
-          Đang khóa
-        </Button>
-      );
-    }
+          disabled={!exam.lastAttemptId}
+          onClick={() => {
+            if (!exam.lastAttemptId) return;
 
-    // ==========================================
-    // CÓ THỂ BẮT ĐẦU BÀI MỚI (CHƯA LÀM HOẶC LÀM LẠI)
-    // ==========================================
-    if (exam.canStart) {
-      // 1. Lần đầu tiên làm bài
-      if (exam.attempts === 0) {
-        return (
-          <Button
-            className="w-full bg-[#88D64C] text-white hover:bg-[#78bf41] active:bg-[#68a838] md:w-32"
-            onClick={handleOpenStartDialog}
-            disabled={isStarting || startExam.isPending}
-          >
-            Làm bài
-          </Button>
-        );
-      }
-
-      // 2. Đã từng làm VÀ còn lượt làm -> Hiện 2 nút xếp dọc (Làm lại trên, Xem lại dưới)
-      return (
-        <div className="flex w-full flex-col gap-2 md:w-32">
-          <Button
-            className="w-full bg-[#88D64C] text-white hover:bg-[#78bf41] active:bg-[#68a838]"
-            disabled={isStarting || startExam.isPending}
-            onClick={handleOpenStartDialog}
-          >
-            Làm lại
-          </Button>
-
-          <Button
-            variant="outline"
-            className="w-full"
-            disabled={!exam.lastAttemptId}
-            onClick={() => {
-              if (!exam.lastAttemptId) return;
-              router.push(
-                `/student-exams/${exam.lastAttemptId}?review=true`
-              );
-            }}
-          >
-            Xem lại
-          </Button>
-        </div>
-      );
-    }
-
-    // ==========================================
-    // HẾT LƯỢT LÀM BÀI → CHỈ XEM LẠI
-    // ==========================================
-    if (exam.lastAttemptId) {
-      return (
-        <Button
-          className="w-full md:w-32"
-          variant="outline"
-          onClick={() =>
             router.push(
               `/student-exams/${exam.lastAttemptId}?review=true`
-            )
-          }
+            );
+          }}
         >
           Xem lại
         </Button>
       );
     }
 
+    // 4. Chưa từng làm (chưa có lượt nào) -> Chỉ hiện "Làm bài"
+    if (exam.attempts === 0) {
+      return (
+        <Button
+          className="w-full bg-[#39FF14] text-black font-bold hover:bg-[#32e012] active:bg-[#2bc40f] md:w-32"
+          disabled={isStarting || startExam.isPending}
+          onClick={handleOpenStartDialog}
+        >
+          Làm bài
+        </Button>
+      );
+    }
+
+    // 5. Đã từng làm VÀ vẫn còn lượt làm -> Nút Làm lại màu vàng đượm
     return (
-      <Button
-        className="w-full md:w-32"
-        variant="outline"
-        disabled
-      >
-        Không thể mở
-      </Button>
+      <div className="flex w-full flex-col gap-2 md:w-32">
+        <Button
+          className="w-full bg-[#FCD34D] text-black border border-[#F59E0B] hover:bg-[#F59E0B] hover:text-white active:bg-[#D97706] font-semibold"
+          disabled={isStarting || startExam.isPending}
+          onClick={handleOpenStartDialog}
+        >
+          Làm lại
+        </Button>
+
+        <Button
+          variant="outline"
+          className="w-full"
+          disabled={!exam.lastAttemptId}
+          onClick={() => {
+            if (!exam.lastAttemptId) return;
+            router.push(
+              `/student-exams/${exam.lastAttemptId}?review=true`
+            );
+          }}
+        >
+          Xem lại
+        </Button>
+      </div>
     );
   }
 

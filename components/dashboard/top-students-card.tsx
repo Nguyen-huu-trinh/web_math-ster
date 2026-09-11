@@ -1,24 +1,25 @@
 "use client";
 
-import Image from "next/image";
 import { Award } from "lucide-react";
-import { getAvatarUrl } from "@/lib/avatar";
 
 interface TopStudent {
   id?: string;
+  student_id?: string;
   full_name?: string;
   name?: string;
-  avatar_url?: string | null;
   avatarUrl?: string | null;
+  avatar_url?: string | null;
   points?: number;
   score?: number;
   value?: number;
-  count?: number
+  count?: number;
 }
 
 interface TopStudentsCardProps {
   entries: TopStudent[];
 }
+
+
 
 function getName(student: TopStudent) {
   return (
@@ -28,9 +29,42 @@ function getName(student: TopStudent) {
   );
 }
 
+function getAvatarUrl(url?: string | null) {
+  if (!url) return undefined;
+
+  const value = url.trim();
+
+  if (!value) return undefined;
+
+  const fileMatch = value.match(
+    /drive\.google\.com\/file\/d\/([^/?]+)/
+  );
+
+  if (fileMatch?.[1]) {
+    return `https://drive.google.com/thumbnail?id=${fileMatch[1]}&sz=w400`;
+  }
+
+  const idMatch = value.match(
+    /drive\.google\.com\/(?:open|uc)\?[^#]*id=([^&]+)/
+  );
+
+  if (idMatch?.[1]) {
+    return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w400`;
+  }
+
+  return value;
+}
+
+function getStudentAvatar(student: TopStudent) {
+  return getAvatarUrl(
+    student.avatarUrl ?? student.avatar_url
+  );
+}
+
 function getScore(student: TopStudent) {
   return student.count ?? 0;
 }
+
 function getInitials(name: string) {
   return name
     .trim()
@@ -53,7 +87,6 @@ export function TopStudentsCard({
   const first = students[0];
   const second = students[1];
   const third = students[2];
-
   return (
     <div className="relative overflow-hidden rounded-xl border border-amber-900/40 bg-gradient-to-b from-[#0a0f1d] via-[#111827] to-[#070b14] px-4 py-6 shadow-xl">
       
@@ -90,20 +123,17 @@ export function TopStudentsCard({
               </div>
 
               <div className="relative z-10 flex size-20 items-center justify-center overflow-hidden rounded-full border border-slate-300 bg-slate-900 shadow-[0_0_10px_rgba(148,163,184,0.1)] sm:size-24">
-                {getAvatarUrl(second.avatar_url) ? (
-                  <Image
-                    src={getAvatarUrl(second.avatar_url)!}
-                    alt={getName(second)}
-                    width={96}
-                    height={96}
-                    className="h-full w-full object-cover"
-                    unoptimized
-                  />
-                ) : (
-                  <span className="text-xl font-bold text-slate-400">
-                    {getInitials(getName(second))}
-                  </span>
-                )}
+{getStudentAvatar(second) ? (
+  <img
+    src={getStudentAvatar(second)}
+    alt={getName(second)}
+    className="h-full w-full object-cover"
+  />
+) : (
+  <span className="text-xl font-bold text-slate-400">
+    {getInitials(getName(second))}
+  </span>
+)}
               </div>
 
               <div className="absolute -bottom-1 -left-1 z-20 flex size-8 flex-col items-center justify-center rounded-full border border-slate-300 bg-gradient-to-b from-slate-100 to-slate-400 text-slate-900 shadow-md">
@@ -139,20 +169,17 @@ export function TopStudentsCard({
               </div>
 
               <div className="relative z-10 flex size-24 items-center justify-center overflow-hidden rounded-full border border-amber-400 bg-amber-950 shadow-[0_0_15px_rgba(251,191,36,0.2)] sm:size-28">
-                {getAvatarUrl(first.avatar_url) ? (
-                  <Image
-                    src={getAvatarUrl(first.avatar_url)!}
-                    alt={getName(first)}
-                    width={112}
-                    height={112}
-                    className="h-full w-full object-cover"
-                    unoptimized
-                  />
-                ) : (
-                  <span className="text-2xl font-extrabold bg-gradient-to-br from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
-                    {getInitials(getName(first))}
-                  </span>
-                )}
+{getStudentAvatar(first) ? (
+  <img
+    src={getStudentAvatar(first)}
+    alt={getName(first)}
+    className="h-full w-full object-cover"
+  />
+) : (
+  <span className="text-2xl font-extrabold bg-gradient-to-br from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
+    {getInitials(getName(first))}
+  </span>
+)}
               </div>
 
               <div className="absolute -bottom-1 -left-1 z-20 flex size-9 flex-col items-center justify-center rounded-full border border-amber-300 bg-gradient-to-b from-yellow-200 via-amber-400 to-amber-600 text-amber-950 shadow-md">
@@ -188,20 +215,17 @@ export function TopStudentsCard({
               </div>
 
               <div className="relative z-10 flex size-20 items-center justify-center overflow-hidden rounded-full border border-orange-400/50 bg-orange-950/40 shadow-[0_0_10px_rgba(249,115,22,0.1)] sm:size-24">
-                {getAvatarUrl(third.avatar_url) ? (
-                  <Image
-                    src={getAvatarUrl(third.avatar_url)!}
-                    alt={getName(third)}
-                    width={96}
-                    height={96}
-                    className="h-full w-full object-cover"
-                    unoptimized
-                  />
-                ) : (
-                  <span className="text-xl font-bold text-orange-400">
-                    {getInitials(getName(third))}
-                  </span>
-                )}
+{getStudentAvatar(third) ? (
+  <img
+    src={getStudentAvatar(third)}
+    alt={getName(third)}
+    className="h-full w-full object-cover"
+  />
+) : (
+  <span className="text-xl font-bold text-orange-400">
+    {getInitials(getName(third))}
+  </span>
+)}
               </div>
 
               <div className="absolute -bottom-1 -left-1 z-20 flex size-8 flex-col items-center justify-center rounded-full border border-orange-300 bg-gradient-to-b from-orange-200 to-orange-500 text-orange-950 shadow-md">

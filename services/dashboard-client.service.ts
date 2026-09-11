@@ -43,6 +43,8 @@ export interface LeaderboardStudent {
 
   full_name: string;
 
+  avatar_url: string | null;
+
   count: number;
 }
 
@@ -167,12 +169,13 @@ const data = response.data;
         count: Number(item.count),
       })),
 
-      excellent: data.excellent.map((item: any) => ({
-        student_id: item.student_id,
-        student_code: item.student_code,
-        full_name: item.full_name,
-        count: Number(item.count),
-      })),
+excellent: data.excellent.map((item: any) => ({
+  student_id: item.student_id,
+  student_code: item.student_code,
+  full_name: item.full_name,
+  avatar_url: item.avatar_url ?? null,
+  count: Number(item.count),
+})),
 
 
     rewardMoney: data.rewardMoney.map(

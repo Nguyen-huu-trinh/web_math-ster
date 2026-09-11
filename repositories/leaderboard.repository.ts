@@ -80,10 +80,16 @@ export class LeaderboardRepository {
 
     const supabase = await createClient();
 
-    const { data, error } = await supabase
-      .from("v_excellent_students")
-      .select("*")
-      .limit(8);
+ const { data, error } = await supabase
+  .from("v_excellent_students")
+  .select(`
+    student_id,
+    student_code,
+    full_name,
+    avatar_url,
+    count
+  `)
+  .limit(8);
 
     if (error) throw error;
 

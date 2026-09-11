@@ -169,7 +169,7 @@ export function OpenExamContent({
   }
 
   // =====================================================
-  // BUTTON
+  // BUTTON (MÀU PASTEL CHUẨN THEO ẢNH)
   // =====================================================
 
   function renderButton() {
@@ -177,7 +177,7 @@ export function OpenExamContent({
     if (exam.status === "LOCKED" && !exam.inProgress) {
       return (
         <Button
-          className="w-full md:w-32"
+          className="w-full md:w-32 bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700"
           variant="outline"
           disabled
         >
@@ -186,11 +186,11 @@ export function OpenExamContent({
       );
     }
 
-    // 2. Đang có bài thi dở dang (in progress) -> Mở lại lượt cũ
+    // 2. Đang có bài thi dở dang (in progress) -> Xanh Mint Pastel dịu mát theo ảnh
     if (exam.inProgress) {
       return (
         <Button
-          className="w-full bg-[#39FF14] text-black font-bold hover:bg-[#32e012] active:bg-[#2bc40f] md:w-32"
+          className="w-full md:w-32 bg-[#E8F8F0] border border-[#BCEACD] text-[#0D6338] font-bold hover:bg-[#D3F2E1] active:bg-[#C0ECD3] transition-all shadow-sm dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300"
           onClick={() => {
             if (!exam.lastAttemptId) {
               toast.error(
@@ -209,11 +209,11 @@ export function OpenExamContent({
       );
     }
 
-    // 3. Đã hết lượt làm (không thể làm thêm) -> Chỉ hiện nút "Xem lại"
+    // 3. Đã hết lượt làm (không thể làm thêm) -> Chỉ hiện nút "Xem lại" dạng Outline
     if (!exam.canStart) {
       return (
         <Button
-          className="w-full md:w-32"
+          className="w-full md:w-32 border-slate-300 bg-white text-slate-800 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 transition-all font-semibold"
           variant="outline"
           disabled={!exam.lastAttemptId}
           onClick={() => {
@@ -229,11 +229,11 @@ export function OpenExamContent({
       );
     }
 
-    // 4. Chưa từng làm (chưa có lượt nào) -> Chỉ hiện "Làm bài"
+    // 4. Chưa từng làm (chưa có lượt nào) -> Nút "Làm bài" Xanh Mint Pastel chuẩn ảnh
     if (exam.attempts === 0) {
       return (
         <Button
-          className="w-full bg-[#39FF14] text-black font-bold hover:bg-[#32e012] active:bg-[#2bc40f] md:w-32"
+          className="w-full md:w-32 bg-[#E8F8F0] border border-[#BCEACD] text-[#0D6338] font-bold hover:bg-[#D3F2E1] active:bg-[#C0ECD3] transition-all shadow-sm dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300"
           disabled={isStarting || startExam.isPending}
           onClick={handleOpenStartDialog}
         >
@@ -242,11 +242,11 @@ export function OpenExamContent({
       );
     }
 
-    // 5. Đã từng làm VÀ vẫn còn lượt làm -> Nút Làm lại màu vàng đượm
+    // 5. Đã từng làm VÀ vẫn còn lượt làm -> Nút "Làm lại" Vàng/Cam Cream Pastel chuẩn ảnh + "Xem lại"
     return (
       <div className="flex w-full flex-col gap-2 md:w-32">
         <Button
-          className="w-full bg-[#FCD34D] text-black border border-[#F59E0B] hover:bg-[#F59E0B] hover:text-white active:bg-[#D97706] font-semibold"
+          className="w-full bg-[#FFF9E6] border border-[#FDE68A] text-[#854D0E] font-bold hover:bg-[#FEF0C7] active:bg-[#FDE047] transition-all shadow-sm dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300"
           disabled={isStarting || startExam.isPending}
           onClick={handleOpenStartDialog}
         >
@@ -255,7 +255,7 @@ export function OpenExamContent({
 
         <Button
           variant="outline"
-          className="w-full"
+          className="w-full border-slate-300 bg-white text-slate-800 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 transition-all font-semibold"
           disabled={!exam.lastAttemptId}
           onClick={() => {
             if (!exam.lastAttemptId) return;

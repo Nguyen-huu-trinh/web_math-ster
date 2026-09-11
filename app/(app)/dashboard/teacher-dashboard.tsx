@@ -421,7 +421,7 @@ const [showSchedule, setShowSchedule] = useState(false);
             <TableRow>
                 <TableHead>Mã HS</TableHead>
                 <TableHead>Họ và tên</TableHead>
-                <TableHead>Ngày vào học</TableHead>
+                <TableHead>Ngày làm bài</TableHead>
                 <TableHead>Bài kiểm tra</TableHead>
                 <TableHead>Trạng thái</TableHead>
                 <TableHead>Chi tiết</TableHead>
@@ -451,10 +451,16 @@ const [showSchedule, setShowSchedule] = useState(false);
                             {alert.studentName}
                         </TableCell>
                         <TableCell className="font-medium">
-                            {alert.createdAt
-                                ? new Date(alert.createdAt).toLocaleDateString("vi-VN")
-                                : "--"}
-                        </TableCell>
+  {alert.createdAt ? (() => {
+    const d = new Date(alert.createdAt);
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+
+    return `${hours}:${minutes} - ${day}/${month}`;
+  })() : "--"}
+</TableCell>
                         <TableCell className="max-w-[200px] truncate">
                             {alert.examTitle}
                         </TableCell>

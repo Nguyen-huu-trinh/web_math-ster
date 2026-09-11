@@ -210,7 +210,7 @@ console.log(
               score:
                 lastAttempt.score,
               createdAt:
-                student.created_at,
+                lastAttempt.created_at,
             });
           }
         }

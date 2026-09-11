@@ -45,15 +45,17 @@ interface ScheduleForm {
 
 const NOTE_OPTIONS = ["Bài giảng", "Chữa bài", "Chữa đề"] as const;
 
+// Cập nhật cấu hình DAYS với id duy nhất và slot thời gian
 const DAYS = [
-  { key: 1, label: "Thứ 2" },
-  { key: 2, label: "Thứ 3" },
-  { key: 3, label: "Thứ 4" },
-  { key: 4, label: "Thứ 5" },
-  { key: 5, label: "Thứ 6" },
-  { key: 6, label: "Thứ 7" },
-  { key: 0, label: "Chủ nhật" },
-];
+  { id: "mon", key: 1, label: "Thứ 2", slot: "all" },
+  { id: "tue", key: 2, label: "Thứ 3", slot: "all" },
+  { id: "wed", key: 3, label: "Thứ 4", slot: "all" },
+  { id: "thu", key: 4, label: "Thứ 5", slot: "all" },
+  { id: "fri", key: 5, label: "Thứ 6", slot: "all" },
+  { id: "sat", key: 6, label: "Thứ 7", slot: "all" },
+  { id: "sun-morning", key: 0, label: "Sáng CN", slot: "morning", defaultTime: "09:00" },
+  { id: "sun-evening", key: 0, label: "Tối CN", slot: "evening", defaultTime: "21:00" },
+] as const;
 
 function formatDate(date: Date) {
   const year = date.getFullYear();
@@ -90,11 +92,8 @@ function getWeekRange(weekType: WeekType) {
 }
 
 function formatDisplayDate(dateString: string) {
-  // Tách trực tiếp chuỗi "YYYY-MM-DD" để tránh lỗi lệch múi giờ (timezone offset)
   const [year, month, day] = dateString.split("-").map(Number);
-  
   if (!day || !month) return dateString;
-
   return `${day}/${month}`;
 }
 
@@ -109,11 +108,11 @@ function getDateForDay(monday: Date, dayKey: number) {
   return formatDate(date);
 }
 
-function createEmptyForm(sessionDate: string): ScheduleForm {
+function createEmptyForm(sessionDate: string, startTime = "21:00"): ScheduleForm {
   return {
     session_date: sessionDate,
     content: "",
-    start_time: "21:00",
+    start_time: startTime,
     note: "Bài giảng",
     reminder: "",
     is_active: true,
@@ -152,6 +151,7 @@ export function TeacherScheduleDialog({
   const [weekType, setWeekType] = useState<WeekType>("current");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ScheduleForm | null>(null);
+  const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
 
   const week = useMemo(() => getWeekRange(weekType), [weekType]);
 
@@ -178,13 +178,15 @@ export function TeacherScheduleDialog({
     return map;
   }, [schedules]);
 
-  function startCreate(sessionDate: string) {
+  function startCreate(sessionDate: string, slotId: string, defaultTime = "21:00") {
     setEditingId(null);
-    setForm(createEmptyForm(sessionDate));
+    setActiveSlotId(slotId);
+    setForm(createEmptyForm(sessionDate, defaultTime));
   }
 
-  function startEdit(schedule: (typeof schedules)[number]) {
+  function startEdit(schedule: (typeof schedules)[number], slotId: string) {
     setEditingId(schedule.id);
+    setActiveSlotId(slotId);
 
     const validNote = NOTE_OPTIONS.includes(schedule.note as any)
       ? schedule.note!
@@ -202,6 +204,7 @@ export function TeacherScheduleDialog({
 
   function closeEditor() {
     setEditingId(null);
+    setActiveSlotId(null);
     setForm(null);
   }
 
@@ -272,51 +275,6 @@ export function TeacherScheduleDialog({
       );
     }
   }
-
-  async function handleToggleActive(schedule: (typeof schedules)[number]) {
-    try {
-      await updateMutation.mutateAsync({
-        id: schedule.id,
-        input: {
-          is_active: !schedule.is_active,
-        },
-      });
-      toast.success(
-        schedule.is_active ? "Đã ẩn lịch học." : "Đã bật lịch học."
-      );
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Không thể cập nhật trạng thái."
-      );
-    }
-  }
-
- function getNoteBadgeStyle(note: string) {
-  switch (note) {
-    case "Bài giảng":
-      return {
-        badge: "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800",
-        icon: "text-blue-600 dark:text-blue-400",
-      };
-    case "Chữa bài":
-      return {
-        badge: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
-        icon: "text-amber-600 dark:text-amber-400",
-      };
-    case "Chữa đề":
-      return {
-        badge: "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
-        icon: "text-emerald-600 dark:text-emerald-400",
-      };
-    default:
-      return {
-        badge: "bg-muted text-muted-foreground border-border",
-        icon: "text-muted-foreground",
-      };
-  }
-}
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -412,16 +370,24 @@ export function TeacherScheduleDialog({
                 <tbody className="divide-y">
                   {DAYS.map((day) => {
                     const date = getDateForDay(week.monday, day.key);
-                    const items = schedulesByDate.get(date) ?? [];
+                    const allItems = schedulesByDate.get(date) ?? [];
+
+                    // Tách lịch học theo slot sáng/tối nếu là Chủ Nhật
+                    const items = allItems.filter((item) => {
+                      if (day.slot === "morning") return item.start_time < "12:00";
+                      if (day.slot === "evening") return item.start_time >= "12:00";
+                      return true;
+                    });
 
                     if (items.length === 0) {
                       const isCreating =
-                        editingId === null && form?.session_date === date;
+                        editingId === null &&
+                        activeSlotId === day.id &&
+                        form?.session_date === date;
 
                       if (isCreating && form) {
                         return (
-                          <tr key={date} className="bg-primary/5 transition-colors">
-                            {/* Thứ / Ngày */}
+                          <tr key={day.id} className="bg-primary/5 transition-colors">
                             <td className="px-4 py-3.5 align-top">
                               <div className="flex items-start gap-2">
                                 <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -436,83 +402,71 @@ export function TeacherScheduleDialog({
                               </div>
                             </td>
 
-                            {/* Giờ */}
                             <td className="px-4 py-3.5 align-top">
                               <input
                                 type="time"
                                 value={form.start_time}
                                 onChange={(e) =>
-                                  setForm({
-                                    ...form,
-                                    start_time: e.target.value,
-                                  })
+                                  setForm({ ...form, start_time: e.target.value })
                                 }
                                 className="h-8 w-full rounded-lg border bg-background px-2 text-xs font-medium outline-none focus:ring-2 focus:ring-primary/30"
                               />
                             </td>
 
-                            {/* Nội dung */}
                             <td className="px-4 py-3.5 align-top">
                               <input
                                 type="text"
                                 autoFocus
                                 value={form.content}
                                 onChange={(e) =>
-                                  setForm({
-                                    ...form,
-                                    content: e.target.value,
-                                  })
+                                  setForm({ ...form, content: e.target.value })
                                 }
                                 placeholder="Nội dung bài học..."
                                 className="h-8 w-full rounded-lg border bg-background px-3 text-xs outline-none focus:ring-2 focus:ring-primary/30"
                               />
                             </td>
 
-                            {/* Ghi chú */}
                             <td className="px-4 py-3.5 align-top">
-<select
-  value={form.note}
-  onChange={(e) =>
-    setForm({
-      ...form,
-      note: e.target.value,
-    })
-  }
-  className={`h-8 w-full rounded-lg border px-2 text-xs font-medium outline-none focus:ring-2 focus:ring-primary/30 ${getNoteBadgeStyle(form.note).badge}`}
->
-  {NOTE_OPTIONS.map((option) => (
-    <option key={option} value={option} className="bg-background text-foreground">
-      {option}
-    </option>
-  ))}
-</select>
+                              <select
+                                value={form.note}
+                                onChange={(e) =>
+                                  setForm({ ...form, note: e.target.value })
+                                }
+                                className={`h-8 w-full rounded-lg border px-2 text-xs font-medium outline-none focus:ring-2 focus:ring-primary/30 ${
+                                  getNoteBadgeStyle(form.note).badge
+                                }`}
+                              >
+                                {NOTE_OPTIONS.map((option) => (
+                                  <option
+                                    key={option}
+                                    value={option}
+                                    className="bg-background text-foreground"
+                                  >
+                                    {option}
+                                  </option>
+                                ))}
+                              </select>
                             </td>
 
-                            {/* Lưu ý */}
                             <td className="px-4 py-3.5 align-top">
                               <input
                                 type="text"
                                 value={form.reminder}
                                 onChange={(e) =>
-                                  setForm({
-                                    ...form,
-                                    reminder: e.target.value,
-                                  })
+                                  setForm({ ...form, reminder: e.target.value })
                                 }
                                 placeholder="Lưu ý..."
                                 className="h-8 w-full rounded-lg border bg-background px-3 text-xs outline-none focus:ring-2 focus:ring-primary/30"
                               />
                             </td>
 
-                            {/* Actions */}
                             <td className="px-4 py-3.5 align-top text-right">
                               <div className="flex items-center justify-end gap-1">
                                 <button
                                   type="button"
                                   onClick={handleSave}
                                   disabled={
-                                    createMutation.isPending ||
-                                    updateMutation.isPending
+                                    createMutation.isPending || updateMutation.isPending
                                   }
                                   className="rounded-md p-1.5 text-emerald-600 hover:bg-emerald-500/10 transition disabled:opacity-50"
                                   title="Lưu"
@@ -523,8 +477,7 @@ export function TeacherScheduleDialog({
                                   type="button"
                                   onClick={closeEditor}
                                   disabled={
-                                    createMutation.isPending ||
-                                    updateMutation.isPending
+                                    createMutation.isPending || updateMutation.isPending
                                   }
                                   className="rounded-md p-1.5 text-muted-foreground hover:bg-muted transition disabled:opacity-50"
                                   title="Hủy"
@@ -539,7 +492,7 @@ export function TeacherScheduleDialog({
 
                       return (
                         <tr
-                          key={date}
+                          key={day.id}
                           className="group transition-colors hover:bg-muted/30"
                         >
                           <td className="px-4 py-3.5 align-top">
@@ -559,7 +512,13 @@ export function TeacherScheduleDialog({
                           <td colSpan={5} className="p-0">
                             <button
                               type="button"
-                              onClick={() => startCreate(date)}
+                              onClick={() =>
+                                startCreate(
+                                  date,
+                                  day.id,
+                                  "defaultTime" in day ? day.defaultTime : "21:00"
+                                )
+                              }
                               className="flex h-full min-h-[52px] w-full items-center justify-center gap-1.5 px-4 text-xs font-medium text-muted-foreground/70 transition-all hover:bg-primary/5 hover:text-primary"
                             >
                               <Plus className="h-3.5 w-3.5" />
@@ -577,9 +536,7 @@ export function TeacherScheduleDialog({
                         <tr
                           key={item.id}
                           className={`transition-colors ${
-                            isEditing
-                              ? "bg-primary/5"
-                              : "hover:bg-muted/30"
+                            isEditing ? "bg-primary/5" : "hover:bg-muted/30"
                           }`}
                         >
                           <td className="px-4 py-3.5 align-top">
@@ -597,7 +554,7 @@ export function TeacherScheduleDialog({
                               </div>
                             ) : (
                               <span className="text-xs font-normal text-muted-foreground/60 italic pl-6">
-                                Cùng ngày
+                                Cùng khung giờ
                               </span>
                             )}
                           </td>
@@ -608,17 +565,14 @@ export function TeacherScheduleDialog({
                                 type="time"
                                 value={form.start_time}
                                 onChange={(e) =>
-                                  setForm({
-                                    ...form,
-                                    start_time: e.target.value,
-                                  })
+                                  setForm({ ...form, start_time: e.target.value })
                                 }
                                 className="h-8 w-full rounded-lg border bg-background px-2 text-xs font-medium outline-none focus:ring-2 focus:ring-primary/30"
                               />
                             ) : (
                               <button
                                 type="button"
-                                onClick={() => startEdit(item)}
+                                onClick={() => startEdit(item, day.id)}
                                 className="inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary transition hover:bg-primary/20"
                               >
                                 <Clock className="h-3.5 w-3.5" />
@@ -634,10 +588,7 @@ export function TeacherScheduleDialog({
                                 autoFocus
                                 value={form.content}
                                 onChange={(e) =>
-                                  setForm({
-                                    ...form,
-                                    content: e.target.value,
-                                  })
+                                  setForm({ ...form, content: e.target.value })
                                 }
                                 placeholder="Nội dung bài học..."
                                 className="h-8 w-full rounded-lg border bg-background px-3 text-xs outline-none focus:ring-2 focus:ring-primary/30"
@@ -645,7 +596,7 @@ export function TeacherScheduleDialog({
                             ) : (
                               <button
                                 type="button"
-                                onClick={() => startEdit(item)}
+                                onClick={() => startEdit(item, day.id)}
                                 className="w-full text-left font-medium text-foreground transition hover:text-primary"
                               >
                                 {item.content}
@@ -653,16 +604,12 @@ export function TeacherScheduleDialog({
                             )}
                           </td>
 
-                          {/* Ghi chú - Form chỉnh sửa / Badge */}
                           <td className="px-4 py-3.5 align-top">
                             {isEditing && form ? (
                               <select
                                 value={form.note}
                                 onChange={(e) =>
-                                  setForm({
-                                    ...form,
-                                    note: e.target.value,
-                                  })
+                                  setForm({ ...form, note: e.target.value })
                                 }
                                 className="h-8 w-full rounded-lg border bg-background px-2 text-xs outline-none focus:ring-2 focus:ring-primary/30"
                               >
@@ -675,24 +622,28 @@ export function TeacherScheduleDialog({
                             ) : (
                               <button
                                 type="button"
-                                onClick={() => startEdit(item)}
+                                onClick={() => startEdit(item, day.id)}
                                 className="flex w-full items-start text-left"
                               >
-{item.note ? (() => {
-  const style = getNoteBadgeStyle(item.note);
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${style.badge}`}
-    >
-      <FileText className={`h-3.5 w-3.5 shrink-0 ${style.icon}`} />
-      <span>{item.note}</span>
-    </span>
-  );
-})() : (
-  <span className="text-xs text-muted-foreground/40 hover:text-muted-foreground">
-    + Chọn ghi chú
-  </span>
-)}
+                                {item.note ? (
+                                  (() => {
+                                    const style = getNoteBadgeStyle(item.note);
+                                    return (
+                                      <span
+                                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${style.badge}`}
+                                      >
+                                        <FileText
+                                          className={`h-3.5 w-3.5 shrink-0 ${style.icon}`}
+                                        />
+                                        <span>{item.note}</span>
+                                      </span>
+                                    );
+                                  })()
+                                ) : (
+                                  <span className="text-xs text-muted-foreground/40 hover:text-muted-foreground">
+                                    + Chọn ghi chú
+                                  </span>
+                                )}
                               </button>
                             )}
                           </td>
@@ -703,10 +654,7 @@ export function TeacherScheduleDialog({
                                 type="text"
                                 value={form.reminder}
                                 onChange={(e) =>
-                                  setForm({
-                                    ...form,
-                                    reminder: e.target.value,
-                                  })
+                                  setForm({ ...form, reminder: e.target.value })
                                 }
                                 placeholder="Lưu ý..."
                                 className="h-8 w-full rounded-lg border bg-background px-3 text-xs outline-none focus:ring-2 focus:ring-primary/30"
@@ -714,13 +662,15 @@ export function TeacherScheduleDialog({
                             ) : (
                               <button
                                 type="button"
-                                onClick={() => startEdit(item)}
+                                onClick={() => startEdit(item, day.id)}
                                 className="flex w-full items-start gap-1.5 text-left text-xs font-medium text-amber-600 dark:text-amber-500"
                               >
                                 {item.reminder ? (
                                   <>
                                     <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                                    <span className="line-clamp-2">{item.reminder}</span>
+                                    <span className="line-clamp-2">
+                                      {item.reminder}
+                                    </span>
                                   </>
                                 ) : (
                                   <span className="font-normal text-muted-foreground/40 hover:text-muted-foreground">
@@ -738,8 +688,7 @@ export function TeacherScheduleDialog({
                                   type="button"
                                   onClick={handleSave}
                                   disabled={
-                                    createMutation.isPending ||
-                                    updateMutation.isPending
+                                    createMutation.isPending || updateMutation.isPending
                                   }
                                   className="rounded-md p-1.5 text-emerald-600 hover:bg-emerald-500/10 transition"
                                   title="Lưu"
@@ -759,7 +708,7 @@ export function TeacherScheduleDialog({
                               <div className="flex items-center justify-end gap-1">
                                 <button
                                   type="button"
-                                  onClick={() => startEdit(item)}
+                                  onClick={() => startEdit(item, day.id)}
                                   className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition"
                                   title="Sửa"
                                 >

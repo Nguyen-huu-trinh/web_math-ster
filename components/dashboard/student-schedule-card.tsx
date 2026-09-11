@@ -1,7 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Clock, AlertCircle, FileText, Calendar, BookOpen, CheckCircle2, GraduationCap } from "lucide-react";
+import {
+  AlertCircle,
+  BookOpen,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  FileText,
+  GraduationCap,
+} from "lucide-react";
 import { useStudentSchedule } from "@/hooks/use-student-schedule";
 
 type WeekType = "current" | "next";
@@ -48,7 +56,7 @@ function getWeekRange(weekType: WeekType) {
 function formatDisplayDate(dateString: string) {
   // Tách trực tiếp chuỗi "YYYY-MM-DD" để tránh lỗi lệch múi giờ (timezone offset)
   const [year, month, day] = dateString.split("-").map(Number);
-  
+
   if (!day || !month) return dateString;
 
   return `${day}/${month}`;
@@ -58,36 +66,44 @@ function formatTime(time: string) {
   return time ? time.slice(0, 5) : "";
 }
 
+// Cập nhật mảng DAYS có id riêng biệt và slot thời gian
 const DAYS = [
-  { key: 1, label: "Thứ 2" },
-  { key: 2, label: "Thứ 3" },
-  { key: 3, label: "Thứ 4" },
-  { key: 4, label: "Thứ 5" },
-  { key: 5, label: "Thứ 6" },
-  { key: 6, label: "Thứ 7" },
-  { key: 0, label: "Chủ nhật" },
-];
+  { id: "mon", key: 1, label: "Thứ 2", slot: "all" },
+  { id: "tue", key: 2, label: "Thứ 3", slot: "all" },
+  { id: "wed", key: 3, label: "Thứ 4", slot: "all" },
+  { id: "thu", key: 4, label: "Thứ 5", slot: "all" },
+  { id: "fri", key: 5, label: "Thứ 6", slot: "all" },
+  { id: "sat", key: 6, label: "Thứ 7", slot: "all" },
+  { id: "sun-morning", key: 0, label: "Sáng CN", slot: "morning" },
+  { id: "sun-evening", key: 0, label: "Tối CN", slot: "evening" },
+] as const;
 
 // Helper hiển thị Badge cho trường Ghi chú
 function NoteBadge({ note }: { note: string | null | undefined }) {
   if (!note) return <span className="text-muted-foreground/30 font-normal">-</span>;
 
-  let badgeStyle = "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200";
+  let badgeStyle =
+    "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200";
   let Icon = FileText;
 
   if (note.includes("Bài giảng")) {
-    badgeStyle = "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800";
+    badgeStyle =
+      "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800";
     Icon = BookOpen;
   } else if (note.includes("Chữa bài")) {
-    badgeStyle = "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800";
+    badgeStyle =
+      "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800";
     Icon = CheckCircle2;
   } else if (note.includes("Chữa đề")) {
-    badgeStyle = "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800";
+    badgeStyle =
+      "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800";
     Icon = GraduationCap;
   }
 
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${badgeStyle}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${badgeStyle}`}
+    >
       <Icon className="h-3.5 w-3.5 shrink-0" />
       <span>{note}</span>
     </span>
@@ -102,15 +118,21 @@ export function StudentScheduleCard() {
   const scheduleQuery = useStudentSchedule(week.startDate, week.endDate);
   const schedules = scheduleQuery.data ?? [];
 
-  // Sắp xếp các buổi học theo từng ngày trong tuần
+  // Sắp xếp các buổi học theo từng ngày/khung giờ trong tuần
   const flatSchedules = useMemo(() => {
     return DAYS.flatMap((day) => {
       const items = schedules.filter((item) => {
         const date = new Date(`${item.session_date}T00:00:00`);
-        return date.getDay() === day.key;
+        if (date.getDay() !== day.key) return false;
+
+        // Lọc theo khung giờ Sáng / Tối cho Chủ Nhật
+        if (day.slot === "morning") return item.start_time < "12:00";
+        if (day.slot === "evening") return item.start_time >= "12:00";
+
+        return true;
       });
 
-      items.sort((a, b) => (a.start_time > b.start_time ? 1 : -1));
+      items.sort((a, b) => a.start_time.localeCompare(b.start_time));
 
       return items.map((item) => ({
         ...item,
@@ -124,7 +146,9 @@ export function StudentScheduleCard() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-5">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-foreground">Thời khóa biểu</h2>
+          <h2 className="text-xl font-bold tracking-tight text-foreground">
+            Thời khóa biểu
+          </h2>
           <p className="mt-1 text-sm font-medium text-muted-foreground flex items-center gap-1.5">
             <Calendar className="h-4 w-4 text-primary" />
             {formatDisplayDate(week.startDate)} – {formatDisplayDate(week.endDate)}
@@ -195,11 +219,21 @@ export function StudentScheduleCard() {
               <table className="w-full border-collapse text-left text-sm">
                 <thead>
                   <tr className="border-b bg-muted/40 text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
-                    <th className="w-[140px] px-5 py-3.5 whitespace-nowrap">Thứ / Ngày</th>
-                    <th className="w-[120px] px-5 py-3.5 whitespace-nowrap">Giờ vào lớp</th>
-                    <th className="px-5 py-3.5 min-w-[220px]">Nội dung buổi học</th>
-                    <th className="w-[150px] px-5 py-3.5 whitespace-nowrap">Ghi chú</th>
-                    <th className="w-[220px] px-5 py-3.5 min-w-[200px]">Lưu ý</th>
+                    <th className="w-[140px] px-5 py-3.5 whitespace-nowrap">
+                      Thứ / Ngày
+                    </th>
+                    <th className="w-[120px] px-5 py-3.5 whitespace-nowrap">
+                      Giờ vào lớp
+                    </th>
+                    <th className="px-5 py-3.5 min-w-[220px]">
+                      Nội dung buổi học
+                    </th>
+                    <th className="w-[150px] px-5 py-3.5 whitespace-nowrap">
+                      Ghi chú
+                    </th>
+                    <th className="w-[220px] px-5 py-3.5 min-w-[200px]">
+                      Lưu ý
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -213,7 +247,9 @@ export function StudentScheduleCard() {
                         <div className="flex items-start gap-2">
                           <Calendar className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                           <div>
-                            <span className="font-semibold text-foreground">{item.dayLabel}</span>
+                            <span className="font-semibold text-foreground">
+                              {item.dayLabel}
+                            </span>
                             <span className="block text-xs text-muted-foreground font-normal">
                               {formatDisplayDate(item.session_date)}
                             </span>
@@ -244,10 +280,14 @@ export function StudentScheduleCard() {
                         {item.reminder ? (
                           <div className="inline-flex items-start gap-1.5 rounded-lg border border-amber-200/80 bg-amber-50/70 dark:bg-amber-950/30 dark:border-amber-900/50 p-2 text-xs font-medium text-amber-800 dark:text-amber-300">
                             <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
-                            <span className="leading-tight">{item.reminder}</span>
+                            <span className="leading-tight">
+                              {item.reminder}
+                            </span>
                           </div>
                         ) : (
-                          <span className="text-muted-foreground/30 font-normal">-</span>
+                          <span className="text-muted-foreground/30 font-normal">
+                            -
+                          </span>
                         )}
                       </td>
                     </tr>

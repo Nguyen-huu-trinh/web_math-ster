@@ -118,23 +118,24 @@ export function OpenExamContent({
       // =================================================
       // ĐANG CÓ LƯỢT LÀM BÀI
       // =================================================
+if (
+  error?.status === 409 &&
+  error?.code === "EXAM_IN_PROGRESS"
+) {
+  setShowStartDialog(false);
 
-      if (
-        error?.status === 409 &&
-        error?.code === "EXAM_IN_PROGRESS"
-      ) {
-        setShowStartDialog(false);
+  if (error?.attemptId) {
+    router.push(
+      `/student-exams/${error.attemptId}`
+    );
+  } else {
+    toast.error(
+      "Không tìm thấy lượt làm bài đang diễn ra."
+    );
+  }
 
-        toast.warning(
-          "Bài thi đang được diễn ra",
-          {
-            description:
-              "Bạn đã có một lượt làm bài chưa nộp. Vui lòng tiếp tục lượt làm bài hiện tại.",
-          }
-        );
-
-        return;
-      }
+  return;
+}
 
       // =================================================
       // THIẾU BÀI KIỂM TRA TIÊN QUYẾT
@@ -167,28 +168,100 @@ export function OpenExamContent({
     }
   }
 
-  // =====================================================
+// =====================================================
   // BUTTON
   // =====================================================
 
   function renderButton() {
-    if (exam.canStart) {
+    // ==========================================
+    // ĐANG CÓ BÀI LÀM DỞ
+    // → TIẾP TỤC ATTEMPT CŨ
+    // ==========================================
+    if (exam.inProgress) {
       return (
         <Button
-          className="w-full md:w-32"
-          onClick={handleOpenStartDialog}
-          disabled={
-            isStarting ||
-            startExam.isPending
-          }
+          className="w-full bg-[#88D64C] text-white hover:bg-[#78bf41] active:bg-[#68a838] md:w-32"
+          onClick={() => {
+            if (!exam.lastAttemptId) {
+              toast.error(
+                "Không tìm thấy lượt làm bài đang diễn ra."
+              );
+              return;
+            }
+
+            router.push(
+              `/student-exams/${exam.lastAttemptId}`
+            );
+          }}
         >
-          {exam.attempts === 0
-            ? "Làm bài"
-            : "Làm lại"}
+          Làm tiếp
         </Button>
       );
     }
 
+    // ==========================================
+    // ĐỀ BỊ KHÓA THỰC SỰ
+    // ==========================================
+    if (exam.status === "LOCKED") {
+      return (
+        <Button
+          className="w-full md:w-32"
+          variant="outline"
+          disabled
+        >
+          Đang khóa
+        </Button>
+      );
+    }
+
+    // ==========================================
+    // CÓ THỂ BẮT ĐẦU BÀI MỚI (CHƯA LÀM HOẶC LÀM LẠI)
+    // ==========================================
+    if (exam.canStart) {
+      // 1. Lần đầu tiên làm bài
+      if (exam.attempts === 0) {
+        return (
+          <Button
+            className="w-full bg-[#88D64C] text-white hover:bg-[#78bf41] active:bg-[#68a838] md:w-32"
+            onClick={handleOpenStartDialog}
+            disabled={isStarting || startExam.isPending}
+          >
+            Làm bài
+          </Button>
+        );
+      }
+
+      // 2. Đã từng làm VÀ còn lượt làm -> Hiện 2 nút xếp dọc (Làm lại trên, Xem lại dưới)
+      return (
+        <div className="flex w-full flex-col gap-2 md:w-32">
+          <Button
+            className="w-full bg-[#88D64C] text-white hover:bg-[#78bf41] active:bg-[#68a838]"
+            disabled={isStarting || startExam.isPending}
+            onClick={handleOpenStartDialog}
+          >
+            Làm lại
+          </Button>
+
+          <Button
+            variant="outline"
+            className="w-full"
+            disabled={!exam.lastAttemptId}
+            onClick={() => {
+              if (!exam.lastAttemptId) return;
+              router.push(
+                `/student-exams/${exam.lastAttemptId}?review=true`
+              );
+            }}
+          >
+            Xem lại
+          </Button>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // HẾT LƯỢT LÀM BÀI → CHỈ XEM LẠI
+    // ==========================================
     if (exam.lastAttemptId) {
       return (
         <Button

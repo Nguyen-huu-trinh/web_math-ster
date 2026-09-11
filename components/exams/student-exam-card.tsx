@@ -47,16 +47,16 @@ export function StudentExamCard({
 
   const startLockRef =
     useRef(false);
-const [showPrerequisiteDialog, setShowPrerequisiteDialog] =
-  useState(false);
+  const [showPrerequisiteDialog, setShowPrerequisiteDialog] =
+    useState(false);
 
-const [missingPrerequisites, setMissingPrerequisites] =
-  useState<
-    {
-      id: string;
-      title: string;
-    }[]
-  >([]);
+  const [missingPrerequisites, setMissingPrerequisites] =
+    useState<
+      {
+        id: string;
+        title: string;
+      }[]
+    >([]);
 
   /*
    * ==========================================
@@ -182,139 +182,162 @@ const [missingPrerequisites, setMissingPrerequisites] =
 
       startLockRef.current = false;
       setIsStarting(false);
-if (
-  error?.status === 409 &&
-  error?.code === "EXAM_IN_PROGRESS"
-) {
-  setShowStartDialog(false);
+      if (
+        error?.status === 409 &&
+        error?.code === "EXAM_IN_PROGRESS"
+      ) {
+        setShowStartDialog(false);
 
-  if (error?.attemptId) {
-    router.push(
-      `/student-exams/${error.attemptId}`
-    );
-  } else {
-    toast.error(
-      "Không tìm thấy lượt làm bài đang diễn ra."
-    );
-  }
+        if (error?.attemptId) {
+          router.push(
+            `/student-exams/${error.attemptId}`
+          );
+        } else {
+          toast.error(
+            "Không tìm thấy lượt làm bài đang diễn ra."
+          );
+        }
 
-  return;
-}
+        return;
+      }
 
-/*
- * ======================================
- * THIẾU BÀI KIỂM TRA TIÊN QUYẾT
- * ======================================
- */
-if (
-  error?.status === 403 &&
-  error?.code === "PREREQUISITE_NOT_COMPLETED"
-) {
-  setShowStartDialog(false);
+      /*
+       * ======================================
+       * THIẾU BÀI KIỂM TRA TIÊN QUYẾT
+       * ======================================
+       */
+      if (
+        error?.status === 403 &&
+        error?.code === "PREREQUISITE_NOT_COMPLETED"
+      ) {
+        setShowStartDialog(false);
 
-  setMissingPrerequisites(
-    error?.missingPrerequisites ?? []
-  );
+        setMissingPrerequisites(
+          error?.missingPrerequisites ?? []
+        );
 
-  setShowPrerequisiteDialog(true);
+        setShowPrerequisiteDialog(true);
 
-  return;
-}
+        return;
+      }
 
-/*
- * ======================================
- * LỖI KHÁC
- * ======================================
- */
-toast.error(
-  error?.message ??
-    "Không thể bắt đầu bài làm."
-);
+      /*
+       * ======================================
+       * LỖI KHÁC
+       * ======================================
+       */
+      toast.error(
+        error?.message ??
+          "Không thể bắt đầu bài làm."
+      );
     }
   }
 
 
   /*
    * ==========================================
-   * BUTTON
+   * BUTTONS CONTROL
    * ==========================================
    */
-function renderButton() {
-  if (exam.status === "LOCKED" && !exam.inProgress) {
-    return (
-      <Button
-        className="w-full md:w-32"
-        variant="outline"
-        disabled
-      >
-        Đang khóa
-      </Button>
-    );
-  }
+  function renderButton() {
+    // 1. Đề đang bị khóa
+    if (exam.status === "LOCKED" && !exam.inProgress) {
+      return (
+        <Button
+          className="w-full md:w-32"
+          variant="outline"
+          disabled
+        >
+          Đang khóa
+        </Button>
+      );
+    }
 
-  // ==========================================
-  // CÓ BÀI ĐANG LÀM DỞ
-  // → HIỆN "LÀM LẠI" NHƯNG MỞ LẠI BÀI CŨ
-  // ==========================================
-  if (exam.inProgress) {
-    return (
-      <Button
-        className="w-full md:w-32"
-        onClick={() => {
-          if (!exam.lastAttemptId) {
-            toast.error(
-              "Không tìm thấy lượt làm bài đang diễn ra."
+    // 2. Đang có bài thi dở dang (in progress) -> Mở lại lượt cũ
+    if (exam.inProgress) {
+      return (
+        <Button
+          className="w-full md:w-32"
+          onClick={() => {
+            if (!exam.lastAttemptId) {
+              toast.error(
+                "Không tìm thấy lượt làm bài đang diễn ra."
+              );
+              return;
+            }
+
+            router.push(
+              `/student-exams/${exam.lastAttemptId}`
             );
-            return;
-          }
+          }}
+        >
+          Tiếp tục làm
+        </Button>
+      );
+    }
 
-          router.push(
-            `/student-exams/${exam.lastAttemptId}`
-          );
-        }}
-      >
-        Làm lại
-      </Button>
-    );
-  }
+    // 3. Đã hết lượt làm (không thể làm thêm) -> Chỉ hiện nút "Xem lại"
+    if (!exam.canStart) {
+      return (
+        <Button
+          className="w-full md:w-32"
+          variant="outline"
+          disabled={!exam.lastAttemptId}
+          onClick={() => {
+            if (!exam.lastAttemptId) {
+              return;
+            }
 
-  if (!exam.canStart) {
+            router.push(
+              `/student-exams/${exam.lastAttemptId}?review=true`
+            );
+          }}
+        >
+          Xem lại
+        </Button>
+      );
+    }
+
+    // 4. Chưa từng làm (chưa có lượt nào) -> Chỉ hiện "Làm bài"
+    if (exam.attempts === 0) {
+      return (
+        <Button
+          className="w-full md:w-32"
+          disabled={isStarting || startExam.isPending}
+          onClick={handleOpenStartDialog}
+        >
+          Làm bài
+        </Button>
+      );
+    }
+
+// 5. Đã từng làm VÀ vẫn còn lượt làm -> Nút Làm lại màu xanh cốm tươi
     return (
-      <Button
-        className="w-full md:w-32"
-        variant="outline"
-        disabled={!exam.lastAttemptId}
-        onClick={() => {
-          if (!exam.lastAttemptId) {
-            return;
-          }
+      <div className="flex w-full flex-col gap-2 md:w-32">
+        <Button
+          className="w-full bg-[#88D64C] text-black hover:bg-[#78bf41] active:bg-[#68a838]"
+          disabled={isStarting || startExam.isPending}
+          onClick={handleOpenStartDialog}
+        >
+          Làm lại
+        </Button>
 
-          router.push(
-            `/student-exams/${exam.lastAttemptId}?review=true`
-          );
-        }}
-      >
-        Xem lại
-      </Button>
+        <Button
+          variant="outline"
+          className="w-full"
+          disabled={!exam.lastAttemptId}
+          onClick={() => {
+            if (!exam.lastAttemptId) return;
+            router.push(
+              `/student-exams/${exam.lastAttemptId}?review=true`
+            );
+          }}
+        >
+          Xem lại
+        </Button>
+      </div>
     );
   }
-
-  return (
-    <Button
-      className="w-full md:w-32"
-      disabled={
-        isStarting ||
-        startExam.isPending
-      }
-      onClick={handleOpenStartDialog}
-    >
-      {exam.attempts === 0
-        ? "Làm bài"
-        : "Làm lại"}
-    </Button>
-  );
-}
-
 
   return (
     <>
@@ -322,28 +345,28 @@ function renderButton() {
 
         <CardContent className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between md:gap-6 md:px-5 md:py-3">
 
-{/* LEFT */}
-<div className="flex-1 min-w-0">
-  {/* Tiêu đề bài thi - Tự động xuống dòng khi tên đề dài */}
-  <h3 className="text-base font-bold leading-snug text-foreground md:text-lg">
-    {exam.title}
-  </h3>
+          {/* LEFT */}
+          <div className="flex-1 min-w-0">
+            {/* Tiêu đề bài thi - Tự động xuống dòng khi tên đề dài */}
+            <h3 className="text-base font-bold leading-snug text-foreground md:text-lg">
+              {exam.title}
+            </h3>
 
-  {/* Hàng chứa thông tin phụ: Tên khóa học & Các Badge trạng thái */}
-  <div className="mt-2 flex flex-wrap items-center gap-2">
-    <span className="text-xs font-medium text-muted-foreground md:text-sm">
-      {exam.courseName}
-    </span>
+            {/* Hàng chứa thông tin phụ: Tên khóa học & Các Badge trạng thái */}
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-muted-foreground md:text-sm">
+                {exam.courseName}
+              </span>
 
-    <span className="text-muted-foreground/40">•</span>
+              <span className="text-muted-foreground/40">•</span>
 
-    <Badge variant="outline" className="text-xs">
-      {exam.category === "ATTENDANCE" ? "Điểm danh" : "Định kỳ"}
-    </Badge>
+              <Badge variant="outline" className="text-xs">
+                {exam.category === "ATTENDANCE" ? "Điểm danh" : "Định kỳ"}
+              </Badge>
 
-    {renderStatus()}
-  </div>
-</div>
+              {renderStatus()}
+            </div>
+          </div>
 
 
           {/* CENTER */}
@@ -452,7 +475,7 @@ function renderButton() {
       {/* ==========================================
           START CONFIRM DIALOG
       ========================================== */}
-{showStartDialog && (
+      {showStartDialog && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           {/* Backdrop làm mờ hậu cảnh */}
           <div 
@@ -485,18 +508,24 @@ function renderButton() {
             </div>
 
             {/* Content Details */}
-            <div className="mt-5 space-y-4">
-              <p className="text-base leading-relaxed text-muted-foreground">
-                Bạn có chắc chắn muốn bắt đầu làm bài thi{" "}
-                <span className="font-bold text-foreground">
-                  "{exam.title}"
-                </span>{" "}
-                không?
-              </p>
+<div className="mt-2 space-y-1.5">
+  <p className="text-base leading-snug text-muted-foreground">
+    <span className="font-bold text-foreground">
+      {exam.title}
+    </span>
+  </p>
+  {exam.description && (
+    <p className="text-sm text-muted-foreground leading-snug">
+      <span className="font-semibold text-foreground">
+        Bài thi gồm kiến thức:
+      </span>{" "}
+      {exam.description}
+    </p>
+  )}
 
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Sau khi bắt đầu, hệ thống sẽ tính giờ ngay lập tức và ghi nhận lượt làm bài của bạn.
-              </p>
+  <p className="text-sm text-muted-foreground leading-snug">
+    Sau khi bắt đầu, hệ thống sẽ tính giờ ngay lập tức và ghi nhận lượt làm bài của bạn.
+  </p>
 
               {/* Callout warning card */}
               <div className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-destructive">
@@ -557,8 +586,7 @@ function renderButton() {
       )}
 
 
-
-            {/* ==========================================
+      {/* ==========================================
           PREREQUISITE DIALOG
       ========================================== */}
       {showPrerequisiteDialog && (
@@ -613,39 +641,39 @@ function renderButton() {
                 , bạn cần làm hoặc đạt các bài kiểm tra sau:
               </p>
 
-{/* Danh sách prerequisite */}
-<div className="mt-4 max-h-[280px] overflow-y-auto pr-1">
-  <div className="space-y-2">
-    {missingPrerequisites.length > 0 ? (
-      missingPrerequisites.map((prerequisite, index) => (
-        <div
-          key={prerequisite.id}
-          className="flex items-center gap-3 rounded-xl border bg-muted/30 px-4 py-3"
-        >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-sm font-bold text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
-            {index + 1}
-          </div>
+              {/* Danh sách prerequisite */}
+              <div className="mt-4 max-h-[280px] overflow-y-auto pr-1">
+                <div className="space-y-2">
+                  {missingPrerequisites.length > 0 ? (
+                    missingPrerequisites.map((prerequisite, index) => (
+                      <div
+                        key={prerequisite.id}
+                        className="flex items-center gap-3 rounded-xl border bg-muted/30 px-4 py-3"
+                      >
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-sm font-bold text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
+                          {index + 1}
+                        </div>
 
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-foreground">
-              {prerequisite.title}
-            </p>
-          </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-foreground">
+                            {prerequisite.title}
+                          </p>
+                        </div>
 
-          <div className="shrink-0">
-            <span className="rounded-full bg-orange-100 px-2.5 py-1 text-xs font-medium text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
-              Cần làm
-            </span>
-          </div>
-        </div>
-      ))
-    ) : (
-      <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-800 dark:border-orange-900/50 dark:bg-orange-950/20 dark:text-orange-300">
-        Bạn chưa hoàn thành bài kiểm tra tiên quyết cần thiết.
-      </div>
-    )}
-  </div>
-</div>
+                        <div className="shrink-0">
+                          <span className="rounded-full bg-orange-100 px-2.5 py-1 text-xs font-medium text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
+                            Cần làm
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-800 dark:border-orange-900/50 dark:bg-orange-950/20 dark:text-orange-300">
+                      Bạn chưa hoàn thành bài kiểm tra tiên quyết cần thiết.
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Footer */}
@@ -666,4 +694,3 @@ function renderButton() {
     </>
   );
 }
-

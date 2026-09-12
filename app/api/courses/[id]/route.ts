@@ -14,22 +14,22 @@ export async function GET(
   { params }: Props
 ) {
   const { id } = await params;
+  const data = await courseService.getById(id);
 
-  return NextResponse.json(
-    await courseService.getById(id)
-  );
+  return NextResponse.json(data, {
+    headers: {
+      // Lưu cache 30 phút (1800s) tại trình duyệt của người dùng
+      "Cache-Control": "private, max-age=1800, stale-while-revalidate=60",
+    },
+  });
 }
 
 export async function PUT(
   request: NextRequest,
   { params }: Props
 ) {
-  const body =
-    await request.json();
-
-  const values =
-    UpdateCourseSchema.parse(body);
-
+  const body = await request.json();
+  const values = UpdateCourseSchema.parse(body);
   const { id } = await params;
 
   return NextResponse.json(

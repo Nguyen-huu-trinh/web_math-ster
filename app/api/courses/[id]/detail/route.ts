@@ -18,10 +18,15 @@ export async function GET(
       "studentId"
     ) ?? undefined;
 
-  return NextResponse.json(
-    await courseDetailService.getCourseDetail(
-      id,
-      studentId
-    )
+  const data = await courseDetailService.getCourseDetail(
+    id,
+    studentId
   );
+
+  return NextResponse.json(data, {
+    headers: {
+      // Lưu cache 30 phút (1800s) tại trình duyệt của riêng học sinh này
+      "Cache-Control": "private, max-age=1800, stale-while-revalidate=60",
+    },
+  });
 }

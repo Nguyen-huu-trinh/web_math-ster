@@ -28,7 +28,13 @@ export async function GET(
             );
 
         return NextResponse.json(
-            student
+            student,
+            {
+                headers: {
+                    // Cache private 3 phút (180s) tại trình duyệt của Giáo viên
+                    "Cache-Control": "private, max-age=180, stale-while-revalidate=30",
+                },
+            }
         );
     } catch (error) {
         console.error(

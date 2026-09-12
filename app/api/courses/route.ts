@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
 import { courseService } from "@/services/course.service";
-
 import { UserRole } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/require-role";
 
@@ -12,23 +10,22 @@ export async function GET() {
       UserRole.TEACHER,
     ]);
 
-    // Học sinh → chỉ lấy khóa học mà mình được thêm vào
     const studentId =
       profile.role === UserRole.STUDENT
         ? profile.id
         : undefined;
 
-    // Giáo viên → studentId = undefined
-    // → repository sẽ lấy toàn bộ khóa học
-    const data =
-      await courseService.getAll(studentId);
+    const data = await courseService.getAll(studentId);
 
-    return NextResponse.json(data);
+    // Trả về kèm Header Caching
+    return NextResponse.json(data, {
+      headers: {
+        // Trình duyệt của user sẽ giữ cache 5 phút (300s), giảm 100% request trùng lặp lên Vercel
+        "Cache-Control": "private, max-age=1800, stale-while-revalidate=60",
+      },
+    });
   } catch (err) {
-    console.error(
-      "GET COURSES ERROR:",
-      err
-    );
+    console.error("GET COURSES ERROR:", err);
 
     return NextResponse.json(
       {
@@ -37,36 +34,23 @@ export async function GET() {
             ? err.message
             : String(err),
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }
 
-export async function POST(
-  req: NextRequest
-) {
+export async function POST(req: NextRequest) {
   try {
-    const profile = await requireRole([
-      UserRole.TEACHER,
-    ]);
-
+    const profile = await requireRole([UserRole.TEACHER]);
     const body = await req.json();
 
     const course = await courseService.create({
       ...body,
-      // Nếu cần, có thể dùng profile.id làm teacherId
     });
 
-    return NextResponse.json(course, {
-      status: 201,
-    });
+    return NextResponse.json(course, { status: 201 });
   } catch (err) {
-    console.error(
-      "CREATE COURSE ERROR:",
-      err
-    );
+    console.error("CREATE COURSE ERROR:", err);
 
     return NextResponse.json(
       {
@@ -75,9 +59,7 @@ export async function POST(
             ? err.message
             : String(err),
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }

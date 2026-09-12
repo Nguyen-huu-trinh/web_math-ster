@@ -14,18 +14,12 @@ export async function GET(
     { params }: Context
 ) {
     try {
-        const student =
-            await requireStudent();
-
+        const student = await requireStudent();
         const { id } = await params;
-
-        const supabase =
-            await createClient();
+        const supabase = await createClient();
 
         /*
-         * =====================================================
          * 1. Lấy lesson content
-         * =====================================================
          */
         const {
             data: content,
@@ -46,64 +40,60 @@ export async function GET(
         }
 
         /*
-         * =====================================================
-         * 2. Resource không liên kết exam
-         *
-         * → Cho phép xem bình thường.
-         * =====================================================
+         * Header cache dùng chung cho trường hợp thành công (Cache ngắn 60s)
+         */
+        const cacheHeaders = {
+            "Cache-Control": "private, max-age=60, stale-while-revalidate=30",
+        };
+
+        /*
+         * 2. Resource không liên kết exam → Cho phép xem
          */
         if (!content.exam_id) {
-            return NextResponse.json({
-                allowed: true,
-            });
+            return NextResponse.json(
+                { allowed: true },
+                { headers: cacheHeaders }
+            );
         }
 
         /*
-         * =====================================================
-         * 3. Resource có liên kết exam
-         *
-         * Kiểm tra học sinh đã có ít nhất
-         * một attempt của đúng exam hay chưa.
-         *
-         * KHÔNG yêu cầu submitted_at.
-         * =====================================================
+         * 3. Resource có liên kết exam → Kiểm tra attempt
          */
-const {
-    data: attempt,
-    error: attemptError,
-} = await supabase
-    .from("exam_attempts")
-    .select("id")
-    .eq("student_id", student.id)
-    .eq("exam_id", content.exam_id)
-    .limit(1)
-    .maybeSingle();
+        const {
+            data: attempt,
+            error: attemptError,
+        } = await supabase
+            .from("exam_attempts")
+            .select("id")
+            .eq("student_id", student.id)
+            .eq("exam_id", content.exam_id)
+            .limit(1)
+            .maybeSingle();
 
         if (attemptError) {
             throw attemptError;
         }
 
         /*
-         * =====================================================
          * 4. Đã từng làm exam
-         * =====================================================
          */
         if (attempt) {
-            return NextResponse.json({
-                allowed: true,
-            });
+            return NextResponse.json(
+                { allowed: true },
+                { headers: cacheHeaders }
+            );
         }
 
         /*
-         * =====================================================
          * 5. Chưa từng làm exam
-         * =====================================================
          */
-        return NextResponse.json({
-            allowed: false,
-            message:
-                "Cần làm đề kiểm tra trước khi xem đáp án.",
-        });
+        return NextResponse.json(
+            {
+                allowed: false,
+                message: "Cần làm đề kiểm tra trước khi xem đáp án.",
+            },
+            { headers: cacheHeaders }
+        );
 
     } catch (error) {
         console.error(
@@ -119,9 +109,7 @@ const {
                         ? error.message
                         : "Không thể kiểm tra quyền truy cập.",
             },
-            {
-                status: 500,
-            }
+            { status: 500 }
         );
     }
 }

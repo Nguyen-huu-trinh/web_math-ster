@@ -23,13 +23,20 @@ export async function GET() {
       );
     }
 
-    const rules =
-      await studentRulesService.getAll();
+    const rules = await studentRulesService.getAll();
 
-    return NextResponse.json({
-      success: true,
-      data: rules,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        data: rules,
+      },
+      {
+        headers: {
+          // Cache 1 ngày trên trình duyệt của người dùng (86400s)
+          "Cache-Control": "private, max-age=86400, stale-while-revalidate=3600",
+        },
+      }
+    );
   } catch (error) {
     console.error(
       "[STUDENT RULES GET ERROR]",
@@ -50,9 +57,7 @@ export async function GET() {
   }
 }
 
-export async function POST(
-  request: Request
-) {
+export async function POST(request: Request) {
   try {
     const profile = await requireProfile();
 
@@ -70,11 +75,8 @@ export async function POST(
 
     const body = await request.json();
 
-    const title =
-      body.title?.trim();
-
-    const content =
-      body.content?.trim();
+    const title = body.title?.trim();
+    const content = body.content?.trim();
 
     if (!title) {
       return NextResponse.json(
@@ -100,18 +102,16 @@ export async function POST(
       );
     }
 
-    const rule =
-      await studentRulesService.create({
-        title,
-        content,
-      });
+    const rule = await studentRulesService.create({
+      title,
+      content,
+    });
 
     return NextResponse.json(
       {
         success: true,
         data: rule,
-        message:
-          "Đã thêm nội quy.",
+        message: "Đã thêm nội quy.",
       },
       {
         status: 201,

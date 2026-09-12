@@ -24,7 +24,12 @@ export async function GET() {
         profile.id
       );
 
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        // Cache cá nhân hóa trong 15 phút (900s)
+        "Cache-Control": "private, max-age=900, stale-while-revalidate=60",
+      },
+    });
   } catch (error) {
     console.error(
       "[STUDENT PROGRESS API ERROR]",

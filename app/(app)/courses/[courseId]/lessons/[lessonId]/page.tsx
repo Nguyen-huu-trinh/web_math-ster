@@ -467,46 +467,53 @@ async function openResource(resource: any) {
         />
       </div>
         <div className="flex flex-col gap-5">
-          {/* Video */}
-          <div className="relative aspect-video overflow-hidden rounded-xl border bg-foreground">
-    {/* {firstPdf && (
-  <iframe
-    src={getPdfViewerUrl(firstPdf.file_links?.url)}
-    className="w-full h-[700px] rounded-lg border"
-  />
-)} */}
-
-
-{currentVideo ? (
+{/* Video Container - Giữ nguyên tỷ lệ 100% */}
+<div className="relative aspect-video w-full overflow-hidden rounded-xl border bg-black">
+  {currentVideo ? (
     <>
-  <p className="text-white absolute top-2 left-2 z-50 pointer-events-none">
-    {currentVideo?.title}
-</p>
+      {/* Tiêu đề "Bài giảng" (hoặc tên video) hiển thị rõ nét không bị nền đen che */}
+      <p className="text-white absolute top-3 left-3 z-30 pointer-events-none text-sm font-medium drop-shadow-md">
+        {currentVideo?.title}
+      </p>
 
+      {/* OVERLAY 1: Che góc trên bên trái (Trong suốt, chặn click vào tiêu đề YT) */}
+      <div 
+        className="absolute top-0 left-0 w-2/3 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
+        onClick={(e) => e.stopPropagation()}
+      />
+
+      {/* OVERLAY 2: Che góc dưới bên phải (Nút Watch on YouTube) */}
+      <div 
+        className="absolute bottom-0 right-0 w-64 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
+        onClick={(e) => e.stopPropagation()}
+      />
+
+      {/* OVERLAY 3: Che góc dưới bên trái (Nút Đồng hồ & Share) */}
+      <div 
+        className="absolute bottom-0 left-0 w-44 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
+        onClick={(e) => e.stopPropagation()}
+      />
+
+      {/* Iframe chuẩn kích thước 100% */}
       <iframe
-    key={currentVideo?.id}
-    className="w-full h-full"
-    src={
-        currentVideo?.file_links?.url
-            ? getYoutubeEmbedUrl(
-                currentVideo.file_links.url
-              )
+        key={currentVideo?.id}
+        className="w-full h-full border-0 relative z-10"
+        src={
+          currentVideo?.file_links?.url
+            ? getYoutubeEmbedUrl(currentVideo.file_links.url)
             : undefined
-    }
-    title={currentVideo?.title}
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowFullScreen
-/>
+        }
+        title={currentVideo?.title}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
     </>
-
   ) : (
-               
-              <div className="flex h-full items-center justify-center text-muted-foreground">
-                  No video
-              </div>
-
-          )}
-        </div>
+    <div className="flex h-full items-center justify-center text-muted-foreground">
+      No video
+    </div>
+  )}
+</div>
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Play className="size-3.5"/>

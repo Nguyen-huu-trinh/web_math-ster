@@ -1,13 +1,8 @@
-import { requireProfile } from "@/lib/auth/require-profile";
 import StudentRulesContent from "./student-rules-content";
 
-export default async function StudentRulesPage() {
-  const profile =
-    await requireProfile();
+// Revalidate mỗi 24 giờ (hoặc tùy chọn) để tận dụng CDN Caching
+export const revalidate = 86400;
 
-  return (
-    <StudentRulesContent
-      role={profile.role}
-    />
-  );
+export default function StudentRulesPage() {
+  return <StudentRulesContent />;
 }

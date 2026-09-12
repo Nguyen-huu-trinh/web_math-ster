@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BookOpen,
   ChevronDown,
@@ -26,55 +23,44 @@ import {
 } from "@/services/student-rules-client.service";
 
 import RuleEditor from "@/components/student-rules/rule-editor";
+import { useAuth } from "@/providers/auth-provider";
 
-type UserRole = "STUDENT" | "TEACHER" | "ADMIN";
-
-interface Props {
-  role: UserRole;
-}
-
-export default function StudentRulesPage({ role }: Props) {
+export default function StudentRulesContent() {
+  const { profile, loading: authLoading } = useAuth();
+  const role = profile?.role;
 
   const [openRuleId, setOpenRuleId] = useState<string | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [editingRule, setEditingRule] = useState<StudentRule | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
-const STUDENT_RULES_QUERY_KEY =
-  ["student-rules"] as const;
+  const STUDENT_RULES_QUERY_KEY = ["student-rules"] as const;
 
-const {
-  data: rules = [],
-  isLoading: loading,
-  error: queryError,
-} = useQuery<StudentRule[]>({
-  queryKey: STUDENT_RULES_QUERY_KEY,
-  queryFn: () =>
-    studentRulesClientService.getAll(),
+  const {
+    data: rules = [],
+    isLoading: loading,
+    error: queryError,
+  } = useQuery<StudentRule[]>({
+    queryKey: STUDENT_RULES_QUERY_KEY,
+    queryFn: () => studentRulesClientService.getAll(),
+    staleTime: 30 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  });
 
-  staleTime: 30 * 60 * 1000,
-
-  gcTime: 30 * 60 * 1000,
-});
-
-const error =
-  queryError instanceof Error
-    ? queryError.message
-    : queryError
+  const error =
+    queryError instanceof Error
+      ? queryError.message
+      : queryError
       ? "Không thể tải nội quy."
       : null;
-useEffect(() => {
-  if (
-    rules.length > 0 &&
-    openRuleId === null
-  ) {
-    setOpenRuleId(rules[0].id);
-  }
-}, [rules, openRuleId]);
 
-  
+  useEffect(() => {
+    if (rules.length > 0 && openRuleId === null) {
+      setOpenRuleId(rules[0].id);
+    }
+  }, [rules, openRuleId]);
 
   function toggleRule(id: string) {
     setOpenRuleId((current) => (current === id ? null : id));
@@ -90,9 +76,9 @@ useEffect(() => {
       });
 
       queryClient.setQueryData<StudentRule[]>(
-  STUDENT_RULES_QUERY_KEY,
-  (current = []) => [...current, newRule]
-);
+        STUDENT_RULES_QUERY_KEY,
+        (current = []) => [...current, newRule]
+      );
       setShowEditor(false);
       setOpenRuleId(newRule.id);
 
@@ -133,9 +119,7 @@ useEffect(() => {
         STUDENT_RULES_QUERY_KEY,
         (current = []) =>
           current.map((rule) =>
-            rule.id === updatedRule.id
-              ? updatedRule
-              : rule
+            rule.id === updatedRule.id ? updatedRule : rule
           )
       );
 
@@ -160,13 +144,10 @@ useEffect(() => {
 
       await studentRulesClientService.remove(id);
 
-queryClient.setQueryData<StudentRule[]>(
-  STUDENT_RULES_QUERY_KEY,
-  (current = []) =>
-    current.filter(
-      (rule) => rule.id !== id
-    )
-);
+      queryClient.setQueryData<StudentRule[]>(
+        STUDENT_RULES_QUERY_KEY,
+        (current = []) => current.filter((rule) => rule.id !== id)
+      );
 
       if (openRuleId === id) {
         setOpenRuleId(null);
@@ -218,7 +199,7 @@ queryClient.setQueryData<StudentRule[]>(
           </div>
 
           {/* CHỈ GIÁO VIÊN */}
-          {role === "TEACHER" && (
+          {!authLoading && role === "TEACHER" && (
             <Button
               onClick={() => {
                 setEditingRule(null);
@@ -323,7 +304,7 @@ queryClient.setQueryData<StudentRule[]>(
 
                     {/* RIGHT ACTIONS */}
                     <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-                      {role === "TEACHER" && (
+                      {!authLoading && role === "TEACHER" && (
                         <>
                           <button
                             type="button"
@@ -369,12 +350,12 @@ queryClient.setQueryData<StudentRule[]>(
                   {/* NỘI DUNG MỞ RỘNG */}
                   {isOpen && (
                     <CardContent className="border-t bg-muted/20 px-4 py-4 md:px-5 md:py-5">
-<div
-  className="text-sm leading-7 text-foreground md:text-base [&_*]:!text-foreground [&_a]:!text-primary"
-  dangerouslySetInnerHTML={{
-    __html: rule.content,
-  }}
-/>
+                      <div
+                        className="text-sm leading-7 text-foreground md:text-base [&_*]:!text-foreground [&_a]:!text-primary"
+                        dangerouslySetInnerHTML={{
+                          __html: rule.content,
+                        }}
+                      />
                     </CardContent>
                   )}
                 </Card>

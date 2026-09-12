@@ -1,6 +1,9 @@
 'use client'
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+
 import {
     useTeacherDashboard,
     useActiveStudentCount,
@@ -10,6 +13,8 @@ import {
     useAnnouncement,
     useUpdateAnnouncement,
 } from "@/hooks/use-announcement";
+
+import { useExamAlerts, type ExamAlert, } from "@/hooks/use-exam-alerts";
 
 import { TopStudentsCard } from '@/components/dashboard/top-students-card'
 import { useProcessAttendance } from "@/hooks/use-process-attendance";
@@ -73,27 +78,17 @@ function greeting() {
     return 'Good evening'
 }
 
-type ExamAlert = {
-    id: string;
-    type: "FAILED" | "OVERDUE";
-    studentId: string;
-    studentName: string;
-    studentCode: string | null;
-    examId: string;
-    examTitle: string;
-    attemptId: string | null;
-    score?: number | null;
-    overdueDays?: number;
-    createdAt: string;
-    enrolledAt?: string | null;
-};
+
 
 export default function TeacherDashboard() {
+     const router = useRouter();
     const teacherDashboard = useTeacherDashboard();
+    const [readingAlertId, setReadingAlertId] =
+    useState<string | null>(null);
     const leaderboard = useLeaderboard();
     const announcement = useAnnouncement();
     const activeStudentCount = useActiveStudentCount();
-
+const queryClient = useQueryClient();
     const updateAnnouncement = useUpdateAnnouncement();
     const processAttendance = useProcessAttendance();
     const currentAttendance = useCurrentAttendance();
@@ -103,10 +98,7 @@ const [showTeacherSchedule, setShowTeacherSchedule] =
     const [attendanceCode, setAttendanceCode] = useState("");
     const [content, setContent] = useState("");
 const [showSchedule, setShowSchedule] = useState(false);
-    const [examAlerts, setExamAlerts] = useState<ExamAlert[]>([]);
-    const [loadingExamAlerts, setLoadingExamAlerts] = useState(false);
-    const [readingAlertId, setReadingAlertId] = useState<string | null>(null);
-
+const examAlertsQuery = useExamAlerts();
     useEffect(() => {
         if (announcement.data) {
             setTitle(announcement.data.title);
@@ -114,34 +106,7 @@ const [showSchedule, setShowSchedule] = useState(false);
         }
     }, [announcement.data]);
 
-    async function loadExamAlerts() {
-        try {
-            setLoadingExamAlerts(true);
-            const response = await fetch("/api/teachers/exam-alerts", {
-                method: "GET",
-                cache: "no-store",
-            });
-            const data = await response.json();
 
-            if (!response.ok || !data.success) {
-                throw new Error(data.message ?? "Không thể tải cảnh báo.");
-            }
-            setExamAlerts(data.alerts ?? []);
-        } catch (error) {
-            console.error("LOAD EXAM ALERTS ERROR:", error);
-            toast.error(
-                error instanceof Error
-                    ? error.message
-                    : "Không thể tải cảnh báo kiểm tra."
-            );
-        } finally {
-            setLoadingExamAlerts(false);
-        }
-    }
-
-    useEffect(() => {
-        void loadExamAlerts();
-    }, []);
 
     async function handleReadExamAlert(alert: ExamAlert) {
         try {
@@ -165,9 +130,13 @@ const [showSchedule, setShowSchedule] = useState(false);
                 throw new Error(data.message ?? "Không thể đánh dấu đã xem.");
             }
 
-            setExamAlerts((current) =>
-                current.filter((item) => item.id !== alert.id)
-            );
+queryClient.setQueryData<ExamAlert[]>(
+    ["teacher", "exam-alerts"],
+    (current) =>
+        current?.filter(
+            (item) => item.id !== alert.id
+        ) ?? []
+);
         } catch (error) {
             console.error("READ EXAM ALERT ERROR:", error);
             toast.error(
@@ -290,9 +259,9 @@ const [showSchedule, setShowSchedule] = useState(false);
             className="relative h-9 w-9 rounded-lg"
           >
             <Bell className="h-4 w-4 text-muted-foreground" />
-            {examAlerts.length > 0 && (
+            {(examAlertsQuery.data ?? []).length > 0 && (
               <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground shadow-sm">
-                {examAlerts.length > 99 ? "99+" : examAlerts.length}
+                {(examAlertsQuery.data ?? []).length > 99 ? "99+" : (examAlertsQuery.data ?? []).length}
               </span>
             )}
           </Button>
@@ -410,7 +379,7 @@ const [showSchedule, setShowSchedule] = useState(false);
                             Cảnh báo kiểm tra
                         </h3>
                         <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-600 dark:bg-red-950/40 dark:text-red-400">
-                            {examAlerts.length}
+                            {(examAlertsQuery.data ?? []).length}
                         </span>
                     </div>
                 </div>
@@ -429,21 +398,31 @@ const [showSchedule, setShowSchedule] = useState(false);
             </TableRow>
         </TableHeader>
         <TableBody>
-            {loadingExamAlerts ? (
+           {examAlertsQuery.isLoading ? (
                 <TableRow>
                     <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                         Đang tải dữ liệu cảnh báo...
                     </TableCell>
                 </TableRow>
-            ) : examAlerts.length === 0 ? (
+            ) : (examAlertsQuery.data ?? []).length === 0 ? (
                 <TableRow>
                     <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                         Không có cảnh báo kiểm tra nào.
                     </TableCell>
                 </TableRow>
             ) : (
-                examAlerts.map((alert) => (
-                    <TableRow key={alert.id}>
+               (examAlertsQuery.data ?? []).map((alert) => (
+                    <TableRow
+  key={alert.id}
+  className="cursor-pointer hover:bg-muted/40"
+  onClick={() => {
+    if (!alert.studentId) {
+      return;
+    }
+
+    router.push(`/students/${alert.studentId}`);
+  }}
+>
                         <TableCell className="font-mono text-xs">
                             {alert.studentCode ?? "--"}
                         </TableCell>
@@ -451,16 +430,16 @@ const [showSchedule, setShowSchedule] = useState(false);
                             {alert.studentName}
                         </TableCell>
                         <TableCell className="font-medium">
-  {alert.createdAt ? (() => {
-    const d = new Date(alert.createdAt);
-    const hours = String(d.getHours()).padStart(2, "0");
-    const minutes = String(d.getMinutes()).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
+                        {alert.createdAt ? (() => {
+                            const d = new Date(alert.createdAt);
+                            const hours = String(d.getHours()).padStart(2, "0");
+                            const minutes = String(d.getMinutes()).padStart(2, "0");
+                            const day = String(d.getDate()).padStart(2, "0");
+                            const month = String(d.getMonth() + 1).padStart(2, "0");
 
-    return `${hours}:${minutes} - ${day}/${month}`;
-  })() : "--"}
-</TableCell>
+                            return `${hours}:${minutes} - ${day}/${month}`;
+                        })() : "--"}
+                        </TableCell>
                         <TableCell className="max-w-[200px] truncate">
                             {alert.examTitle}
                         </TableCell>
@@ -486,7 +465,10 @@ const [showSchedule, setShowSchedule] = useState(false);
                                 size="sm"
                                 className="h-8 px-2.5 text-xs"
                                 disabled={readingAlertId === alert.id}
-                                onClick={() => void handleReadExamAlert(alert)}
+                                onClick={(event) => {
+                                event.stopPropagation();
+                                void handleReadExamAlert(alert);
+                                }}
                             >
                                 <Check className="mr-1 h-3.5 w-3.5 text-green-600" />
                                 {readingAlertId === alert.id ? "Lưu..." : "Đã xem"}

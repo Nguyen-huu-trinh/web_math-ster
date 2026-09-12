@@ -8,7 +8,7 @@ export function useProfile(id?: string) {
     queryKey: queryKeys.profile.detail(id ?? "anonymous"),
     queryFn: () => profileClientService.getById(id!),
     enabled: Boolean(id),
-    staleTime: 1000 * 60 * 10,
+    staleTime: 1000 * 60 * 30,
   });
 }
 

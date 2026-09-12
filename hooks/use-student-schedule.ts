@@ -23,7 +23,7 @@ export function useStudentSchedule(
     enabled: Boolean(startDate && endDate),
 
     // Không gọi lại Supabase khi dữ liệu vẫn còn mới.
-    staleTime: 10 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
 
     // Giữ cache 30 phút sau khi không còn component sử dụng.
     gcTime: 30 * 60 * 1000,

@@ -8,7 +8,7 @@ export function useCourses() {
   const query = useQuery<Course[]>({
     queryKey: queryKeys.course.all,
     queryFn: () => courseClientService.getAll(),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 30,
   });
 
   return {

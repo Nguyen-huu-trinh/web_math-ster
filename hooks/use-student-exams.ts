@@ -9,6 +9,6 @@ export function useStudentExams() {
 
     queryFn: () =>
       studentExamClientService.getMyExams(),
-    staleTime: 1000 * 60,
+    staleTime: 1000 * 60*10,
   });
 }

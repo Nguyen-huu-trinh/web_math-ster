@@ -23,7 +23,7 @@ export function useExams() {
   return useQuery({
     queryKey: queryKeys.exam.all,
     queryFn: () => examClientService.getAll(),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 30,
   });
 }
 
@@ -32,7 +32,7 @@ export function useExam(id: string) {
     enabled: !!id,
     queryKey: queryKeys.exam.detail(id),
     queryFn: () => examClientService.getById(id),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 30,
   });
 }
 
@@ -41,7 +41,7 @@ export function useAnswerKey(id: string) {
     enabled: !!id,
     queryKey: queryKeys.exam.answerKey(id),
     queryFn: () => examClientService.getAnswerKey(id),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 30,
   });
 }
 // =========================
@@ -65,7 +65,7 @@ export function useExamPrerequisites(
         examId
       ) as Promise<ExamPrerequisite[]>,
 
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 30,
   });
 }
 // =========================

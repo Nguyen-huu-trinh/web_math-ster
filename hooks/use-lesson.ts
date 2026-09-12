@@ -13,7 +13,7 @@ export function useLesson(
     queryKey: queryKeys.lesson.detail(lessonId),
     queryFn: () => lessonClientService.getById(lessonId),
     enabled: Boolean(lessonId),
-    staleTime: 1000 * 60 * 10,
+    staleTime: 1000 * 60 * 30,
   });
 
   return { ...query, lesson: query.data ?? null, loading: query.isLoading };

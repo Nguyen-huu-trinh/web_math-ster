@@ -319,7 +319,7 @@ export default function LessonClientView({
                   )}
                 </button>
                 <div 
-                  className="absolute bottom-[3px] left-0 right-0 h-[3px] bg-gray-600 z-20 pointer-events-none mix-blend-multiply" 
+                  className="absolute bottom-[3px] left-0 right-0 h-[3px] bg-white/20 z-20 pointer-events-none backdrop-blur-[1px]"
                 />
                 <iframe
                   key={currentVideo?.id}

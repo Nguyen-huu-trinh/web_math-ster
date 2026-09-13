@@ -14,38 +14,34 @@ export interface UpdateLessonDto {
 }
 
 class LessonRepository {
-  // Loại bỏ private property supabase để tránh giữ state client cũ trong closure
-  private getClient() {
-    return createClient();
-  }
+  private supabase = createClient();
 
   async getByChapter(chapterId: string) {
-    const supabase = this.getClient();
-    const { data, error } = await supabase
+    const { data, error } = await this.supabase
       .from("lessons")
-      .select("id, chapter_id, title, order_index, is_active")
+      .select("*")
       .eq("chapter_id", chapterId)
       .order("order_index", { ascending: true });
 
     if (error) throw error;
+
     return data ?? [];
   }
 
   async getById(id: string) {
-    const supabase = this.getClient();
-    const { data, error } = await supabase
+    const { data, error } = await this.supabase
       .from("lessons")
-      .select("id, chapter_id, title, order_index, is_active")
+      .select("*")
       .eq("id", id)
       .single();
 
     if (error) throw error;
+
     return data;
   }
 
   async create(dto: CreateLessonDto) {
-    const supabase = this.getClient();
-    const { data, error } = await supabase
+    const { data, error } = await this.supabase
       .from("lessons")
       .insert({
         chapter_id: dto.chapter_id,
@@ -57,12 +53,15 @@ class LessonRepository {
       .single();
 
     if (error) throw error;
+
     return data;
   }
 
-  async update(id: string, dto: UpdateLessonDto) {
-    const supabase = this.getClient();
-    const { data, error } = await supabase
+  async update(
+    id: string,
+    dto: UpdateLessonDto
+  ) {
+    const { data, error } = await this.supabase
       .from("lessons")
       .update({
         ...dto,
@@ -73,12 +72,12 @@ class LessonRepository {
       .single();
 
     if (error) throw error;
+
     return data;
   }
 
   async delete(id: string) {
-    const supabase = this.getClient();
-    const { error } = await supabase
+    const { error } = await this.supabase
       .from("lessons")
       .delete()
       .eq("id", id);

@@ -1,51 +1,65 @@
 import { NextRequest, NextResponse } from "next/server";
-
 import { courseService } from "@/services/course.service";
-import { UpdateCourseSchema } from "@/validators/course.schema";
+import { UserRole } from "@/lib/auth/roles";
+import { requireRole } from "@/lib/auth/require-role";
 
-interface Props {
-  params: Promise<{
-    id: string;
-  }>;
+export async function GET() {
+  try {
+    const profile = await requireRole([
+      UserRole.STUDENT,
+      UserRole.TEACHER,
+    ]);
+
+    const studentId =
+      profile.role === UserRole.STUDENT
+        ? profile.id
+        : undefined;
+
+    const data = await courseService.getAll(studentId);
+
+    // Trả về kèm Header Caching
+    return NextResponse.json(data, {
+      headers: {
+        // Trình duyệt của user sẽ giữ cache 5 phút (300s), giảm 100% request trùng lặp lên Vercel
+        "Cache-Control": "private, max-age=1800, stale-while-revalidate=600",
+      },
+    });
+  } catch (err) {
+    console.error("GET COURSES ERROR:", err);
+
+    return NextResponse.json(
+      {
+        error:
+          err instanceof Error
+            ? err.message
+            : String(err),
+      },
+      { status: 500 }
+    );
+  }
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: Props
-) {
-  const { id } = await params;
-  const data = await courseService.getById(id);
+export async function POST(req: NextRequest) {
+  try {
+    const profile = await requireRole([UserRole.TEACHER]);
+    const body = await req.json();
 
-  return NextResponse.json(data, {
-    headers: {
-      // Lưu cache 30 phút (1800s) tại trình duyệt của người dùng
-      "Cache-Control": "private, max-age=1800, stale-while-revalidate=60",
-    },
-  });
-}
+    const course = await courseService.create({
+      ...body,
+    });
 
-export async function PUT(
-  request: NextRequest,
-  { params }: Props
-) {
-  const body = await request.json();
-  const values = UpdateCourseSchema.parse(body);
-  const { id } = await params;
+    return NextResponse.json(course, { status: 201 });
+  } catch (err) {
+    console.error("CREATE COURSE ERROR:", err);
 
-  return NextResponse.json(
-    await courseService.update(id, values)
-  );
-}
-
-export async function DELETE(
-  request: NextRequest,
-  { params }: Props
-) {
-  const { id } = await params;
-
-  await courseService.delete(id);
-
-  return NextResponse.json({
-    success: true,
-  });
+    return NextResponse.json(
+      {
+        error:
+          err instanceof Error
+            ? err.message
+            : String(err),
+      },
+      { status: 500 }
+    );
+  }
 }

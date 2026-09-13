@@ -1,18 +1,8 @@
 import { NextResponse } from "next/server";
-
 import { requireStudent } from "@/lib/auth/student";
-
-import {
-  submitExam,
-} from "@/lib/exam/submit/orchestrator";
-
-import {
-  submitContextRepository,
-} from "@/lib/exam/submit/supabase-context-repository";
-
-import type {
-  SubmitReason,
-} from "@/lib/exam/submit/types";
+import { submitExam } from "@/lib/exam/submit/orchestrator";
+import { submitContextRepository } from "@/lib/exam/submit/supabase-context-repository";
+import type { SubmitReason } from "@/lib/exam/submit/types";
 
 interface Context {
   params: Promise<{
@@ -20,240 +10,114 @@ interface Context {
   }>;
 }
 
-// ============================================================
-// POST /api/students/attempts/[id]/submit
-// ============================================================
-
 export async function POST(
   request: Request,
   { params }: Context
 ) {
   try {
-    // ========================================================
-    // 1. AUTH
-    // ========================================================
-
-    const student =
-      await requireStudent();
-
-    // ========================================================
-    // 2. ATTEMPT ID
-    // ========================================================
-
-    const { id: attemptId } =
-      await params;
-
-    if (!attemptId) {
+    // 1. Auth check an toàn (Tránh văng 500 khi hết session)
+    let student;
+    try {
+      student = await requireStudent();
+    } catch {
       return NextResponse.json(
-        {
-          error:
-            "Thiếu mã lượt làm bài.",
-        },
-        {
-          status: 400,
-        }
+        { error: "Unauthorized" },
+        { status: 401 }
       );
     }
 
-    // ========================================================
-    // 3. REQUEST BODY
-    // ========================================================
+    const resolvedParams = await params;
+    const attemptId = resolvedParams?.id;
 
+    if (!attemptId) {
+      return NextResponse.json(
+        { error: "Thiếu mã lượt làm bài." },
+        { status: 400 }
+      );
+    }
+
+    // 2. Parse Payload
     let body: any;
-
     try {
-      body =
-        await request.json();
+      body = await request.json();
     } catch {
       return NextResponse.json(
-        {
-          error:
-            "Dữ liệu gửi lên không hợp lệ.",
-        },
-        {
-          status: 400,
-        }
+        { error: "Dữ liệu gửi lên không hợp lệ." },
+        { status: 400 }
       );
     }
 
     if (!body?.answers) {
       return NextResponse.json(
-        {
-          error:
-            "Không có dữ liệu đáp án.",
-        },
-        {
-          status: 400,
-        }
+        { error: "Không có dữ liệu đáp án." },
+        { status: 400 }
       );
     }
 
-    // ========================================================
-    // 4. SUBMIT REASON
-    // ========================================================
+    const allowedReasons: SubmitReason[] = [
+      "manual",
+      "timeout",
+      "fullscreen_exit",
+      "page_exit",
+    ];
 
-    const allowedReasons: SubmitReason[] =
-      [
-        "manual",
-        "timeout",
-        "fullscreen_exit",
-        "page_exit",
-      ];
+    const reason: SubmitReason = allowedReasons.includes(body.reason)
+      ? body.reason
+      : "manual";
 
-    const reason: SubmitReason =
-      allowedReasons.includes(
-        body.reason
-      )
-        ? body.reason
-        : "manual";
-
-    // ========================================================
-    // 5. SUBMIT ENGINE
-    // ========================================================
-
- 
-
-    const result =
-      await submitExam(
-        {
-          attemptId,
-
-          studentId:
-            student.id,
-
-          answers:
-            body.answers,
-
-          reason,
-        },
-
-        submitContextRepository
-      );
-
-    // ========================================================
-    // 6. SUCCESS
-    // ========================================================
-
-    
+    // 3. Thực thi Orchestrator Chấm Bài
+    const result = await submitExam(
+      {
+        attemptId,
+        studentId: student.id,
+        answers: body.answers,
+        reason,
+      },
+      submitContextRepository
+    );
 
     return NextResponse.json({
       success: true,
-
-      attemptId:
-        result.attempt.id,
-
-      score:
-        result.grading.score,
-
-      isPassed:
-        result.grading.passed,
-
-      alreadySubmitted:
-        result.alreadySubmitted,
-
-      reason:
-        result.reason,
-
-      answers:
-        result.attempt.answers,
+      attemptId: result.attempt.id,
+      score: result.grading.score,
+      isPassed: result.grading.passed,
+      alreadySubmitted: result.alreadySubmitted ?? false,
+      reason: result.reason,
+      answers: result.attempt.answers,
     });
 
-  } catch (error) {
-    // ========================================================
-    // ERROR
-    // ========================================================
+  } catch (error: any) {
+    const message = error instanceof Error ? error.message : String(error);
 
-   
-
-    const message =
-      error instanceof Error
-        ? error.message
-        : String(error);
-
-    // ========================================================
-    // UNAUTHORIZED
-    // ========================================================
-
-    if (
-      message ===
-      "Unauthorized"
-    ) {
+    // 4. Xử lý trường hợp bài làm ĐÃ ĐƯỢC NỘP TRƯỚC ĐÓ (Tránh coi đây là lỗi system 500)
+    if (message === "Bài làm đã được nộp." || message.includes("already submitted")) {
       return NextResponse.json(
         {
-          error:
-            "Unauthorized",
+          success: true,
+          alreadySubmitted: true,
+          message: "Bài làm này đã được hoàn tất trước đó.",
         },
-        {
-          status: 401,
-        }
+        { status: 200 } // Đưa về HTTP 200 Idempotent để Client ngưng retry
       );
     }
 
-    // ========================================================
-    // NOT FOUND
-    // ========================================================
-
-    if (
-      message ===
-      "Không tìm thấy lượt làm bài."
-    ) {
-      return NextResponse.json(
-        {
-          error: message,
-        },
-        {
-          status: 404,
-        }
-      );
+    if (message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // ========================================================
-    // CONFLICT
-    // ========================================================
-
-    if (
-      message ===
-      "Bài làm đã được nộp."
-    ) {
-      return NextResponse.json(
-        {
-          error: message,
-        },
-        {
-          status: 409,
-        }
-      );
+    if (message === "Không tìm thấy lượt làm bài.") {
+      return NextResponse.json({ error: message }, { status: 404 });
     }
 
-    // ========================================================
-    // INVALID TIME
-    // ========================================================
-
-    if (
-      message ===
-      "Không xác định được thời gian làm bài."
-    ) {
-      return NextResponse.json(
-        {
-          error: message,
-        },
-        {
-          status: 409,
-        }
-      );
+    if (message === "Không xác định được thời gian làm bài.") {
+      return NextResponse.json({ error: message }, { status: 400 });
     }
 
-    // ========================================================
-    // GENERIC ERROR
-    // ========================================================
+    console.error("[SUBMIT EXAM SYSTEM ERROR]:", error);
 
     return NextResponse.json(
-      {
-        error: message,
-      },
-      {
-        status: 500,
-      }
+      { error: message || "Lỗi hệ thống khi chấm bài." },
+      { status: 500 }
     );
   }
 }

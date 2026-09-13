@@ -1,19 +1,20 @@
-import { NextResponse } from "next/server";
 import { success } from "@/lib/api/api-response";
 import { handleError } from "@/lib/api/handle-error";
 import { dashboardLeaderboardService } from "@/services/dashboard-leaderboard.service";
+
+// Bật ISR Cache ở cấp độ Route (Cache tại Vercel Edge 5 phút)
+export const revalidate = 300;
 
 export async function GET() {
   try {
     const data = await dashboardLeaderboardService.dashboard();
 
-    // Lấy NextResponse từ helper success và bổ sung Cache Header
     const response = success(data);
 
-    // Cache 5 phút (300s) tại trình duyệt người dùng, stale-while-revalidate 60s
+    // Bật cache public trên Edge CDN thay vì private
     response.headers.set(
       "Cache-Control",
-      "private, max-age=1800, stale-while-revalidate=600"
+      "public, s-maxage=300, stale-while-revalidate=600"
     );
 
     return response;

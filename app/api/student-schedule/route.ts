@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/auth/student";
 import { createClient } from "@/lib/supabase/server";
 
+export const revalidate = 0; // Tránh static cache trên server Vercel
+
 export async function GET(request: Request) {
   try {
     await requireStudent();
@@ -58,8 +60,8 @@ export async function GET(request: Request) {
       },
       {
         headers: {
-          // Cache 15 phút (900s) tại trình duyệt của học sinh
-          "Cache-Control": "private, max-age=1800, stale-while-revalidate=600",
+          // Chuẩn hóa header cache: 15 phút (900s) cho browser, SWR 10 phút
+          "Cache-Control": "private, max-age=900, stale-while-revalidate=600",
         },
       }
     );

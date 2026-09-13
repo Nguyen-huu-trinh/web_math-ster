@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-
 import { requireStudent } from "@/lib/auth/student";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,42 +12,61 @@ export async function GET(
     _request: Request,
     { params }: Context
 ) {
+    const cacheHeaders = {
+        "Cache-Control": "private, max-age=60, stale-while-revalidate=30",
+    };
+
     try {
-        const student = await requireStudent();
-        const { id } = await params;
+        // 1. Kiểm tra auth an toàn
+        let student;
+        try {
+            student = await requireStudent();
+        } catch {
+            return NextResponse.json(
+                { allowed: false, message: "Yêu cầu đăng nhập học sinh." },
+                { status: 401 }
+            );
+        }
+
+        const resolvedParams = await params;
+        const id = resolvedParams?.id;
+
+        if (!id) {
+            return NextResponse.json(
+                { allowed: false, message: "Thiếu ID nội dung bài học." },
+                { status: 400 }
+            );
+        }
+
         const supabase = await createClient();
 
-        /*
-         * 1. Lấy lesson content
-         */
-        const {
-            data: content,
-            error: contentError,
-        } = await supabase
+        // 2. Query gộp: Lấy lesson_content và check attempt của student cùng lúc
+        const { data: content, error: contentError } = await supabase
             .from("lesson_contents")
             .select(`
                 id,
-                title,
                 exam_id,
-                file_link_id
+                exam_attempts!left (
+                    id
+                )
             `)
             .eq("id", id)
-            .single();
+            .eq("exam_attempts.student_id", student.id)
+            .maybeSingle();
 
         if (contentError) {
+            console.error("[SUPABASE QUERY ERROR]", contentError);
             throw contentError;
         }
 
-        /*
-         * Header cache dùng chung cho trường hợp thành công (Cache ngắn 60s)
-         */
-        const cacheHeaders = {
-            "Cache-Control": "private, max-age=60, stale-while-revalidate=30",
-        };
+        if (!content) {
+            return NextResponse.json(
+                { allowed: false, message: "Không tìm thấy tài liệu." },
+                { status: 404 }
+            );
+        }
 
-        /*
-         * 2. Resource không liên kết exam → Cho phép xem
-         */
+        // 3. Nếu tài liệu không gắn với bài thi -> Cho phép truy cập
         if (!content.exam_id) {
             return NextResponse.json(
                 { allowed: true },
@@ -56,37 +74,19 @@ export async function GET(
             );
         }
 
-        /*
-         * 3. Resource có liên kết exam → Kiểm tra attempt
-         */
-        const {
-            data: attempt,
-            error: attemptError,
-        } = await supabase
-            .from("exam_attempts")
-            .select("id")
-            .eq("student_id", student.id)
-            .eq("exam_id", content.exam_id)
-            .limit(1)
-            .maybeSingle();
+        // 4. Nếu tài liệu có bài thi -> Kiểm tra xem student đã làm bài thi chưa
+        const hasAttempted = Array.isArray(content.exam_attempts) 
+            ? content.exam_attempts.length > 0 
+            : Boolean(content.exam_attempts);
 
-        if (attemptError) {
-            throw attemptError;
-        }
-
-        /*
-         * 4. Đã từng làm exam
-         */
-        if (attempt) {
+        if (hasAttempted) {
             return NextResponse.json(
                 { allowed: true },
                 { headers: cacheHeaders }
             );
         }
 
-        /*
-         * 5. Chưa từng làm exam
-         */
+        // 5. Chưa làm bài thi
         return NextResponse.json(
             {
                 allowed: false,
@@ -96,18 +96,12 @@ export async function GET(
         );
 
     } catch (error) {
-        console.error(
-            "CHECK LESSON CONTENT ACCESS ERROR:",
-            error
-        );
+        console.error("CHECK LESSON CONTENT ACCESS ERROR:", error);
 
         return NextResponse.json(
             {
                 allowed: false,
-                message:
-                    error instanceof Error
-                        ? error.message
-                        : "Không thể kiểm tra quyền truy cập.",
+                message: "Không thể kiểm tra quyền truy cập.",
             },
             { status: 500 }
         );

@@ -6,20 +6,25 @@ import { queryKeys } from "@/lib/react-query/query-keys";
 import type { CreateChapterDto } from "@/repositories/chapter.repository";
 import type { CreateLessonDto, UpdateLessonDto } from "@/repositories/lesson.repository";
 
-export function useCourseDetail(
-  courseId: string,
-  studentId?: string
-) {
+export function useCourseDetail(courseId: string, studentId?: string) {
   const query = useQuery({
     queryKey: queryKeys.course.detail(courseId, studentId),
     queryFn: () => courseDetailService.getCourseDetail(courseId, studentId),
     enabled: Boolean(courseId),
-    staleTime: 1000 * 60 * 60,
+    staleTime: 1000 * 60 * 30, // Tối ưu: 30 phút giữ fresh cache
+    gcTime: 1000 * 60 * 60,    // Giữ trong bộ nhớ tạm (Garbage Collection) 1 giờ
   });
 
-  return { ...query, course: query.data ?? null, loading: query.isLoading };
+  return { 
+    ...query, 
+    course: query.data ?? null, 
+    loading: query.isLoading 
+  };
 }
 
+/**
+  Helper Mutation tổng quát hỗ trợ Invalidate chuẩn xác theo prefix key của course
+ */
 function useCourseDetailMutation<TVariables>(
   courseId: string,
   mutationFn: (variables: TVariables) => Promise<unknown>
@@ -28,10 +33,16 @@ function useCourseDetailMutation<TVariables>(
 
   return useMutation({
     mutationFn,
-    onSuccess: () =>
+    onSuccess: () => {
+      // Invalidate tất cả các query có chứa prefix course detail 
+      // bất kể có hay không có studentId
       queryClient.invalidateQueries({
-        queryKey: ["course", courseId],
-      }),
+        predicate: (query) => {
+          const key = query.queryKey;
+          return Array.isArray(key) && key.includes("course") && key.includes(courseId);
+        },
+      });
+    },
   });
 }
 

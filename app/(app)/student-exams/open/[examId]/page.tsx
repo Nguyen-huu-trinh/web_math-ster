@@ -237,7 +237,12 @@ export default async function OpenExamPage({
             ================================================= */}
 
             <div className="mt-2 flex w-full items-center md:mt-0 md:w-auto">
-              <OpenExamContent exam={exam} />
+              <OpenExamContent 
+    exam={{
+      ...exam,
+      examFile: (exam as any).examFile ?? null, 
+    }} 
+  />
             </div>
 
           </CardContent>

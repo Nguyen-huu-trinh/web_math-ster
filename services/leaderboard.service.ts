@@ -1,41 +1,40 @@
-import {
-  leaderboardRepository,
-} from "@/repositories/leaderboard.repository";
+import { leaderboardRepository } from "@/repositories/leaderboard.repository";
+import { cache } from "react";
 
 export class LeaderboardService {
 
-  overall() {
+  // Dùng React cache để deduplicate request trong cùng 1 lần render
+  overall = cache(() => {
     return leaderboardRepository.overall();
-  }
+  });
 
-  latest() {
+  latest = cache(() => {
     return leaderboardRepository.latest();
-  }
+  });
 
-  lazyStudents() {
+  lazyStudents = cache(() => {
     return leaderboardRepository.lazyStudents();
-  }
+  });
 
-  lowHomeworkStudents() {
+  lowHomeworkStudents = cache(() => {
     return leaderboardRepository.lowHomeworkStudents();
-  }
+  });
 
-  hardworkingStudents() {
+  hardworkingStudents = cache(() => {
     return leaderboardRepository.hardworkingStudents();
-  }
+  });
 
-  excellentStudents() {
+  excellentStudents = cache(() => {
     return leaderboardRepository.excellentStudents();
-  }
+  });
 
-  rewardMoneyStudents() {
+  rewardMoneyStudents = cache(() => {
     return leaderboardRepository.rewardMoneyStudents();
-}
+  });
 
-dotrauStudents() {
+  dotrauStudents = cache(() => {
     return leaderboardRepository.doTrauStudents();
-}
+  });
 }
 
-export const leaderboardService =
-  new LeaderboardService();
+export const leaderboardService = new LeaderboardService();

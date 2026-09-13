@@ -1,11 +1,11 @@
-'use client'
+'use client';
 
 import { ResourceDialog } from "@/components/lesson-resources/resource-dialog";
 import { LessonSidebar } from "@/components/lessons/lesson-sidebar";
 import { DeleteResourceDialog } from "@/components/lesson-resources/delete-resource-dialog";
-import { useEffect, useState, useRef } from "react";
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
 import {
   ChevronLeft,
@@ -19,12 +19,12 @@ import {
   Menu,
   Maximize,
   Minimize,
-} from 'lucide-react'
+} from 'lucide-react';
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useAuth } from '@/providers/auth-provider'
-import { toast } from 'sonner'
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/providers/auth-provider';
+import { toast } from 'sonner';
 
 import { useCourseDetail } from "@/hooks/use-course-detail";
 import {
@@ -44,10 +44,9 @@ function getYoutubeEmbedUrl(url?: string) {
   } else if (url.includes("/embed/")) {
     videoId = url.split("/embed/")[1].split("?")[0];
   }
-if (videoId) {
-  // Thêm color=red để ép thanh tua luôn hiển thị rõ nét màu đỏ trên nền trắng
-  return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&fs=0&color=red`;
-}
+  if (videoId) {
+    return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&fs=0&color=red`;
+  }
   return url;
 }
 
@@ -59,13 +58,14 @@ export default function LessonClientView({
   lessonId: string;
 }) {
   const { profile } = useAuth();
-
   const role = profile?.role;
+
   const courseQuery = useCourseDetail(courseId, profile?.id);
   const createLessonContentMutation = useCreateLessonContent(courseId);
   const updateLessonContentMutation = useUpdateLessonContent(courseId);
   const deleteLessonContentMutation = useDeleteLessonContent(courseId);
   const saveLearningProgressMutation = useSaveLearningProgress(courseId);
+
   const course = courseQuery.course;
 
   const [completed, setCompleted] = useState(false);
@@ -75,9 +75,25 @@ export default function LessonClientView({
   const [currentVideo, setCurrentVideo] = useState<any>(null);
   const [showLessonSidebar, setShowLessonSidebar] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  
+
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const resourceAccessCache = useRef<Record<string, boolean>>({});
+
+  // 1. Tối ưu tính toán danh sách bài học với useMemo để tránh chạy lại khi re-render
+  const { allLessons, lessonIndex, lesson, nextLesson, resources } = useMemo(() => {
+    const lessons = course?.chapters?.flatMap((chapter: any) => chapter.lessons) ?? [];
+    const index = lessons.findIndex((l: any) => l.id === lessonId);
+    const current = index >= 0 ? lessons[index] : null;
+    const next = index >= 0 ? lessons[index + 1] : null;
+    const res = current?.contents ?? [];
+    return {
+      allLessons: lessons,
+      lessonIndex: index,
+      lesson: current,
+      nextLesson: next,
+      resources: res,
+    };
+  }, [course, lessonId]);
 
   // Lắng nghe sự kiện đổi trạng thái Fullscreen
   useEffect(() => {
@@ -90,7 +106,20 @@ export default function LessonClientView({
     };
   }, []);
 
-  const toggleFullscreen = () => {
+  useEffect(() => {
+    if (!lesson) return;
+    setCompleted(lesson.progress?.completed ?? lesson.completed ?? false);
+  }, [lesson]);
+
+  useEffect(() => {
+    if (resources.length === 0) return;
+    const video = resources.find((x: any) => x.type === "VIDEO");
+    if (video) {
+      setCurrentVideo(video);
+    }
+  }, [resources]);
+
+  const toggleFullscreen = useCallback(() => {
     if (!videoContainerRef.current) return;
     if (!document.fullscreenElement) {
       videoContainerRef.current.requestFullscreen().catch((err) => {
@@ -99,7 +128,7 @@ export default function LessonClientView({
     } else {
       document.exitFullscreen();
     }
-  };
+  }, []);
 
   async function createResource(values: any) {
     if (!lesson) return;
@@ -155,34 +184,8 @@ export default function LessonClientView({
     }
   }
 
-  const allLessons =
-    course?.chapters?.flatMap((chapter: any) => chapter.lessons) ?? [];
-  const lessonIndex = allLessons.findIndex((l: any) => l.id === lessonId);
-  const lesson = lessonIndex >= 0 ? allLessons[lessonIndex] : null;
-  const nextLesson = lessonIndex >= 0 ? allLessons[lessonIndex + 1] : null;
-  const resources = lesson?.contents ?? [];
-
-  useEffect(() => {
-    if (!lesson) return;
-    setCompleted(lesson.progress?.completed ?? lesson.completed ?? false);
-  }, [lesson]);
-
-  useEffect(() => {
-    if (resources.length === 0) return;
-    const video = resources.find((x: any) => x.type === "VIDEO");
-    if (video) {
-      setCurrentVideo(video);
-    }
-  }, [resources]);
-
-  if (!course) {
-    return <div className="py-20 text-center">Loading...</div>;
-  }
-
-  if (lessonIndex === -1) notFound();
-
   async function completeLesson() {
-    if (!profile) return;
+    if (!profile || !lesson) return;
     if (completed) return;
 
     await saveLearningProgressMutation.mutateAsync({
@@ -256,6 +259,12 @@ export default function LessonClientView({
     await completeLesson();
   }
 
+  if (!course) {
+    return <div className="py-20 text-center">Loading...</div>;
+  }
+
+  if (lessonIndex === -1) notFound();
+
   return (
     <div className="flex flex-col gap-6">
       <Link
@@ -281,25 +290,22 @@ export default function LessonClientView({
                   {currentVideo?.title}
                 </p>
 
-{/* 1. Che góc trên bên trái (Thu hẹp w-80 để KHÔNG che các nút Loa, CC, Cài đặt ở góc trên bên phải) */}
+                {/* Giữ nguyên Lớp phủ che YouTube UI */}
                 <div
                   className="absolute top-0 left-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
                   onClick={(e) => e.stopPropagation()}
                 />
 
-                {/* 2. Che góc dưới trái (Giữ nguyên như đoạn trước) */}
                 <div
                   className="absolute bottom-0 left-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
                   onClick={(e) => e.stopPropagation()}
                 />
 
-                {/* 3. Che kín góc dưới phải (Giữ nguyên sát mép right-0 như đoạn trước) */}
                 <div
                   className="absolute bottom-0 right-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
                   onClick={(e) => e.stopPropagation()}
                 />
 
-                {/* Nút Fullscreen Custom (Giữ nguyên z-30) */}
                 <button
                   type="button"
                   onClick={toggleFullscreen}
@@ -312,9 +318,9 @@ export default function LessonClientView({
                     <Maximize className="size-4" />
                   )}
                 </button>
-<div 
-  className="absolute bottom-[3px] left-0 right-0 h-[3px] bg-gray-600 z-20 pointer-events-none mix-blend-multiply" 
-/>
+                <div 
+                  className="absolute bottom-[3px] left-0 right-0 h-[3px] bg-gray-600 z-20 pointer-events-none mix-blend-multiply" 
+                />
                 <iframe
                   key={currentVideo?.id}
                   className="w-full h-full border-0 relative z-10"

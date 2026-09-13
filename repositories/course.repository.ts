@@ -8,83 +8,50 @@ export interface CreateCourseDto {
 }
 
 export class CourseRepository {
- async getAll(studentId?: string) {
-  try {
-    const supabase = await createClient();
+  async getAll(studentId?: string) {
+    try {
+      const supabase = await createClient();
 
-    // =====================================================
-    // HỌC SINH
-    // Chỉ lấy những course mà học sinh đã được thêm vào
-    // =====================================================
-
-    if (studentId) {
-      const {
-        data: courseStudents,
-        error: courseStudentError,
-      } = await supabase
-        .from("course_students")
-        .select("course_id")
-        .eq("student_id", studentId);
-
-      if (courseStudentError) {
-        throw courseStudentError;
-      }
-
-      const courseIds =
-        courseStudents?.map(
-          (item) => item.course_id
-        ) ?? [];
-
-      // Học sinh chưa được thêm vào khóa học nào
-      if (courseIds.length === 0) {
-        return [];
-      }
-
-      const { data, error } =
-        await supabase
-          .from("courses")
+      // HỌC SINH: Dùng Query trực tiếp bằng INNER JOIN/Filter tối ưu Postgres Plan
+      if (studentId) {
+        const { data, error } = await supabase
+          .from("course_students")
           .select(`
-            id,
-            name,
-            description,
-            thumbnail_url,
-            is_active,
-            deleted_at,
-            created_at,
-            updated_at
+            courses!inner (
+              id,
+              name,
+              description,
+              thumbnail_url,
+              is_active,
+              deleted_at,
+              created_at,
+              updated_at
+            )
           `)
-          .in("id", courseIds)
-          .eq("is_active", true)
-          .is("deleted_at", null)
-          .order("created_at", {
-            ascending: true,
-          });
+          .eq("student_id", studentId)
+          .eq("courses.is_active", true)
+          .is("courses.deleted_at", null);
 
-      if (error) {
-        throw error;
+        if (error) throw error;
+
+        // Flatten dữ liệu từ Relation
+        return (data ?? []).map((item: any) => {
+          const course = item.courses;
+          return {
+            ...course,
+            title: course.name,
+            thumbnail: course.thumbnail_url,
+            category: "",
+            teacher: "",
+            progress: 0,
+            totalLessons: 0,
+            chapters: [],
+          };
+        });
       }
 
-      return (data ?? []).map((course) => ({
-        ...course,
-
-        // UI Compatibility
-        title: course.name,
-        thumbnail: course.thumbnail_url,
-        category: "",
-        teacher: "",
-        progress: 0,
-        totalLessons: 0,
-        chapters: [],
-      }));
-    }
-
-    // =====================================================
-    // GIÁO VIÊN
-    // Không có studentId → lấy toàn bộ khóa học
-    // =====================================================
-
-    const { data, error } =
-      await supabase
+      // GIÁO VIÊN: Lấy toàn bộ khóa học chưa bị xóa
+      const { data, error } = await supabase
         .from("courses")
         .select(`
           id,
@@ -97,34 +64,25 @@ export class CourseRepository {
           updated_at
         `)
         .is("deleted_at", null)
-        .order("created_at", {
-          ascending: true,
-        });
+        .order("created_at", { ascending: true });
 
-    if (error) {
-      throw error;
+      if (error) throw error;
+
+      return (data ?? []).map((course) => ({
+        ...course,
+        title: course.name,
+        thumbnail: course.thumbnail_url,
+        category: "",
+        teacher: "",
+        progress: 0,
+        totalLessons: 0,
+        chapters: [],
+      }));
+    } catch (err) {
+      console.error("CourseRepository.getAll()", err);
+      throw err;
     }
-
-    return (data ?? []).map((course) => ({
-      ...course,
-
-      title: course.name,
-      thumbnail: course.thumbnail_url,
-      category: "",
-      teacher: "",
-      progress: 0,
-      totalLessons: 0,
-      chapters: [],
-    }));
-  } catch (err) {
-    console.error(
-      "CourseRepository.getAll()",
-      err
-    );
-
-    throw err;
   }
-}
 
   async getById(id: string) {
     const supabase = await createClient();
@@ -136,13 +94,10 @@ export class CourseRepository {
       .single();
 
     if (error) throw error;
-
     if (!data) return null;
 
     return {
       ...data,
-
-      // ===== UI Compatibility =====
       title: data.name,
       thumbnail: data.thumbnail_url,
       category: "",
@@ -163,14 +118,10 @@ export class CourseRepository {
       .single();
 
     if (error) throw error;
-
     return data;
   }
 
-  async update(
-    id: string,
-    values: Partial<CreateCourseDto>
-  ) {
+  async update(id: string, values: Partial<CreateCourseDto>) {
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -181,7 +132,6 @@ export class CourseRepository {
       .single();
 
     if (error) throw error;
-
     return data;
   }
 
@@ -211,17 +161,10 @@ export class CourseRepository {
       .single();
 
     if (error) throw error;
-
     return data;
   }
 }
 
-export const courseRepository =
-  new CourseRepository();
+export const courseRepository = new CourseRepository();
 
-export type CourseEntity =
-  Awaited<
-    ReturnType<
-      CourseRepository["getById"]
-    >
-  >;
+export type CourseEntity = Awaited<ReturnType<CourseRepository["getById"]>>;

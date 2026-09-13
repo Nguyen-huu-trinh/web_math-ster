@@ -1,72 +1,26 @@
-import {
-  leaderboardService,
-} from "./leaderboard.service";
+import { leaderboardRepository } from "@/repositories/leaderboard.repository";
 
 export class DashboardLeaderboardService {
+  private cache: any = null;
+  private lastFetchTime = 0;
+  private readonly CACHE_TTL = 60 * 60 * 1000; // 5 phút
 
   async dashboard() {
+    const now = Date.now();
 
-    const [
+    // 1. Trả về In-Memory Cache ngay lập tức nếu chưa hết hạn 5 phút (0ms Active CPU)
+    if (this.cache && now - this.lastFetchTime < this.CACHE_TTL) {
+      return this.cache;
+    }
 
-      overall,
+    // 2. Gọi hàm repository gom nhóm truy vấn
+    const data = await leaderboardRepository.getDashboardData();
 
-      latest,
+    this.cache = data;
+    this.lastFetchTime = now;
 
-      lazy,
-
-      lowHomework,
-
-      hardworking,
-
-      excellent,
-
-      rewardMoney,
-
-      dotrau,
-
-    ] = await Promise.all([
-
-      leaderboardService.overall(),
-
-      leaderboardService.latest(),
-
-      leaderboardService.lazyStudents(),
-
-      leaderboardService.lowHomeworkStudents(),
-
-      leaderboardService.hardworkingStudents(),
-
-      leaderboardService.excellentStudents(),
-
-      leaderboardService.rewardMoneyStudents(),
-
-      leaderboardService.dotrauStudents(),
-
-
-    ]);
-
-    return {
-
-      overall,
-
-      latest,
-
-      lazy,
-
-      lowHomework,
-
-      hardworking,
-
-      excellent,
-
-      rewardMoney,
-
-      dotrau,
-    };
-
+    return this.cache;
   }
-
 }
 
-export const dashboardLeaderboardService =
-  new DashboardLeaderboardService();
+export const dashboardLeaderboardService = new DashboardLeaderboardService();

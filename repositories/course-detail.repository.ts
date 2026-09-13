@@ -1,141 +1,100 @@
 import { createClient } from "@/lib/supabase/client";
 
+// Định nghĩa kiểu dữ liệu cho Lesson kèm thuộc tính completed
+export interface LessonDetail {
+  id: string;
+  title: string;
+  order_index: number;
+  is_active: boolean;
+  completed?: boolean;
+}
+
+export interface ChapterDetail {
+  id: string;
+  title: string;
+  order_index: number;
+  lessons: LessonDetail[];
+}
+
 export class CourseDetailRepository {
-  async get(
-    courseId: string,
-    studentId?: string
-  ) {
+  async get(courseId: string, studentId?: string) {
     const supabase = createClient();
 
-    const { data, error } = await supabase
+    const { data: course, error } = await supabase
       .from("courses")
       .select(`
-        *,
+        id,
+        name,
+        description,
+        thumbnail_url,
+        is_active,
         chapters (
-          *,
+          id,
+          title,
+          order_index,
           lessons (
-            *,
-            lesson_contents (
-              *,
-              file_links (*)
-            )
+            id,
+            title,
+            order_index,
+            is_active
           )
         )
       `)
       .eq("id", courseId)
+      .order("order_index", { referencedTable: "chapters", ascending: true })
+      .order("order_index", { referencedTable: "chapters.lessons", ascending: true })
       .single();
 
     if (error) throw error;
-    if (!data) return null;
+    if (!course) return null;
 
-    data.chapters =
-      (data.chapters ?? []).sort(
-        (a: any, b: any) =>
-          a.order_index - b.order_index
+    // Ep kiểu dữ liệu cho chapters để TypeScript nhận diện thuộc tính completed
+    const chapters = (course.chapters ?? []) as unknown as ChapterDetail[];
+    const allLessons = chapters.flatMap((chapter) => chapter.lessons ?? []);
+    const totalLessons = allLessons.length;
+
+    let completedCount = 0;
+
+    if (studentId && totalLessons > 0) {
+      const lessonIds = allLessons.map((lesson) => lesson.id);
+
+      const { data: progressList } = await supabase
+        .from("lesson_progress")
+        .select("lesson_id, is_completed")
+        .eq("student_id", studentId)
+        .in("lesson_id", lessonIds);
+
+      const progressMap = new Map<string, boolean>(
+        progressList?.map((p: any) => [p.lesson_id, p.is_completed]) ?? []
       );
 
-    for (const chapter of data.chapters) {
-
-      chapter.lessons =
-        (chapter.lessons ?? []).sort(
-          (a: any, b: any) =>
-            a.order_index - b.order_index
-        );
-
-      for (const lesson of chapter.lessons) {
-
-        lesson.contents =
-          (lesson.lesson_contents ?? []).sort(
-            (a: any, b: any) =>
-              a.order_index - b.order_index
-          );
-
-        delete lesson.lesson_contents;
-
-        lesson.videos =
-          lesson.contents.filter(
-            (x: any) => x.type === "video"
-          );
-
-        lesson.documents =
-          lesson.contents.filter(
-            (x: any) => x.type === "document"
-          );
-
-        lesson.completed = false;
-      }
-    }
-
-    if (studentId) {
-
-      const lessonIds =
-        data.chapters.flatMap((chapter: any) =>
-          chapter.lessons.map(
-            (lesson: any) => lesson.id
-          )
-        );
-
-      if (lessonIds.length) {
-
-        const {
-          data: progress,
-        } = await supabase
-          .from("lesson_progress")
-          .select("*")
-          .eq("student_id", studentId)
-          .in("lesson_id", lessonIds);
-
-        for (const chapter of data.chapters) {
-
-          for (const lesson of chapter.lessons) {
-
-            lesson.progress =
-              progress?.find(
-                (p: any) =>
-                  p.lesson_id === lesson.id
-              );
-
-            lesson.completed =
-              !!lesson.progress?.is_completed;
-
-          }
-
+      for (const chapter of chapters) {
+        for (const lesson of chapter.lessons ?? []) {
+          const isCompleted = progressMap.get(lesson.id) ?? false;
+          lesson.completed = isCompleted; // TypeScript không còn báo lỗi tại đây
+          if (isCompleted) completedCount++;
         }
-
       }
-
+    } else {
+      for (const chapter of chapters) {
+        for (const lesson of chapter.lessons ?? []) {
+          lesson.completed = false; // TypeScript không còn báo lỗi tại đây
+        }
+      }
     }
 
-    const allLessons =
-      data.chapters.flatMap(
-        (c: any) => c.lessons
-      );
-
-    const completed =
-      allLessons.filter(
-        (l: any) => l.completed
-      ).length;
-
-    data.totalLessons =
-      allLessons.length;
-
-    data.progress =
-      data.totalLessons === 0
-        ? 0
-        : Math.round(
-            completed /
-              data.totalLessons *
-              100
-          );
-
-    data.thumbnail =
-      data.thumbnail_url;
-
-    data.teacher = "";
-
-    return data;
+    return {
+      id: course.id,
+      name: course.name,
+      description: course.description,
+      thumbnail_url: course.thumbnail_url,
+      is_active: course.is_active,
+      chapters,
+      totalLessons,
+      progress: totalLessons === 0 ? 0 : Math.round((completedCount / totalLessons) * 100),
+      teacher: "",
+    };
   }
 }
 
-export const courseDetailRepository =
-  new CourseDetailRepository();
+export const courseDetailRepository = new CourseDetailRepository();

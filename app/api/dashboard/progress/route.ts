@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-
 import { requireProfile } from "@/lib/auth/require-profile";
 import { UserRole } from "@/lib/auth/roles";
 import { studentExamRepository } from "@/repositories/student-exam.repository";
+
+export const revalidate = 0; // Đảm bảo luôn lấy dữ liệu mới nhất khi không cache browser
 
 export async function GET() {
   try {
@@ -10,31 +11,21 @@ export async function GET() {
 
     if (profile.role !== UserRole.STUDENT) {
       return NextResponse.json(
-        {
-          message: "Chỉ học sinh mới có thể xem dữ liệu này.",
-        },
-        {
-          status: 403,
-        }
+        { message: "Chỉ học sinh mới có thể xem dữ liệu này." },
+        { status: 403 }
       );
     }
 
-    const data =
-      await studentExamRepository.getPeriodicProgress(
-        profile.id
-      );
+    const data = await studentExamRepository.getPeriodicProgress(profile.id);
 
     return NextResponse.json(data, {
       headers: {
-        // Cache cá nhân hóa trong 15 phút (900s)
-        "Cache-Control": "private, max-age=1800, stale-while-revalidate=600",
+        // Cache phía Browser 5 phút (300s), CDN revalidate trong 10 phút (600s)
+        "Cache-Control": "private, max-age=300, stale-while-revalidate=600",
       },
     });
   } catch (error) {
-    console.error(
-      "[STUDENT PROGRESS API ERROR]",
-      error
-    );
+    console.error("[STUDENT PROGRESS API ERROR]", error);
 
     return NextResponse.json(
       {
@@ -43,9 +34,7 @@ export async function GET() {
             ? error.message
             : "Không thể lấy dữ liệu tiến bộ.",
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }

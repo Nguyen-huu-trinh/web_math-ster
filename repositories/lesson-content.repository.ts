@@ -18,68 +18,76 @@ export interface UpdateLessonContentDto {
 }
 
 export interface LessonContent {
+  id: string;
+  lesson_id: string;
+  title: string;
+  type: "VIDEO" | "PDF" | "EXAM";
+  order_index: number;
+  file_link_id: string | null;
+  exam_id: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  file_links: {
     id: string;
-    lesson_id: string;
     title: string;
-    type: "VIDEO" | "PDF" | "EXAM";
-    order_index: number;
-    file_link_id: string | null;
-    exam_id: string | null;
-    created_at: string | null;
-    updated_at: string | null;
-    file_links: {
-        id: string;
-        title: string;
-        provider: string;
-        url: string;
-        created_at?: string | null;
-        updated_at?: string | null;
-    } | null;
+    provider: string;
+    url: string;
+    created_at?: string | null;
+    updated_at?: string | null;
+  } | null;
 }
-
 
 class LessonContentRepository {
-  private supabase = createClient();
+  private getClient() {
+    return createClient();
+  }
 
   async getByLesson(lessonId: string) {
-    const { data, error } =
-        await this.supabase
-            .from("lesson_contents")
-            .select(`
-                *,
-                file_links(*)
-            `)
-            .eq("lesson_id", lessonId)
-            .order("order_index");
+    const supabase = this.getClient();
+    const { data, error } = await supabase
+      .from("lesson_contents")
+      .select(`
+        id,
+        lesson_id,
+        title,
+        type,
+        order_index,
+        file_link_id,
+        exam_id,
+        created_at,
+        updated_at,
+        file_links (
+          id,
+          title,
+          provider,
+          url
+        )
+      `)
+      .eq("lesson_id", lessonId)
+      .order("order_index", { ascending: true });
 
     if (error) throw error;
-
-    return data as LessonContent[];
-}
+    return (data ?? []) as unknown as LessonContent[];
+  }
 
   async create(values: CreateLessonContentDto) {
-    console.log("CREATE RESOURCE", values);
+    const supabase = this.getClient();
 
-    // 1. Create file link
-    const { data: fileLink, error: fileError } = await this.supabase
+    // 1. Tạo file link
+    const { data: fileLink, error: fileError } = await supabase
       .from("file_links")
       .insert({
         title: values.title,
         provider: values.provider,
         url: values.url,
       })
-      .select()
+      .select("id")
       .single();
 
-    if (fileError) {
-      console.error("FILE LINK ERROR", fileError);
-      throw fileError;
-    }
+    if (fileError) throw fileError;
 
-    console.log("FILE LINK CREATED", fileLink);
-
-    // 2. Create lesson content
-    const { data, error } = await this.supabase
+    // 2. Tạo lesson content
+    const { data, error } = await supabase
       .from("lesson_contents")
       .insert({
         lesson_id: values.lesson_id,
@@ -90,114 +98,97 @@ class LessonContentRepository {
       })
       .select(`
         *,
-        file_links(*)
+        file_links (*)
       `)
       .single();
 
     if (error) {
-      console.error("LESSON CONTENT ERROR", error);
-
-      // rollback
-      await this.supabase
-        .from("file_links")
-        .delete()
-        .eq("id", fileLink.id);
-
+      // Rollback file_link nếu tạo content thất bại
+      await supabase.from("file_links").delete().eq("id", fileLink.id);
       throw error;
     }
 
-    console.log("LESSON CONTENT CREATED", data);
-
-    return data;
+    return data as unknown as LessonContent;
   }
 
-  async update(
-    id: string,
-    values: UpdateLessonContentDto
-  ) {
-    console.log("UPDATE RESOURCE", values);
+  async update(id: string, values: UpdateLessonContentDto) {
+    const supabase = this.getClient();
 
-    const { data: current, error: currentError } =
-      await this.supabase
-        .from("lesson_contents")
-        .select("file_link_id")
-        .eq("id", id)
-        .single();
+    // Tối ưu: Lấy file_link_id và update lesson_contents cùng 1 bước select
+    const { data: updatedContent, error: contentError } = await supabase
+      .from("lesson_contents")
+      .update({
+        title: values.title,
+        type: values.type,
+        order_index: values.order_index,
+      })
+      .eq("id", id)
+      .select("file_link_id")
+      .single();
 
-    if (currentError) throw currentError;
+    if (contentError) throw contentError;
 
-    if (!current)
-      throw new Error("Resource not found");
-
-    // update file link
-    const { error: fileError } =
-      await this.supabase
+    // Cập nhật thông tin file_link song song nếu có liên kết
+    if (updatedContent?.file_link_id) {
+      const { error: fileError } = await supabase
         .from("file_links")
         .update({
-          title: values.title,
-          provider: values.provider,
-          url: values.url,
+          ...(values.title && { title: values.title }),
+          ...(values.provider && { provider: values.provider }),
+          ...(values.url && { url: values.url }),
         })
-        .eq("id", current.file_link_id);
+        .eq("id", updatedContent.file_link_id);
 
-    if (fileError) throw fileError;
+      if (fileError) throw fileError;
+    }
 
-    // update lesson content
-    const { data, error } =
-      await this.supabase
-        .from("lesson_contents")
-        .update({
-          title: values.title,
-          type: values.type,
-          order_index: values.order_index,
-        })
-        .eq("id", id)
-        .select(`
-          *,
-          file_links(*)
-        `)
-        .single();
-
-    if (error) throw error;
-
-    console.log("RESOURCE UPDATED", data);
-
-    return data;
+    // Trả về dữ liệu mới nhất
+    return this.getByLessonContentId(id);
   }
 
   async delete(id: string) {
-    console.log("DELETE RESOURCE", id);
+    const supabase = this.getClient();
 
-    const { data: current, error: currentError } =
-      await this.supabase
-        .from("lesson_contents")
-        .select("file_link_id")
-        .eq("id", id)
-        .single();
-
-    if (currentError) throw currentError;
+    // Tối ưu: Lấy file_link_id trước khi xóa
+    const { data: current } = await supabase
+      .from("lesson_contents")
+      .select("file_link_id")
+      .eq("id", id)
+      .maybeSingle();
 
     if (!current) return;
 
-    const { error: lessonError } =
-      await this.supabase
-        .from("lesson_contents")
-        .delete()
-        .eq("id", id);
+    // Xóa lesson content
+    const { error: lessonError } = await supabase
+      .from("lesson_contents")
+      .delete()
+      .eq("id", id);
 
     if (lessonError) throw lessonError;
 
-    const { error: fileError } =
-      await this.supabase
+    // Xóa liên kết file_link ngay sau đó
+    if (current.file_link_id) {
+      await supabase
         .from("file_links")
         .delete()
         .eq("id", current.file_link_id);
+    }
+  }
 
-    if (fileError) throw fileError;
+  private async getByLessonContentId(id: string) {
+    const supabase = this.getClient();
+    const { data, error } = await supabase
+      .from("lesson_contents")
+      .select(`
+        *,
+        file_links (*)
+      `)
+      .eq("id", id)
+      .single();
 
-    console.log("RESOURCE DELETED");
+    if (error) throw error;
+    return data as unknown as LessonContent;
   }
 }
 
-export const lessonContentRepository =
-  new LessonContentRepository();
+export const lessonContentRepository = new LessonContentRepository();

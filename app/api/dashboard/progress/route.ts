@@ -27,7 +27,7 @@ export async function GET() {
     return NextResponse.json(data, {
       headers: {
         // Cache cá nhân hóa trong 15 phút (900s)
-        "Cache-Control": "private, max-age=900, stale-while-revalidate=60",
+        "Cache-Control": "private, max-age=1800, stale-while-revalidate=600",
       },
     });
   } catch (error) {

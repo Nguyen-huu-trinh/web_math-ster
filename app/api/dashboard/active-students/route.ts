@@ -11,7 +11,7 @@ export async function GET() {
     // Cache 3 phút (180s) tại trình duyệt, revalidate sau 60s
     response.headers.set(
       "Cache-Control",
-      "private, max-age=3000, stale-while-revalidate=60"
+      "private, max-age=3000, stale-while-revalidate=600"
     );
 
     return response;

@@ -59,7 +59,7 @@ export async function GET(request: Request) {
       {
         headers: {
           // Cache 15 phút (900s) tại trình duyệt của học sinh
-          "Cache-Control": "private, max-age=1800, stale-while-revalidate=60",
+          "Cache-Control": "private, max-age=1800, stale-while-revalidate=600",
         },
       }
     );

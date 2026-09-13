@@ -13,7 +13,7 @@ export async function GET() {
     // Cache 5 phút (300s) tại trình duyệt người dùng, stale-while-revalidate 60s
     response.headers.set(
       "Cache-Control",
-      "private, max-age=1800, stale-while-revalidate=60"
+      "private, max-age=1800, stale-while-revalidate=600"
     );
 
     return response;

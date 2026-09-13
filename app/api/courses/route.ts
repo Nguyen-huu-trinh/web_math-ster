@@ -21,7 +21,7 @@ export async function GET() {
     return NextResponse.json(data, {
       headers: {
         // Trình duyệt của user sẽ giữ cache 5 phút (300s), giảm 100% request trùng lặp lên Vercel
-        "Cache-Control": "private, max-age=1800, stale-while-revalidate=60",
+        "Cache-Control": "private, max-age=1800, stale-while-revalidate=600",
       },
     });
   } catch (err) {

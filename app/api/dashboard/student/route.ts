@@ -11,7 +11,7 @@ export async function GET() {
   return NextResponse.json(data, {
     headers: {
       // Trình duyệt của học sinh lưu cache 3 phút (180s)
-      "Cache-Control": "private, max-age=1800, stale-while-revalidate=60",
+      "Cache-Control": "private, max-age=1800, stale-while-revalidate=600",
     },
   });
 }

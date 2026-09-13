@@ -608,7 +608,7 @@
 import CourseClientView from "./course-client-view";
 
 // Cấu hình ISR: Cache lại HTML trên Vercel CDN trong 1 giờ (3600 giây)
-export const revalidate = 3600;
+export const revalidate = 7200;
 
 export default async function CourseDetailPage({
   params,

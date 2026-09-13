@@ -840,7 +840,7 @@
 import LessonClientView from "./lesson-client-view";
 
 // Cho phép Vercel Edge Server cache lại trang tĩnh này trong 1 giờ (3600s)
-export const revalidate = 3600;
+export const revalidate = 7200;
 
 export default async function LessonPage({
   params,

@@ -3,7 +3,6 @@
 import { ResourceDialog } from "@/components/lesson-resources/resource-dialog";
 import { LessonSidebar } from "@/components/lessons/lesson-sidebar";
 import { DeleteResourceDialog } from "@/components/lesson-resources/delete-resource-dialog";
-import { LessonLayout } from "@/components/layout/lesson-layout";
 import { useEffect, useState, useRef } from "react";
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -11,23 +10,19 @@ import { notFound } from 'next/navigation'
 import {
   ChevronLeft,
   FileText,
-  Download,
-  ClipboardList,
   CircleCheckBig,
   Circle,
   Play,
   ArrowRight,
   Pencil,
   Trash2,
-  BookOpen,
   Menu,
+  Maximize,
+  Minimize,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { cn } from '@/lib/utils'
 import { useAuth } from '@/providers/auth-provider'
 import { toast } from 'sonner'
 
@@ -49,13 +44,13 @@ function getYoutubeEmbedUrl(url?: string) {
   } else if (url.includes("/embed/")) {
     videoId = url.split("/embed/")[1].split("?")[0];
   }
-  if (videoId) {
-    return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`;
-  }
+if (videoId) {
+  // Thêm color=red để ép thanh tua luôn hiển thị rõ nét màu đỏ trên nền trắng
+  return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&fs=0&color=red`;
+}
   return url;
 }
 
-// KHÁC BIỆT CHÍNH: Nhận courseId và lessonId qua props trực tiếp
 export default function LessonClientView({
   courseId,
   lessonId,
@@ -79,7 +74,32 @@ export default function LessonClientView({
   const [selectedResource, setSelectedResource] = useState<any>(null);
   const [currentVideo, setCurrentVideo] = useState<any>(null);
   const [showLessonSidebar, setShowLessonSidebar] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  const videoContainerRef = useRef<HTMLDivElement>(null);
   const resourceAccessCache = useRef<Record<string, boolean>>({});
+
+  // Lắng nghe sự kiện đổi trạng thái Fullscreen
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!videoContainerRef.current) return;
+    if (!document.fullscreenElement) {
+      videoContainerRef.current.requestFullscreen().catch((err) => {
+        console.error("Error attempting to enable fullscreen:", err);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
 
   async function createResource(values: any) {
     if (!lesson) return;
@@ -251,24 +271,50 @@ export default function LessonClientView({
           <LessonSidebar course={course} currentLessonId={lesson.id} />
         </div>
         <div className="flex flex-col gap-5">
-          <div className="relative aspect-video w-full overflow-hidden rounded-xl border bg-black">
+          <div
+            ref={videoContainerRef}
+            className="relative aspect-video w-full overflow-hidden rounded-xl border bg-black group"
+          >
             {currentVideo ? (
               <>
                 <p className="text-white absolute top-3 left-3 z-30 pointer-events-none text-sm font-medium drop-shadow-md">
                   {currentVideo?.title}
                 </p>
+
+{/* 1. Che góc trên bên trái (Thu hẹp w-80 để KHÔNG che các nút Loa, CC, Cài đặt ở góc trên bên phải) */}
                 <div
-                  className="absolute top-0 left-0 w-2/3 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
+                  className="absolute top-0 left-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
                   onClick={(e) => e.stopPropagation()}
                 />
+
+                {/* 2. Che góc dưới trái (Giữ nguyên như đoạn trước) */}
                 <div
-                  className="absolute bottom-0 right-0 w-64 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
+                  className="absolute bottom-0 left-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
                   onClick={(e) => e.stopPropagation()}
                 />
+
+                {/* 3. Che kín góc dưới phải (Giữ nguyên sát mép right-0 như đoạn trước) */}
                 <div
-                  className="absolute bottom-0 left-0 w-44 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
+                  className="absolute bottom-0 right-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
                   onClick={(e) => e.stopPropagation()}
                 />
+
+                {/* Nút Fullscreen Custom (Giữ nguyên z-30) */}
+                <button
+                  type="button"
+                  onClick={toggleFullscreen}
+                  className="absolute bottom-3 right-3 z-30 p-2 text-white bg-black/60 hover:bg-black/90 rounded-md transition-all pointer-events-auto"
+                  title={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
+                >
+                  {isFullscreen ? (
+                    <Minimize className="size-4" />
+                  ) : (
+                    <Maximize className="size-4" />
+                  )}
+                </button>
+<div 
+  className="absolute bottom-[3px] left-0 right-0 h-[3px] bg-gray-600 z-20 pointer-events-none mix-blend-multiply" 
+/>
                 <iframe
                   key={currentVideo?.id}
                   className="w-full h-full border-0 relative z-10"
@@ -279,7 +325,6 @@ export default function LessonClientView({
                   }
                   title={currentVideo?.title}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
                 />
               </>
             ) : (

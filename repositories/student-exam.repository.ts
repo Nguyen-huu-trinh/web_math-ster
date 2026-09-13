@@ -1,74 +1,156 @@
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
-
 export class StudentExamRepository {
 
-  async adjustStudentPoints(
-    examId: string,
-    studentId: string,
-    action: "increase" | "decrease"
-  ) {
-    const supabase = await createClient();
+async adjustStudentPoints(
+  examId: string,
+  studentId: string,
+  action: "increase" | "decrease"
+) {
+  const supabase = await createClient();
 
-    const { data: exam, error: examError } = await supabase
+  // =====================================================
+  // 1. LẤY THÔNG TIN ĐỀ
+  // =====================================================
+
+  const { data: exam, error: examError } =
+    await supabase
       .from("exams")
-      .select("id, category")
+      .select(`
+        id,
+        category
+      `)
       .eq("id", examId)
       .is("deleted_at", null)
       .single();
 
-    if (examError || !exam) throw new Error("Không tìm thấy đề thi.");
-
-    const delta =
-      exam.category === "ATTENDANCE" ? 10 : exam.category === "PERIODIC" ? 50 : 0;
-
-    if (delta === 0) throw new Error("Đề thi không thuộc loại được cộng/trừ điểm.");
-
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("id, points")
-      .eq("id", studentId)
-      .single();
-
-    if (profileError || !profile) throw new Error("Không tìm thấy hồ sơ học sinh.");
-
-    const change = action === "increase" ? delta : -delta;
-    const newPoints = Math.max(0, profile.points + change);
-
-    const { data: updatedProfile, error: updateError } = await supabase
-      .from("profiles")
-      .update({ points: newPoints })
-      .eq("id", studentId)
-      .select("id, points")
-      .single();
-
-    if (updateError) throw updateError;
-
-    return {
-      studentId,
-      oldPoints: profile.points,
-      newPoints: updatedProfile.points,
-      change,
-      category: exam.category,
-    };
+  if (examError) {
+    throw examError;
   }
+
+  if (!exam) {
+    throw new Error(
+      "Không tìm thấy đề thi."
+    );
+  }
+
+  // =====================================================
+  // 2. XÁC ĐỊNH MỨC ĐIỂM
+  // =====================================================
+
+  const delta =
+    exam.category === "ATTENDANCE"
+      ? 10
+      : exam.category === "PERIODIC"
+      ? 50
+      : 0;
+
+  if (delta === 0) {
+    throw new Error(
+      "Đề thi không thuộc loại được cộng/trừ điểm."
+    );
+  }
+
+  // =====================================================
+  // 3. LẤY PROFILE HỌC SINH
+  // =====================================================
+
+  const { data: profile, error: profileError } =
+    await supabase
+      .from("profiles")
+      .select(`
+        id,
+        points
+      `)
+      .eq("id", studentId)
+      .single();
+
+  if (profileError) {
+    throw profileError;
+  }
+
+  if (!profile) {
+    throw new Error(
+      "Không tìm thấy hồ sơ học sinh."
+    );
+  }
+
+  // =====================================================
+  // 4. TÍNH ĐIỂM MỚI
+  // =====================================================
+
+  const change =
+    action === "increase"
+      ? delta
+      : -delta;
+
+  const newPoints = Math.max(
+    0,
+    profile.points + change
+  );
+
+  // =====================================================
+  // 5. UPDATE PROFILE
+  // =====================================================
+
+  const {
+    data: updatedProfile,
+    error: updateError,
+  } = await supabase
+    .from("profiles")
+    .update({
+      points: newPoints,
+    })
+    .eq("id", studentId)
+    .select(`
+      id,
+      points
+    `)
+    .single();
+
+  if (updateError) {
+    throw updateError;
+  }
+
+  return {
+    studentId,
+    oldPoints: profile.points,
+    newPoints: updatedProfile.points,
+    change,
+    category: exam.category,
+  };
+}
+
 
   async getMyExams(studentId: string) {
     const supabase = await createClient();
 
-    // 1. Tải song song thông tin profile và danh sách khóa học đang đăng ký
-    const [profileRes, enrollmentsRes] = await Promise.all([
-      supabase.from("profiles").select("created_at").eq("id", studentId).single(),
-      supabase.from("course_students").select("course_id").eq("student_id", studentId),
-    ]);
+    const { data: studentProfile, error: studentProfileError } =
+  await supabase
+    .from("profiles")
+    .select("created_at")
+    .eq("id", studentId)
+    .single();
 
-    if (profileRes.error || !profileRes.data) throw new Error("Không tìm thấy hồ sơ học sinh.");
-    if (enrollmentsRes.error) throw enrollmentsRes.error;
+if (studentProfileError) throw studentProfileError;
 
-    const courseIds = enrollmentsRes.data.map((x) => x.course_id);
+if (!studentProfile) {
+  throw new Error("Không tìm thấy hồ sơ học sinh.");
+}
+
+    // 1. Lấy danh sách khóa học học sinh đang học
+    const { data: enrollments, error: enrollError } = await supabase
+      .from("course_students")
+      .select("course_id")
+      .eq("student_id", studentId);
+
+    if (enrollError) throw enrollError;
+
+    const courseIds = enrollments.map((x) => x.course_id);
+
     if (courseIds.length === 0) return [];
 
-    // 2. Lấy danh sách đề thi (Chỉ chọn các trường tinh gọn cần thiết cho UI)
+    // 2. Lấy toàn bộ đề của các khóa học
     const { data: exams, error: examError } = await supabase
       .from("exams")
       .select(`
@@ -82,464 +164,1359 @@ export class StudentExamRepository {
         max_attempts,
         attendance_min_score,
         show_answer,
+        exam_file_url,
         exam_duration_days,
         status,
         is_active,
-        courses(name)
+        courses(
+          id,
+          name
+        )
       `)
       .in("course_id", courseIds)
       .is("deleted_at", null)
       .in("status", ["OPEN", "LOCKED"])
-      .order("created_at", { ascending: false });
+      .order("created_at", {
+        ascending: false,
+      });
 
-    if (examError || !exams?.length) return [];
+    if (examError) throw examError;
+
+    if (!exams?.length) return [];
 
     const examIds = exams.map((e) => e.id);
 
-// 3. Tải lịch sử làm bài
-    const { data: attempts, error: attemptError } = await supabase
-      .from("exam_attempts")
-      .select("id, exam_id, score, is_passed, created_at, submitted_at")
-      .eq("student_id", studentId)
-      .in("exam_id", examIds);
+    // 3. Lấy toàn bộ lịch sử làm bài
+const { data: attempts, error: attemptError } =
+    await supabase
+        .from("exam_attempts")
+        .select(
+            "id, exam_id, score, is_passed, created_at, submitted_at"
+        )
+        .eq("student_id", studentId)
+        .in("exam_id", examIds);
 
     if (attemptError) throw attemptError;
 
-    // Định nghĩa Type rõ ràng cho Attempt Item
-    type AttemptItem = NonNullable<typeof attempts>[number];
-    const attemptsByExam = new Map<string, AttemptItem[]>();
+const getCalendarDateVN = (date: Date) => {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+};
 
-    (attempts ?? []).forEach((att) => {
-      const list = attemptsByExam.get(att.exam_id) || [];
-      list.push(att);
-      attemptsByExam.set(att.exam_id, list);
-    });
+const getDaysBetween = (
+  fromDate: string,
+  toDate: Date
+) => {
+  const from = new Date(`${getCalendarDateVN(new Date(fromDate))}T00:00:00+07:00`);
 
-    const studentCreatedAt = new Date(profileRes.data.created_at).getTime();
-    const nowTime = Date.now();
-    const daysElapsed = Math.floor((nowTime - studentCreatedAt) / (86400 * 1000));
+  const toDateVN = getCalendarDateVN(toDate);
+  const to = new Date(`${toDateVN}T00:00:00+07:00`);
+
+  return Math.floor(
+    (to.getTime() - from.getTime()) /
+      (1000 * 60 * 60 * 24)
+  );
+};
+
+const today = new Date();
 
     return exams.map((exam) => {
-      const course = Array.isArray(exam.courses) ? exam.courses[0] : exam.courses;
-      const examAttempts = attemptsByExam.get(exam.id) || [];
+      const course = Array.isArray(exam.courses)
+        ? exam.courses[0]
+        : exam.courses;
 
-      // Sắp xếp tìm attempt mới nhất
-      let lastAttempt = null;
-      if (examAttempts.length > 0) {
-        lastAttempt = examAttempts.reduce((prev, current) =>
-          new Date(current.created_at).getTime() > new Date(prev.created_at).getTime()
-            ? current
-            : prev
-        );
-      }
+      const examAttempts = attempts.filter(
+        (a) => a.exam_id === exam.id
+      );
+
+      const lastAttempt =
+        examAttempts.length > 0
+          ? examAttempts.sort(
+              (a, b) =>
+                new Date(b.created_at).getTime() -
+                new Date(a.created_at).getTime()
+            )[0]
+          : null;
 
       const attemptCount = examAttempts.length;
-      const hasSubmittedAttempt = examAttempts.some((a) => a.submitted_at !== null);
-      const hasUnsubmittedAttempt = examAttempts.some((a) => a.submitted_at === null);
 
-      let periodicDaysRemaining: number | null = null;
-      if (
-        exam.category === "PERIODIC" &&
-        exam.status === "OPEN" &&
-        exam.exam_duration_days !== null &&
-        !hasSubmittedAttempt
-      ) {
-        periodicDaysRemaining = exam.exam_duration_days - daysElapsed;
-      }
+const hasSubmittedAttempt = examAttempts.some(
+  (attempt) => attempt.submitted_at !== null
+);
 
-      const canStart =
-        exam.status === "OPEN" &&
-        exam.is_active === true &&
-        !hasUnsubmittedAttempt &&
-        attemptCount < (exam.max_attempts ?? 1);
+let periodicDaysRemaining: number | null = null;
 
-      let status: "NOT_STARTED" | "PASSED" | "FAILED" | "DONE" | "LOCKED" = "NOT_STARTED";
+if (
+  exam.category === "PERIODIC" &&
+  exam.status === "OPEN" &&
+  exam.exam_duration_days !== null &&
+  !hasSubmittedAttempt
+) {
+  const daysElapsed = getDaysBetween(
+    studentProfile.created_at,
+    today
+  );
 
-      if (exam.status === "LOCKED" || hasUnsubmittedAttempt) {
-        status = "LOCKED";
-      } else if (lastAttempt) {
-        status = lastAttempt.is_passed ? "PASSED" : "FAILED";
-      }
+  periodicDaysRemaining =
+    exam.exam_duration_days - daysElapsed;
+}
+
+const hasUnsubmittedAttempt =
+  examAttempts.some(
+    (attempt) =>
+      attempt.submitted_at === null
+  );
+
+const canStart =
+  exam.status === "OPEN" &&
+  exam.is_active === true &&
+  !hasUnsubmittedAttempt &&
+  attemptCount <
+    (exam.max_attempts ?? 1);
+
+let status:
+  | "NOT_STARTED"
+  | "PASSED"
+  | "FAILED"
+  | "DONE"
+  | "LOCKED" = "NOT_STARTED";
+
+// =====================================================
+// ĐỀ ĐANG KHÓA
+// =====================================================
+
+if (exam.status === "LOCKED") {
+  status = "LOCKED";
+}
+
+// =====================================================
+// ĐANG CÓ MỘT ATTEMPT CHƯA NỘP
+// =====================================================
+
+else if (hasUnsubmittedAttempt) {
+  status = "LOCKED";
+}
+
+// =====================================================
+// ĐÃ CÓ LỊCH SỬ LÀM BÀI
+// =====================================================
+
+else if (lastAttempt) {
+  status = lastAttempt.is_passed
+    ? "PASSED"
+    : "FAILED";
+}
 
       return {
         id: exam.id,
+
         title: exam.title,
+
         description: exam.description,
+
         category: exam.category,
+
         examType: exam.exam_type,
+
         duration: exam.duration_minutes,
+
         inProgress: hasUnsubmittedAttempt,
+
         courseId: exam.course_id,
-        courseName: course?.name ?? "",
-        maxAttempts: exam.max_attempts ?? 1,
+
+        courseName:
+          course?.name ?? "",
+
+        maxAttempts:
+          exam.max_attempts ?? 1,
+
         attempts: attemptCount,
-        lastScore: lastAttempt?.score ?? null,
-        lastAttemptAt: lastAttempt?.submitted_at ?? null,
-        lastAttemptId: lastAttempt?.id ?? null,
+
+        lastScore:
+            lastAttempt?.score ?? null,
+
+        lastAttemptAt:
+            lastAttempt?.submitted_at ?? null,
+
+        lastAttemptId:
+            lastAttempt?.id ?? null,
+
         status,
+
         canStart,
+
         canRetake: canStart,
-        attendanceMinScore: exam.attendance_min_score,
-        showAnswer: exam.show_answer,
+
+        attendanceMinScore:
+          exam.attendance_min_score,
+
+        showAnswer:
+          exam.show_answer,
+
+        examFile:
+          exam.exam_file_url,
         periodicDaysRemaining,
       };
     });
   }
 
-  async startExam(examId: string, studentId: string) {
-    const supabase = await createClient();
+  // =====================================================
+// START EXAM
+// =====================================================
 
-    const { data: exam, error: examError } = await supabase
-      .from("exams")
-      .select("id, is_active, status, start_at, end_at, duration_minutes, max_attempts, question_config")
-      .eq("id", examId)
-      .single();
+async startExam(
+  examId: string,
+  studentId: string
+) {
+  const supabase =
+    await createClient();
 
-    if (examError || !exam) throw new Error("Không tìm thấy đề thi.");
-    if (!exam.is_active) throw new Error("Đề chưa mở.");
-    if (exam.status !== "OPEN") throw new Error("Đề đã khóa.");
+  // ===========================
+  // Lấy thông tin đề
+  // ===========================
 
-    const now = new Date();
-    if (exam.start_at && now < new Date(exam.start_at)) throw new Error("Đề chưa bắt đầu.");
-    if (exam.end_at && now > new Date(exam.end_at)) throw new Error("Đề đã kết thúc.");
+  const {
+    data: exam,
+    error: examError,
+  } = await supabase
+    .from("exams")
+    .select("*")
+    .eq("id", examId)
+    .single();
+
+  if (examError) throw examError;
+
+  if (!exam.is_active) {
+    throw new Error("Đề chưa mở.");
+  }
+
+  if (exam.status !== "OPEN") {
+    throw new Error("Đề đã khóa.");
+  }
+
+  const now = new Date();
+
+  if (
+    exam.start_at &&
+    now < new Date(exam.start_at)
+  ) {
+    throw new Error("Đề chưa bắt đầu.");
+  }
+
+  if (
+    exam.end_at &&
+    now > new Date(exam.end_at)
+  ) {
+    throw new Error("Đề đã kết thúc.");
+  }
+
+    // ===========================
+  // KIỂM TRA ATTEMPT ĐANG LÀM
+  // ===========================
+
+  const {
+    data: existingAttempt,
+    error: existingAttemptError,
+  } = await adminClient
+    .from("exam_attempts")
+    .select("id, exam_id, student_id, submitted_at")
+    .eq("exam_id", examId)
+    .eq("student_id", studentId)
+    .is("submitted_at", null)
+    .maybeSingle();
+
+  if (existingAttemptError) {
+    throw existingAttemptError;
+  }
+
+  if (existingAttempt) {
+    const error = new Error(
+      "Bạn đã có một lượt làm bài chưa nộp."
+    ) as Error & {
+      code?: string;
+      attemptId?: string;
+    };
+
+    error.code = "EXAM_IN_PROGRESS";
+    error.attemptId = existingAttempt.id;
+
+    throw error;
+  }
 
 // ===========================
-    // KIỂM TRA ATTEMPT ĐANG LÀM
-    // ===========================
+// KIỂM TRA ĐỀ TIÊN QUYẾT
+// ===========================
 
-    const {
-      data: existingAttempt,
-      error: existingAttemptError,
-    } = await adminClient
-      .from("exam_attempts")
-      .select("id")
-      .eq("exam_id", examId)
-      .eq("student_id", studentId)
-      .is("submitted_at", null)
-      .maybeSingle<{ id: string }>(); // Bổ sung Generic Type { id: string } ở đây
+const {
+  data: prerequisites,
+  error: prerequisiteError,
+} = await adminClient
+  .from("exam_prerequisites")
+  .select(`
+    prerequisite_exam_id,
+    prerequisite_exam:exams!exam_prerequisites_prerequisite_exam_id_fkey (
+      id,
+      title,
+      category
+    )
+  `)
+  .eq("exam_id", examId);
 
-    if (existingAttemptError) {
-      throw existingAttemptError;
-    }
+if (prerequisiteError) {
+  throw prerequisiteError;
+}
 
-    if (existingAttempt) {
-      // Định nghĩa kiểu rõ ràng cho Custom Error
-      type CustomExamError = Error & {
-        code?: string;
-        attemptId?: string;
-      };
+if (prerequisites && prerequisites.length > 0) {
+  const prerequisiteExamIds =
+    prerequisites.map(
+      (item) => item.prerequisite_exam_id
+    );
 
-      const error = new Error(
-        "Bạn đã có một lượt làm bài chưa nộp."
-      ) as CustomExamError;
 
-      error.code = "EXAM_IN_PROGRESS";
-      error.attemptId = existingAttempt.id; // Hết lỗi 'id' does not exist
 
-      throw error;
-    }
+   // =====================================================
+  // Kiểm tra trạng thái của TỪNG đề tiên quyết
+  // =====================================================
 
-// Đếm số lượt đã làm
-    const { count, error: countError } = await supabase
-      .from("exam_attempts")
-      .select("id", { count: "exact", head: true })
-      .eq("exam_id", examId)
-      .eq("student_id", studentId);
+  const {
+    data: prerequisiteAttempts,
+    error: prerequisiteAttemptsError,
+  } = await adminClient
+    .from("exam_attempts")
+    .select(`
+      exam_id,
+      is_passed,
+      submitted_at
+    `)
+    .eq("student_id", studentId)
+    .in("exam_id", prerequisiteExamIds)
+    .not("submitted_at", "is", null);
 
-    if (countError) throw countError;
+  if (prerequisiteAttemptsError) {
+    throw prerequisiteAttemptsError;
+  }
 
-    const attemptNumber = (count ?? 0) + 1;
-    if (exam.max_attempts && attemptNumber > exam.max_attempts) {
-      throw new Error("Bạn đã hết lượt làm.");
-    }
+  // Những đề tiên quyết học sinh đã nộp
+  const completedExamIds = new Set(
+    (prerequisiteAttempts ?? []).map(
+      (attempt) => attempt.exam_id
+    )
+  );
 
-    const questionConfig = exam.question_config ?? { multipleChoice: 0, trueFalse: 0, shortAnswer: 0 };
-    const emptyAnswers = {
-      multipleChoice: Array(questionConfig.multipleChoice).fill(""),
-      trueFalse: Array.from({ length: questionConfig.trueFalse }, () => ["", "", "", ""]),
-      shortAnswer: Array.from({ length: questionConfig.shortAnswer }, () => ["", "", "", ""]),
-    };
+  // Những đề tiên quyết học sinh đã đạt
+  const passedExamIds = new Set(
+    (prerequisiteAttempts ?? [])
+      .filter(
+        (attempt) =>
+          attempt.is_passed === true
+      )
+      .map(
+        (attempt) => attempt.exam_id
+      )
+  );
 
-    const { data: attempt, error } = await supabase
-      .from("exam_attempts")
-      .insert({
-        exam_id: examId,
-        student_id: studentId,
-        attempt_number: attemptNumber,
-        started_at: new Date().toISOString(),
-        duration_seconds: exam.duration_minutes * 60,
-        answers: emptyAnswers,
+  const missingPrerequisites =
+    prerequisites
+      .filter((item) => {
+        const prerequisiteExam =
+          Array.isArray(
+            item.prerequisite_exam
+          )
+            ? item.prerequisite_exam[0]
+            : item.prerequisite_exam;
+
+        // ==========================================
+        // Đề tiên quyết là ĐỊNH KỲ
+        // → chỉ cần đã hoàn thành / đã nộp
+        // ==========================================
+
+        if (
+          prerequisiteExam?.category ===
+          "PERIODIC"
+        ) {
+          return !completedExamIds.has(
+            item.prerequisite_exam_id
+          );
+        }
+
+        // ==========================================
+        // Đề tiên quyết là ĐIỂM DANH
+        // → bắt buộc phải đạt
+        // ==========================================
+
+        if (
+          prerequisiteExam?.category ===
+          "ATTENDANCE"
+        ) {
+          return !passedExamIds.has(
+            item.prerequisite_exam_id
+          );
+        }
+
+        // ==========================================
+        // Các loại đề khác
+        // → mặc định phải đạt
+        // ==========================================
+
+        return !passedExamIds.has(
+          item.prerequisite_exam_id
+        );
       })
-      .select()
-      .single();
+      .map((item) => {
+        const prerequisiteExam =
+          Array.isArray(
+            item.prerequisite_exam
+          )
+            ? item.prerequisite_exam[0]
+            : item.prerequisite_exam;
 
-    if (error) throw error;
-    return attempt;
-  }
+        return {
+          id: item.prerequisite_exam_id,
+          title:
+            prerequisiteExam?.title ??
+            "Bài kiểm tra tiên quyết",
+        };
+      });
 
-  async getTeacherAttemptDetail(attemptId: string) {
-    const supabase = await createClient();
-
-    const { data: attempt, error: attemptError } = await supabase
-      .from("exam_attempts")
-      .select("*")
-      .eq("id", attemptId)
-      .maybeSingle();
-
-    if (attemptError || !attempt) throw new Error(`Không tìm thấy bài làm ${attemptId}`);
-
-    const { data: exam, error: examError } = await supabase
-      .from("exams")
-      .select("*")
-      .eq("id", attempt.exam_id)
-      .single();
-
-    if (examError) throw examError;
-
-    return {
-      attempt,
-      exam,
-      pdfUrl: exam.exam_file_url,
-      remainingSeconds: 0,
-      savedAnswers: attempt.answers ?? { multipleChoice: [], trueFalse: [], shortAnswer: [] },
+  if (missingPrerequisites.length > 0) {
+    const error = new Error(
+      "Bạn chưa hoàn thành đủ các bài kiểm tra tiên quyết."
+    ) as Error & {
+      code?: string;
+      missingPrerequisites?: {
+        id: string;
+        title: string;
+      }[];
     };
+
+    error.code =
+      "PREREQUISITE_NOT_COMPLETED";
+
+    error.missingPrerequisites =
+      missingPrerequisites;
+
+    throw error;
+  }
+}
+
+  
+  // ===========================
+  // Đếm số lần làm
+  // ===========================
+
+  const {
+    data: oldAttempts,
+    error: attemptError,
+  } = await supabase
+    .from("exam_attempts")
+    .select("id")
+    .eq("exam_id", examId)
+    .eq("student_id", studentId);
+
+  if (attemptError) {
+    throw attemptError;
   }
 
-  async getPeriodicProgress(studentId: string) {
-    const supabase = await createClient();
+  const attemptNumber =
+    (oldAttempts?.length ?? 0) + 1;
 
-    const { data: exams, error: examsError } = await supabase
-      .from("exams")
-      .select("id, title, category")
-      .eq("category", "PERIODIC")
-      .is("deleted_at", null);
+  if (
+    exam.max_attempts &&
+    attemptNumber >
+      exam.max_attempts
+  ) {
+    throw new Error(
+      "Bạn đã hết lượt làm."
+    );
+  }
 
-    if (examsError || !exams?.length) return [];
+  // ===========================
+  // Khởi tạo đáp án rỗng
+  // ===========================
 
-    const examIds = exams.map((exam) => exam.id);
+  const questionConfig =
+    exam.question_config ?? {
+      multipleChoice: 0,
+      trueFalse: 0,
+      shortAnswer: 0,
+    };
 
-    const { data: attempts, error: attemptsError } = await supabase
-      .from("exam_attempts")
-      .select("id, exam_id, score, submitted_at, created_at")
-      .eq("student_id", studentId)
-      .in("exam_id", examIds)
-      .not("score", "is", null)
-      .order("submitted_at", { ascending: true });
+  const emptyAnswers = {
+    multipleChoice: Array(
+      questionConfig.multipleChoice
+    ).fill(""),
 
-    if (attemptsError) throw attemptsError;
+    trueFalse: Array.from(
+      {
+        length:
+          questionConfig.trueFalse,
+      },
+      () => ["", "", "", ""]
+    ),
 
-    return (attempts ?? []).map((attempt, index) => {
-      const exam = exams.find((item) => item.id === attempt.exam_id);
+    shortAnswer: Array.from(
+      {
+        length:
+          questionConfig.shortAnswer,
+      },
+      () => ["", "", "", ""]
+    ),
+  };
+
+  // ===========================
+  // Tạo attempt mới
+  // ===========================
+
+  const {
+    data: attempt,
+    error,
+  } = await supabase
+    .from("exam_attempts")
+    .insert({
+
+      exam_id: examId,
+
+      student_id: studentId,
+
+      attempt_number:
+        attemptNumber,
+
+      started_at:
+        new Date().toISOString(),
+
+      duration_seconds:
+        exam.duration_minutes * 60,
+
+      answers:
+        emptyAnswers,
+
+    })
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+  console.log("[START EXAM] CREATED", {
+    examId,
+    studentId,
+    attemptId: attempt.id,
+});
+  return attempt;
+}
+async getTeacherAttemptDetail(
+  attemptId: string
+) {
+  const supabase =
+    await createClient();
+
+  const {
+    data: attempt,
+    error: attemptError,
+  } = await supabase
+    .from("exam_attempts")
+    .select("*")
+    .eq("id", attemptId)
+    .maybeSingle();
+
+  if (attemptError) {
+    throw attemptError;
+  }
+
+  if (!attempt) {
+    throw new Error(
+      `Không tìm thấy bài làm ${attemptId}`
+    );
+  }
+
+  const {
+    data: exam,
+    error: examError,
+  } = await supabase
+    .from("exams")
+    .select("*")
+    .eq("id", attempt.exam_id)
+    .single();
+
+  if (examError) {
+    throw examError;
+  }
+
+  const savedAnswers =
+    attempt.answers ?? {
+      multipleChoice: [],
+      trueFalse: [],
+      shortAnswer: [],
+    };
+
+  return {
+    attempt,
+    exam,
+    pdfUrl: exam.exam_file_url,
+    remainingSeconds: 0,
+    savedAnswers,
+  };
+}
+
+async getPeriodicProgress(
+  studentId: string
+) {
+  const supabase = await createClient();
+
+  // 1. Lấy các bài kiểm tra định kỳ
+  const {
+    data: exams,
+    error: examsError,
+  } = await supabase
+    .from("exams")
+    .select(`
+      id,
+      title,
+      category
+    `)
+    .eq("category", "PERIODIC")
+    .is("deleted_at", null);
+
+  if (examsError) {
+    throw examsError;
+  }
+
+  if (!exams || exams.length === 0) {
+    return [];
+  }
+
+  const examIds = exams.map(
+    (exam) => exam.id
+  );
+
+  // 2. Lấy các lượt làm của học sinh
+  const {
+    data: attempts,
+    error: attemptsError,
+  } = await supabase
+    .from("exam_attempts")
+    .select(`
+      id,
+      exam_id,
+      score,
+      submitted_at,
+      created_at
+    `)
+    .eq("student_id", studentId)
+    .in("exam_id", examIds)
+    .not("score", "is", null)
+    .order("submitted_at", {
+      ascending: true,
+    });
+
+  if (attemptsError) {
+    throw attemptsError;
+  }
+
+  // 3. Ghép thông tin bài thi
+  return (attempts ?? []).map(
+    (attempt, index) => {
+      const exam = exams.find(
+        (item) =>
+          item.id === attempt.exam_id
+      );
+
       return {
         attemptId: attempt.id,
         examId: attempt.exam_id,
-        examTitle: exam?.title ?? "Bài kiểm tra",
+        examTitle:
+          exam?.title ?? "Bài kiểm tra",
         score: Number(attempt.score),
-        date: attempt.submitted_at ?? attempt.created_at,
+        date:
+          attempt.submitted_at ??
+          attempt.created_at,
         attemptNumber: index + 1,
       };
-    });
-  }
+    }
+  );
+}
 
-  async getAttemptDetail(studentId: string, attemptId: string) {
-    const supabase = await createClient();
 
-    const { data: attempt, error: attemptError } = await supabase
-      .from("exam_attempts")
-      .select("*")
-      .eq("id", attemptId)
-      .eq("student_id", studentId)
-      .maybeSingle();
+async getAttemptDetail(
+    studentId: string,
+    attemptId: string
+) {
+    const supabase =
+        await createClient();
 
-    if (attemptError || !attempt) throw new Error(`Không tìm thấy attempt ${attemptId}`);
+    // ==========================
+    // Kiểm tra user thực tế
+    // ==========================
 
-    const { data: exam, error: examError } = await supabase
-      .from("exams")
-      .select("*")
-      .eq("id", attempt.exam_id)
-      .single();
+    const {
+        data: {
+            user,
+        },
+    } = await supabase.auth.getUser();
 
-    if (examError) throw examError;
+    console.log(
+        "[GET ATTEMPT DETAIL AUTH]",
+        {
+            authUserId: user?.id,
+            studentId,
+            attemptId,
+        }
+    );
 
-    const startedAt = new Date(attempt.started_at).getTime();
-    const duration = attempt.duration_seconds ?? exam.duration_minutes * 60;
-    const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+    // ==========================
+    // Attempt
+    // ==========================
 
-    return {
-      attempt,
-      exam,
-      pdfUrl: exam.exam_file_url,
-      remainingSeconds: Math.max(duration - elapsed, 0),
-      savedAnswers: attempt.answers ?? { multipleChoice: [], trueFalse: [], shortAnswer: [] },
-    };
-  }
-
-  async submitAttempt(studentId: string, attemptId: string, answers: Record<string, any>) {
-    const supabase = await createClient();
-
-    const { data: attempt, error: attemptError } = await supabase
-      .from("exam_attempts")
-      .select("*, exams(*)")
-      .eq("id", attemptId)
-      .eq("student_id", studentId)
-      .single();
-
-    if (attemptError) throw attemptError;
-
-    const startedAt = new Date(attempt.started_at).getTime();
-    const duration = attempt.duration_seconds ?? attempt.exams.duration_minutes * 60;
-    const expiresAt = startedAt + duration * 1000;
-    const isExpired = Date.now() >= expiresAt;
-
-    const answerKey = typeof attempt.exams.answer_key === "string"
-      ? JSON.parse(attempt.exams.answer_key)
-      : attempt.exams.answer_key;
-
-    let score = attempt.exams.exam_type === "MOET"
-      ? this.gradeTHPT(answerKey, answers)
-      : this.gradeCustom(answerKey, answers);
-
-    score = Number(score.toFixed(2));
-    const passed = score >= Number(attempt.exams.attendance_min_score ?? 0);
-    const submittedAt = isExpired ? new Date(expiresAt).toISOString() : new Date().toISOString();
-
-    const { data: updatedAttempt, error: updateError } = await supabase
-      .from("exam_attempts")
-      .update({ answers, submitted_at: submittedAt, score, is_passed: passed })
-      .eq("id", attemptId)
-      .eq("student_id", studentId)
-      .is("submitted_at", null)
-      .select("id, score, is_passed, submitted_at")
-      .maybeSingle();
-
-    if (updateError) throw updateError;
-
-    if (!updatedAttempt) {
-      const { data: existingAttempt } = await supabase
+    const {
+        data: attempt,
+        error: attemptError,
+    } = await supabase
         .from("exam_attempts")
-        .select("score, is_passed, submitted_at, answers")
+        .select("*")
         .eq("id", attemptId)
         .eq("student_id", studentId)
         .maybeSingle();
 
-      return {
-        score: existingAttempt?.score ?? 0,
-        passed: existingAttempt?.is_passed ?? false,
-        alreadySubmitted: true,
-        showAnswer: attempt.exams.show_answer,
-        answers: attempt.exams.show_answer ? answerKey : null,
-        answerKey: attempt.exams.show_answer ? answerKey : null,
-      };
+    console.log(
+        "[GET ATTEMPT DETAIL RESULT]",
+        {
+            authUserId: user?.id,
+            studentId,
+            attemptId,
+            found: !!attempt,
+            attemptStudentId:
+                attempt?.student_id ?? null,
+            error: attemptError,
+        }
+    );
+
+    if (attemptError) {
+        throw attemptError;
     }
 
-    const pointDelta = attempt.exams.category === "ATTENDANCE"
-      ? (passed ? 10 : -10)
-      : (passed ? 50 : -50);
+    if (!attempt) {
+        throw new Error(
+            `Không tìm thấy attempt ${attemptId} của student ${studentId}`
+        );
+    }
 
-    await supabase.rpc("adjust_student_points", { p_student_id: studentId, p_delta: pointDelta });
+
+ 
+  // Exam
+
+  const {
+    data: exam,
+    error: examError,
+  } = await supabase
+
+    .from("exams")
+
+    .select("*")
+
+    .eq("id", attempt.exam_id)
+
+    .single();
+
+  if (examError) {
+    throw examError;
+  }
+
+// ==========================
+// Saved Answers
+// ==========================
+
+const savedAnswers =
+  attempt.answers ?? {
+    multipleChoice: [],
+    trueFalse: [],
+    shortAnswer: [],
+  };
+  // ============================
+// Remaining Time
+// ============================
+
+const startedAt =
+  new Date(attempt.started_at).getTime();
+
+const now =
+  Date.now();
+
+const duration =
+  attempt.duration_seconds ??
+  exam.duration_minutes * 60;
+
+const elapsed =
+  Math.floor(
+    (now - startedAt) / 1000
+  );
+
+const remainingSeconds =
+  Math.max(
+    duration - elapsed,
+    0
+  );
+
+
+
+
+return {
+
+    attempt,
+
+    exam,
+
+    pdfUrl: exam.exam_file_url,
+
+    remainingSeconds,
+
+    savedAnswers,
+
+};
+
+}
+async submitAttempt(
+    studentId: string,
+    attemptId: string,
+    answers: Record<string, any>
+) {
+    const supabase =
+        await createClient();
+
+    // ==========================
+    // Attempt
+    // ==========================
+
+    const {
+        data: attempt,
+        error: attemptError,
+    } = await supabase
+        .from("exam_attempts")
+        .select(`
+            *,
+            exams(*)
+        `)
+        .eq("id", attemptId)
+        .eq("student_id", studentId)
+        .single();
+
+    if (attemptError) {
+        throw attemptError;
+    }
+
+    // ==========================
+    // Kiểm tra thời gian làm bài
+    // ==========================
+
+    const startedAt =
+        new Date(
+            attempt.started_at
+        ).getTime();
+
+    const duration =
+        attempt.duration_seconds ??
+        attempt.exams.duration_minutes * 60;
+
+    const expiresAt =
+        startedAt + duration * 1000;
+
+    const now =
+        Date.now();
+
+    const isExpired =
+        now >= expiresAt;
+    // ==========================
+    // Answer key
+    // ==========================
+
+    const answerKey =
+        typeof attempt.exams.answer_key === "string"
+            ? JSON.parse(
+                  attempt.exams.answer_key
+              )
+            : attempt.exams.answer_key;
+
+    let score = 0;
+
+    if (
+        attempt.exams.exam_type ===
+        "MOET"
+    ) {
+        score =
+            this.gradeTHPT(
+                answerKey,
+                answers
+            );
+    } else {
+        score =
+            this.gradeCustom(
+                answerKey,
+                answers
+            );
+    }
+
+    score =
+        Number(score.toFixed(2));
+
+    const passed =
+    score >= Number(
+        attempt.exams.attendance_min_score ?? 0
+    );
+
+    // ==========================
+    // Atomic submit
+    // ==========================
+
+const submittedAt =
+    isExpired
+        ? new Date(
+            expiresAt
+          ).toISOString()
+        : new Date().toISOString();
+
+    const {
+        data: updatedAttempt,
+        error: updateError,
+    } = await supabase
+        .from("exam_attempts")
+        .update({
+            answers,
+            submitted_at: submittedAt,
+            score,
+            is_passed: passed,
+        })
+        .eq(
+            "id",
+            attemptId
+        )
+        .eq(
+            "student_id",
+            studentId
+        )
+        .is(
+            "submitted_at",
+            null
+        )
+        .select(
+            "id, score, is_passed, submitted_at"
+        )
+        .maybeSingle();
+
+    if (updateError) {
+        throw updateError;
+    }
+
+    // ==========================
+    // Một request khác đã submit
+    // ==========================
+
+    if (!updatedAttempt) {
+        const {
+            data: existingAttempt,
+            error:
+                existingAttemptError,
+        } = await supabase
+            .from("exam_attempts")
+            .select(
+                "score, is_passed, submitted_at, answers"
+            )
+            .eq(
+                "id",
+                attemptId
+            )
+            .eq(
+                "student_id",
+                studentId
+            )
+            .maybeSingle();
+
+        if (existingAttemptError) {
+            throw existingAttemptError;
+        }
+        if (!existingAttempt) {
+        throw new Error(
+            "Phiên làm bài không còn tồn tại."
+        );
+    }
+
+        return {
+            score:
+                existingAttempt.score ??
+                0,
+
+            passed:
+                existingAttempt.is_passed ??
+                false,
+
+            alreadySubmitted:
+                true,
+
+            showAnswer:
+                attempt.exams.show_answer,
+
+            answers:
+                attempt.exams.show_answer
+                    ? answerKey
+                    : null,
+            answerKey:
+                attempt.exams.show_answer
+                    ? answerKey
+                    : null,
+        };
+    }
+
+
+
+    // ==========================
+// CỘNG / TRỪ POINTS
+// ==========================
+// const pointDelta = passed ? 10 : -10;
+const pointDelta =
+    attempt.exams.category === "ATTENDANCE"
+        ? (passed ? 10 : -10)
+        : (passed ? 50 : -50);
+
+const { error: pointsError } = await supabase.rpc(
+    "adjust_student_points",
+    {
+        p_student_id: studentId,
+        p_delta: pointDelta,
+    }
+);
+
+if (pointsError) {
+    console.error(
+        "UPDATE STUDENT POINTS ERROR:",
+        pointsError
+    );
+
+    throw pointsError;
+}
+    // ==========================
+    // Submit thành công
+    // ==========================
 
     return {
-      score,
-      passed,
-      alreadySubmitted: false,
-      showAnswer: attempt.exams.show_answer,
-      answers,
-      answerKey: attempt.exams.show_answer ? answerKey : null,
+        score,
+        passed,
+        alreadySubmitted: false,
+
+        showAnswer:
+            attempt.exams.show_answer,
+
+        answers,
+
+        answerKey:
+            attempt.exams.show_answer
+                ? answerKey
+                : null,
     };
-  }
-
-  private gradeTHPT(answerKey: any, answers: any) {
-    let score = 0;
-    const mcKey = answerKey.multipleChoice ?? [];
-    const mc = answers.multipleChoice ?? [];
-    for (let i = 0; i < mcKey.length; i++) {
-      if (mc[i] === mcKey[i]) score += 0.25;
-    }
-
-    const tfKey = answerKey.trueFalse ?? [];
-    const tf = answers.trueFalse ?? [];
-    for (let i = 0; i < tfKey.length; i++) {
-      let correct = 0;
-      for (let j = 0; j < 4; j++) {
-        if (tf[i]?.[j] === tfKey[i]?.[j]) correct++;
-      }
-      if (correct === 1) score += 0.1;
-      else if (correct === 2) score += 0.25;
-      else if (correct === 3) score += 0.5;
-      else if (correct === 4) score += 1;
-    }
-
-    const saKey = answerKey.shortAnswer ?? [];
-    const sa = answers.shortAnswer ?? [];
-    for (let i = 0; i < saKey.length; i++) {
-      const student = this.normalizeShortAnswer(sa[i]);
-      const correct = this.normalizeShortAnswer(saKey[i]);
-      if (student === correct && student !== "") score += 0.5;
-    }
-    return score;
-  }
-
-  private gradeCustom(answerKey: any, answers: any) {
-    let score = 0;
-    const totalQuestions = this.getCustomTotalQuestions(answerKey);
-    if (totalQuestions === 0) return 0;
-    const point = 10 / totalQuestions;
-
-    const mcKey = answerKey.multipleChoice ?? [];
-    const mc = answers.multipleChoice ?? [];
-    for (let i = 0; i < mcKey.length; i++) {
-      if (mc[i] === mcKey[i]) score += point;
-    }
-
-    const tfKey = answerKey.trueFalse ?? [];
-    const tf = answers.trueFalse ?? [];
-    for (let i = 0; i < tfKey.length; i++) {
-      let correct = 0;
-      for (let j = 0; j < 4; j++) {
-        if (tf[i]?.[j] === tfKey[i]?.[j]) correct++;
-      }
-      if (correct === 1) score += point * 0.1;
-      else if (correct === 2) score += point * 0.25;
-      else if (correct === 3) score += point * 0.5;
-      else if (correct === 4) score += point;
-    }
-
-    const saKey = answerKey.shortAnswer ?? [];
-    const sa = answers.shortAnswer ?? [];
-    for (let i = 0; i < saKey.length; i++) {
-      const student = this.normalizeShortAnswer(sa[i]);
-      const correct = this.normalizeShortAnswer(saKey[i]);
-      if (student !== "" && student === correct) score += point;
-    }
-    return score;
-  }
-
-  private getCustomTotalQuestions(answerKey: any) {
-    return (
-      (answerKey.multipleChoice?.length ?? 0) +
-      (answerKey.trueFalse?.length ?? 0) +
-      (answerKey.shortAnswer?.length ?? 0)
-    );
-  }
-
-  private normalizeShortAnswer(value: any): string {
-    if (Array.isArray(value)) {
-      return value.join("").replace(/\s/g, "").trim();
-    }
-    return String(value ?? "").replace(/\s/g, "").trim();
-  }
-
-  async getSubmittedAttemptsForRegrade(examId: string) {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("exam_attempts")
-      .select("id, exam_id, student_id, answers, score, is_passed, submitted_at")
-      .eq("exam_id", examId)
-      .not("submitted_at", "is", null);
-
-    if (error) throw error;
-    return data ?? [];
-  }
 }
 
-export const studentExamRepository = new StudentExamRepository();
+private gradeTHPT(
+  answerKey: any,
+  answers: any
+) {
+
+  let score = 0;
+
+  // ======================
+  // PART I
+  // ======================
+
+  const mcKey = answerKey.multipleChoice ?? [];
+  const mc = answers.multipleChoice ?? [];
+
+  for (let i = 0; i < mcKey.length; i++) {
+    if (mc[i] === mcKey[i]) {
+      score += 0.25;
+    }
+  }
+
+  // ======================
+  // PART II
+  // ======================
+
+  const tfKey = answerKey.trueFalse ?? [];
+  const tf = answers.trueFalse ?? [];
+
+  for (let i = 0; i < tfKey.length; i++) {
+
+    let correct = 0;
+
+    for (let j = 0; j < 4; j++) {
+
+      if (tf[i]?.[j] === tfKey[i]?.[j]) {
+        correct++;
+      }
+
+    }
+
+    switch (correct) {
+
+      case 1:
+        score += 0.1;
+        break;
+
+      case 2:
+        score += 0.25;
+        break;
+
+      case 3:
+        score += 0.5;
+        break;
+
+      case 4:
+        score += 1;
+        break;
+
+    }
+
+  }
+
+  // ======================
+  // PART III
+  // ======================
+const saKey = answerKey.shortAnswer ?? [];
+const sa = answers.shortAnswer ?? [];
+
+for (let i = 0; i < saKey.length; i++) {
+
+  // Học sinh gửi lên là mảng ký tự
+  const student = Array.isArray(sa[i])
+    ? sa[i]
+        .join("")
+        .replace(/\s/g, "")
+        .trim()
+    : String(sa[i] ?? "")
+        .replace(/\s/g, "")
+        .trim();
+
+  // Giáo viên lưu là chuỗi
+  const correct = String(saKey[i] ?? "")
+    .replace(/\s/g, "")
+    .trim();
+
+  if (student === correct) {
+    score += 0.5;
+  }
+}
+  return score;
+
+}
+private gradeCustom(
+  answerKey: any,
+  answers: any
+) {
+  let score = 0;
+
+  // =====================================================
+  // TỔNG SỐ CÂU CỦA ĐỀ CUSTOM
+  // =====================================================
+
+  const totalQuestions =
+    this.getCustomTotalQuestions(answerKey);
+
+  // Không có câu hỏi
+  if (totalQuestions === 0) {
+    return 0;
+  }
+
+  // Tổng điểm đề = 10 điểm
+  // Mỗi câu có trọng số bằng nhau
+  const point = 10 / totalQuestions;
+
+
+  // =====================================================
+  // PART I — MULTIPLE CHOICE
+  // =====================================================
+
+  const mcKey =
+    answerKey.multipleChoice ?? [];
+
+  const mc =
+    answers.multipleChoice ?? [];
+
+  for (
+    let i = 0;
+    i < mcKey.length;
+    i++
+  ) {
+    if (
+      mc[i] === mcKey[i]
+    ) {
+      score += point;
+    }
+  }
+
+
+  // =====================================================
+  // PART II — TRUE / FALSE
+  // =====================================================
+
+  const tfKey =
+    answerKey.trueFalse ?? [];
+
+  const tf =
+    answers.trueFalse ?? [];
+
+  for (
+    let i = 0;
+    i < tfKey.length;
+    i++
+  ) {
+    let correct = 0;
+
+    // Mỗi câu Đúng/Sai có 4 ý
+    for (
+      let j = 0;
+      j < 4;
+      j++
+    ) {
+      if (
+        tf[i]?.[j] ===
+        tfKey[i]?.[j]
+      ) {
+        correct++;
+      }
+    }
+
+    /*
+     * Quy tắc chấm:
+     *
+     * 0/4 → 0%
+     * 1/4 → 10%
+     * 2/4 → 25%
+     * 3/4 → 50%
+     * 4/4 → 100%
+     */
+
+    switch (correct) {
+      case 1:
+        score += point * 0.10;
+        break;
+
+      case 2:
+        score += point * 0.25;
+        break;
+
+      case 3:
+        score += point * 0.50;
+        break;
+
+      case 4:
+        score += point;
+        break;
+    }
+  }
+
+
+  // =====================================================
+  // PART III — SHORT ANSWER
+  // =====================================================
+
+  const saKey =
+    answerKey.shortAnswer ?? [];
+
+  const sa =
+    answers.shortAnswer ?? [];
+
+  for (
+    let i = 0;
+    i < saKey.length;
+    i++
+  ) {
+    const student =
+      this.normalizeShortAnswer(
+        sa[i]
+      );
+
+    const correct =
+      this.normalizeShortAnswer(
+        saKey[i]
+      );
+
+    // Không cho câu trả lời rỗng được tính đúng
+    if (
+      student !== "" &&
+      student === correct
+    ) {
+      score += point;
+    }
+  }
+
+
+  return score;
+}
+private getCustomTotalQuestions(
+    answerKey: any
+) {
+    const multipleChoice =
+        answerKey.multipleChoice?.length ?? 0;
+
+    const trueFalse =
+        answerKey.trueFalse?.length ?? 0;
+
+    const shortAnswer =
+        answerKey.shortAnswer?.length ?? 0;
+
+    return (
+        multipleChoice +
+        trueFalse +
+        shortAnswer
+    );
+}
+
+private normalizeShortAnswer(value: any): string {
+    if (Array.isArray(value)) {
+        return value
+            .join("")
+            .replace(/\s/g, "")
+            .trim();
+    }
+
+    return String(value ?? "")
+        .replace(/\s/g, "")
+        .trim();
+}
+// ============================================================
+// GET SUBMITTED ATTEMPTS FOR REGRADE
+// ============================================================
+
+async getSubmittedAttemptsForRegrade(
+  examId: string
+) {
+  const supabase =
+    await createClient();
+
+  const {
+    data,
+    error,
+  } = await supabase
+    .from("exam_attempts")
+    .select(`
+      id,
+      exam_id,
+      student_id,
+      answers,
+      score,
+      is_passed,
+      submitted_at
+    `)
+    .eq("exam_id", examId)
+    .not("submitted_at", "is", null);
+
+  if (error) {
+    throw error;
+  }
+
+  return data ?? [];
+}
+
+}
+
+export const studentExamRepository =
+  new StudentExamRepository();

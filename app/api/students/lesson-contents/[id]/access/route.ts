@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { requireStudent } from "@/lib/auth/student";
 import { createClient } from "@/lib/supabase/server";
 
@@ -12,98 +13,115 @@ export async function GET(
     _request: Request,
     { params }: Context
 ) {
-    const cacheHeaders = {
-        "Cache-Control": "private, max-age=60, stale-while-revalidate=30",
-    };
-
     try {
-        // 1. Kiểm tra auth an toàn
-        let student;
-        try {
-            student = await requireStudent();
-        } catch {
-            return NextResponse.json(
-                { allowed: false, message: "Yêu cầu đăng nhập học sinh." },
-                { status: 401 }
-            );
-        }
+        const student =
+            await requireStudent();
 
-        const resolvedParams = await params;
-        const id = resolvedParams?.id;
+        const { id } = await params;
 
-        if (!id) {
-            return NextResponse.json(
-                { allowed: false, message: "Thiếu ID nội dung bài học." },
-                { status: 400 }
-            );
-        }
+        const supabase =
+            await createClient();
 
-        const supabase = await createClient();
-
-        // 2. Query gộp: Lấy lesson_content và check attempt của student cùng lúc
-        const { data: content, error: contentError } = await supabase
+        /*
+         * =====================================================
+         * 1. Lấy lesson content
+         * =====================================================
+         */
+        const {
+            data: content,
+            error: contentError,
+        } = await supabase
             .from("lesson_contents")
             .select(`
                 id,
+                title,
                 exam_id,
-                exam_attempts!left (
-                    id
-                )
+                file_link_id
             `)
             .eq("id", id)
-            .eq("exam_attempts.student_id", student.id)
-            .maybeSingle();
+            .single();
 
         if (contentError) {
-            console.error("[SUPABASE QUERY ERROR]", contentError);
             throw contentError;
         }
 
-        if (!content) {
-            return NextResponse.json(
-                { allowed: false, message: "Không tìm thấy tài liệu." },
-                { status: 404 }
-            );
-        }
-
-        // 3. Nếu tài liệu không gắn với bài thi -> Cho phép truy cập
+        /*
+         * =====================================================
+         * 2. Resource không liên kết exam
+         *
+         * → Cho phép xem bình thường.
+         * =====================================================
+         */
         if (!content.exam_id) {
-            return NextResponse.json(
-                { allowed: true },
-                { headers: cacheHeaders }
-            );
+            return NextResponse.json({
+                allowed: true,
+            });
         }
 
-        // 4. Nếu tài liệu có bài thi -> Kiểm tra xem student đã làm bài thi chưa
-        const hasAttempted = Array.isArray(content.exam_attempts) 
-            ? content.exam_attempts.length > 0 
-            : Boolean(content.exam_attempts);
+        /*
+         * =====================================================
+         * 3. Resource có liên kết exam
+         *
+         * Kiểm tra học sinh đã có ít nhất
+         * một attempt của đúng exam hay chưa.
+         *
+         * KHÔNG yêu cầu submitted_at.
+         * =====================================================
+         */
+const {
+    data: attempt,
+    error: attemptError,
+} = await supabase
+    .from("exam_attempts")
+    .select("id")
+    .eq("student_id", student.id)
+    .eq("exam_id", content.exam_id)
+    .limit(1)
+    .maybeSingle();
 
-        if (hasAttempted) {
-            return NextResponse.json(
-                { allowed: true },
-                { headers: cacheHeaders }
-            );
+        if (attemptError) {
+            throw attemptError;
         }
 
-        // 5. Chưa làm bài thi
-        return NextResponse.json(
-            {
-                allowed: false,
-                message: "Cần làm đề kiểm tra trước khi xem đáp án.",
-            },
-            { headers: cacheHeaders }
-        );
+        /*
+         * =====================================================
+         * 4. Đã từng làm exam
+         * =====================================================
+         */
+        if (attempt) {
+            return NextResponse.json({
+                allowed: true,
+            });
+        }
+
+        /*
+         * =====================================================
+         * 5. Chưa từng làm exam
+         * =====================================================
+         */
+        return NextResponse.json({
+            allowed: false,
+            message:
+                "Cần làm đề kiểm tra trước khi xem đáp án.",
+        });
 
     } catch (error) {
-        console.error("CHECK LESSON CONTENT ACCESS ERROR:", error);
+        console.error(
+            "CHECK LESSON CONTENT ACCESS ERROR:",
+            error
+        );
 
         return NextResponse.json(
             {
                 allowed: false,
-                message: "Không thể kiểm tra quyền truy cập.",
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : "Không thể kiểm tra quyền truy cập.",
             },
-            { status: 500 }
+            {
+                status: 500,
+            }
         );
     }
 }

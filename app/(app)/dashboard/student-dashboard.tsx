@@ -3,7 +3,8 @@
 import { useAnnouncement } from "@/hooks/use-announcement";
 import { useAuth } from '@/providers/auth-provider'
 import Image from "next/image";
-import { useStudentDashboard, useActiveStudentCount, } from '@/hooks/use-dashboard'
+// import { useStudentDashboard, useActiveStudentCount, } from '@/hooks/use-dashboard'
+import { useStudentDashboard, } from '@/hooks/use-dashboard'
 import { useLeaderboard } from '@/hooks/use-leaderboard'
 import { TopStudentsCard } from '@/components/dashboard/top-students-card'
 import { useQueryClient } from "@tanstack/react-query";
@@ -98,8 +99,8 @@ export default function StudentDashboard() {
         useLeaderboard()
     const announcement =
     useAnnouncement()
-    const activeStudentCount =
-    useActiveStudentCount()
+    // const activeStudentCount =
+    // useActiveStudentCount()
     const studentExams =
     useStudentExams();
 
@@ -127,9 +128,9 @@ const learningGoal =
 ]);
 
 
-    const activeStudents =
-        activeStudentCount.data
-            ?.activeStudents ?? 0
+    // const activeStudents =
+    //     activeStudentCount.data
+    //         ?.activeStudents ?? 0
    
     const stats = [
 
@@ -254,8 +255,8 @@ function handleStartEditGoal() {
 if (
         studentDashboard.isLoading ||
         leaderboard.isLoading ||
-        announcement.isLoading||
-        activeStudentCount.isLoading
+        announcement.isLoading
+        // activeStudentCount.isLoading
     ) {
         return (
             <div className="flex justify-center py-20">
@@ -428,9 +429,10 @@ const periodicNotifications =
   <div className="col-span-1 flex flex-col items-center justify-center rounded-xl border bg-card p-4 sm:p-6 shadow-sm lg:col-span-5">
     <div className="flex items-center justify-center gap-2">
       <span className="text-3xl font-bold tabular-nums text-primary sm:text-4xl">
-        {activeStudentCount.isLoading || activeStudentCount.isError
+        {/* {activeStudentCount.isLoading || activeStudentCount.isError
           ? "--"
-          : activeStudents + Math.floor(Math.random() * 11) + 20}
+          : activeStudents + Math.floor(Math.random() * 11) + 20} */}
+          {Math.floor(Math.random() * 11) + 20}
       </span>
 
       <Image

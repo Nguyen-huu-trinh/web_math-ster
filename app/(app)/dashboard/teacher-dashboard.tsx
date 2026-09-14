@@ -4,9 +4,12 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
+// import {
+//     useTeacherDashboard,
+//     useActiveStudentCount,
+// } from '@/hooks/use-dashboard'
 import {
     useTeacherDashboard,
-    useActiveStudentCount,
 } from '@/hooks/use-dashboard'
 import { TeacherScheduleDialog } from "@/components/dashboard/teacher-schedule-dialog";
 import {
@@ -87,7 +90,7 @@ export default function TeacherDashboard() {
     useState<string | null>(null);
     const leaderboard = useLeaderboard();
     const announcement = useAnnouncement();
-    const activeStudentCount = useActiveStudentCount();
+    // const activeStudentCount = useActiveStudentCount();
 const queryClient = useQueryClient();
     const updateAnnouncement = useUpdateAnnouncement();
     const processAttendance = useProcessAttendance();
@@ -158,7 +161,7 @@ queryClient.setQueryData<ExamAlert[]>(
     }
 
     const dashboard = teacherDashboard.data;
-    const activeStudents = activeStudentCount.data?.activeStudents ?? 0;
+    // const activeStudents = activeStudentCount.data?.activeStudents ?? 0;
 
     const stats = [
         {
@@ -274,9 +277,10 @@ queryClient.setQueryData<ExamAlert[]>(
                 <div className="col-span-1 flex flex-col items-center justify-center rounded-xl border bg-card p-6 shadow-sm lg:col-span-5">
                     <div className="flex items-center justify-center gap-2">
                         <span className="text-4xl font-bold tabular-nums text-primary">
-                            {activeStudentCount.isLoading || activeStudentCount.isError
+                            {/* {activeStudentCount.isLoading || activeStudentCount.isError
                                 ? "--"
-                                : activeStudents + 20}
+                                : activeStudents + 20} */}
+                            {Math.floor(Math.random() * 11) + 20}
                         </span>
                         <Image
                             src="/trau.png"

@@ -10,9 +10,17 @@ export function useCourseDetail(courseId: string, studentId?: string) {
   const query = useQuery({
     queryKey: queryKeys.course.detail(courseId, studentId),
     queryFn: () => courseDetailService.getCourseDetail(courseId, studentId),
+    
+    // Tắt các hành vi refetch tự động ngầm gây tốn CPU
+    refetchOnWindowFocus: false, // Ngăn fetch lại khi chuyển tab
+    refetchOnMount: false,       // Sử dụng triệt để cache khi component re-mount
+    refetchOnReconnect: false,   // Ngăn fetch lại khi mạng kết nối lại
+
+    staleTime: 1000 * 60 * 30,   // 30 phút giữ fresh cache
+    gcTime: 1000 * 60 * 60,      // Giữ trong bộ nhớ tạm 1 giờ
+    
+    // Chỉ kích hoạt query khi có courseId
     enabled: Boolean(courseId),
-    staleTime: 1000 * 60 * 30, // Tối ưu: 30 phút giữ fresh cache
-    gcTime: 1000 * 60 * 60,    // Giữ trong bộ nhớ tạm (Garbage Collection) 1 giờ
   });
 
   return { 

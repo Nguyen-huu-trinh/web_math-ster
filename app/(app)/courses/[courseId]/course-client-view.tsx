@@ -190,6 +190,7 @@ export default function CourseClientView({ courseId }: CourseClientViewProps) {
   return (
     <div className="flex flex-col gap-6">
       <Link
+        prefetch={false}
         href="/courses"
         className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >

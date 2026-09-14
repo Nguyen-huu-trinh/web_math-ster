@@ -1,7 +1,5 @@
 import CourseClientView from "./course-client-view";
 
-// Cache tĩnh trên CDN trong 2 giờ (7200 giây)
-export const revalidate = 7200;
 
 interface CourseDetailPageProps {
   params: Promise<{ courseId: string }>;

@@ -305,17 +305,18 @@ function toggleChapter(chapterId: string) {
                           );
 
                         return (
-                          <Link
-                            key={lesson.id}
-                            href={`/courses/${course.id}/lessons/${lesson.id}`}
-                            onClick={onClose}
-                            className={cn(
-                              "flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
-                              active
-                                ? "bg-primary/10 font-semibold text-primary"
-                                : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                            )}
-                          >
+                        <Link
+                          key={lesson.id}
+                          href={`/courses/${course.id}/lessons/${lesson.id}`}
+                          prefetch={false} // <-- Tắt prefetch tại đây
+                          onClick={onClose}
+                          className={cn(
+                            "flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
+                            active
+                              ? "bg-primary/10 font-semibold text-primary"
+                              : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                          )}
+                        >
 
                             {/* =================================================
                                 STATUS ICON

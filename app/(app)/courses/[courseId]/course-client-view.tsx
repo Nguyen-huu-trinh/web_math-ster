@@ -291,19 +291,20 @@ export default function CourseClientView({ courseId }: CourseClientViewProps) {
                       key={lesson.id}
                       className="flex items-center gap-2 rounded-lg p-2 hover:bg-muted"
                     >
-                      <Link
-                        href={`/courses/${course.id}/lessons/${lesson.id}`}
-                        className="flex flex-1 items-center gap-3"
-                      >
-                        {lesson.completed ? (
-                          <CircleCheckBig className="text-primary" size={18} />
-                        ) : (
-                          <Circle size={18} />
-                        )}
-                        <div className="flex-1">
-                          <div>{lesson.title}</div>
-                        </div>
-                      </Link>
+                  <Link
+                    href={`/courses/${course.id}/lessons/${lesson.id}`}
+                    prefetch={false} // <-- Thêm dòng này để tắt prefetch
+                    className="flex flex-1 items-center gap-3"
+                  >
+                    {lesson.completed ? (
+                      <CircleCheckBig className="text-primary" size={18} />
+                    ) : (
+                      <Circle size={18} />
+                    )}
+                    <div className="flex-1">
+                      <div>{lesson.title}</div>
+                    </div>
+                  </Link>
 
                       {role === "TEACHER" && (
                         <div className="flex gap-1">

@@ -267,13 +267,14 @@ export default function LessonClientView({
 
   return (
     <div className="flex flex-col gap-6">
-      <Link
-        href={`/courses/${course.id}`}
-        className="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ChevronLeft className="size-4" />
-        {course.name}
-      </Link>
+<Link
+  href={`/courses/${course.id}`}
+  prefetch={false}
+  className="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+>
+  <ChevronLeft className="size-4" />
+  {course.name}
+</Link>
 
       <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)_340px]">
         <div className="hidden lg:block">
@@ -369,15 +370,16 @@ export default function LessonClientView({
                 {completed ? "Hoàn thành" : "Đánh dấu hoàn thành"}
               </Button>
               {nextLesson ? (
-                <Link
-                  href={`/courses/${course.id}/lessons/${nextLesson.id}`}
-                >
-                  <Button variant="ghost">
-                    Bài học tiếp theo
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              ) : null}
+  <Link
+    href={`/courses/${course.id}/lessons/${nextLesson.id}`}
+    prefetch={false}
+  >
+    <Button variant="ghost">
+      Bài học tiếp theo
+      <ArrowRight className="ml-2 h-4 w-4" />
+    </Button>
+  </Link>
+) : null}
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">

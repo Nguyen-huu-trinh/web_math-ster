@@ -122,247 +122,171 @@ async adjustStudentPoints(
 }
 
 
-  async getMyExams(studentId: string) {
-    const supabase = await createClient();
+async getMyExams(studentId: string) {
+  const supabase = await createClient();
 
-    const { data: studentProfile, error: studentProfileError } =
-  await supabase
-    .from("profiles")
-    .select("created_at")
-    .eq("id", studentId)
-    .single();
-
-if (studentProfileError) throw studentProfileError;
-
-if (!studentProfile) {
-  throw new Error("Không tìm thấy hồ sơ học sinh.");
-}
-
-    // 1. Lấy danh sách khóa học học sinh đang học
-    const { data: enrollments, error: enrollError } = await supabase
+  // 1. Lấy đồng thời Profile và Khoá học (Tiết kiệm thời gian chờ network)
+  const [profileRes, enrollRes] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("created_at")
+      .eq("id", studentId)
+      .single(),
+    supabase
       .from("course_students")
       .select("course_id")
-      .eq("student_id", studentId);
+      .eq("student_id", studentId),
+  ]);
 
-    if (enrollError) throw enrollError;
+  if (profileRes.error) throw profileRes.error;
+  if (enrollRes.error) throw enrollRes.error;
 
-    const courseIds = enrollments.map((x) => x.course_id);
+  const studentProfile = profileRes.data;
+  const enrollments = enrollRes.data;
 
-    if (courseIds.length === 0) return [];
-
-    // 2. Lấy toàn bộ đề của các khóa học
-    const { data: exams, error: examError } = await supabase
-      .from("exams")
-      .select(`
-        id,
-        title,
-        description,
-        category,
-        exam_type,
-        duration_minutes,
-        course_id,
-        max_attempts,
-        attendance_min_score,
-        show_answer,
-        exam_file_url,
-        exam_duration_days,
-        status,
-        is_active,
-        courses(
-          id,
-          name
-        )
-      `)
-      .in("course_id", courseIds)
-      .is("deleted_at", null)
-      .in("status", ["OPEN", "LOCKED"])
-      .order("created_at", {
-        ascending: false,
-      });
-
-    if (examError) throw examError;
-
-    if (!exams?.length) return [];
-
-    const examIds = exams.map((e) => e.id);
-
-    // 3. Lấy toàn bộ lịch sử làm bài
-const { data: attempts, error: attemptError } =
-    await supabase
-        .from("exam_attempts")
-        .select(
-            "id, exam_id, score, is_passed, created_at, submitted_at"
-        )
-        .eq("student_id", studentId)
-        .in("exam_id", examIds);
-
-    if (attemptError) throw attemptError;
-
-const getCalendarDateVN = (date: Date) => {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Ho_Chi_Minh",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
-};
-
-const getDaysBetween = (
-  fromDate: string,
-  toDate: Date
-) => {
-  const from = new Date(`${getCalendarDateVN(new Date(fromDate))}T00:00:00+07:00`);
-
-  const toDateVN = getCalendarDateVN(toDate);
-  const to = new Date(`${toDateVN}T00:00:00+07:00`);
-
-  return Math.floor(
-    (to.getTime() - from.getTime()) /
-      (1000 * 60 * 60 * 24)
-  );
-};
-
-const today = new Date();
-
-    return exams.map((exam) => {
-      const course = Array.isArray(exam.courses)
-        ? exam.courses[0]
-        : exam.courses;
-
-      const examAttempts = attempts.filter(
-        (a) => a.exam_id === exam.id
-      );
-
-      const lastAttempt =
-        examAttempts.length > 0
-          ? examAttempts.sort(
-              (a, b) =>
-                new Date(b.created_at).getTime() -
-                new Date(a.created_at).getTime()
-            )[0]
-          : null;
-
-      const attemptCount = examAttempts.length;
-
-const hasSubmittedAttempt = examAttempts.some(
-  (attempt) => attempt.submitted_at !== null
-);
-
-let periodicDaysRemaining: number | null = null;
-
-if (
-  exam.category === "PERIODIC" &&
-  exam.status === "OPEN" &&
-  exam.exam_duration_days !== null &&
-  !hasSubmittedAttempt
-) {
-  const daysElapsed = getDaysBetween(
-    studentProfile.created_at,
-    today
-  );
-
-  periodicDaysRemaining =
-    exam.exam_duration_days - daysElapsed;
-}
-
-const hasUnsubmittedAttempt =
-  examAttempts.some(
-    (attempt) =>
-      attempt.submitted_at === null
-  );
-
-const canStart =
-  exam.status === "OPEN" &&
-  exam.is_active === true &&
-  !hasUnsubmittedAttempt &&
-  attemptCount <
-    (exam.max_attempts ?? 1);
-
-let status:
-  | "NOT_STARTED"
-  | "PASSED"
-  | "FAILED"
-  | "DONE"
-  | "LOCKED" = "NOT_STARTED";
-
-// =====================================================
-// ĐỀ ĐANG KHÓA
-// =====================================================
-
-if (exam.status === "LOCKED") {
-  status = "LOCKED";
-}
-
-// =====================================================
-// ĐANG CÓ MỘT ATTEMPT CHƯA NỘP
-// =====================================================
-
-else if (hasUnsubmittedAttempt) {
-  status = "LOCKED";
-}
-
-// =====================================================
-// ĐÃ CÓ LỊCH SỬ LÀM BÀI
-// =====================================================
-
-else if (lastAttempt) {
-  status = lastAttempt.is_passed
-    ? "PASSED"
-    : "FAILED";
-}
-
-      return {
-        id: exam.id,
-
-        title: exam.title,
-
-        description: exam.description,
-
-        category: exam.category,
-
-        examType: exam.exam_type,
-
-        duration: exam.duration_minutes,
-
-        inProgress: hasUnsubmittedAttempt,
-
-        courseId: exam.course_id,
-
-        courseName:
-          course?.name ?? "",
-
-        maxAttempts:
-          exam.max_attempts ?? 1,
-
-        attempts: attemptCount,
-
-        lastScore:
-            lastAttempt?.score ?? null,
-
-        lastAttemptAt:
-            lastAttempt?.submitted_at ?? null,
-
-        lastAttemptId:
-            lastAttempt?.id ?? null,
-
-        status,
-
-        canStart,
-
-        canRetake: canStart,
-
-        attendanceMinScore:
-          exam.attendance_min_score,
-
-        showAnswer:
-          exam.show_answer,
-
-        examFile:
-          exam.exam_file_url,
-        periodicDaysRemaining,
-      };
-    });
+  if (!studentProfile) {
+    throw new Error("Không tìm thấy hồ sơ học sinh.");
   }
+
+  const courseIds = enrollments.map((x) => x.course_id);
+  if (courseIds.length === 0) return [];
+
+  // 2. Lấy toàn bộ đề của các khóa học
+  const { data: exams, error: examError } = await supabase
+    .from("exams")
+    .select(`
+      id,
+      title,
+      description,
+      category,
+      exam_type,
+      duration_minutes,
+      course_id,
+      max_attempts,
+      attendance_min_score,
+      show_answer,
+      exam_file_url,
+      exam_duration_days,
+      status,
+      is_active,
+      courses(
+        id,
+        name
+      )
+    `)
+    .in("course_id", courseIds)
+    .is("deleted_at", null)
+    .in("status", ["OPEN", "LOCKED"])
+    .order("created_at", { ascending: false });
+
+  if (examError) throw examError;
+  if (!exams?.length) return [];
+
+  const examIds = exams.map((e) => e.id);
+
+  // 3. Lấy toàn bộ lịch sử làm bài
+  const { data: attempts, error: attemptError } = await supabase
+    .from("exam_attempts")
+    .select("id, exam_id, score, is_passed, created_at, submitted_at")
+    .eq("student_id", studentId)
+    .in("exam_id", examIds);
+
+  if (attemptError) throw attemptError;
+
+  const getCalendarDateVN = (date: Date) => {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(date);
+  };
+
+  const getDaysBetween = (fromDate: string, toDate: Date) => {
+    const from = new Date(`${getCalendarDateVN(new Date(fromDate))}T00:00:00+07:00`);
+    const toDateVN = getCalendarDateVN(toDate);
+    const to = new Date(`${toDateVN}T00:00:00+07:00`);
+
+    return Math.floor((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
+  const today = new Date();
+
+  return exams.map((exam) => {
+    const course = Array.isArray(exam.courses) ? exam.courses[0] : exam.courses;
+
+    const examAttempts = attempts.filter((a) => a.exam_id === exam.id);
+
+    const lastAttempt =
+      examAttempts.length > 0
+        ? examAttempts.sort(
+            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          )[0]
+        : null;
+
+    const attemptCount = examAttempts.length;
+
+    const hasSubmittedAttempt = examAttempts.some(
+      (attempt) => attempt.submitted_at !== null
+    );
+
+    let periodicDaysRemaining: number | null = null;
+
+    if (
+      exam.category === "PERIODIC" &&
+      exam.status === "OPEN" &&
+      exam.exam_duration_days !== null &&
+      !hasSubmittedAttempt
+    ) {
+      const daysElapsed = getDaysBetween(studentProfile.created_at, today);
+      periodicDaysRemaining = exam.exam_duration_days - daysElapsed;
+    }
+
+    const hasUnsubmittedAttempt = examAttempts.some(
+      (attempt) => attempt.submitted_at === null
+    );
+
+    const canStart =
+      exam.status === "OPEN" &&
+      exam.is_active === true &&
+      !hasUnsubmittedAttempt &&
+      attemptCount < (exam.max_attempts ?? 1);
+
+    let status: "NOT_STARTED" | "PASSED" | "FAILED" | "DONE" | "LOCKED" = "NOT_STARTED";
+
+    if (exam.status === "LOCKED") {
+      status = "LOCKED";
+    } else if (hasUnsubmittedAttempt) {
+      status = "LOCKED";
+    } else if (lastAttempt) {
+      status = lastAttempt.is_passed ? "PASSED" : "FAILED";
+    }
+
+    return {
+      id: exam.id,
+      title: exam.title,
+      description: exam.description,
+      category: exam.category,
+      examType: exam.exam_type,
+      duration: exam.duration_minutes,
+      inProgress: hasUnsubmittedAttempt,
+      courseId: exam.course_id,
+      courseName: course?.name ?? "",
+      maxAttempts: exam.max_attempts ?? 1,
+      attempts: attemptCount,
+      lastScore: lastAttempt?.score ?? null,
+      lastAttemptAt: lastAttempt?.submitted_at ?? null,
+      lastAttemptId: lastAttempt?.id ?? null,
+      status,
+      canStart,
+      canRetake: canStart,
+      attendanceMinScore: exam.attendance_min_score,
+      showAnswer: exam.show_answer,
+      examFile: exam.exam_file_url,
+      periodicDaysRemaining,
+    };
+  });
+}
 
   // =====================================================
 // START EXAM

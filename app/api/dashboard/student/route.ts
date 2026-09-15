@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { dashboardService } from "@/services/dashboard.service";
 import { requireStudent } from "@/lib/auth/student";
 
-// Ép Route Handler chạy ở môi trường Node.js tối ưu hoặc Edge nếu có thể
-export const revalidate = 0; // Tránh Next.js build cache tĩnh ngoài ý muốn
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
@@ -13,8 +12,7 @@ export async function GET() {
 
     return NextResponse.json(data, {
       headers: {
-        // Cache phía Browser 3 phút (180s), Vercel CDN/SWR revalidate 600s
-        "Cache-Control": "private, max-age=180, stale-while-revalidate=600",
+        "Cache-Control": "private, no-cache, no-store, must-revalidate",
       },
     });
   } catch (error: any) {

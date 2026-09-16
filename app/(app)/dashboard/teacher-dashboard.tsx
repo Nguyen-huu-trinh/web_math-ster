@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-
+import { useOnlineCount } from "@/providers/presence-provider";
 // import {
 //     useTeacherDashboard,
 //     useActiveStudentCount,
@@ -88,26 +88,34 @@ export default function TeacherDashboard() {
      const router = useRouter();
     const teacherDashboard = useTeacherDashboard();
     // 1. Thêm State lưu số lượng người online thực tế
-    const [onlineCount, setOnlineCount] = useState<number>(1);
+    const onlineCount = useOnlineCount();
 
     // 2. Thêm Hook Subscribe kênh Supabase Realtime Presence
-    useEffect(() => {
-        const supabase = createClient();
-        const channel = supabase.channel("mathster-online-users");
+// useEffect(() => {
+//     const supabase = createClient();
+//     const channel = supabase.channel("mathster-online-users");
 
-        channel
-            .on("presence", { event: "sync" }, () => {
-                const state = channel.presenceState();
-                const count = Object.keys(state).length;
-                // Nếu chưa có ai sync thì mặc định hiển thị ít nhất 1 (là chính giáo viên)
-                setOnlineCount(count > 0 ? count : 1);
-            })
-            .subscribe();
+//     channel
+//         .on("presence", { event: "sync" }, () => {
+//             const state = channel.presenceState();
+//             const count = Object.keys(state).length;
+//             setOnlineCount(count);
+//         })
+//         .subscribe(async (status) => {
+//             // CẦN THÊM ĐOẠN NÀY: Báo danh thiết bị hiện tại khi đã kết nối thành công
+//             if (status === "SUBSCRIBED") {
+//                 await channel.track({
+//                     online_at: new Date().toISOString(),
+//                 });
+//             }
+//         });
 
-        return () => {
-            void supabase.removeChannel(channel);
-        };
-    }, []);
+//     return () => {
+//         void supabase.removeChannel(channel);
+//     };
+// }, []);
+
+
     const [readingAlertId, setReadingAlertId] =
     useState<string | null>(null);
     const leaderboard = useLeaderboard();

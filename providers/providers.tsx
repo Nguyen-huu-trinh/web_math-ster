@@ -3,6 +3,7 @@
 import { ThemeProvider } from "./theme-provider";
 import { AuthProvider } from "./auth-provider";
 import { QueryProvider } from "./query-provider";
+import { PresenceProvider } from "./presence-provider";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
@@ -16,13 +17,15 @@ export function Providers({
     <ThemeProvider>
       <QueryProvider>
         <AuthProvider>
-          <TooltipProvider delay={200}>
-            {children}
-            <Toaster
-              position="top-right"
-              richColors
-            />
-          </TooltipProvider>
+          <PresenceProvider>
+            <TooltipProvider delay={200}>
+              {children}
+              <Toaster
+                position="top-right"
+                richColors
+              />
+            </TooltipProvider>
+          </PresenceProvider>
         </AuthProvider>
       </QueryProvider>
     </ThemeProvider>

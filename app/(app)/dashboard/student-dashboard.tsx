@@ -1,5 +1,6 @@
 
 'use client'
+import { useOnlineCount } from "@/providers/presence-provider";
 import { useAnnouncement } from "@/hooks/use-announcement";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from '@/providers/auth-provider'
@@ -93,7 +94,7 @@ export default function StudentDashboard() {
     useState("");
     const [displayPoints, setDisplayPoints] =
     useState<number | null>(null);
-const [onlineCount, setOnlineCount] = useState<number>(1);
+const onlineCount = useOnlineCount();
     const [showSchedule, setShowSchedule] =
     useState(false);
     const leaderboard =
@@ -128,22 +129,29 @@ const learningGoal =
     dashboard?.profile?.points,
 ]);
 
-useEffect(() => {
-    const supabase = createClient();
-    const channel = supabase.channel("mathster-online-users");
+// useEffect(() => {
+//     const supabase = createClient();
+//     const channel = supabase.channel("mathster-online-users");
 
-    channel
-      .on("presence", { event: "sync" }, () => {
-        const state = channel.presenceState();
-        const count = Object.keys(state).length;
-        setOnlineCount(count > 0 ? count : 1);
-      })
-      .subscribe();
+//     channel
+//         .on("presence", { event: "sync" }, () => {
+//             const state = channel.presenceState();
+//             const count = Object.keys(state).length;
+//             setOnlineCount(count);
+//         })
+//         .subscribe(async (status) => {
+//             // CẦN THÊM ĐOẠN NÀY: Báo danh thiết bị hiện tại khi đã kết nối thành công
+//             if (status === "SUBSCRIBED") {
+//                 await channel.track({
+//                     online_at: new Date().toISOString(),
+//                 });
+//             }
+//         });
 
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, []);
+//     return () => {
+//         void supabase.removeChannel(channel);
+//     };
+// }, []);
 
 
     // const activeStudents =

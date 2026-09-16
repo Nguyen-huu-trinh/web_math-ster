@@ -32,7 +32,7 @@ import {
 
 import { toast } from "sonner";
 import { UpdateCourseInput } from "@/validators/course.schema";
-
+export const dynamic = 'force-static';
 const CATEGORIES = [
   "All",
 ];

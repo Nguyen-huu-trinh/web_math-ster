@@ -1,6 +1,6 @@
 import CourseClientView from "./course-client-view";
 
-
+export const dynamic = 'force-static';
 interface CourseDetailPageProps {
   params: Promise<{ courseId: string }>;
 }

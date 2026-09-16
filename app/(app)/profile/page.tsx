@@ -43,7 +43,7 @@ import {
   AvatarImage,
 } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
-
+export const dynamic = 'force-static';
 function initials(name?: string) {
   if (!name) return '?'
 

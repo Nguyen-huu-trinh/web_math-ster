@@ -13,7 +13,7 @@ import ImportStudentsDialog from "@/components/accounts/import-students-dialog";
 import { useCourses } from "@/hooks/use-courses";
 import { useCreateStudent, useImportStudents } from "@/hooks/use-accounts";
 import { useTeacherStudents } from "@/hooks/use-teacher-students";
-
+export const dynamic = 'force-static';
 export default function TeacherStudentsPage() {
     const { courses, isLoading: loadingCourses } = useCourses();
     const {

@@ -11,7 +11,7 @@ import { CreateStudentDialog } from "@/components/accounts/create-student-dialog
 import ImportStudentsDialog from "@/components/accounts/import-students-dialog";
 import { useCourses } from "@/hooks/use-courses";
 import { useCreateStudent, useImportStudents } from "@/hooks/use-accounts";
-
+export const dynamic = 'force-static';
 interface Course {
   id: string;
   name: string;

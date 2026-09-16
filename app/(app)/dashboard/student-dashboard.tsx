@@ -1,6 +1,7 @@
 
 'use client'
 import { useAnnouncement } from "@/hooks/use-announcement";
+import { createClient } from "@/lib/supabase/client";
 import { useAuth } from '@/providers/auth-provider'
 import Image from "next/image";
 // import { useStudentDashboard, useActiveStudentCount, } from '@/hooks/use-dashboard'
@@ -92,7 +93,7 @@ export default function StudentDashboard() {
     useState("");
     const [displayPoints, setDisplayPoints] =
     useState<number | null>(null);
-
+const [onlineCount, setOnlineCount] = useState<number>(1);
     const [showSchedule, setShowSchedule] =
     useState(false);
     const leaderboard =
@@ -126,6 +127,23 @@ const learningGoal =
 }, [
     dashboard?.profile?.points,
 ]);
+
+useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase.channel("mathster-online-users");
+
+    channel
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState();
+        const count = Object.keys(state).length;
+        setOnlineCount(count > 0 ? count : 1);
+      })
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, []);
 
 
     // const activeStudents =
@@ -424,30 +442,27 @@ const periodicNotifications =
   </div>
 </div>
 
-  {/* KHỐI 2: Số người đang cày */}
-  {/* Mobile: col-span-1 (Nằm ở bên trái hàng thứ 2) | Desktop: lg:col-span-5 */}
-  <div className="col-span-1 flex flex-col items-center justify-center rounded-xl border bg-card p-4 sm:p-6 shadow-sm lg:col-span-5">
-    <div className="flex items-center justify-center gap-2">
-      <span className="text-3xl font-bold tabular-nums text-primary sm:text-4xl">
-        {/* {activeStudentCount.isLoading || activeStudentCount.isError
-          ? "--"
-          : activeStudents + Math.floor(Math.random() * 11) + 20} */}
-          {Math.floor(Math.random() * 11) + 20}
-      </span>
+{/* KHỐI 2: Số người đang cày */}
+<div className="col-span-1 flex flex-col items-center justify-center rounded-xl border bg-card p-4 sm:p-6 shadow-sm lg:col-span-5">
+  <div className="flex items-center justify-center gap-2">
+    {/* HIỂN THỊ CON SỐ REALTIME TẠI ĐÂY */}
+    <span className="text-3xl font-bold tabular-nums text-primary sm:text-4xl">
+      {Math.floor(Math.random() * 11) + 20+onlineCount}
+    </span>
 
-      <Image
-        src="/trau.png"
-        alt="Trâu đang cày"
-        width={42}
-        height={42}
-        className="object-contain sm:h-[52px] sm:w-[52px]"
-      />
-    </div>
-
-    <p className="mt-1 text-base font-semibold tracking-wide text-foreground sm:text-xl">
-      ĐANG CÀY
-    </p>
+    <Image
+      src="/trau.png"
+      alt="Trâu đang cày"
+      width={42}
+      height={42}
+      className="object-contain sm:h-[52px] sm:w-[52px]"
+    />
   </div>
+
+  <p className="mt-1 text-base font-semibold tracking-wide text-foreground sm:text-xl">
+    ĐANG CÀY
+  </p>
+</div>
 
   {/* KHỐI 3: Độ trâu / Mã điểm danh */}
   {/* Mobile: col-span-1 (Nằm ở bên phải hàng thứ 2) | Desktop: lg:col-span-5 */}

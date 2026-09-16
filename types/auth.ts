@@ -8,7 +8,7 @@ export interface Profile {
 
   avatar_url: string | null;
 
-  link_zoom: string | null;
+  link_zoom?: string | null;
 
   email?: string;
 

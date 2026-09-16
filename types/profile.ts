@@ -27,4 +27,5 @@ export interface Profile {
   updated_at: string;
   personal_email: string | null;
   points: number;
+  link_zoom?: string | null;
 }

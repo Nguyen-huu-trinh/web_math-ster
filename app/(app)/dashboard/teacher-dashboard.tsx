@@ -1,4 +1,5 @@
 'use client'
+import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -86,6 +87,27 @@ function greeting() {
 export default function TeacherDashboard() {
      const router = useRouter();
     const teacherDashboard = useTeacherDashboard();
+    // 1. Thêm State lưu số lượng người online thực tế
+    const [onlineCount, setOnlineCount] = useState<number>(1);
+
+    // 2. Thêm Hook Subscribe kênh Supabase Realtime Presence
+    useEffect(() => {
+        const supabase = createClient();
+        const channel = supabase.channel("mathster-online-users");
+
+        channel
+            .on("presence", { event: "sync" }, () => {
+                const state = channel.presenceState();
+                const count = Object.keys(state).length;
+                // Nếu chưa có ai sync thì mặc định hiển thị ít nhất 1 (là chính giáo viên)
+                setOnlineCount(count > 0 ? count : 1);
+            })
+            .subscribe();
+
+        return () => {
+            void supabase.removeChannel(channel);
+        };
+    }, []);
     const [readingAlertId, setReadingAlertId] =
     useState<string | null>(null);
     const leaderboard = useLeaderboard();
@@ -274,26 +296,25 @@ queryClient.setQueryData<ExamAlert[]>(
   </div>
 
 
-                <div className="col-span-1 flex flex-col items-center justify-center rounded-xl border bg-card p-6 shadow-sm lg:col-span-5">
-                    <div className="flex items-center justify-center gap-2">
-                        <span className="text-4xl font-bold tabular-nums text-primary">
-                            {/* {activeStudentCount.isLoading || activeStudentCount.isError
-                                ? "--"
-                                : activeStudents + 20} */}
-                            {Math.floor(Math.random() * 11) + 20}
-                        </span>
-                        <Image
-                            src="/trau.png"
-                            alt="Trâu đang cày"
-                            width={52}
-                            height={52}
-                            className="object-contain"
-                        />
-                    </div>
-                    <p className="mt-1 text-xl font-semibold tracking-wide text-foreground">
-                        ĐANG CÀY
-                    </p>
-                </div>
+ {/* KHỐI HIỂN THỊ SỐ NGUỜI ĐANG CÀY */}
+<div className="col-span-1 flex flex-col items-center justify-center rounded-xl border bg-card p-6 shadow-sm lg:col-span-5">
+    <div className="flex items-center justify-center gap-2">
+        {/* HIỂN THỊ CON SỐ REALTIME TẠI ĐÂY */}
+        <span className="text-4xl font-bold tabular-nums text-primary">
+            {20+onlineCount}
+        </span>
+        <Image
+            src="/trau.png"
+            alt="Trâu đang cày"
+            width={52}
+            height={52}
+            className="object-contain"
+        />
+    </div>
+    <p className="mt-1 text-xl font-semibold tracking-wide text-foreground">
+        ĐANG CÀY
+    </p>
+</div>
 
                 <div className="col-span-1 rounded-xl border bg-card p-4 text-center shadow-sm lg:col-span-5">
                     <div className="text-center">

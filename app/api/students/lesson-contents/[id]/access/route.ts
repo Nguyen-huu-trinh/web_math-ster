@@ -76,6 +76,7 @@ const {
     .select("id")
     .eq("student_id", student.id)
     .eq("exam_id", content.exam_id)
+    .eq("is_passed", true)
     .limit(1)
     .maybeSingle();
 

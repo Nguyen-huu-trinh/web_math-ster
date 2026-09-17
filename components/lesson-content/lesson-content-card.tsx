@@ -125,7 +125,7 @@ export function LessonContentCard({
                     {
                         description:
                             result.message ??
-                            "Cần làm đề kiểm tra trước khi xem đáp án.",
+                            "Cần làm đề kiểm tra đạt trước khi xem đáp án.",
                     }
                 );
 

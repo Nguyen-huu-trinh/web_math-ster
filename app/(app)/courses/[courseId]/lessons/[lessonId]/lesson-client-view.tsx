@@ -19,6 +19,8 @@ import {
   Menu,
   Maximize,
   Minimize,
+  Lock,
+  ExternalLink,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -73,6 +75,8 @@ export default function LessonClientView({
   const [deleteResourceOpen, setDeleteResourceOpen] = useState(false);
   const [selectedResource, setSelectedResource] = useState<any>(null);
   const [currentVideo, setCurrentVideo] = useState<any>(null);
+  const [isVideoLocked, setIsVideoLocked] = useState(false);
+  const [lockedExamId, setLockedExamId] = useState<string | null>(null);
   const [showLessonSidebar, setShowLessonSidebar] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -111,13 +115,76 @@ export default function LessonClientView({
     setCompleted(lesson.progress?.completed ?? lesson.completed ?? false);
   }, [lesson]);
 
+  const checkResourceAccess = useCallback(async (resource: any, showToast: boolean = false) => {
+    if (role !== "STUDENT") return true;
+    if (!resource.exam_id) return true;
+
+    const cached = resourceAccessCache.current[resource.id];
+    if (cached !== undefined) {
+      if (!cached && showToast) {
+        toast.warning("Chưa thể xem video chữa bài", {
+          description: "Cần hoàn thành bài kiểm tra trước khi xem đáp án.",
+        });
+      }
+      return cached;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/students/lesson-contents/${resource.id}/access`,
+        { method: "GET", credentials: "include" }
+      );
+      const result = await response.json();
+      if (!response.ok) {
+        if (showToast) {
+          toast.error("Không thể kiểm tra quyền truy cập", {
+            description: result.message ?? "Vui lòng thử lại.",
+          });
+        }
+        return false;
+      }
+      const allowed = result.allowed === true;
+      resourceAccessCache.current[resource.id] = allowed;
+
+      if (!allowed && showToast) {
+        toast.warning("Chưa thể xem video chữa bài", {
+          description:
+            result.message ?? "Cần làm đề kiểm tra đạt trước khi xem video này.",
+        });
+      }
+      return allowed;
+    } catch (error) {
+      console.error("[RESOURCE ACCESS ERROR]", error);
+      if (showToast) {
+        toast.error("Có lỗi xảy ra", {
+          description: "Không thể kiểm tra quyền xem tài liệu.",
+        });
+      }
+      return false;
+    }
+  }, [role]);
+
+  // Kiểm tra quyền khi load video đầu tiên (không hiện toast)
   useEffect(() => {
     if (resources.length === 0) return;
     const video = resources.find((x: any) => x.type === "VIDEO");
     if (video) {
       setCurrentVideo(video);
+      checkResourceAccess(video, false).then((allowed) => {
+        if (allowed) {
+          setIsVideoLocked(false);
+          setLockedExamId(null);
+        } else {
+          setIsVideoLocked(true);
+          setLockedExamId(video.exam_id);
+        }
+      });
+    } else {
+      setCurrentVideo(null);
+      setIsVideoLocked(false);
+      setLockedExamId(null);
     }
-  }, [resources]);
+  }, [resources, checkResourceAccess]);
 
   const toggleFullscreen = useCallback(() => {
     if (!videoContainerRef.current) return;
@@ -198,41 +265,15 @@ export default function LessonClientView({
     toast.success("Lesson completed");
   }
 
-  async function checkResourceAccess(resource: any) {
-    if (role !== "STUDENT") return true;
-    if (!resource.exam_id) return true;
-
-    const cached = resourceAccessCache.current[resource.id];
-    if (cached !== undefined) return cached;
-
-    try {
-      const response = await fetch(
-        `/api/students/lesson-contents/${resource.id}/access`,
-        { method: "GET", credentials: "include" }
-      );
-      const result = await response.json();
-      if (!response.ok) {
-        toast.error("Không thể kiểm tra quyền truy cập", {
-          description: result.message ?? "Vui lòng thử lại.",
-        });
-        return false;
-      }
-      const allowed = result.allowed === true;
-      resourceAccessCache.current[resource.id] = allowed;
-
-      if (!allowed) {
-        toast.warning("Chưa thể xem đáp án", {
-          description:
-            result.message ?? "Cần làm đề kiểm tra trước khi xem đáp án.",
-        });
-      }
-      return allowed;
-    } catch (error) {
-      console.error("[RESOURCE ACCESS ERROR]", error);
-      toast.error("Có lỗi xảy ra", {
-        description: "Không thể kiểm tra quyền xem tài liệu.",
-      });
-      return false;
+  async function handleSelectVideo(resource: any) {
+    setCurrentVideo(resource);
+    const allowed = await checkResourceAccess(resource, true);
+    if (allowed) {
+      setIsVideoLocked(false);
+      setLockedExamId(null);
+    } else {
+      setIsVideoLocked(true);
+      setLockedExamId(resource.exam_id);
     }
   }
 
@@ -248,7 +289,7 @@ export default function LessonClientView({
       return;
     }
 
-    const allowed = await checkResourceAccess(resource);
+    const allowed = await checkResourceAccess(resource, true);
     if (!allowed) return;
 
     window.open(
@@ -267,14 +308,14 @@ export default function LessonClientView({
 
   return (
     <div className="flex flex-col gap-6">
-<Link
-  href={`/courses/${course.id}`}
-  prefetch={false}
-  className="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
->
-  <ChevronLeft className="size-4" />
-  {course.name}
-</Link>
+      <Link
+        href={`/courses/${course.id}`}
+        prefetch={false}
+        className="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ChevronLeft className="size-4" />
+        {course.name}
+      </Link>
 
       <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)_340px]">
         <div className="hidden lg:block">
@@ -286,54 +327,79 @@ export default function LessonClientView({
             className="relative aspect-video w-full overflow-hidden rounded-xl border bg-black group"
           >
             {currentVideo ? (
-              <>
-                <p className="text-white absolute top-3 left-3 z-30 pointer-events-none text-sm font-medium drop-shadow-md">
-                  {currentVideo?.title}
-                </p>
-
-                {/* Giữ nguyên Lớp phủ che YouTube UI */}
-                <div
-                  className="absolute top-0 left-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
-                  onClick={(e) => e.stopPropagation()}
-                />
-
-                <div
-                  className="absolute bottom-0 left-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
-                  onClick={(e) => e.stopPropagation()}
-                />
-
-                <div
-                  className="absolute bottom-0 right-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
-                  onClick={(e) => e.stopPropagation()}
-                />
-
-                <button
-                  type="button"
-                  onClick={toggleFullscreen}
-                  className="absolute bottom-3 right-3 z-30 p-2 text-white bg-black/60 hover:bg-black/90 rounded-md transition-all pointer-events-auto"
-                  title={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
-                >
-                  {isFullscreen ? (
-                    <Minimize className="size-4" />
-                  ) : (
-                    <Maximize className="size-4" />
+              isVideoLocked ? (
+                /* Giao diện hiển thị khi Video bị khóa */
+                <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center text-white bg-slate-900">
+                  <div className="flex size-14 items-center justify-center rounded-full bg-slate-800 border border-slate-700 text-amber-400">
+                    <Lock className="size-7" />
+                  </div>
+                  <div className="flex flex-col gap-1 max-w-md">
+                    <h3 className="text-lg font-semibold">{currentVideo?.title}</h3>
+                    <p className="text-sm text-slate-400">
+                      Video này yêu cầu bạn hoàn thành bài kiểm tra đạt điều kiện trước khi mở khóa nội dung.
+                    </p>
+                  </div>
+                  {lockedExamId && (
+                    <Button
+                      className="mt-2 gap-2 bg-amber-500 text-black hover:bg-amber-400 font-medium"
+                      onClick={() => window.open(`/student-exams/open/${lockedExamId}`, "_blank")}
+                    >
+                      Làm bài kiểm tra ngay
+                      <ExternalLink className="size-4" />
+                    </Button>
                   )}
-                </button>
-                <div 
-                  className="absolute bottom-[3px] left-0 right-0 h-[3px] bg-white/20 z-20 pointer-events-none backdrop-blur-[1px]"
-                />
-                <iframe
-                  key={currentVideo?.id}
-                  className="w-full h-full border-0 relative z-10"
-                  src={
-                    currentVideo?.file_links?.url
-                      ? getYoutubeEmbedUrl(currentVideo.file_links.url)
-                      : undefined
-                  }
-                  title={currentVideo?.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                />
-              </>
+                </div>
+              ) : (
+                /* Giao diện phát Video bình thường */
+                <>
+                  <p className="text-white absolute top-3 left-3 z-30 pointer-events-none text-sm font-medium drop-shadow-md">
+                    {currentVideo?.title}
+                  </p>
+
+                  {/* Lớp phủ che YouTube UI */}
+                  <div
+                    className="absolute top-0 left-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+
+                  <div
+                    className="absolute bottom-0 left-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+
+                  <div
+                    className="absolute bottom-0 right-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={toggleFullscreen}
+                    className="absolute bottom-3 right-3 z-30 p-2 text-white bg-black/60 hover:bg-black/90 rounded-md transition-all pointer-events-auto"
+                    title={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
+                  >
+                    {isFullscreen ? (
+                      <Minimize className="size-4" />
+                    ) : (
+                      <Maximize className="size-4" />
+                    )}
+                  </button>
+                  <div 
+                    className="absolute bottom-[3px] left-0 right-0 h-[3px] bg-white/20 z-20 pointer-events-none backdrop-blur-[1px]"
+                  />
+                  <iframe
+                    key={currentVideo?.id}
+                    className="w-full h-full border-0 relative z-10"
+                    src={
+                      currentVideo?.file_links?.url
+                        ? getYoutubeEmbedUrl(currentVideo.file_links.url)
+                        : undefined
+                    }
+                    title={currentVideo?.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  />
+                </>
+              )
             ) : (
               <div className="flex h-full items-center justify-center text-muted-foreground">
                 No video
@@ -370,16 +436,16 @@ export default function LessonClientView({
                 {completed ? "Hoàn thành" : "Đánh dấu hoàn thành"}
               </Button>
               {nextLesson ? (
-  <Link
-    href={`/courses/${course.id}/lessons/${nextLesson.id}`}
-    prefetch={false}
-  >
-    <Button variant="ghost">
-      Bài học tiếp theo
-      <ArrowRight className="ml-2 h-4 w-4" />
-    </Button>
-  </Link>
-) : null}
+                <Link
+                  href={`/courses/${course.id}/lessons/${nextLesson.id}`}
+                  prefetch={false}
+                >
+                  <Button variant="ghost">
+                    Bài học tiếp theo
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              ) : null}
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -435,11 +501,7 @@ export default function LessonClientView({
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={async () => {
-                          const allowed = await checkResourceAccess(resource);
-                          if (!allowed) return;
-                          setCurrentVideo({ ...resource });
-                        }}
+                        onClick={() => handleSelectVideo(resource)}
                       >
                         <Play className="h-4 w-4" />
                       </Button>

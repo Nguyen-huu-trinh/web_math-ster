@@ -14,13 +14,11 @@ export async function GET(
     { params }: Context
 ) {
     try {
-        const student =
-            await requireStudent();
+        const student = await requireStudent();
 
         const { id } = await params;
 
-        const supabase =
-            await createClient();
+        const supabase = await createClient();
 
         /*
          * =====================================================
@@ -60,25 +58,46 @@ export async function GET(
 
         /*
          * =====================================================
-         * 3. Resource có liên kết exam
-         *
-         * Kiểm tra học sinh đã có ít nhất
-         * một attempt của đúng exam hay chưa.
-         *
-         * KHÔNG yêu cầu submitted_at.
+         * 2.5. Lấy thông tin Exam để biết Category
          * =====================================================
          */
-const {
-    data: attempt,
-    error: attemptError,
-} = await supabase
-    .from("exam_attempts")
-    .select("id")
-    .eq("student_id", student.id)
-    .eq("exam_id", content.exam_id)
-    .eq("is_passed", true)
-    .limit(1)
-    .maybeSingle();
+        const { data: examData, error: examError } = await supabase
+            .from("exams")
+            .select("category")
+            .eq("id", content.exam_id)
+            .single();
+
+        if (examError) {
+            throw examError;
+        }
+
+        const isAttendanceExam = examData?.category === "ATTENDANCE";
+
+        /*
+         * =====================================================
+         * 3. Resource có liên kết exam
+         *
+         * - Đề điểm danh (ATTENDANCE): Cần làm và ĐẠT (is_passed = true).
+         * - Đề định kỳ (PERIODIC): Chỉ cần ĐÃ LÀM (có record attempt).
+         * =====================================================
+         */
+        let attemptQuery = supabase
+            .from("exam_attempts")
+            .select("id")
+            .eq("student_id", student.id)
+            .eq("exam_id", content.exam_id);
+
+        // Nếu là đề điểm danh -> Bắt buộc is_passed = true
+        if (isAttendanceExam) {
+            attemptQuery = attemptQuery.eq("is_passed", true);
+        }
+
+        const {
+            data: attempt,
+            error: attemptError,
+        } = await attemptQuery
+            .limit(1)
+            .maybeSingle();
 
         if (attemptError) {
             throw attemptError;
@@ -97,13 +116,14 @@ const {
 
         /*
          * =====================================================
-         * 5. Chưa từng làm exam
+         * 5. Chưa từng làm exam / Chưa đạt
          * =====================================================
          */
         return NextResponse.json({
             allowed: false,
-            message:
-                "Cần làm đề kiểm tra trước khi xem đáp án.",
+            message: isAttendanceExam
+                ? "Cần làm đề kiểm tra đạt trước khi xem đáp án."
+                : "Cần hoàn thành bài kiểm tra định kỳ trước khi xem đáp án.",
         });
 
     } catch (error) {

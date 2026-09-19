@@ -155,7 +155,7 @@ const removePrerequisite =
       duration_minutes: 90,
       attendance_min_score: 9,
       show_answer: false,
-      max_attempts: 1,
+      max_attempts: 20,
       start_at: null,
       end_at: null,
       question_config: defaultQuestionConfig,

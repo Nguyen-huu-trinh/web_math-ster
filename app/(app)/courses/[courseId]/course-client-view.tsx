@@ -3,7 +3,6 @@
 import { DeleteLessonDialog } from "@/components/lessons/delete-lesson-dialog";
 import { toast } from "sonner";
 import { useState } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ChapterDialog } from "@/components/chapters/chapter-dialog";
@@ -11,7 +10,6 @@ import {
   BookOpen,
   CircleCheckBig,
   Circle,
-  Play,
   Plus,
   Pencil,
   Trash2,
@@ -43,9 +41,10 @@ import {
 
 interface CourseClientViewProps {
   courseId: string;
+  embedded?: boolean;
 }
 
-export default function CourseClientView({ courseId }: CourseClientViewProps) {
+export default function CourseClientView({ courseId, embedded = false }: CourseClientViewProps) {
   const [chapterDialogOpen, setChapterDialogOpen] = useState(false);
   const [selectedChapter, setSelectedChapter] = useState<any>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -175,7 +174,7 @@ export default function CourseClientView({ courseId }: CourseClientViewProps) {
   }
 
   if (loading) {
-    return <div className="py-10 text-center">Loading...</div>;
+    return <div className="py-10 text-center text-muted-foreground">Loading...</div>;
   }
 
   if (!course) {
@@ -189,70 +188,74 @@ export default function CourseClientView({ courseId }: CourseClientViewProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <Link
-        prefetch={false}
-        href="/courses"
-        className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ChevronLeft className="size-4" />
-        Quay về
-      </Link>
+      {/* Ẩn nút Quay về nếu đang hiển thị ở cột bên phải */}
+      {!embedded && (
+        <Link
+          prefetch={false}
+          href="/courses"
+          className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ChevronLeft className="size-4" />
+          Quay về
+        </Link>
+      )}
 
-      <div className="grid gap-6 lg:grid-cols-[360px_1fr] items-start">
-        <div className="relative h-44 overflow-hidden rounded-xl border bg-muted">
-          <Image
-            src={course.thumbnail_url ?? "/placeholder.svg"}
-            alt={course.name}
-            fill
-            className="object-cover"
-          />
-        </div>
-
-        <div className="flex flex-col justify-center gap-4">
-          <div>
-            <Badge>{course.is_active ? "Active" : "Inactive"}</Badge>
-            <h1 className="mt-3 text-3xl font-bold">{course.name}</h1>
-            <p className="mt-2 text-muted-foreground">{course.description}</p>
+      {/* Header khóa học không còn hình ảnh */}
+      <div className="flex flex-col gap-4 pb-2 border-b">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2.5">
+            <Badge variant={course.is_active ? "default" : "secondary"}>
+              {course.is_active ? "Active" : "Inactive"}
+            </Badge>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <BookOpen className="size-3.5" />
+              <span>{course.totalLessons} bài</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <BookOpen className="size-4" />
-            {course.totalLessons} bài
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            {course.name}
+          </h1>
 
-          {role === "STUDENT" ? (
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span>
-                  {completedCount}/{course.totalLessons}
-                </span>
-                <span>{course.progress}%</span>
-              </div>
-              <Progress value={course.progress} />
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <Button
-                onClick={() => {
-                  setSelectedChapter(null);
-                  setChapterDialogOpen(true);
-                }}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Chapter
-              </Button>
-              <Button variant="outline">Edit Course</Button>
-              <Link href={`/courses/${course.id}/students`}>
-                <Button variant="outline">
-                  <Users />
-                  Học sinh
-                </Button>
-              </Link>
-            </div>
+          {course.description && (
+            <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">
+              {course.description}
+            </p>
           )}
         </div>
+
+        {role === "STUDENT" ? (
+          <div className="max-w-md pt-1">
+            <div className="flex justify-between text-xs text-muted-foreground mb-1.5 font-medium">
+              <span>Tiến độ: {completedCount}/{course.totalLessons} bài</span>
+              <span>{course.progress}%</span>
+            </div>
+            <Progress value={course.progress} className="h-2" />
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <Button
+              size="sm"
+              onClick={() => {
+                setSelectedChapter(null);
+                setChapterDialogOpen(true);
+              }}
+            >
+              <Plus className="mr-1.5 h-4 w-4" />
+              Add Chapter
+            </Button>
+            
+            <Link href={`/courses/${course.id}/students`}>
+              <Button size="sm" variant="outline">
+                <Users className="mr-1.5 h-4 w-4" />
+                Học sinh
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
 
+      {/* Danh sách chương và bài học */}
       <Card>
         <CardContent className="pt-6">
           <Accordion defaultValue={chapters.map((c: any) => c.id)}>
@@ -290,22 +293,22 @@ export default function CourseClientView({ courseId }: CourseClientViewProps) {
                   {(chapter.lessons ?? []).map((lesson: any) => (
                     <div
                       key={lesson.id}
-                      className="flex items-center gap-2 rounded-lg p-2 hover:bg-muted"
+                      className="flex items-center gap-2 rounded-lg p-2 hover:bg-muted transition-colors"
                     >
-                  <Link
-                    href={`/courses/${course.id}/lessons/${lesson.id}`}
-                    prefetch={false} // <-- Thêm dòng này để tắt prefetch
-                    className="flex flex-1 items-center gap-3"
-                  >
-                    {lesson.completed ? (
-                      <CircleCheckBig className="text-primary" size={18} />
-                    ) : (
-                      <Circle size={18} />
-                    )}
-                    <div className="flex-1">
-                      <div>{lesson.title}</div>
-                    </div>
-                  </Link>
+                      <Link
+                        href={`/courses/${course.id}/lessons/${lesson.id}`}
+                        prefetch={false}
+                        className="flex flex-1 items-center gap-3"
+                      >
+                        {lesson.completed ? (
+                          <CircleCheckBig className="text-primary" size={18} />
+                        ) : (
+                          <Circle size={18} />
+                        )}
+                        <div className="flex-1 text-sm font-medium">
+                          {lesson.title}
+                        </div>
+                      </Link>
 
                       {role === "TEACHER" && (
                         <div className="flex gap-1">
@@ -323,7 +326,7 @@ export default function CourseClientView({ courseId }: CourseClientViewProps) {
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="text-red-500"
+                            className="text-red-500 hover:text-red-600"
                             onClick={() => {
                               setSelectedLesson(lesson);
                               setSelectedChapterForLesson(chapter);

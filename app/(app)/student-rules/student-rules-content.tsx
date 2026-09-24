@@ -31,13 +31,51 @@ import { useAuth } from "@/providers/auth-provider";
  * BỘ PARSER TỰ ĐỘNG PHÂN TÍCH TEXT THUẦN THÀNH GIAO DIỆN THÔNG MINH
  * ========================================================================= */
 function parseInlineFormatting(text: string): React.ReactNode[] {
-  const parts = text.split(/(\*\*.*?\*\*|\+\d+\s*(?:máu|điểm)?|-\d+\s*(?:máu|điểm)?|kick\s+khỏi\s+lớp)/gi);
+  const parts = text.split(/(\*\*.*?\*\*|\[[^\]]+\]\(https?:\/\/[^\s<>]+\)|(?:https?:\/\/|www\.)[^\s<>"*]+|\+\d+\s*(?:máu|điểm)?|-\d+\s*(?:máu|điểm)?|kick\s+khỏi\s+lớp)/gi);
 
   return parts.map((part, index) => {
     if (!part) return null;
 
+    const namedLink = part.match(/^\[([^\]]+)\]\((https?:\/\/[^\s<>]+)\)$/i);
+    if (namedLink || /^(?:https?:\/\/|www\.)/i.test(part)) {
+      let url = namedLink ? namedLink[2] : part;
+      let suffix = "";
+      if (!namedLink) {
+        while (/[.,;:!?\])}]$/.test(url)) {
+          const last = url.slice(-1);
+          const opening = ({ ")": "(", "]": "[", "}": "{" } as Record<string, string>)[last];
+          if (opening && url.split(opening).length >= url.split(last).length) break;
+          suffix = last + suffix;
+          url = url.slice(0, -1);
+        }
+      }
+      const href = /^www\./i.test(url) ? `https://${url}` : url;
+      try {
+        const parsed = new URL(href);
+        if (!["http:", "https:"].includes(parsed.protocol)) return part;
+      } catch {
+        return part;
+      }
+      return (
+        <React.Fragment key={index}>
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-sm font-bold text-blue-700 underline decoration-blue-300 underline-offset-4 [overflow-wrap:anywhere] hover:text-blue-900 hover:decoration-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:text-blue-300 dark:hover:text-blue-200"
+          >
+            {namedLink ? namedLink[1] : url}
+          </a>
+          {suffix}
+        </React.Fragment>
+      );
+    }
+
     if (part.startsWith("**") && part.endsWith("**")) {
       const content = part.slice(2, -2);
+      if (/(?:https?:\/\/|www\.)/i.test(content)) {
+        return <strong key={index}>{parseInlineFormatting(content)}</strong>;
+      }
       const isNegative =
         content.includes("-") || content.toLowerCase().includes("kick");
       const isPositive = content.includes("+");
@@ -108,11 +146,16 @@ function FormattedRuleContent({ rawContent }: { rawContent: string }) {
     if (!rawContent) return [];
 
     let text = rawContent
+      // Giữ lại đích đến của link có nhãn trước khi loại bỏ HTML.
+      .replace(/<a\b[^>]*\bhref\s*=\s*(["'])(https?:\/\/.*?)\1[^>]*>([\s\S]*?)<\/a>/gi,
+        (_, _quote, href, label) => `[${label.replace(/<[^>]+>/g, "")}](${href})`)
       .replace(/<\/p>/gi, "\n")
       .replace(/<br\s*\/?>/gi, "\n")
       .replace(/<li[^>]*>/gi, "\n- ")
       .replace(/<\/li>/gi, "\n")
-      .replace(/<[^>]+>/g, "");
+      .replace(/<[^>]+>/g, "")
+      .replace(/&amp;/gi, "&")
+      .replace(/&nbsp;/gi, " ");
 
     text = text.replace(/[\u2013\u2014\u2012\u2212]/g, "-");
     text = text.replace(/([^\n])\s*-\s+([A-Z0-9À-Ỹ])/gu, "$1\n- $2");
@@ -158,7 +201,7 @@ function FormattedRuleContent({ rawContent }: { rawContent: string }) {
               <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-rose-100 text-rose-600">
                 <AlertTriangle className="size-4.5 stroke-[2.5]" />
               </div>
-              <div className="space-y-1 text-xs sm:text-sm">
+              <div className="min-w-0 space-y-1 text-xs sm:text-sm">
                 <p className="font-black uppercase tracking-wider text-rose-700">
                   QUY ĐỊNH NGHIÊM CẤM:
                 </p>
@@ -178,7 +221,7 @@ function FormattedRuleContent({ rawContent }: { rawContent: string }) {
             className="flex items-start gap-3.5 rounded-2xl border border-amber-100/70 bg-gradient-to-r from-white to-amber-50/50 p-3.5 sm:px-4.5 sm:py-3.5 shadow-2xs transition-all hover:border-amber-200"
           >
             <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-amber-500 stroke-[2.3]" />
-            <div className="text-xs sm:text-[13.5px] font-semibold leading-relaxed text-slate-700">
+            <div className="min-w-0 text-xs sm:text-[13.5px] font-semibold leading-relaxed text-slate-700">
               {parseInlineFormatting(contentText)}
             </div>
           </div>

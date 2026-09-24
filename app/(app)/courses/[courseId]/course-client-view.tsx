@@ -8,8 +8,9 @@ import { notFound } from 'next/navigation'
 import { ChapterDialog } from "@/components/chapters/chapter-dialog";
 import {
   BookOpen,
-  CircleCheckBig,
-  ChevronRight,
+  Check,
+  Circle,
+  Play,
   Plus,
   Pencil,
   Trash2,
@@ -312,7 +313,7 @@ export default function CourseClientView({ courseId, embedded = false }: CourseC
                   : undefined
               }
             >
-              <div className="space-y-2.5 pb-2 pt-3">
+              <div className="-mx-4 -mt-2 -mb-3.5 divide-y divide-slate-100 bg-white sm:-mx-5">
                 {(chapter.lessons ?? []).length === 0 && (
                   <div className="rounded-2xl border border-dashed border-slate-200 bg-white/70 px-4 py-6 text-center text-sm text-slate-400">
                     Chương này chưa có bài học.
@@ -325,46 +326,40 @@ export default function CourseClientView({ courseId, embedded = false }: CourseC
                   return (
                   <div
                     key={lesson.id}
-                    className={`group flex items-center gap-1 rounded-2xl border transition-all duration-200 hover:shadow-sm ${
+                    className={`group/lesson flex items-center gap-1 transition-colors ${
                       isNext
-                        ? "border-amber-200 bg-gradient-to-r from-white to-amber-50 shadow-sm"
-                        : isCompleted
-                        ? "border-emerald-100 bg-gradient-to-r from-white to-emerald-50/60 hover:border-emerald-200"
-                        : "border-slate-200/80 bg-white hover:border-blue-200 hover:bg-blue-50/30"
+                        ? "bg-amber-50/70 hover:bg-amber-50"
+                        : "bg-white hover:bg-slate-50/70"
                     }`}
                   >
                     <Link
                       href={`/courses/${course.id}/lessons/${lesson.id}`}
                       prefetch={false}
-                      className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl p-3 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:gap-4 sm:p-4"
+                      className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 sm:gap-3.5 sm:px-5 sm:py-4"
                     >
                       <span
-                        className={`flex size-10 shrink-0 items-center justify-center rounded-xl border sm:size-11 ${
+                        className={`flex size-7 shrink-0 items-center justify-center rounded-full border ${
                           isCompleted
-                            ? "border-emerald-200 bg-emerald-100/70 text-emerald-600"
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-600"
                             : isNext
-                            ? "border-amber-200 bg-amber-100 text-amber-700"
-                            : "border-slate-200 bg-slate-50 text-slate-400 group-hover:border-blue-200 group-hover:text-blue-600"
+                            ? "border-amber-200 bg-amber-50 text-amber-600"
+                            : "border-slate-200 bg-slate-50 text-slate-400"
                         }`}
                       >
-                        {isCompleted ? <CircleCheckBig className="size-5" /> : <PlayCircle className="size-5" />}
+                        {isCompleted ? <Check className="size-5" /> : isNext ? <Play className="size-4.5" /> : <Circle className="size-5" />}
                       </span>
-                      <div className="min-w-0 flex-1">
-                        <span className="block break-words text-sm font-bold leading-relaxed text-slate-700 group-hover:text-slate-950">
-                          {lesson.title}
-                        </span>
-                        {(isCompleted || isNext) && (
-                        <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-bold sm:text-[11px]">
-                          {isCompleted ? (
-                            <span className="rounded-full bg-emerald-100/80 px-2 py-0.5 text-emerald-700">Đã hoàn thành</span>
-                          ) : isNext ? (
-                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-700">Bài tiếp theo</span>
-                          ) : null}
-                        </div>
-                        )}
-
-                      </div>
-                      <ChevronRight className={`hidden size-4 shrink-0 sm:block ${isNext ? "text-amber-500" : "text-slate-300 group-hover:text-blue-500"}`} />
+<div className="min-w-0 flex-1">
+  <div className="flex flex-wrap items-center gap-2">
+    <span className="break-words text-sm font-semibold leading-relaxed text-slate-700 group-hover/lesson:text-slate-950">
+      {lesson.title}
+    </span>
+    {isNext && (
+      <span className="shrink-0 rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 sm:text-[11px]">
+        Học tiếp
+      </span>
+    )}
+  </div>
+</div>
                     </Link>
 
                     {role === "TEACHER" && (

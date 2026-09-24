@@ -35,15 +35,15 @@ export function StudentExamCard({ exam }: Props) {
     { id: string; title: string }[]
   >([]);
 
-  // Xác định trạng thái
-  const isPassed = exam.status === "PASSED" || (exam.lastScore !== null && exam.lastScore !== undefined && exam.lastScore >= 8);
-  const isFailed = exam.status === "FAILED" || (exam.lastScore !== null && exam.lastScore !== undefined && exam.lastScore < 5 && exam.attempts > 0);
+  // API ánh xạ is_passed của lượt làm bài thành PASSED / FAILED.
+  const isPassed = exam.status === "PASSED";
+  const isFailed = exam.status === "FAILED";
 
   // Đồng bộ nền, viền và điểm nhấn theo trạng thái bài thi.
   const palette = exam.inProgress
     ? {
         surface: "border-blue-200/80 to-blue-50/80 hover:border-blue-300",
-        accent: "before:bg-blue-500",
+        accent: "before:border-l-blue-500",
         dot: "bg-blue-500 ring-4 ring-blue-100/70",
         progress: "from-blue-400 to-blue-600",
         title: "group-hover:text-blue-700",
@@ -51,7 +51,7 @@ export function StudentExamCard({ exam }: Props) {
     : exam.status === "LOCKED"
     ? {
         surface: "border-slate-200 to-slate-100/60 hover:border-slate-300",
-        accent: "before:bg-slate-300",
+        accent: "before:border-l-slate-300",
         dot: "bg-slate-400 ring-4 ring-slate-100",
         progress: "from-slate-300 to-slate-400",
         title: "group-hover:text-slate-700",
@@ -59,24 +59,24 @@ export function StudentExamCard({ exam }: Props) {
     : isPassed
     ? {
         surface: "border-emerald-200/70 to-emerald-50/80 hover:border-emerald-300",
-        accent: "before:bg-emerald-500",
+        accent: "before:border-l-emerald-500",
         dot: "bg-emerald-500 ring-4 ring-emerald-100/70",
         progress: "from-emerald-400 to-emerald-600",
         title: "group-hover:text-emerald-700",
       }
     : isFailed
     ? {
-        surface: "border-rose-200/70 to-rose-50/70 hover:border-rose-300",
-        accent: "before:bg-rose-400",
-        dot: "bg-rose-400 ring-4 ring-rose-100/70",
-        progress: "from-rose-300 to-rose-500",
-        title: "group-hover:text-rose-700",
+        surface: "border-red-200/70 to-red-50/70 hover:border-red-300",
+        accent: "before:border-l-red-500",
+        dot: "bg-red-400 ring-4 ring-red-100/70",
+        progress: "from-red-300 to-red-500",
+        title: "group-hover:text-red-700",
       }
     : {
-        surface: "border-amber-200/70 to-amber-50/70 hover:border-amber-300",
-        accent: "before:bg-amber-400",
-        dot: "bg-amber-400 ring-4 ring-amber-100/70",
-        progress: "from-amber-300 to-amber-500",
+        surface: "border-slate-200 to-amber-50/30 hover:border-amber-200",
+        accent: "before:border-l-amber-600/80",
+        dot: "bg-amber-600/70 ring-4 ring-amber-50",
+        progress: "from-amber-200 to-amber-500/70",
         title: "group-hover:text-amber-800",
       };
 
@@ -99,7 +99,7 @@ export function StudentExamCard({ exam }: Props) {
         );
       case "FAILED":
         return (
-          <span className="inline-flex items-center rounded-md border border-rose-200 bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-600">
+          <span className="inline-flex items-center rounded-md border border-red-200 bg-red-50 px-2 py-0.5 text-[11px] font-bold text-red-600">
             Chưa đạt
           </span>
         );
@@ -111,7 +111,7 @@ export function StudentExamCard({ exam }: Props) {
         );
       default:
         return (
-          <span className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-bold text-slate-500">
+          <span className="inline-flex items-center rounded-md border border-amber-200/70 bg-amber-50/60 px-2 py-0.5 text-[11px] font-bold text-amber-800">
             Chưa làm
           </span>
         );
@@ -132,16 +132,16 @@ export function StudentExamCard({ exam }: Props) {
 
     const scoreNum = Number(exam.lastScore);
 
-    if (scoreNum >= 9.0) {
+    if (isPassed) {
       return (
         <div className="inline-flex items-center gap-1 rounded-xl border border-emerald-300 bg-emerald-50/70 px-2.5 py-1 font-mono text-xs font-black text-emerald-600 shadow-2xs">
-          <Star className="size-3 fill-emerald-500 text-emerald-500" />
+          {scoreNum >= 9 && <Star className="size-3 fill-emerald-500 text-emerald-500" />}
           <span>{scoreNum.toFixed(1)}</span>
         </div>
       );
     }
 
-    if (scoreNum >= 6.5) {
+    if (!isFailed) {
       return (
         <div className="inline-flex items-center rounded-xl border border-blue-200 bg-blue-50/70 px-2.5 py-1 font-mono text-xs font-black text-blue-600 shadow-2xs">
           <span>{scoreNum.toFixed(1)}</span>
@@ -150,7 +150,7 @@ export function StudentExamCard({ exam }: Props) {
     }
 
     return (
-      <div className="inline-flex items-center rounded-xl border border-rose-200 bg-rose-50/70 px-2.5 py-1 font-mono text-xs font-black text-rose-600 shadow-2xs">
+      <div className="inline-flex items-center rounded-xl border border-red-200 bg-red-50/70 px-2.5 py-1 font-mono text-xs font-black text-red-600 shadow-2xs">
         <span>{scoreNum.toFixed(1)}</span>
       </div>
     );
@@ -259,7 +259,7 @@ export function StudentExamCard({ exam }: Props) {
     if (exam.attempts === 0) {
       return (
         <Button
-          className="h-9 w-28 rounded-xl border border-amber-300 bg-gradient-to-r from-amber-200 to-amber-300 text-amber-950 font-bold text-xs hover:from-amber-300 hover:to-amber-400 shadow-xs shadow-amber-200/40 transition-all active:scale-[0.98]"
+          className="h-9 w-28 rounded-xl border border-amber-200/80 bg-gradient-to-r from-amber-50 to-amber-100/80 text-amber-900 font-bold text-xs hover:from-amber-100 hover:to-amber-200/70 shadow-2xs transition-all active:scale-[0.98]"
           disabled={isStarting || startExam.isPending}
           onClick={handleOpenStartDialog}
         >
@@ -274,7 +274,7 @@ export function StudentExamCard({ exam }: Props) {
         <Button
           className={`h-9 px-3 rounded-xl text-xs font-bold transition-all ${
             isFailed
-              ? "border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+              ? "border border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
               : isPassed
               ? "border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
               : "border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100"
@@ -307,7 +307,7 @@ export function StudentExamCard({ exam }: Props) {
   return (
     <>
       <div
-        className={`group relative overflow-hidden rounded-[20px] border bg-white bg-gradient-to-r from-white via-white px-5 py-4 shadow-2xs transition-all hover:shadow-sm before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1.5 before:rounded-r-full ${palette.surface} ${palette.accent}`}
+        className={`group relative overflow-hidden rounded-[20px] border bg-white bg-gradient-to-r from-white via-white px-5 py-4 shadow-2xs transition-all hover:shadow-sm before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:border-l-[5px] ${palette.surface} ${palette.accent}`}
       >
         {/* GRID LAYOUT 12 CỘT CỐ ĐỊNH: ĐẢM BẢO TẤT CẢ CÁC HÀNG THẲNG ĐỀU TẮP */}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-center">
@@ -327,7 +327,7 @@ export function StudentExamCard({ exam }: Props) {
                 </span>
                 <span className="text-slate-300">•</span>
                 {renderStatus()}
-{exam.category === "ATTENDANCE" ? (
+{/* {exam.category === "ATTENDANCE" ? (
   <span className="rounded-md border border-slate-200/80 bg-white/80 px-1.5 py-0.5 text-[10.5px] font-bold text-slate-600">
     Điểm danh
   </span>
@@ -335,7 +335,7 @@ export function StudentExamCard({ exam }: Props) {
   <span className="rounded-md border border-slate-200/80 bg-white/80 px-1.5 py-0.5 text-[10.5px] font-bold text-slate-600">
     Định kì
   </span>
-)}
+)} */}
               </div>
             </div>
           </div>
@@ -419,8 +419,8 @@ export function StudentExamCard({ exam }: Props) {
                 Sau khi bắt đầu, hệ thống sẽ tính giờ ngay lập tức ({exam.duration} phút) và ghi nhận lượt làm bài của bạn.
               </p>
 
-              <div className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50/80 p-3 text-rose-700">
-                <AlertTriangle className="size-4.5 shrink-0 mt-0.5 text-rose-600" />
+              <div className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50/80 p-3 text-red-700">
+                <AlertTriangle className="size-4.5 shrink-0 mt-0.5 text-red-600" />
                 <div className="text-xs leading-5">
                   <strong className="block font-bold">Lưu ý quan trọng:</strong>
                   Không thoát trình duyệt giữa chừng, nếu thoát bài thi sẽ được tự động nộp và ghi nhận điểm tại thời điểm đó.
@@ -463,7 +463,7 @@ export function StudentExamCard({ exam }: Props) {
 
           <div className="relative w-full max-w-md overflow-hidden rounded-[24px] border border-slate-150 bg-white p-6 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center gap-3">
-              <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-red-50 text-red-600">
                 <AlertTriangle className="size-5" />
               </div>
               <div>
@@ -488,7 +488,7 @@ export function StudentExamCard({ exam }: Props) {
                     className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs font-bold text-slate-700"
                   >
                     <span>{idx + 1}. {item.title}</span>
-                    <span className="rounded-md bg-rose-100 px-2 py-0.5 text-[10px] text-rose-700">
+                    <span className="rounded-md bg-red-100 px-2 py-0.5 text-[10px] text-red-700">
                       Cần làm
                     </span>
                   </div>

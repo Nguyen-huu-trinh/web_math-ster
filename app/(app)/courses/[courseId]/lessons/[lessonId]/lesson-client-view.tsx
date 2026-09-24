@@ -311,7 +311,7 @@ export default function LessonClientView({
   if (chapterId) returnParams.set("chapterId", chapterId);
 
   return (
-    <div className="dark flex min-h-[calc(100dvh-4rem)] w-full flex-col overflow-hidden bg-[#0f1426] text-slate-200 lg:h-[calc(100dvh-4rem)]">
+    <div className="dark flex min-h-dvh w-full flex-col overflow-hidden bg-[#0f1426] text-slate-200 lg:h-dvh">
       <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-800 px-4 py-3">
 <div className="flex min-w-0 flex-1 items-center gap-2.5">
   <Link
@@ -448,9 +448,9 @@ export default function LessonClientView({
                 {role === "TEACHER" && <Button variant="outline" className="m-3 mb-0 border-slate-700 bg-slate-800 text-xs" onClick={() => { setSelectedResource(null); setResourceDialogOpen(true); }}>Thêm tài liệu</Button>}
           <div className="p-3">
             <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
-              Tài liệu &amp; bài tập đi kèm ({resources.length} mục)
+              Tài nguyên đi kèm bài {lessonIndex + 1}
             </h2>
-            <div className="grid gap-2">
+            <div className="grid gap-3">
               {(lesson.contents ?? []).length === 0 ? (
                 <p className="text-sm text-slate-400">
                   Chưa có tài liệu bài học này.
@@ -459,29 +459,28 @@ export default function LessonClientView({
                 (lesson.contents ?? []).map((resource: any) => (
                   <div
                     key={resource.id}
-                    className={`flex min-w-0 items-center gap-2.5 rounded-xl border p-3 transition-colors ${currentVideo?.id === resource.id ? "border-amber-500/30 bg-amber-500/10" : "border-slate-800 bg-slate-950/40 hover:bg-slate-800/60"}`}
+                    className={`flex min-w-0 flex-wrap items-center gap-3 rounded-2xl border px-3.5 py-4 transition-colors ${currentVideo?.id === resource.id ? "border-amber-500/30 bg-amber-500/[0.06]" : resource.type === "EXAM" ? "border-emerald-500/25 bg-emerald-500/[0.05]" : "border-slate-800 bg-slate-950/40 hover:border-slate-700"}`}
                   >
-                    <div className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${currentVideo?.id === resource.id ? "bg-amber-500 text-white" : "bg-slate-800 text-slate-400"}`}>
+                    <div className={`flex size-6 shrink-0 items-center justify-center ${currentVideo?.id === resource.id ? "text-amber-400" : resource.type === "VIDEO" ? "text-rose-400" : resource.type === "EXAM" ? "text-emerald-400" : "text-sky-400"}`}>
                       {resource.type === "VIDEO" ? (
-                        <Play className="h-4 w-4" />
+                        <Play className="size-5" />
+                      ) : resource.type === "EXAM" ? (
+                        <CircleCheckBig className="size-5" />
                       ) : (
-                        <FileText className="h-4 w-4" />
+                        <FileText className="size-5" />
                       )}
                     </div>
 
                     <div className="flex min-w-0 flex-1 flex-col">
-                      <span className="truncate text-sm font-medium">
+                      <span className={`break-words text-sm font-bold leading-relaxed ${resource.type === "EXAM" ? "text-emerald-300" : "text-slate-100"}`}>
                         {resource.title}
-                      </span>
-                      <span className="text-xs text-slate-400">
-                        {resource.file_links?.provider ?? resource.provider ?? (resource.type === "VIDEO" ? "Video bài học" : resource.type === "EXAM" ? "Bài kiểm tra" : "Tài liệu bài học")}
                       </span>
                     </div>
 
                     {resource.type === "VIDEO" ? (
                       <Button
                         variant="ghost"
-                        className="h-8 shrink-0 rounded-lg px-2 text-xs font-semibold"
+                        className={`h-8 shrink-0 rounded-lg px-2.5 text-xs font-bold ${currentVideo?.id === resource.id ? "text-amber-400 hover:bg-amber-500/10 hover:text-amber-300" : "border border-slate-700 bg-slate-800 text-rose-300 hover:bg-slate-700 hover:text-rose-200"}`}
                         onClick={() => handleSelectVideo(resource)}
                       >
                         {currentVideo?.id === resource.id ? (isVideoLocked ? "Đang khóa" : "Đang xem") : "Xem video"}
@@ -489,9 +488,10 @@ export default function LessonClientView({
                     ) : (
                       <Button
                         variant="ghost"
+                        className={`h-8 shrink-0 rounded-lg px-2.5 text-xs font-bold ${resource.type === "EXAM" ? "bg-emerald-500 text-slate-950 hover:bg-emerald-400 hover:text-slate-950" : "border border-slate-700 bg-slate-800 text-sky-300 hover:bg-slate-700 hover:text-sky-200"}`}
                         onClick={() => openResource(resource)}
                       >
-                        Mở
+                        {resource.type === "EXAM" ? "Làm bài" : "Mở file"}
                       </Button>
                     )}
 

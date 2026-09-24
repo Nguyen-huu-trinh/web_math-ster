@@ -1,4 +1,5 @@
 "use client";
+import { StartExamDialog } from "@/components/exams/start-exam-dialog";
 
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -387,73 +388,9 @@ export function StudentExamCard({ exam }: Props) {
           MODAL XÁC NHẬN BẮT ĐẦU BÀI THI
       ========================================== */}
       {showStartDialog && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          <div
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-in fade-in"
-            onClick={handleCancelStart}
-          />
-
-          <div className="relative w-full max-w-md overflow-hidden rounded-[24px] border border-slate-150 bg-white p-6 shadow-2xl animate-in zoom-in-95">
-            <div className="flex items-center gap-3">
-              <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
-                <Play className="size-5 fill-current" />
-              </div>
-              <div>
-                <h2 className="text-lg font-black text-slate-900">
-                  Bắt đầu làm bài?
-                </h2>
-                <p className="text-xs font-semibold text-slate-400">
-                  {exam.title}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              {exam.description && (
-                <div className="rounded-xl bg-amber-50/60 p-3 text-xs font-medium text-amber-900 border border-amber-100">
-                  <strong>Kiến thức ôn tập:</strong> {exam.description}
-                </div>
-              )}
-
-              <p className="text-xs leading-relaxed text-slate-500">
-                Sau khi bắt đầu, hệ thống sẽ tính giờ ngay lập tức ({exam.duration} phút) và ghi nhận lượt làm bài của bạn.
-              </p>
-
-              <div className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50/80 p-3 text-red-700">
-                <AlertTriangle className="size-4.5 shrink-0 mt-0.5 text-red-600" />
-                <div className="text-xs leading-5">
-                  <strong className="block font-bold">Lưu ý quan trọng:</strong>
-                  Không thoát trình duyệt giữa chừng, nếu thoát bài thi sẽ được tự động nộp và ghi nhận điểm tại thời điểm đó.
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 flex items-center justify-end gap-2.5">
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isStarting}
-                onClick={handleCancelStart}
-                className="h-10 rounded-xl px-4 text-xs font-bold text-slate-600"
-              >
-                Hủy
-              </Button>
-              <Button
-                type="button"
-                disabled={isStarting || startExam.isPending}
-                onClick={handleStartExam}
-                className="h-10 rounded-xl bg-slate-900 px-5 text-xs font-black text-white hover:bg-slate-800"
-              >
-                {isStarting || startExam.isPending ? "Đang mở..." : "Bắt đầu ngay"}
-              </Button>
-            </div>
-          </div>
-        </div>
+        <StartExamDialog exam={exam} busy={isStarting || startExam.isPending} onClose={handleCancelStart} onStart={handleStartExam} />
       )}
 
-      {/* ==========================================
-          MODAL ĐIỀU KIỆN TIÊN QUYẾT
-      ========================================== */}
       {showPrerequisiteDialog && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           <div

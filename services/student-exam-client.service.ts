@@ -12,6 +12,11 @@ export interface StudentExamItem {
   examType: string;
 
   duration: number;
+  questionConfig?: {
+    multipleChoice?: number;
+    trueFalse?: number;
+    shortAnswer?: number;
+  } | null;
 
   courseId: string;
 

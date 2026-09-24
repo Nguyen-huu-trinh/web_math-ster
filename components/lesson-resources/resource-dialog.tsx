@@ -149,12 +149,12 @@ export function ResourceDialog({
 
                         <Select
                             value={form.watch("type")}
-                            onValueChange={(v) =>
-                                form.setValue(
-                                    "type",
-                                    v as any
-                                )
-                            }
+                            onValueChange={(v) => {
+                                if (v !== "VIDEO" && v !== "PDF" && v !== "EXAM") return;
+                                const providers = { VIDEO: "youtube", PDF: "google_drive", EXAM: "other" };
+                                form.setValue("type", v, { shouldDirty: true });
+                                form.setValue("provider", providers[v], { shouldDirty: true });
+                            }}
                         >
 
                             <SelectTrigger>

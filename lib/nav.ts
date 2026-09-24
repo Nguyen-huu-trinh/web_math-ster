@@ -44,12 +44,12 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ["teacher"],
   },
 
-  {
-    label: "Tạo Bài Kiểm Tra",
-    href: "/exams/create",
-    icon: "FilePlus2",
-    roles: ["teacher"],
-  },
+  // {
+  //   label: "Tạo Bài Kiểm Tra",
+  //   href: "/exams/create",
+  //   icon: "FilePlus2",
+  //   roles: ["teacher"],
+  // },
 
   {
     label: "Học Sinh",

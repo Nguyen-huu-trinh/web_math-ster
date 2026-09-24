@@ -1,4 +1,5 @@
 "use client";
+import { StartExamDialog } from "@/components/exams/start-exam-dialog";
 
 import { useRouter } from "next/navigation";
 import { useState, useRef } from "react";
@@ -7,7 +8,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Loader2,
-  Play,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -283,106 +283,8 @@ export function OpenExamContent({
       ================================================== */}
 
       {showStartDialog && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
-            onClick={handleCancelStart}
-          />
-
-          {/* Modal */}
-          <div className="relative w-full max-w-md max-h-[90vh] overflow-hidden rounded-2xl border border-border/50 bg-background shadow-2xl animate-in zoom-in-95 duration-200">
-            {/* Header */}
-            <div className="flex items-center gap-3 border-b px-5 py-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Play className="h-5 w-5 fill-current" />
-              </div>
-
-              <div>
-                <h2 className="text-lg font-bold">
-                  Bắt đầu làm bài?
-                </h2>
-
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {exam.title}
-                </p>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="px-5 py-4">
-              <p className="text-sm leading-6 text-muted-foreground">
-                Bạn có chắc chắn muốn bắt đầu
-                bài thi này không?
-              </p>
-
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                Sau khi bắt đầu, hệ thống sẽ
-                tính giờ ngay lập tức và ghi
-                nhận lượt làm bài của bạn.
-              </p>
-
-              {/* Warning */}
-              <div className="mt-4 flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-3.5 text-destructive">
-                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
-
-                <div className="text-sm leading-5">
-                  <span className="mb-1 block font-bold">
-                    LƯU Ý QUAN TRỌNG
-                  </span>
-
-                  Nếu bạn thoát khỏi bài thi
-                  giữa chừng, bài làm sẽ được
-                  tính là{" "}
-                  <strong className="underline underline-offset-2">
-                    0 điểm
-                  </strong>
-                  .
-                </div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="flex justify-end gap-2 border-t bg-muted/20 px-5 py-3">
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isStarting}
-                onClick={handleCancelStart}
-              >
-                Hủy
-              </Button>
-
-              <Button
-                type="button"
-                disabled={
-                  isStarting ||
-                  startExam.isPending
-                }
-                onClick={handleStartExam}
-                className="font-semibold"
-              >
-                {isStarting ||
-                startExam.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Đang mở...
-                  </>
-                ) : (
-                  <>
-                    <Play className="mr-2 h-4 w-4" />
-                    Bắt đầu ngay
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
+        <StartExamDialog exam={exam} busy={isStarting || startExam.isPending} onClose={handleCancelStart} onStart={handleStartExam} />
       )}
-
-      {/* ==================================================
-          PREREQUISITE DIALOG
-      ================================================== */}
 
       {showPrerequisiteDialog && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">

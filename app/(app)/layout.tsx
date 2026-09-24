@@ -51,7 +51,7 @@ export default function AppLayout({
           NAVIGATION
       ====================================================== */}
 
-      <SidebarNav />
+      {!isLessonPage && <SidebarNav />}
 
 
       {/* =====================================================
@@ -61,7 +61,7 @@ export default function AppLayout({
       <main
         className={
           isLessonPage
-            ? "min-h-[calc(100dvh-4rem)] w-full bg-[#0f1426]"
+            ? "min-h-dvh w-full bg-[#0f1426]"
             : "flex-1 px-4 py-6 sm:px-6 lg:px-8"
         }
       >

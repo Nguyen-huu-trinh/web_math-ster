@@ -149,12 +149,12 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ["ADMIN", "TEACHER"],
   },
 
-  {
-    label: "Tạo Bài Kiểm Tra",
-    href: "/exams/create",
-    icon: "FilePlus2",
-    roles: ["ADMIN", "TEACHER"],
-  },
+  // {
+  //   label: "Tạo Bài Kiểm Tra",
+  //   href: "/exams/create",
+  //   icon: "FilePlus2",
+  //   roles: ["ADMIN", "TEACHER"],
+  // },
 
   {
     label: "Học Sinh",

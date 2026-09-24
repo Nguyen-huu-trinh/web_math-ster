@@ -161,19 +161,19 @@ export function ChapterCard({
       value={chapter.id}
       className="group mb-3 overflow-hidden rounded-[22px] border border-slate-200/80 bg-[#F8FAFC] shadow-2xs transition-all hover:border-slate-300 hover:bg-[#F1F5F9]/80"
     >
-      <AccordionTrigger className="px-4 py-3.5 hover:no-underline sm:px-5">
-        <div className="flex w-full items-center justify-between gap-3 pr-2">
-          {/* Cột trái: Khối Squircle bo cong mềm + Tên chương */}
-          <div className="flex items-center gap-3.5 min-w-0">
-            {/* Đổi từ rounded-full sang rounded-2xl chuẩn form hiện đại */}
+<AccordionTrigger className="px-3.5 py-3 hover:no-underline sm:px-5 sm:py-3.5">
+        <div className="flex w-full items-center justify-between gap-2.5 sm:gap-3 pr-1 sm:pr-2">
+          {/* Cột trái: Khối Squircle + Tên chương (Tự cân đối Mobile & Desktop) */}
+          <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
             <div
-              className={`flex size-11 shrink-0 items-center justify-center rounded-2xl border ${visual.bg} shadow-2xs transition-transform group-hover:scale-105`}
+              className={`flex size-9 sm:size-11 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl border ${visual.bg} shadow-2xs transition-transform group-hover:scale-105`}
             >
               {visual.icon}
             </div>
 
-            <div className="text-left min-w-0">
-              <p className="truncate text-sm sm:text-[14.5px] font-black uppercase tracking-tight text-slate-800 transition-colors group-hover:text-amber-600">
+            <div className="text-left min-w-0 flex-1">
+              {/* Mobile: 2 dòng gọn gàng, không tràn; Desktop: 1 dòng thẳng tắp có truncate */}
+              <p className="line-clamp-2 sm:line-clamp-none sm:truncate text-[12.5px] sm:text-[14.5px] font-black uppercase tracking-tight text-slate-800 transition-colors group-hover:text-amber-600 leading-snug sm:leading-normal">
                 {chapter.title}
               </p>
             </div>
@@ -181,11 +181,11 @@ export function ChapterCard({
 
           {/* Cột phải: Badge tiến độ & Các nút thao tác */}
           <div
-            className="flex items-center gap-2.5 shrink-0"
+            className="flex items-center gap-1.5 sm:gap-2.5 shrink-0"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Badge hiển thị X/Y Bài */}
-            <span className="rounded-full border border-slate-200/80 bg-white px-3 py-1 font-mono text-xs font-black text-slate-700 shadow-2xs">
+            <span className="rounded-full border border-slate-200/80 bg-white px-2.5 py-0.5 sm:px-3 sm:py-1 font-mono text-[10.5px] sm:text-xs font-black text-slate-700 shadow-2xs">
               {completedLessons}/{totalLessons} Bài
             </span>
 
@@ -195,14 +195,14 @@ export function ChapterCard({
                 type="button"
                 size="icon"
                 variant="ghost"
-                className="size-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                className="size-7 sm:size-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800"
                 title="Thêm bài học"
                 onClick={(e) => {
                   e.stopPropagation();
                   onAddLesson(chapter);
                 }}
               >
-                <Plus className="size-4" />
+                <Plus className="size-3.5 sm:size-4" />
               </Button>
             )}
 
@@ -211,14 +211,14 @@ export function ChapterCard({
                 type="button"
                 size="icon"
                 variant="ghost"
-                className="size-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                className="size-7 sm:size-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800"
                 title="Chỉnh sửa chương"
                 onClick={(e) => {
                   e.stopPropagation();
                   onEdit(chapter);
                 }}
               >
-                <Pencil className="size-4" />
+                <Pencil className="size-3.5 sm:size-4" />
               </Button>
             )}
 
@@ -227,14 +227,14 @@ export function ChapterCard({
                 type="button"
                 size="icon"
                 variant="ghost"
-                className="size-8 rounded-full text-rose-500 hover:bg-rose-50 hover:text-rose-600"
+                className="size-7 sm:size-8 rounded-full text-rose-500 hover:bg-rose-50 hover:text-rose-600"
                 title="Xóa chương"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDelete(chapter);
                 }}
               >
-                <Trash2 className="size-4" />
+                <Trash2 className="size-3.5 sm:size-4" />
               </Button>
             )}
           </div>

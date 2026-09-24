@@ -118,14 +118,9 @@ export function DashboardAnnouncementCard({
               <BellRing className="size-5.5 stroke-[2.3]" />
             </div>
 
-            <div className="space-y-0.5">
-              <h3 className="text-lg sm:text-[19px] font-black tracking-tight text-slate-900">
-                Thông Báo Học Vụ Quan Trọng
-              </h3>
-              <p className="text-xs sm:text-[13px] font-semibold text-slate-500">
-                Phải làm đạt tất cả bài tập điểm danh mới làm bài tập định kì
-              </p>
-            </div>
+<h3 className="self-center text-xl sm:text-[21px] font-black tracking-tight text-slate-900 leading-none">
+  Thông Báo Học Vụ Quan Trọng
+</h3>
           </div>
 
           {/* Badge đếm số bài quá hạn ở góc phải */}

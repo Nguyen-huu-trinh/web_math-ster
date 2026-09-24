@@ -112,6 +112,7 @@ function NoteBadge({ note }: { note: string | null | undefined }) {
 
 export function StudentScheduleCard() {
   const [weekType, setWeekType] = useState<WeekType>("current");
+  const today = formatDate(new Date());
 
   const week = useMemo(() => getWeekRange(weekType), [weekType]);
 
@@ -142,9 +143,9 @@ export function StudentScheduleCard() {
   }, [schedules]);
 
   return (
-    <div className="rounded-2xl border bg-card p-6 shadow-sm">
+    <div className="rounded-2xl border border-slate-200/80 bg-card p-4 sm:p-6 shadow-sm dark:border-slate-800">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200/70 pb-5 dark:border-slate-800">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-foreground">
             Thời khóa biểu
@@ -214,11 +215,11 @@ export function StudentScheduleCard() {
       {!scheduleQuery.isLoading &&
         !scheduleQuery.isError &&
         flatSchedules.length > 0 && (
-          <div className="mt-6 overflow-hidden rounded-xl border bg-background shadow-xs">
+          <div className="mt-6 overflow-hidden rounded-xl border border-slate-200/80 bg-background shadow-xs dark:border-slate-800">
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left text-sm">
                 <thead>
-                  <tr className="border-b bg-muted/40 text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
+                  <tr className="border-b border-slate-200 bg-slate-100/80 text-xs font-bold uppercase tracking-wider text-slate-600 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300">
                     <th className="w-[140px] px-5 py-3.5 whitespace-nowrap">
                       Thứ / Ngày
                     </th>
@@ -236,16 +237,22 @@ export function StudentScheduleCard() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
-                  {flatSchedules.map((item) => (
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {flatSchedules.map((item) => {
+                    const isToday = item.session_date === today;
+
+                    return (
                     <tr
                       key={item.id}
-                      className="transition-colors hover:bg-muted/20"
+                      className={`transition-colors ${isToday
+                        ? "bg-amber-50/60 dark:bg-amber-950/20"
+                        : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                      }`}
                     >
                       {/* Thứ / Ngày */}
-                      <td className="px-5 py-4 align-top font-medium whitespace-nowrap">
+                      <td className={`px-5 py-4 align-top font-medium whitespace-nowrap ${isToday ? "shadow-[inset_4px_0_0_0_#f59e0b]" : ""}`}>
                         <div className="flex items-start gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                          <Calendar className={`h-4 w-4 shrink-0 mt-0.5 ${isToday ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`} />
                           <div>
                             <span className="font-semibold text-foreground">
                               {item.dayLabel}
@@ -253,13 +260,19 @@ export function StudentScheduleCard() {
                             <span className="block text-xs text-muted-foreground font-normal">
                               {formatDisplayDate(item.session_date)}
                             </span>
+                            {isToday && (
+                              <span className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-amber-200/70 bg-amber-100/70 px-2 py-0.5 text-[10px] font-extrabold text-amber-950 dark:border-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                                <span aria-hidden="true" className="size-1.5 rounded-full bg-amber-700" />
+                                Hôm nay
+                              </span>
+                            )}
                           </div>
                         </div>
                       </td>
 
                       {/* Giờ vào lớp */}
                       <td className="px-5 py-4 align-top whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-700 dark:text-amber-400">
+                        <span className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold ${isToday ? "bg-amber-100/80 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}>
                           <Clock className="h-3.5 w-3.5" />
                           {formatTime(item.start_time)}
                         </span>
@@ -276,7 +289,7 @@ export function StudentScheduleCard() {
                       </td>
 
                       {/* Lưu ý */}
-                      <td className="px-5 py-4 align-top">
+                          <td className="px-5 py-4 align-top">
                         {item.reminder ? (
                           <div className="inline-flex items-start gap-1.5 rounded-lg border border-amber-200/80 bg-amber-50/70 dark:bg-amber-950/30 dark:border-amber-900/50 p-2 text-xs font-medium text-amber-800 dark:text-amber-300">
                             <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
@@ -290,8 +303,10 @@ export function StudentScheduleCard() {
                           </span>
                         )}
                       </td>
+
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

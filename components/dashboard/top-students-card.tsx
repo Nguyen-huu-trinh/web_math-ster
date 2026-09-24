@@ -126,7 +126,13 @@ export function TopStudentsCard({
   const diffScore = Math.max(0, Number((thirdScore - currentStudentScore).toFixed(2)));
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-slate-800/80 bg-[#0F1420] p-6 sm:p-8 text-white shadow-2xl">
+    <div
+      className="relative overflow-hidden rounded-3xl border border-slate-800/80 bg-[#0F1420] p-6 sm:p-8 text-white shadow-2xl"
+      style={{
+        backgroundImage:
+          "radial-gradient(ellipse at 48% 0%, rgba(245, 158, 11, 0.14), transparent 58%), radial-gradient(ellipse at 100% 100%, rgba(124, 58, 237, 0.1), transparent 52%)",
+      }}
+    >
       {/* HEADER */}
       <div className="mb-6 space-y-2">
         <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-amber-400">
@@ -150,7 +156,13 @@ export function TopStudentsCard({
             CỘT TRÁI: TOP 1 - THỦ KHOA (lg:col-span-7)
         ========================================================= */}
         {first && (
-          <div className="flex flex-col justify-between rounded-2xl border border-amber-500/30 bg-gradient-to-b from-[#1E2230]/90 to-[#141824]/90 p-5 sm:p-6 shadow-lg lg:col-span-7">
+          <div
+            className="flex flex-col justify-between rounded-2xl border border-amber-500/30 bg-gradient-to-b from-[#1E2230]/90 to-[#141824]/90 p-5 sm:p-6 shadow-lg lg:col-span-7"
+            style={{
+              backgroundImage:
+                "radial-gradient(ellipse at 0% 50%, rgba(245, 158, 11, 0.04), transparent 55%), linear-gradient(to bottom, rgba(30, 34, 48, 0.9), rgba(20, 24, 36, 0.9))",
+            }}
+          >
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-2">
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-[#EAB308] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-950">

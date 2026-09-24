@@ -43,6 +43,23 @@ export function LeaderboardCard({
 
   // Nhận diện riêng bảng Top Học Giỏi (bắt đầu từ rank 4)
   const isTopExcellence = startRank > 1 && valueType === "count" && !isWarning;
+  const rankingTheme = isWarning
+    ? { rgb: "239, 68, 68", text: "text-red-700 dark:text-red-300" }
+    : isTopExcellence
+    ? { rgb: "59, 130, 246", text: "text-blue-800 dark:text-blue-300" }
+    : valueType === "points"
+    ? { rgb: "245, 158, 11", text: "text-amber-800 dark:text-amber-300" }
+    : valueType === "money"
+    ? { rgb: "16, 185, 129", text: "text-emerald-800 dark:text-emerald-300" }
+    : null;
+
+  const getRankStrength = (rank: number) =>
+    1 - (rank - startRank) / Math.max(entries.length - 1, 1);
+
+  const getRankBackground = (rank: number, min: number, max: number) =>
+    rankingTheme
+      ? `rgba(${rankingTheme.rgb}, ${min + (max - min) * getRankStrength(rank)})`
+      : undefined;
 
   const handleStudentClick = (studentId?: string) => {
     if (!isTeacher || !studentId) return;
@@ -51,11 +68,8 @@ export function LeaderboardCard({
 
   // 1. Phân loại màu cho số thứ hạng (Rank)
   const renderRankBadge = (rank: number) => {
-    if (isWarning) {
-      if (rank === 1) return "bg-rose-500 text-white font-black shadow-xs shadow-rose-200";
-      if (rank === 2) return "bg-rose-100 text-rose-600 font-extrabold border border-rose-200";
-      if (rank === 3) return "bg-amber-100 text-amber-700 font-extrabold border border-amber-200";
-      return "bg-slate-100 text-slate-500 font-bold dark:bg-slate-800 dark:text-slate-400";
+    if (rankingTheme) {
+      return cn("font-black", rankingTheme.text);
     }
 
     if (isTopExcellence) {
@@ -85,24 +99,20 @@ export function LeaderboardCard({
       text = Number((student as LeaderboardStudent).count ?? 0).toFixed(2);
     }
 
-    // Bảng Khu Vực Cần Tăng Tốc
-    if (isWarning) {
-      if (rank <= 2) {
-        return (
-          <span className="inline-flex min-w-[58px] items-center justify-center rounded-full border border-rose-200 bg-rose-50 px-3 py-1 font-mono text-xs font-black text-rose-600 shadow-2xs dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-400">
-            {text}
-          </span>
-        );
-      }
-      if (rank === 3) {
-        return (
-          <span className="inline-flex min-w-[58px] items-center justify-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 font-mono text-xs font-black text-amber-600 shadow-2xs dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-400">
-            {text}
-          </span>
-        );
-      }
+    // Cùng một tông màu, nhạt dần theo vị trí trong danh sách.
+    if (rankingTheme) {
       return (
-        <span className="inline-flex min-w-[58px] items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-mono text-xs font-bold text-slate-600 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-400">
+        <span
+          className={cn(
+            "inline-flex items-center justify-center rounded-full border px-3 py-1 font-mono text-xs font-black",
+            valueType === "money" ? "min-w-[76px]" : "min-w-[64px]",
+            rankingTheme.text
+          )}
+          style={{
+            backgroundColor: getRankBackground(rank, 0.04, 0.22),
+            borderColor: getRankBackground(rank, 0.12, 0.4),
+          }}
+        >
           {text}
         </span>
       );
@@ -165,7 +175,7 @@ export function LeaderboardCard({
                 isWarning
                   ? "border border-rose-200 bg-rose-50 text-rose-600 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-400"
                   : isTopExcellence
-                  ? "border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-400"
+                  ? "border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-400"
                   : "border border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
               )}
             >
@@ -190,6 +200,7 @@ export function LeaderboardCard({
               <div
                 key={studentId || index}
                 className="flex items-center justify-between gap-3 rounded-xl px-1.5 py-0.5 transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/50"
+                style={{ backgroundColor: getRankBackground(rank, 0.015, 0.12) }}
               >
                 {/* Khối bên trái: Thứ hạng + Mã học sinh + Họ tên */}
                 <div className="flex min-w-0 items-center gap-3">
@@ -199,6 +210,7 @@ export function LeaderboardCard({
                       "flex size-6.5 shrink-0 items-center justify-center rounded-full text-xs",
                       renderRankBadge(rank)
                     )}
+                    style={{ backgroundColor: getRankBackground(rank, 0.08, 0.4) }}
                   >
                     {rank}
                   </div>

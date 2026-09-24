@@ -2,14 +2,12 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 
 import type { CreateCourseDto } from "@/repositories/course.repository";
-import { PageHeader } from "@/components/layout/page-header";
 import { CourseCard } from "@/components/courses/course-card";
 import { CourseDialog } from "@/components/courses/course-dialog";
 import { DeleteCourseDialog } from "@/components/courses/delete-course-dialog";
-import { CourseToolbar } from "@/components/courses/course-toolbar";
 import { Button } from "@/components/ui/button";
 import CourseClientView from "@/app/(app)/courses/[courseId]/course-client-view";
 
@@ -57,7 +55,7 @@ export default function CoursesPage() {
     );
   }, [courses, query]);
 
-  // Tự động chọn khóa học đầu tiên khi dữ liệu được nạp xong
+  // Tự động chọn khóa học đầu tiên khi có dữ liệu
   useEffect(() => {
     if (!selectedCourseId && filteredCourses.length > 0) {
       setSelectedCourseId(filteredCourses[0].id);
@@ -68,18 +66,18 @@ export default function CoursesPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
 
-async function createCourse(values: CreateCourseDto) {
+  async function createCourse(values: CreateCourseDto) {
     try {
       const created = await createCourseMutation.mutateAsync(values);
-      toast.success("Course created");
+      toast.success("Tạo khóa học thành công");
       setDialogOpen(false);
-      
+
       const courseId = (created as { id?: string } | undefined)?.id;
       if (courseId) {
         setSelectedCourseId(courseId);
       }
     } catch {
-      toast.error("Create failed");
+      toast.error("Không thể tạo khóa học");
     }
   }
 
@@ -90,11 +88,11 @@ async function createCourse(values: CreateCourseDto) {
         id: editingCourse.id,
         values,
       });
-      toast.success("Course updated");
+      toast.success("Cập nhật khóa học thành công");
       setDialogOpen(false);
       setEditingCourse(null);
     } catch {
-      toast.error("Update failed");
+      toast.error("Không thể cập nhật khóa học");
     }
   }
 
@@ -102,101 +100,141 @@ async function createCourse(values: CreateCourseDto) {
     if (!editingCourse) return;
     try {
       await deleteCourseMutation.mutateAsync(editingCourse.id);
-      toast.success("Course deleted");
+      toast.success("Đã xóa khóa học");
       setDeleteOpen(false);
       if (selectedCourseId === editingCourse.id) {
         setSelectedCourseId(null);
       }
       setEditingCourse(null);
     } catch {
-      toast.error("Delete failed");
+      toast.error("Không thể xóa khóa học");
     }
   }
 
   function handleCourseClick(course: Course) {
-    // Trên màn hình mobile (<1024px): chuyển thẳng sang trang chi tiết
     if (typeof window !== "undefined" && window.innerWidth < 1024) {
       router.push(`/courses/${course.id}`);
       return;
     }
-    // Trên desktop: cập nhật ID để hiển thị ở cột bên phải
     setSelectedCourseId(course.id);
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto px-2 sm:px-4">
-      <PageHeader
-        title="Khoá học"
-        description={
-          role === "TEACHER"
-            ? "Manage your courses, chapters and lessons."
-            : "Vô học bớt lười đi."
-        }
-      />
+    <div className="flex flex-col gap-6 w-full max-w-[1440px] mx-auto px-2 sm:px-4 pb-12">
+      {/* HEADER TRANG & THANH TÌM KIẾM PILL CHUẨN MOCKUP */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
+            Khóa học
+          </h1>
+          <p className="mt-1 text-sm font-semibold italic text-slate-400">
+            {role === "TEACHER"
+              ? "Quản lý khóa học, chương và các bài giảng trực tuyến."
+              : "Vô học bớt lười đi."}
+          </p>
+        </div>
 
-      <CourseToolbar keyword={query} onKeywordChange={setQuery}>
-        {role === "TEACHER" && (
-          <Button
-            onClick={() => {
-              setEditingCourse(null);
-              setDialogOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            New Course
-          </Button>
-        )}
-      </CourseToolbar>
+        {/* Thanh tìm kiếm Pill và Nút Tạo khóa học */}
+        <div className="flex items-center gap-3">
+          <div className="relative w-full sm:w-[280px]">
+            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+              <Search className="size-4.5 stroke-[2.5]" />
+            </span>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Tìm khoá học..."
+              className="h-11 w-full rounded-full border border-slate-200/90 bg-white pl-11 pr-5 text-sm font-medium text-slate-800 placeholder:text-slate-400 shadow-2xs transition-all focus:border-amber-400 focus:outline-hidden focus:ring-2 focus:ring-amber-400/20"
+            />
+          </div>
+
+          {role === "TEACHER" && (
+            <Button
+              className="h-11 shrink-0 rounded-full px-5 font-bold shadow-xs bg-slate-900 hover:bg-slate-800 text-white"
+              onClick={() => {
+                setEditingCourse(null);
+                setDialogOpen(true);
+              }}
+            >
+              <Plus className="mr-1.5 h-4 w-4" />
+              Tạo khóa học
+            </Button>
+          )}
+        </div>
+      </div>
 
       {loading ? (
-        <div className="py-20 text-center text-muted-foreground">Đang tải...</div>
+        <div className="py-24 text-center font-medium text-slate-400">
+          Đang tải danh sách khóa học...
+        </div>
       ) : filteredCourses.length === 0 ? (
-        <Empty>
+        <Empty className="rounded-3xl border border-slate-200 bg-white p-12">
           <EmptyHeader>
-            <EmptyTitle>No courses found</EmptyTitle>
-            <EmptyDescription>There are no courses.</EmptyDescription>
+            <EmptyTitle>Không tìm thấy khóa học nào</EmptyTitle>
+            <EmptyDescription>
+              {query ? "Thử tìm kiếm với từ khóa khác." : "Chưa có khóa học nào được tạo."}
+            </EmptyDescription>
           </EmptyHeader>
         </Empty>
       ) : (
-        /* Cấu trúc Master-Detail: 2 cột trên Desktop, 1 cột trên Mobile */
+        /* CẤU TRÚC 2 CỘT MASTER-DETAIL (DESKTOP: 340px - 1fr) */
         <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6 items-start">
-          {/* Cột trái: Danh sách các khóa học */}
-          <div className="flex flex-col gap-2.5 max-h-[calc(100vh-220px)] overflow-y-auto pr-1">
-            {filteredCourses.map((course) => (
-              <CourseCard
-                key={course.id}
-                course={course}
-                isActive={course.id === selectedCourseId}
-                onSelect={() => handleCourseClick(course)}
-                onEdit={() => {
-                  setEditingCourse(course);
-                  setDialogOpen(true);
-                }}
-                onDelete={() => {
-                  setEditingCourse(course);
-                  setDeleteOpen(true);
-                }}
-              />
-            ))}
+          {/* CỘT TRÁI: Danh sách khóa học */}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between px-1 text-[11.5px] font-black uppercase tracking-wider text-slate-400">
+              <span>DANH SÁCH KHÓA HỌC</span>
+              <span>{filteredCourses.length} KHÓA</span>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              {filteredCourses.map((course) => (
+                <CourseCard
+                  key={course.id}
+                  course={course}
+                  isActive={course.id === selectedCourseId}
+                  onSelect={() => handleCourseClick(course)}
+                  onEdit={() => {
+                    setEditingCourse(course);
+                    setDialogOpen(true);
+                  }}
+                  onDelete={() => {
+                    setEditingCourse(course);
+                    setDeleteOpen(true);
+                  }}
+                />
+              ))}
+            </div>
           </div>
 
-          {/* Cột phải (Chỉ hiện trên Desktop): Nhúng trực tiếp chi tiết khóa học */}
-          <div className="hidden lg:block rounded-2xl border bg-card p-5 shadow-xs min-h-[500px]">
-            {selectedCourseId ? (
-              <CourseClientView
-                key={selectedCourseId}
-                courseId={selectedCourseId}
-                embedded={true}
-              />
-            ) : (
-              <div className="py-24 text-center text-muted-foreground text-sm">
-                Chọn một khóa học từ danh sách bên trái để xem nội dung.
-              </div>
-            )}
+          {/* CỘT PHẢI: KHUNG TRẮNG CHỨA CHI TIẾT KHÓA HỌC NHÚNG CHUẨN HÌNH MẪU */}
+          <div className="hidden lg:block">
+            <div className="min-h-[600px] rounded-[32px] border border-slate-200/80 bg-white p-5 sm:p-7 shadow-2xs">
+              {selectedCourseId ? (
+                <CourseClientView
+                  key={selectedCourseId}
+                  courseId={selectedCourseId}
+                  embedded={true}
+                />
+              ) : (
+                <div className="flex h-full min-h-[500px] flex-col items-center justify-center text-center">
+                  <div className="size-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mb-3 text-xl">
+                    📚
+                  </div>
+                  <p className="text-sm font-bold text-slate-600">
+                    Chưa chọn khóa học
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Chọn một khóa học từ danh sách bên trái để bắt đầu xem lộ trình.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
+      {/* DIALOGS DÀNH CHO GIÁO VIÊN */}
       <CourseDialog
         open={dialogOpen}
         course={editingCourse}

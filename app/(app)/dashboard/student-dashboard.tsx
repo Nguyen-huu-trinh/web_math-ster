@@ -1,5 +1,5 @@
 'use client'
-
+import { DashboardAnnouncementCard } from "@/components/dashboard/dashboard-announcement-card";
 import { useOnlineCount } from "@/providers/presence-provider";
 import { useAnnouncement } from "@/hooks/use-announcement";
 import { useAuth } from '@/providers/auth-provider';
@@ -325,57 +325,11 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* THÔNG BÁO VÀ HẠN NỘP BÀI THI */}
-      <div className="rounded-xl border border-amber-300 bg-amber-50 p-5 shadow-xs">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">📢</span>
-          <h3 className="font-semibold text-amber-900">
-            {announcement.data?.title ?? "Thông báo"}
-          </h3>
-        </div>
-
-        <p className="mt-3 whitespace-pre-line text-sm leading-7 text-amber-800">
-          {announcement.data?.content ?? "Chưa có thông báo."}
-        </p>
-
-        {periodicNotifications.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-amber-200/80 space-y-2">
-            {periodicNotifications.map((exam) => {
-              const days = exam.periodicDaysRemaining;
-              if (days === null) return null;
-              const isOverdue = days < 0;
-              const isToday = days === 0;
-
-              return (
-                <div
-                  key={exam.id}
-                  className="flex items-center gap-3 rounded-xl bg-red-100/70 border border-red-200/80 px-3.5 py-2.5 text-sm text-red-950 shadow-xs"
-                >
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-500 text-white font-bold text-xs">
-                    🚨
-                  </span>
-                  <div className="flex-1 font-medium leading-snug">
-                    Bài thi <strong className="font-bold underline underline-offset-2">{exam.title}</strong>{" "}
-                    {isOverdue ? (
-                      <span className="font-extrabold text-red-700">
-                        đã quá hạn {Math.abs(days)} ngày!
-                      </span>
-                    ) : isToday ? (
-                      <span className="font-extrabold text-red-700 uppercase tracking-wide">
-                        sẽ HẾT HẠN trong HÔM NAY!
-                      </span>
-                    ) : (
-                      <span className="font-bold text-red-600">
-                        sẽ hết hạn sau {days} ngày
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+{/* THÔNG BÁO VÀ HẠN NỘP BÀI THI CHUẨN DESIGN */}
+      <DashboardAnnouncementCard
+        announcement={announcement.data}
+        periodicNotifications={periodicNotifications}
+      />
 
       {/* ĐẾM NGƯỢC NGÀY THI */}
       <CountdownCard />
@@ -455,7 +409,7 @@ export default function StudentDashboard() {
       <Dialog open={showSchedule} onOpenChange={setShowSchedule}>
         <DialogContent className="sm:max-w-4xl w-full">
           <DialogHeader>
-            <DialogTitle>Thời khóa biểu</DialogTitle>
+            
           </DialogHeader>
           <div className="max-h-[75vh] overflow-y-auto pr-1">
             <StudentScheduleCard />

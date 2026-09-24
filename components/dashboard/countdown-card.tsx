@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { EXAM_DATE } from '@/lib/mock-data'
 import { Card } from '@/components/ui/card'
-import { CalendarClock, Flame, Quote } from 'lucide-react'
+
 const MOTIVATIONAL_QUOTES = [
   "Mỗi ngày cố gắng một chút, bạn sẽ tiến gần hơn đến mục tiêu.",
   "Không cần phải giỏi ngay hôm nay, chỉ cần tốt hơn ngày hôm qua.",
@@ -51,7 +51,7 @@ const MOTIVATIONAL_QUOTES = [
   "Sức mạnh lớn nhất của tuổi trẻ là biến những điều ‘không thể’ thành những cột mốc chói lọi trong lịch sử của chính mình.",
   "Hãy đầu tư vào bản thân. Không ai có thể lấy đi những gì bạn đã học được",
   "Bạn chỉ có thể thấy mình thất bại chứ không thể thấy mình bỏ cuộc.",
-  "Bạn định nói với ‘đứa trẻ’ kiên cường đó rằng: ‘Xịn lỗi, tôi không chiụ nổi nữa sao?’",
+  "Bạn định nói với ‘đứa trẻ’ kiên cường đó rằng: ‘Xin lỗi, tôi không chịu nổi nữa sao?’",
   "Chấp nhận không thoải mái trong vài năm, để có thể sống thoải mái phần đời còn lại.",
   "Sao không thử một lần cố gắng hết sức để xem bản thân có thể xuất sắc đến đâu?",
   "Mạnh dạn đặt mục tiêu lớn một chút. Cùng lắm là phải học nhiều hơn.",
@@ -85,7 +85,7 @@ const MOTIVATIONAL_QUOTES = [
   "You’ve got the brains, you can study the plan, u can make your dreams come true. WHY NOT YOU?",
   "Chỉ cần bạn đứng hạng nhất 1 lần. Tôi chắc chắn bạn sẽ không bao giờ muốn rời khỏi vị trí đó.",
   "Sự đau đớn của tri thức sẽ khiến bạn thêm giỏi giang, hạnh phúc hơn.",
-  "Hãy can đảm làm những điều khiến bạn sợ hãi, vì bạn sẽ nhận ra rằng chẳng có gi đáng sợ cả.",
+  "Hãy can đảm làm những điều khiến bạn sợ hãi, vì bạn sẽ nhận ra rằng chẳng có gì đáng sợ cả.",
   "Những gì chờ đợi bạn ở phía trước, nhất định sẽ tốt đẹp hơn những gì bạn đã bỏ lại phía sau.",
   "Trở thành phiên bản tốt nhất của chính mình đồng nghĩa với việc phải nói lời tạm biệt với rất nhiều người.",
   "Tập hài lòng với những thứ mình đang có và học từ bỏ những thứ trời không cho.",
@@ -102,8 +102,8 @@ const MOTIVATIONAL_QUOTES = [
   "Đặt mục tiêu ở tận mặt trăng, để khi rơi xuống cũng ngã giữa những vì sao.",
   "Bạn nhất định phải nỗ lực.",
   "Trăng khuyết rồi lại tròn, bóng tối qua đi, ánh sáng lại đong đầy.",
-  "Muốn ngẩn đầu lên nhìn đời thì trước hết phải cuối đầu nhìn sách.",
-  "Để trở nên xuất sắc- hãy trở nên thoải mái với sự không thoải mái. Vì những điều tuyệt vời sẽ không bao giờ đến từ những vùng không an toàn.",
+  "Muốn ngẩng đầu lên nhìn đời thì trước hết phải cúi đầu nhìn sách.",
+  "Để trở nên xuất sắc - hãy trở nên thoải mái với sự không thoải mái. Vì những điều tuyệt vời sẽ không bao giờ đến từ những vùng không an toàn.",
   "Sợ thất bại là bản năng nhưng dám bước tiếp là bản lĩnh.",
   "Người biết kiên trì với tri thức chính là người đang đi đúng hướng tới thành công.",
   "Nếu lúc này bạn ngủ bạn sẽ có một giấc mơ, nhưng lúc này nếu học bạn sẽ giải thích được ước mơ.",
@@ -140,21 +140,39 @@ export function CountdownCard() {
   ]
 
   return (
-    <Card className="relative overflow-hidden rounded-3xl border border-slate-800 bg-[#0F172A] p-6 sm:p-7 text-white shadow-xl">
-      <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
+    <Card className="relative overflow-hidden rounded-[28px] border border-slate-800/80 bg-[#111622] p-5 sm:p-7 text-white shadow-2xl">
+      {/* ========================================================
+          CÁC LỚP GRADIENT GLOW Ở GÓC TRÁI (TẠO ÁNH SÁNG DỊU MẮT)
+      ======================================================== */}
+      {/* 1. Điểm phát sáng ấm áp ở góc trên bên trái */}
+      <div 
+        aria-hidden="true" 
+        className="pointer-events-none absolute -left-16 -top-16 h-72 w-72 rounded-full bg-amber-500/15 blur-[90px]" 
+      />
+
+      {/* 2. Dải gradient chuyển màu ngang từ góc trái sang giữa thẻ */}
+<div 
+        aria-hidden="true" 
+        className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-amber-500/[0.02] to-transparent blur-3xl" 
+      />
+
+      {/* ========================================================
+          NỘI DUNG CHÍNH CỦA THẺ
+      ======================================================== */}
+      <div className="relative z-10 flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
         
-        {/* Khối bên trái: Icon + Tiêu đề + Ngày thi + Quote */}
-        <div className="flex flex-col gap-4 max-w-2xl">
-          <div className="flex items-start gap-3.5">
-            {/* Icon đồng hồ báo thức viền tròn tối */}
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-amber-950/40 border border-amber-800/40 text-lg shadow-inner">
+        {/* Khối bên trái: Icon + Tiêu đề + Ngày thi + Trích dẫn */}
+        <div className="flex flex-col gap-3.5 max-w-2xl">
+          <div className="flex items-center gap-3.5">
+            {/* Icon đồng hồ báo thức viền tròn tối ấm áp */}
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-amber-950/50 border border-amber-800/40 text-lg shadow-inner">
               ⏰
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {/* Tiêu đề chữ trắng in hoa + Badge 2k9 nền vàng */}
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-base sm:text-lg font-black tracking-wide uppercase text-white">
+                <h3 className="text-sm sm:text-base font-black tracking-wide uppercase text-white">
                   Đếm ngược kỳ thi tốt nghiệp THPT 2027
                 </h3>
                 <span className="rounded-full bg-[#FACC15] px-2 py-0.5 text-[11px] font-black text-slate-950">
@@ -172,28 +190,25 @@ export function CountdownCard() {
             </div>
           </div>
 
-{/* Khối Trích dẫn động lực dạng Capsule chuẩn theo mẫu */}
+          {/* Khối Trích dẫn động lực chuẩn theo hình mẫu */}
           {quote && (
-            <div className="inline-flex w-fit max-w-full items-center gap-3 rounded-full border border-slate-700/50 border-l-2 border-l-[#F5B82E] bg-[#262B30]/90 px-5 py-2.5 shadow-md backdrop-blur-xs">
-              {/* Icon dấu ngoặc kép đôi màu vàng */}
-              <Quote className="size-5 shrink-0 rotate-180 fill-none text-[#F5B82E] stroke-[2.2]" />
-
-              {/* Nội dung trích dẫn */}
-              <p className="text-xs sm:text-sm font-extrabold italic tracking-wide text-[#F5B82E]">
-                "{quote}"
-              </p>
+            <div className="inline-flex w-fit max-w-full items-center rounded-2xl border border-slate-700/40 bg-[#161F30]/70 px-4 py-2.5 shadow-sm backdrop-blur-xs">
+<p className="text-xs sm:text-[13px] font-medium italic tracking-wide text-[#FACC15]">
+  <span className="mr-1.5 text-sm font-bold">“</span>
+  {quote}
+</p>
             </div>
           )}
         </div>
 
         {/* Khối bên phải: 4 Ô đếm ngược thời gian */}
-        <div className="grid grid-cols-4 gap-2.5 sm:gap-3 self-center lg:self-auto shrink-0">
+        <div className="grid grid-cols-4 gap-2 sm:gap-3 self-center lg:self-auto shrink-0">
           {units.map((u) => (
             <div
               key={u.label}
-              className="flex min-w-[68px] sm:min-w-[80px] flex-col items-center justify-center rounded-2xl border border-slate-800/90 bg-[#162032] px-2 py-3 shadow-md"
+              className="flex min-w-[66px] sm:min-w-[78px] flex-col items-center justify-center rounded-2xl border border-slate-800/80 bg-[#151D2C]/90 px-2 py-3 shadow-md"
             >
-              {/* Riêng ngày mang màu vàng đậm (#FACC15), các ô còn lại mang màu trắng */}
+              {/* Số ngày mang màu vàng (#FACC15), các ô còn lại màu trắng */}
               <span
                 className={`font-mono text-2xl sm:text-3xl font-black tabular-nums ${
                   u.isDays ? 'text-[#FACC15]' : 'text-white'

@@ -1,8 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Pencil, Trash2, MoreHorizontal } from 'lucide-react'
-
+import { ChevronRight, Pencil, Trash2, MoreHorizontal } from 'lucide-react'
 import { useAuth } from '@/providers/auth-provider'
 import {
   DropdownMenu,
@@ -10,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useCourseDetail } from "@/hooks/use-course-detail"
 import type { Course } from '@/types/course'
 
 interface Props {
@@ -20,36 +20,66 @@ interface Props {
   onDelete?: () => void
 }
 
-const THEME_STYLES: Record<string, { card: string; activeCard: string; badge: string; text: string }> = {
+// Bảng màu viền và gradient tiến độ sắc nét, rõ ràng
+const THEME_STYLES: Record<string, {
+  borderActive: string
+  backgroundActive: string
+  badgeBg: string
+  badgeText: string
+  barGradient: string
+  percentText: string
+  arrowActive: string
+  subText: string
+}> = {
   S: {
-    card: "border-red-200 bg-red-50/40 hover:bg-red-50 hover:border-red-300 dark:bg-red-950/20 dark:border-red-900",
-    activeCard: "border-red-500 bg-red-100/70 shadow-sm ring-1 ring-red-400 dark:bg-red-950/50 dark:border-red-500",
-    badge: "border-red-400 text-red-600 bg-white dark:bg-zinc-900",
-    text: "text-red-700 dark:text-red-400",
+    backgroundActive: "bg-gradient-to-r from-white to-rose-100",
+    borderActive: "border-[2px] border-rose-500 shadow-sm shadow-rose-500/10",
+    badgeBg: "bg-rose-50 border-rose-200",
+    badgeText: "text-rose-600",
+    barGradient: "bg-gradient-to-r from-rose-500 to-amber-500",
+    percentText: "text-rose-600",
+    arrowActive: "text-rose-600",
+    subText: "Đang học",
   },
   T: {
-    card: "border-blue-200 bg-blue-50/40 hover:bg-blue-50 hover:border-blue-300 dark:bg-blue-950/20 dark:border-blue-900",
-    activeCard: "border-blue-500 bg-blue-100/70 shadow-sm ring-1 ring-blue-400 dark:bg-blue-950/50 dark:border-blue-500",
-    badge: "border-blue-400 text-blue-600 bg-white dark:bg-zinc-900",
-    text: "text-blue-700 dark:text-blue-400",
+    backgroundActive: "bg-gradient-to-r from-white to-blue-100",
+    borderActive: "border-[2px] border-blue-500 shadow-sm shadow-blue-500/10",
+    badgeBg: "bg-blue-50 border-blue-200",
+    badgeText: "text-blue-600",
+    barGradient: "bg-blue-500",
+    percentText: "text-slate-400",
+    arrowActive: "text-blue-600",
+    subText: "Luyện dạng",
   },
   E: {
-    card: "border-emerald-200 bg-emerald-50/40 hover:bg-emerald-50 hover:border-emerald-300 dark:bg-emerald-950/20 dark:border-emerald-900",
-    activeCard: "border-emerald-500 bg-emerald-100/70 shadow-sm ring-1 ring-emerald-400 dark:bg-emerald-950/50 dark:border-emerald-500",
-    badge: "border-emerald-400 text-emerald-600 bg-white dark:bg-zinc-900",
-    text: "text-emerald-700 dark:text-emerald-400",
+    backgroundActive: "bg-gradient-to-r from-white to-emerald-100",
+    borderActive: "border-[2px] border-emerald-500 shadow-sm shadow-emerald-500/10",
+    badgeBg: "bg-emerald-50 border-emerald-200",
+    badgeText: "text-emerald-600",
+    barGradient: "bg-emerald-500",
+    percentText: "text-slate-400",
+    arrowActive: "text-emerald-600",
+    subText: "Chuẩn cấu trúc",
   },
   R: {
-    card: "border-pink-200 bg-pink-50/40 hover:bg-pink-50 hover:border-pink-300 dark:bg-pink-950/20 dark:border-pink-900",
-    activeCard: "border-pink-500 bg-pink-100/70 shadow-sm ring-1 ring-pink-400 dark:bg-pink-950/50 dark:border-pink-500",
-    badge: "border-pink-400 text-pink-600 bg-white dark:bg-zinc-900",
-    text: "text-pink-700 dark:text-pink-400",
+    backgroundActive: "bg-gradient-to-r from-white to-pink-100",
+    borderActive: "border-[2px] border-pink-500 shadow-sm shadow-pink-500/10",
+    badgeBg: "bg-pink-50 border-pink-200",
+    badgeText: "text-pink-600",
+    barGradient: "bg-gradient-to-r from-pink-500 to-rose-500",
+    percentText: "text-slate-500",
+    arrowActive: "text-pink-600",
+    subText: "Cấp tốc",
   },
   V: {
-    card: "border-purple-200 bg-purple-50/40 hover:bg-purple-50 hover:border-purple-300 dark:bg-purple-950/20 dark:border-purple-900",
-    activeCard: "border-purple-500 bg-purple-100/70 shadow-sm ring-1 ring-purple-400 dark:bg-purple-950/50 dark:border-purple-500",
-    badge: "border-purple-400 text-purple-600 bg-white dark:bg-zinc-900",
-    text: "text-purple-700 dark:text-purple-400",
+    backgroundActive: "bg-gradient-to-r from-white to-purple-100",
+    borderActive: "border-[2px] border-purple-500 shadow-sm shadow-purple-500/10",
+    badgeBg: "bg-purple-50 border-purple-200",
+    badgeText: "text-purple-600",
+    barGradient: "bg-purple-500",
+    percentText: "text-slate-500",
+    arrowActive: "text-purple-600",
+    subText: "Tư duy định lượng",
   },
 }
 
@@ -76,79 +106,146 @@ export function CourseCard({
   const { profile } = useAuth()
   const role = profile?.role
 
+  // LẤY DỮ LIỆU TIẾN ĐỘ THỰC TẾ ĐỒNG BỘ TỪ HOOK useCourseDetail
+  const { course: detailCourse } = useCourseDetail(
+    course.id,
+    profile?.id
+  )
+
+  const chapters = detailCourse?.chapters ?? []
+  const allLessons = chapters.flatMap((chapter: any) => chapter.lessons ?? [])
+
+  // Số lượng bài thực tế
+  const totalLessons =
+    detailCourse?.totalLessons ?? allLessons.length ?? course.totalLessons ?? 0
+
+  // Số lượng bài đã hoàn thành
+  const completedLessons = allLessons.filter(
+    (lesson: any) => lesson.progress?.completed ?? lesson.completed ?? false
+  ).length
+
+  // Tỉ lệ phần trăm
+  const progressPercent =
+    totalLessons > 0
+      ? Math.round((completedLessons / totalLessons) * 100)
+      : (detailCourse?.progress ?? course.progress ?? 0)
+
   const badgeLetter = getCourseBadgeLetter(course.name)
   const theme = THEME_STYLES[badgeLetter] || {
-    card: "border-slate-200 bg-slate-50/60 hover:bg-slate-100 dark:bg-zinc-900 dark:border-zinc-800",
-    activeCard: "border-primary bg-primary/10 shadow-sm ring-1 ring-primary",
-    badge: "border-slate-400 text-slate-700 bg-white dark:bg-zinc-800",
-    text: "text-slate-800 dark:text-slate-200",
+    backgroundActive: "bg-gradient-to-r from-white to-amber-100",
+    borderActive: "border-[2px] border-amber-500 shadow-sm shadow-amber-500/10",
+    badgeBg: "bg-slate-50 border-slate-200",
+    badgeText: "text-slate-700",
+    barGradient: "bg-amber-500",
+    percentText: "text-slate-500",
+    arrowActive: "text-amber-500",
+    subText: "Khóa học",
   }
-
-  const textSizeClass = badgeLetter.length > 2 ? "text-xs" : "text-base"
 
   const cardContent = (
     <div
-      className={`flex items-center justify-between rounded-xl border-2 px-4 py-3 transition-all duration-150 cursor-pointer ${
-        isActive ? theme.activeCard : theme.card
-      }`}
       onClick={onSelect}
+      className={`group relative flex flex-col justify-between rounded-[22px] p-4 transition-all duration-200 cursor-pointer ${
+        isActive
+          ? `${theme.borderActive} ${theme.backgroundActive}`
+          : "border-[1.5px] border-slate-200 bg-white hover:border-slate-300"
+      }`}
     >
-      <div className="flex items-center gap-3 min-w-0 pr-2">
-        <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border font-bold tracking-wider shadow-xs ${textSizeClass} ${theme.badge}`}
-        >
-          {badgeLetter}
+      {/* Hàng 1: Icon chữ cái + Tên khóa học + Mũi tên */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Badge Icon bo góc tròn mềm chuẩn mẫu */}
+          <div
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border text-[15px] font-black ${theme.badgeBg} ${theme.badgeText}`}
+          >
+            {badgeLetter}
+          </div>
+
+          <div className="flex flex-col min-w-0">
+            <h3 className="truncate text-[14px] font-black uppercase tracking-tight text-slate-800">
+              {course.name}
+            </h3>
+            <p className="text-[11.5px] font-medium text-slate-400">
+              {totalLessons > 0
+                ? `${totalLessons} bài học • ${theme.subText}`
+                : "Chưa có bài học"}
+            </p>
+          </div>
         </div>
 
-        <h3 className={`truncate text-sm sm:text-base font-bold tracking-tight ${theme.text}`}>
-          {course.name}
-        </h3>
+        {/* Nút tác vụ cho Giáo viên hoặc Mũi tên cho Học sinh */}
+        <div className="shrink-0 pr-0.5">
+          {role === "TEACHER" ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onEdit?.()
+                  }}
+                >
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Chỉnh sửa
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-red-600 focus:text-red-600"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDelete?.()
+                  }}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Xóa
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <ChevronRight
+              className={`size-4.5 stroke-[2.5] transition-colors ${
+                isActive ? theme.arrowActive : "text-slate-300 group-hover:text-slate-500"
+              }`}
+            />
+          )}
+        </div>
       </div>
 
-      <div className="shrink-0">
-        {role === "TEACHER" ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-white/80 hover:text-slate-900 dark:hover:bg-zinc-800 transition-colors"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">Menu</span>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onEdit?.()
-                }}
-              >
-                <Pencil className="mr-2 h-4 w-4" />
-                Chỉnh sửa
-              </DropdownMenuItem>
-
-              <DropdownMenuItem
-                className="text-red-600 focus:text-red-600"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDelete?.()
-                }}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Xóa
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <div className="flex size-7 items-center justify-center rounded-full text-slate-400 transition-all">
-            <ArrowRight className="size-3.5" />
+      {/* Hàng 2: Thanh tiến trình đồng bộ dữ liệu chuẩn mẫu số 2 */}
+      {role !== "TEACHER" && (
+        <div className="mt-3.5 space-y-1.5 px-0.5">
+          {/* Thanh progress bar */}
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${theme.barGradient}`}
+              style={{ width: `${Math.min(100, progressPercent)}%` }}
+            />
           </div>
-        )}
-      </div>
+
+          {/* Dòng số bài và % hoàn thành */}
+          <div className="flex items-center justify-between text-[11px] font-bold">
+            <span className="text-slate-400 font-medium">
+              {progressPercent > 0
+                ? `Tiến độ: ${completedLessons}/${totalLessons} bài`
+                : "Chưa bắt đầu"}
+            </span>
+            <span
+              className={
+                progressPercent > 0 ? theme.percentText : "text-slate-300 font-semibold"
+              }
+            >
+              {progressPercent}%
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   )
 
-  // Nếu không có hàm onSelect (chạy độc lập), bọc trong Link
   if (!onSelect) {
     return (
       <Link href={`/courses/${course.id}`} className="block w-full">

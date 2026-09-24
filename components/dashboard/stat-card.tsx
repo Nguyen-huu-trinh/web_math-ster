@@ -49,27 +49,28 @@ export function StatCardsGrid({
     totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
   const remainingLessons = Math.max(0, totalLessons - completedLessons);
 
-  const getScoreClassification = (score: number) => {
-    if (score >= 8.0)
-      return {
-        label: "Xếp loại Giỏi",
-        color: "bg-indigo-50 text-indigo-600 border-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-400 dark:border-indigo-900/50",
-      };
-    if (score >= 6.5)
-      return {
-        label: "Xếp loại Khá",
-        color: "bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-900/50",
-      };
-    if (score >= 5.0)
-      return {
-        label: "Xếp loại TB",
-        color: "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/50",
-      };
+ const getScoreClassification = (score: number) => {
+  if (score >= 9.0)
     return {
-      label: "Cần Cố Gắng",
-      color: "bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900/50",
+      label: "Giỏi",
+      // Thêm: px-3 py-1 text-xs sm:text-sm font-bold rounded-lg
+      color: "px-3 py-1 text-xs sm:text-sm font-bold rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-400 dark:border-indigo-900/50",
     };
+  if (score >= 7.5)
+    return {
+      label: "Tạm",
+      color: "px-3 py-1 text-xs sm:text-sm font-bold rounded-lg bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-900/50",
+    };
+  if (score >= 6.0)
+    return {
+      label: "Trâu Bò",
+      color: "px-3 py-1 text-xs sm:text-sm font-bold rounded-lg bg-amber-50 text-amber-600 border border-amber-100 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/50",
+    };
+  return {
+    label: "Ngô",
+    color: "px-3 py-1 text-xs sm:text-sm font-bold rounded-lg bg-rose-50 text-rose-600 border border-rose-100 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900/50",
   };
+};
 
   const classification = getScoreClassification(averageScore);
 

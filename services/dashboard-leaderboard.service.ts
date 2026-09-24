@@ -3,7 +3,7 @@ import { leaderboardRepository } from "@/repositories/leaderboard.repository";
 export class DashboardLeaderboardService {
   private cache: any = null;
   private lastFetchTime = 0;
-  private readonly CACHE_TTL = 60 * 60 * 1000; // 5 phút
+  private readonly CACHE_TTL = 60* 60 * 1000; // 5 phút
 
   async dashboard() {
     const now = Date.now();

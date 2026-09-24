@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Sun, Moon, Monitor, Languages, Bell, ShieldCheck, LogOut, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/providers/auth-provider'
@@ -31,13 +31,25 @@ const THEME_OPTIONS: { value: ThemePref; label: string; icon: typeof Sun }[] = [
 export default function SettingsPage() {
   const { setTheme, theme } = useTheme()
   const { logout } = useAuth()
-  const [pref, setPref] = useState<ThemePref>(theme)
+
+  // Mặc định ưu tiên theme đã lưu, nếu chưa có thì chọn 'light'
+  const [pref, setPref] = useState<ThemePref>(theme || 'light')
   const [notifications, setNotifications] = useState({
     lessons: true,
     exams: true,
     attendance: false,
     weekly: true,
   })
+
+  // Đảm bảo nếu theme đang rỗng hoặc chưa set thì set sang 'light'
+  useEffect(() => {
+    if (!theme) {
+      setTheme('light')
+      setPref('light')
+    } else {
+      setPref(theme as ThemePref)
+    }
+  }, [theme, setTheme])
 
   function selectTheme(value: ThemePref) {
     setPref(value)
@@ -47,7 +59,7 @@ export default function SettingsPage() {
     } else {
       setTheme(value)
     }
-    toast.success(`Theme set to ${value}`)
+    toast.success(`Đã đổi giao diện: ${value === 'light' ? 'Sáng' : value === 'dark' ? 'Tối' : 'Hệ thống'}`)
   }
 
   return (
@@ -68,6 +80,7 @@ export default function SettingsPage() {
                 const Icon = opt.icon
                 return (
                   <button
+                    type="button"
                     key={opt.value}
                     onClick={() => selectTheme(opt.value)}
                     className={cn(
@@ -94,14 +107,14 @@ export default function SettingsPage() {
         {/* Language */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
+            <CardTitle className="text-base flex items-center gap-2">
               <Languages className="size-4 text-muted-foreground" />
               Ngôn ngữ
             </CardTitle>
             <CardDescription>Chọn cũng không có tác dụng đâu.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Select defaultValue="en" onValueChange={(v) => toast.success(`Language: ${v}`)}>
+            <Select defaultValue="vi" onValueChange={(v) => toast.success(`Language: ${v}`)}>
               <SelectTrigger className="w-full sm:w-64">
                 <SelectValue />
               </SelectTrigger>
@@ -116,7 +129,7 @@ export default function SettingsPage() {
         {/* Notifications */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
+            <CardTitle className="text-base flex items-center gap-2">
               <Bell className="size-4 text-muted-foreground" />
               Thông báo
             </CardTitle>
@@ -154,7 +167,7 @@ export default function SettingsPage() {
         {/* Security */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
+            <CardTitle className="text-base flex items-center gap-2">
               <ShieldCheck className="size-4 text-muted-foreground" />
               Bảo mật 
             </CardTitle>

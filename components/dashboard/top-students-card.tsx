@@ -1,10 +1,12 @@
 "use client";
 
-import { Award } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/providers/auth-provider";
 
 interface TopStudent {
   id?: string;
   student_id?: string;
+  student_code?: string;
   full_name?: string;
   name?: string;
   avatarUrl?: string | null;
@@ -13,41 +15,31 @@ interface TopStudent {
   score?: number;
   value?: number;
   count?: number;
+  quote?: string;
+  hp?: number;
 }
 
 interface TopStudentsCardProps {
   entries: TopStudent[];
+  currentStudentScore?: number;
+  currentStudentId?: string;
 }
 
-
-
 function getName(student: TopStudent) {
-  return (
-    student.full_name ??
-    student.name ??
-    "Học sinh"
-  );
+  return student.full_name ?? student.name ?? "Học sinh";
 }
 
 function getAvatarUrl(url?: string | null) {
   if (!url) return undefined;
-
   const value = url.trim();
-
   if (!value) return undefined;
 
-  const fileMatch = value.match(
-    /drive\.google\.com\/file\/d\/([^/?]+)/
-  );
-
+  const fileMatch = value.match(/drive\.google\.com\/file\/d\/([^/?]+)/);
   if (fileMatch?.[1]) {
     return `https://drive.google.com/thumbnail?id=${fileMatch[1]}&sz=w400`;
   }
 
-  const idMatch = value.match(
-    /drive\.google\.com\/(?:open|uc)\?[^#]*id=([^&]+)/
-  );
-
+  const idMatch = value.match(/drive\.google\.com\/(?:open|uc)\?[^#]*id=([^&]+)/);
   if (idMatch?.[1]) {
     return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w400`;
   }
@@ -56,13 +48,28 @@ function getAvatarUrl(url?: string | null) {
 }
 
 function getStudentAvatar(student: TopStudent) {
-  return getAvatarUrl(
-    student.avatarUrl ?? student.avatar_url
-  );
+  return getAvatarUrl(student.avatarUrl ?? student.avatar_url);
 }
 
-function getScore(student: TopStudent) {
-  return student.count ?? 0;
+function getScore(student: TopStudent): number {
+  return Number(student.count ?? student.score ?? student.value ?? 0);
+}
+
+function getStudentCode(student: TopStudent, fallbackIndex: number) {
+  return student.student_code ?? student.student_id ?? `MS-${String(fallbackIndex).padStart(4, "0")}`;
+}
+
+function getStudentHp(student: TopStudent) {
+  if (student.points !== undefined && student.points !== null) {
+    return Number(student.points);
+  }
+  if (student.hp !== undefined && student.hp !== null) {
+    return Number(student.hp);
+  }
+  if (student.value !== undefined && student.value !== null) {
+    return Number(student.value);
+  }
+  return 0;
 }
 
 function getInitials(name: string) {
@@ -77,7 +84,15 @@ function getInitials(name: string) {
 
 export function TopStudentsCard({
   entries,
+  currentStudentScore = 0,
+  currentStudentId,
 }: TopStudentsCardProps) {
+  const router = useRouter();
+  const { profile } = useAuth();
+
+  // Kiểm tra vai trò xem người dùng hiện tại có phải Giáo viên không
+  const isTeacher = profile?.role?.toUpperCase() === "TEACHER";
+
   const students = entries.slice(0, 3);
 
   if (students.length === 0) {
@@ -87,166 +102,270 @@ export function TopStudentsCard({
   const first = students[0];
   const second = students[1];
   const third = students[2];
-  return (
-    <div className="relative overflow-hidden rounded-xl border border-amber-900/40 bg-gradient-to-b from-[#0a0f1d] via-[#111827] to-[#070b14] px-4 py-6 shadow-xl">
-      
-      {/* Hiệu ứng ánh sáng nền tinh giản */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(251,191,36,0.05)_0%,transparent_70%)] pointer-events-none" />
 
+  // Hàm chuyển hướng đến trang cá nhân của học sinh nếu là Giáo viên
+  const handleStudentClick = (student: TopStudent) => {
+    if (!isTeacher) return;
+    const targetId = student.student_id ?? student.id;
+    if (!targetId) return;
+
+    router.push(`/students/${targetId}`);
+  };
+
+  // Kiểm tra học sinh hiện tại có thuộc Top 3 (dành cho chế độ xem của học sinh)
+  const isCurrentUserInTop = currentStudentId
+    ? students.some(
+        (s) =>
+          (s.student_id && s.student_id === currentStudentId) ||
+          (s.id && s.id === currentStudentId) ||
+          (s.student_code && s.student_code === currentStudentId)
+      )
+    : false;
+
+  const thirdScore = third ? getScore(third) : 0;
+  const diffScore = Math.max(0, Number((thirdScore - currentStudentScore).toFixed(2)));
+
+  return (
+    <div className="relative overflow-hidden rounded-3xl border border-slate-800/80 bg-[#0F1420] p-6 sm:p-8 text-white shadow-2xl">
       {/* HEADER */}
-      <div className="relative z-10 mb-6 text-center">
-        <div className="flex items-center justify-center gap-2">
-          <Award className="size-5 text-amber-400" />
-          <h3 className="text-lg font-black tracking-widest bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200 bg-clip-text text-transparent uppercase drop-shadow-[0_2px_4px_rgba(251,191,36,0.2)] sm:text-xl">
-            TOP 3 HỌC SINH XUẤT SẮC
-          </h3>
-          <Award className="size-5 text-amber-400" />
+      <div className="mb-6 space-y-2">
+        <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-amber-400">
+          <span>✨</span>
+          <span>MATH-STER HALL OF FAME</span>
         </div>
-        <p className="text-[10px] font-medium tracking-wide text-amber-100/40 uppercase">
-          Những học sinh có điểm làm bài kiểm tra cao nhất
+
+        <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white">
+          TOP 3 CHIẾN BINH XUẤT SẮC
+        </h3>
+
+        <p className="text-xs sm:text-sm font-medium text-slate-400">
+          Vinh danh những gương mặt thống trị bài thi định kỳ tuần này
         </p>
       </div>
 
-      {/* PODIUM COMPACT */}
-      <div className="relative z-10 mx-auto flex max-w-3xl items-end justify-center gap-4 sm:gap-8">
+      {/* GRID 2 CỘT */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 items-stretch">
         
-        {/* =========================
-            HẠNG 2 (Bên trái)
-        ========================== */}
-        {second && (
-          <div className="flex w-[30%] max-w-[160px] flex-col items-center">
-            <div className="relative flex items-center justify-center p-2">
-              <div className="absolute -top-1 left-1/2 -translate-x-1/2 text-slate-400 text-sm">👑</div>
-              
-              <div className="absolute inset-0 rounded-full border border-slate-400/30 p-0.5">
-                <div className="h-full w-full rounded-full border-2 border-double border-slate-400/60" />
-              </div>
-
-              <div className="relative z-10 flex size-20 items-center justify-center overflow-hidden rounded-full border border-slate-300 bg-slate-900 shadow-[0_0_10px_rgba(148,163,184,0.1)] sm:size-24">
-{getStudentAvatar(second) ? (
-  <img
-    src={getStudentAvatar(second)}
-    alt={getName(second)}
-    className="h-full w-full object-cover"
-  />
-) : (
-  <span className="text-xl font-bold text-slate-400">
-    {getInitials(getName(second))}
-  </span>
-)}
-              </div>
-
-              <div className="absolute -bottom-1 -left-1 z-20 flex size-8 flex-col items-center justify-center rounded-full border border-slate-300 bg-gradient-to-b from-slate-100 to-slate-400 text-slate-900 shadow-md">
-                <span className="text-xs font-black leading-none">2</span>
-                <span className="text-[6px] font-bold uppercase tracking-tighter">TOP</span>
-              </div>
-            </div>
-
-            {/* Khung Tên - Cho phép rớt hàng */}
-            <div className="mt-3 w-full text-center">
-              <div className="rounded-full border border-slate-400/20 bg-gradient-to-r from-slate-200/90 via-white to-slate-200/90 px-3 py-1 sm:py-1.5 shadow">
-                <p className="text-[11px] font-black tracking-normal text-slate-900 uppercase leading-tight">
-                  {getName(second)}
-                </p>
-              </div>
-              <p className="mt-1 text-base font-medium text-slate-400">
-                {getScore(second)} điểm
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* =========================
-            HẠNG 1 (Ở giữa)
-        ========================== */}
+        {/* ========================================================
+            CỘT TRÁI: TOP 1 - THỦ KHOA (lg:col-span-7)
+        ========================================================= */}
         {first && (
-          <div className="flex w-[34%] max-w-[180px] flex-col items-center sm:-translate-y-2">
-            <div className="relative flex items-center justify-center p-2.5">
-              <div className="absolute -top-2 left-1/2 -translate-x-1/2 text-amber-400 text-lg drop-shadow">👑</div>
-              
-              <div className="absolute inset-0 rounded-full border border-amber-400/30 p-0.5">
-                <div className="h-full w-full rounded-full border-2 border-double border-amber-400" />
-              </div>
+          <div className="flex flex-col justify-between rounded-2xl border border-amber-500/30 bg-gradient-to-b from-[#1E2230]/90 to-[#141824]/90 p-5 sm:p-6 shadow-lg lg:col-span-7">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-[#EAB308] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-950">
+                  <span>👑</span>
+                  <span>THỦ KHOA TOÁN MATH-STER</span>
+                </div>
 
-              <div className="relative z-10 flex size-24 items-center justify-center overflow-hidden rounded-full border border-amber-400 bg-amber-950 shadow-[0_0_15px_rgba(251,191,36,0.2)] sm:size-28">
-{getStudentAvatar(first) ? (
-  <img
-    src={getStudentAvatar(first)}
-    alt={getName(first)}
-    className="h-full w-full object-cover"
-  />
-) : (
-  <span className="text-2xl font-extrabold bg-gradient-to-br from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
-    {getInitials(getName(first))}
-  </span>
-)}
-              </div>
-
-              <div className="absolute -bottom-1 -left-1 z-20 flex size-9 flex-col items-center justify-center rounded-full border border-amber-300 bg-gradient-to-b from-yellow-200 via-amber-400 to-amber-600 text-amber-950 shadow-md">
-                <span className="text-sm font-black leading-none">1</span>
-                <span className="text-[6px] font-bold uppercase tracking-tighter">TOP</span>
-              </div>
-            </div>
-
-            {/* Khung Tên - Cho phép rớt hàng */}
-            <div className="mt-3 w-full text-center">
-              <div className="rounded-full border border-amber-400 bg-gradient-to-r from-amber-100 via-amber-200 to-amber-100 px-3 py-1 sm:py-1.5 shadow-[0_2px_8px_rgba(251,191,36,0.15)]">
-                <p className="text-xs font-black tracking-normal text-amber-950 uppercase leading-tight">
+                {/* Tên Top 1: Nếu là giáo viên thì cho phép nhấp chuột */}
+                <h4
+                  onClick={() => handleStudentClick(first)}
+                  className={`text-2xl sm:text-3xl font-extrabold text-[#F5B82E] tracking-tight transition-opacity ${
+                    isTeacher ? "cursor-pointer hover:underline hover:opacity-85" : ""
+                  }`}
+                  title={isTeacher ? "Xem trang cá nhân học sinh" : undefined}
+                >
                   {getName(first)}
-                </p>
+                </h4>
               </div>
-              <p className="mt-1 text-lg font-bold text-yellow-400 drop-shadow">
-                {getScore(first)} điểm
-              </p>
+
+              {/* Avatar Top 1: Nếu là giáo viên thì cho phép nhấp chuột */}
+              <div
+                onClick={() => handleStudentClick(first)}
+                className={`relative size-20 sm:size-24 shrink-0 overflow-hidden rounded-2xl border-2 border-[#F5B82E] bg-slate-800 p-0.5 shadow-md transition-transform ${
+                  isTeacher ? "cursor-pointer hover:scale-105" : ""
+                }`}
+                title={isTeacher ? "Xem trang cá nhân học sinh" : undefined}
+              >
+                {getStudentAvatar(first) ? (
+                  <img
+                    src={getStudentAvatar(first)}
+                    alt={getName(first)}
+                    className="h-full w-full rounded-xl object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center rounded-xl bg-slate-900 text-xl font-black text-[#F5B82E]">
+                    {getInitials(getName(first))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 3 Box chỉ số thống kê */}
+            <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-3">
+              <div className="flex flex-col items-center justify-center rounded-xl bg-slate-900/80 border border-slate-800/80 py-2.5 px-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Điểm số
+                </span>
+                <span className="mt-0.5 text-base sm:text-lg font-black text-[#F5B82E]">
+                  {getScore(first).toFixed(2)}
+                </span>
+              </div>
+
+              <div className="flex flex-col items-center justify-center rounded-xl bg-slate-900/80 border border-slate-800/80 py-2.5 px-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Độ trâu
+                </span>
+                <span className="mt-0.5 text-base sm:text-lg font-black text-white">
+                  {getStudentHp(first)} HP
+                </span>
+              </div>
+
+              <div className="flex flex-col items-center justify-center rounded-xl bg-slate-900/80 border border-slate-800/80 py-2.5 px-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Xếp hạng
+                </span>
+                <span className="mt-0.5 text-base sm:text-lg font-black text-emerald-400">
+                  #1 Khối
+                </span>
+              </div>
             </div>
           </div>
         )}
 
-        {/* =========================
-            HẠNG 3 (Bên phải)
-        ========================== */}
-        {third && (
-          <div className="flex w-[30%] max-w-[160px] flex-col items-center">
-            <div className="relative flex items-center justify-center p-2">
-              <div className="absolute -top-1 left-1/2 -translate-x-1/2 text-orange-400 text-sm">👑</div>
-              
-              <div className="absolute inset-0 rounded-full border border-orange-500/20 p-0.5">
-                <div className="h-full w-full rounded-full border-2 border-double border-orange-400/50" />
+        {/* ========================================================
+            CỘT PHẢI: TOP 2 & TOP 3 (lg:col-span-5)
+        ========================================================= */}
+        <div className="flex flex-col justify-between gap-3 lg:col-span-5">
+          
+          {/* TOP 2 */}
+          {second && (
+            <div className="flex items-center justify-between rounded-2xl border border-slate-800 bg-[#161B28]/90 p-4 shadow-sm hover:border-slate-700 transition-colors">
+              <div className="flex items-center gap-3 min-w-0">
+                {/* Avatar Top 2 */}
+                <div
+                  onClick={() => handleStudentClick(second)}
+                  className={`size-12 shrink-0 overflow-hidden rounded-xl border border-slate-700 bg-slate-800 transition-transform ${
+                    isTeacher ? "cursor-pointer hover:scale-105" : ""
+                  }`}
+                  title={isTeacher ? "Xem trang cá nhân học sinh" : undefined}
+                >
+                  {getStudentAvatar(second) ? (
+                    <img
+                      src={getStudentAvatar(second)}
+                      alt={getName(second)}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center font-bold text-slate-300">
+                      {getInitials(getName(second))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
+                    <span>{getStudentCode(second, 2)}</span>
+                    <span>•</span>
+                    <span className="text-slate-300">Á Quân</span>
+                  </div>
+                  {/* Tên Top 2 */}
+                  <h5
+                    onClick={() => handleStudentClick(second)}
+                    className={`truncate text-sm sm:text-base font-bold text-white transition-opacity ${
+                      isTeacher ? "cursor-pointer hover:underline hover:opacity-85" : ""
+                    }`}
+                    title={isTeacher ? "Xem trang cá nhân học sinh" : undefined}
+                  >
+                    {getName(second)}
+                  </h5>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    Độ trâu: {getStudentHp(second)} Máu
+                  </p>
+                </div>
               </div>
 
-              <div className="relative z-10 flex size-20 items-center justify-center overflow-hidden rounded-full border border-orange-400/50 bg-orange-950/40 shadow-[0_0_10px_rgba(249,115,22,0.1)] sm:size-24">
-{getStudentAvatar(third) ? (
-  <img
-    src={getStudentAvatar(third)}
-    alt={getName(third)}
-    className="h-full w-full object-cover"
-  />
-) : (
-  <span className="text-xl font-bold text-orange-400">
-    {getInitials(getName(third))}
-  </span>
-)}
-              </div>
-
-              <div className="absolute -bottom-1 -left-1 z-20 flex size-8 flex-col items-center justify-center rounded-full border border-orange-300 bg-gradient-to-b from-orange-200 to-orange-500 text-orange-950 shadow-md">
-                <span className="text-xs font-black leading-none">3</span>
-                <span className="text-[6px] font-bold uppercase tracking-tighter">TOP</span>
+              <div className="shrink-0 rounded-xl bg-slate-900/90 border border-slate-800 px-3 py-1.5 text-right">
+                <span className="font-mono text-sm sm:text-base font-black text-slate-100">
+                  {getScore(second).toFixed(2)}đ
+                </span>
               </div>
             </div>
+          )}
 
-            {/* Khung Tên - Cho phép rớt hàng */}
-            <div className="mt-3 w-full text-center">
-              <div className="rounded-full border border-orange-400/20 bg-gradient-to-r from-orange-100/90 via-orange-50 to-orange-100/90 px-3 py-1 sm:py-1.5 shadow">
-                <p className="text-[11px] font-black tracking-normal text-orange-950 uppercase leading-tight">
-                  {getName(third)}
-                </p>
+          {/* TOP 3 */}
+          {third && (
+            <div className="flex items-center justify-between rounded-2xl border border-slate-800 bg-[#161B28]/90 p-4 shadow-sm hover:border-slate-700 transition-colors">
+              <div className="flex items-center gap-3 min-w-0">
+                {/* Avatar Top 3 */}
+                <div
+                  onClick={() => handleStudentClick(third)}
+                  className={`size-12 shrink-0 overflow-hidden rounded-xl border border-slate-700 bg-slate-800 transition-transform ${
+                    isTeacher ? "cursor-pointer hover:scale-105" : ""
+                  }`}
+                  title={isTeacher ? "Xem trang cá nhân học sinh" : undefined}
+                >
+                  {getStudentAvatar(third) ? (
+                    <img
+                      src={getStudentAvatar(third)}
+                      alt={getName(third)}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center font-bold text-slate-300">
+                      {getInitials(getName(third))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
+                    <span>{getStudentCode(third, 3)}</span>
+                    <span>•</span>
+                    <span className="text-slate-300">Quý Quân</span>
+                  </div>
+                  {/* Tên Top 3 */}
+                  <h5
+                    onClick={() => handleStudentClick(third)}
+                    className={`truncate text-sm sm:text-base font-bold text-white transition-opacity ${
+                      isTeacher ? "cursor-pointer hover:underline hover:opacity-85" : ""
+                    }`}
+                    title={isTeacher ? "Xem trang cá nhân học sinh" : undefined}
+                  >
+                    {getName(third)}
+                  </h5>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    Độ trâu: {getStudentHp(third)} Máu
+                  </p>
+                </div>
               </div>
-              <p className="mt-1 text-sm font-medium text-slate-400">
-                {getScore(third)} điểm
-              </p>
+
+              <div className="shrink-0 rounded-xl bg-slate-900/90 border border-slate-800 px-3 py-1.5 text-right">
+                <span className="font-mono text-sm sm:text-base font-black text-slate-100">
+                  {getScore(third).toFixed(2)}đ
+                </span>
+              </div>
             </div>
+          )}
+
+          {/* THANH ĐỘNG LỰC DƯỚI CÙNG (Chỉ hiển thị cho học sinh, hoặc nhắc nhở chung khi là giáo viên) */}
+          <div className="flex items-center justify-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-2.5 text-center text-xs font-semibold text-amber-400">
+            {isTeacher ? (
+              <>
+                <span>👨‍🏫</span>
+                <span>Chế độ giáo viên: Bấm vào tên hoặc avatar để xem chi tiết hồ sơ học sinh.</span>
+              </>
+            ) : isCurrentUserInTop ? (
+              <>
+                <span>🔥</span>
+                <span>Tuyệt vời! Bạn đang nằm trong Top 3 xuất sắc nhất tuần này. Giữ vững phong độ nhé!</span>
+              </>
+            ) : diffScore > 0 ? (
+              <>
+                <span>💪</span>
+                <span>Chỉ cách Top 3 đúng <strong className="font-black text-amber-300">{diffScore}</strong> điểm, cố lên nhé!</span>
+              </>
+            ) : (
+              <>
+                <span>🚀</span>
+                <span>Bạn đang bám sát nút Top 3 rồi, hãy bứt phá ở bài thi tiếp theo nhé!</span>
+              </>
+            )}
           </div>
-        )}
+
+        </div>
+
       </div>
     </div>
   );

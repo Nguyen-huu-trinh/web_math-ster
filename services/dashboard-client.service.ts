@@ -17,6 +17,11 @@ export interface StudentDashboard {
   pendingExams:number;
 
   averagePeriodicScore: number;
+  ranking?: {
+    rank: number;
+    totalStudents: number;
+    topPercent: number;
+  };
 }
 
 export interface TeacherDashboard {
@@ -46,6 +51,8 @@ export interface LeaderboardStudent {
   avatar_url: string | null;
 
   count: number;
+
+  points?: number;
 }
 
 export interface RewardMoneyStudent {
@@ -175,6 +182,7 @@ excellent: data.excellent.map((item: any) => ({
   full_name: item.full_name,
   avatar_url: item.avatar_url ?? null,
   count: Number(item.count),
+  points: Number(item.points ?? item.hp ?? 0),
 })),
 
 

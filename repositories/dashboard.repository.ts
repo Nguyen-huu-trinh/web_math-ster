@@ -4,21 +4,33 @@ export class DashboardRepository {
   async getStudentDashboard(studentId: string) {
     const supabase = await createClient();
 
-    const { data, error } = await supabase
-      .from("v_student_dashboard")
-      .select(`
-        full_name,
-        learning_goal,
-        total_courses,
-        completed_lessons,
-        total_lessons,
-        pending_exams,
-        average_periodic_score
-      `)
-      .eq("student_id", studentId)
-      .single();
+    // Chạy song song query dashboard và query xếp hạng
+    const [dashboardRes, rankingRes] = await Promise.all([
+      supabase
+        .from("v_student_dashboard")
+        .select(`
+          full_name,
+          learning_goal,
+          total_courses,
+          completed_lessons,
+          total_lessons,
+          pending_exams,
+          average_periodic_score
+        `)
+        .eq("student_id", studentId)
+        .single(),
 
-    if (error) throw error;
+      supabase
+        .from("v_student_rankings")
+        .select("current_rank, total_students, top_percent")
+        .eq("student_id", studentId)
+        .maybeSingle(),
+    ]);
+
+    if (dashboardRes.error) throw dashboardRes.error;
+
+    const data = dashboardRes.data;
+    const rankInfo = rankingRes.data;
 
     return {
       profile: {
@@ -30,6 +42,12 @@ export class DashboardRepository {
       totalLessons: Number(data.total_lessons ?? 0),
       pendingExams: Number(data.pending_exams ?? 0),
       averagePeriodicScore: Number(data.average_periodic_score ?? 0),
+      // Bổ sung dữ liệu xếp hạng
+      ranking: {
+        rank: Number(rankInfo?.current_rank ?? 1),
+        totalStudents: Number(rankInfo?.total_students ?? 1),
+        topPercent: Number(rankInfo?.top_percent ?? 100),
+      },
     };
   }
 

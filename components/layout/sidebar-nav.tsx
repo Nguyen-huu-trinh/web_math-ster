@@ -1,4 +1,5 @@
 "use client";
+
 import { getAvatarUrl } from "@/lib/avatar";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -6,7 +7,7 @@ import {
   ChevronDown,
   LogOut,
   User,
-  BookOpen,
+  Bell,
 } from "lucide-react";
 
 import { useAuth } from "@/providers/auth-provider";
@@ -51,20 +52,13 @@ export function SidebarNav({
   const pathname = usePathname();
   const router = useRouter();
 
-  const {
-    user,
-    profile,
-    logout,
-  } = useAuth();
+  const { user, profile, logout } = useAuth();
 
   if (!user || !profile) {
     return null;
   }
 
-  const { primary } =
-    navForRole(
-      profile.role.toLowerCase() as any
-    );
+  const { primary } = navForRole(profile.role.toLowerCase() as any);
 
   const renderItem = (item: {
     label: string;
@@ -73,60 +67,28 @@ export function SidebarNav({
   }) => {
     const active =
       pathname === item.href ||
-      pathname.startsWith(item.href + "/");
+      (item.href !== "/dashboard" && pathname.startsWith(item.href + "/"));
 
     return (
       <Link
         key={item.href}
         href={item.href}
         onClick={onNavigate}
+        title={item.label}
         className={cn(
-          // Base
-          "group flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2.5",
-          "text-sm font-medium transition-all duration-200",
-
-          // Active
+          "flex shrink-0 items-center gap-2 rounded-full transition-all duration-200",
+          // Điện thoại: dạng nút tròn gọn gàng | Màn hình sm trở lên: dạng pill đầy đủ
+          "p-2.5 sm:px-4 sm:py-2 text-sm font-semibold",
           active
-            ? [
-                "bg-sidebar-accent",
-                "text-sidebar-accent-foreground",
-                "shadow-sm",
-              ]
-            : [
-                "text-sidebar-foreground/65",
-                "hover:bg-sidebar-accent/60",
-                "hover:text-sidebar-foreground",
-              ]
+            ? "bg-[#FACC15] text-slate-950 shadow-sm"
+            : "text-slate-300 hover:text-white hover:bg-white/10"
         )}
       >
-        {/* ICON */}
-
-        <span
-          className={cn(
-            "flex size-9 shrink-0 items-center justify-center rounded-lg",
-            "transition-all duration-200",
-
-            active
-              ? [
-                  "bg-primary",
-                  "text-primary-foreground",
-                  "shadow-sm",
-                ]
-              : [
-                  "bg-sidebar-accent/40",
-                  "text-sidebar-foreground/60",
-                  "group-hover:bg-sidebar-accent",
-                  "group-hover:text-sidebar-foreground",
-                ]
-          )}
-        >
-          <Icon
-            name={item.icon}
-            className="size-4"
-          />
-        </span>
-
-        {/* LABEL - Ẩn trên mobile bằng `hidden` và hiện từ màn hình `sm` trở lên bằng `sm:inline` */}
+        <Icon
+          name={item.icon}
+          className={cn("size-4 shrink-0", active ? "text-slate-950" : "text-slate-400")}
+        />
+        {/* Trên điện thoại ẩn chữ, chỉ hiện từ màn hình sm trở lên */}
         <span className="whitespace-nowrap hidden sm:inline">
           {item.label}
         </span>
@@ -135,202 +97,103 @@ export function SidebarNav({
   };
 
   return (
-    <header
-      className="
-        sticky
-        top-0
-        z-50
-        w-full
-        border-b
-        border-sidebar-border/80
-        bg-sidebar/95
-        text-sidebar-foreground
-        shadow-sm
-        backdrop-blur
-      "
-    >
-      <div
-        className="
-          flex
-          h-[72px]
-          w-full
-          items-center
-          justify-between
-          px-4
-          sm:px-6
-          lg:px-8
-        "
-      >
+    <header className="sticky top-0 z-50 w-full border-b border-slate-800/80 bg-[#0F172A] text-white shadow-md">
+      <div className="flex h-16 w-full items-center justify-between px-4 sm:px-6 lg:px-8">
+        
         {/* =====================================================
-            LOGO (CĂN TRÁI)
+            1. LOGO (CĂN TRÁI)
         ====================================================== */}
-
         <div className="flex shrink-0 items-center justify-start">
           <Link
             href="/dashboard"
             onClick={onNavigate}
-            className="
-              flex
-              items-center
-              rounded-xl
-              transition-opacity
-              hover:opacity-90
-            "
+            className="flex items-center transition-opacity hover:opacity-90"
           >
-            <BrandLogo variant="sidebar" className="h-12 w-auto" />
+            <BrandLogo variant="sidebar" className="h-10 w-auto" />
           </Link>
         </div>
 
-
         {/* =====================================================
-            MAIN NAVIGATION (LỆCH TRÁI & CÓ KHOẢNG CÁCH VỚI LOGO)
+            2. MAIN NAVIGATION (BỐ CỤC CŨ: NẰM LỆCH TRÁI CẠNH LOGO)
         ====================================================== */}
-
-        <nav
-          className="
-            flex
-            flex-1
-            ml-6
-            items-center
-            justify-start
-            gap-1
-            overflow-x-auto
-            scrollbar-none
-          "
-        >
+        <nav className="flex flex-1 ml-4 sm:ml-6 items-center justify-start gap-1 sm:gap-2 overflow-x-auto scrollbar-none">
           {primary.map(renderItem)}
         </nav>
 
-
         {/* =====================================================
-            USER MENU (CĂN PHẢI)
+            3. NOTIFICATION & USER MENU (CĂN PHẢI)
         ====================================================== */}
+        <div className="flex shrink-0 items-center gap-3">
+          
+          {/* NÚT THÔNG BÁO */}
+          <button
+            type="button"
+            className="relative flex size-10 items-center justify-center rounded-xl bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700/80 transition-colors border border-slate-700/60"
+            title="Thông báo"
+          >
+            <Bell className="size-4" />
+            <span className="absolute top-2 right-2 size-2 rounded-full bg-rose-500 ring-2 ring-[#0F172A]" />
+          </button>
 
-        <div className="flex shrink-0 items-center justify-end">
-
+          {/* USER PILL BUTTON */}
           <DropdownMenu>
+            <DropdownMenuTrigger className="group flex items-center gap-3 rounded-full border border-slate-700/80 bg-slate-850/80 px-3 py-1.5 outline-none transition-all duration-200 hover:bg-slate-800 focus-visible:ring-1 focus-visible:ring-[#FACC15]">
+              
+              {/* Tên & Mã học sinh */}
+              <div className="hidden sm:flex flex-col text-right leading-tight min-w-0">
+                <span className="truncate text-sm font-semibold text-white max-w-[140px]">
+                  {profile.full_name}
+                </span>
+                <span className="text-[11px] font-medium text-[#FACC15] tracking-tight">
+                  {profile.student_code ?? "MATH-STER"}
+                </span>
+              </div>
 
-            <DropdownMenuTrigger
-              className="
-                group
-                flex
-                items-center
-                gap-2
-                rounded-xl
-                p-1
-                outline-none
-                transition-all
-                duration-200
-                hover:bg-sidebar-accent
-                focus-visible:ring-2
-                focus-visible:ring-primary
-                focus-visible:ring-offset-2
-                focus-visible:ring-offset-sidebar
-              "
-            >
-              <Avatar
-                className="
-                  size-10
-                  border-2
-                  border-sidebar-border
-                  shadow-sm
-                  transition-all
-                  duration-200
-                  group-hover:border-primary/50
-                "
-              >
-              <AvatarImage
-                src={getAvatarUrl(
-                  profile.avatar_url
-                )}
-                alt={profile.full_name}
-              />
+              {/* Avatar kèm viền và trạng thái active */}
+              <div className="relative">
+                <Avatar className="size-8 border border-amber-400/80 shadow-xs">
+                  <AvatarImage
+                    src={getAvatarUrl(profile.avatar_url)}
+                    alt={profile.full_name}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="bg-amber-500/20 text-[#FACC15] text-xs font-bold">
+                    {initials(profile.full_name)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-emerald-500 ring-2 ring-[#0F172A]" />
+              </div>
 
-                <AvatarFallback className="bg-primary/10 text-primary">
-                  {initials(profile.full_name)}
-                </AvatarFallback>
-              </Avatar>
-
-              <ChevronDown
-                className="
-                  mr-1
-                  hidden
-                  size-4
-                  text-sidebar-foreground/50
-                  transition-transform
-                  group-data-[state=open]:rotate-180
-                  sm:block
-                "
-              />
+              <ChevronDown className="size-3.5 text-slate-400 transition-transform group-data-[state=open]:rotate-180" />
             </DropdownMenuTrigger>
 
-
-            {/* =================================================
-                DROPDOWN
-            ================================================== */}
-
+            {/* DROPDOWN MENU NỘI DUNG */}
             <DropdownMenuContent
               align="end"
               sideOffset={8}
-              className="
-                w-52
-                rounded-xl
-                border
-                bg-background
-                p-1.5
-                shadow-xl
-              "
+              className="w-52 rounded-xl border border-slate-800 bg-[#1E293B] !text-slate-100 p-1.5 shadow-2xl"
             >
-
-              {/* PROFILE */}
-
               <DropdownMenuItem
-                className="
-                  cursor-pointer
-                  rounded-lg
-                  px-3
-                  py-2.5
-                "
-                onClick={() =>
-                  router.push("/profile")
-                }
+                className="group cursor-pointer rounded-lg px-3 py-2 text-sm !text-slate-200 transition-colors focus:!bg-slate-700 focus:!text-white hover:!bg-slate-700 hover:!text-white"
+                onClick={() => router.push("/profile")}
               >
-                <User className="mr-2.5 size-4" />
-
-                <span>
-                  Hồ sơ
-                </span>
+                <User className="mr-2.5 size-4 !text-slate-400 group-hover:!text-white group-focus:!text-white transition-colors" />
+                <span className="font-medium !text-inherit">Hồ sơ cá nhân</span>
               </DropdownMenuItem>
 
-
-              <DropdownMenuSeparator className="my-1" />
-
-
-              {/* LOGOUT */}
+              <DropdownMenuSeparator className="my-1 !bg-slate-700/60" />
 
               <DropdownMenuItem
-                variant="destructive"
-                className="
-                  cursor-pointer
-                  rounded-lg
-                  px-3
-                  py-2.5
-                "
+                className="group cursor-pointer rounded-lg px-3 py-2 text-sm !text-rose-400 transition-colors focus:!bg-rose-500/20 focus:!text-rose-300 hover:!bg-rose-500/20 hover:!text-rose-300"
                 onClick={logout}
               >
-                <LogOut className="mr-2.5 size-4" />
-
-                <span>
-                  Đăng xuất
-                </span>
+                <LogOut className="mr-2.5 size-4 !text-rose-400 group-hover:!text-rose-300 group-focus:!text-rose-300 transition-colors" />
+                <span className="font-medium !text-inherit">Đăng xuất</span>
               </DropdownMenuItem>
-
             </DropdownMenuContent>
-
           </DropdownMenu>
 
         </div>
-
       </div>
     </header>
   );

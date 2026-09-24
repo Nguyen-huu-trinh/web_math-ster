@@ -40,9 +40,10 @@ interface CourseClientViewProps {
   courseId: string;
   embedded?: boolean;
   initialChapterId?: string;
+  initialLessonId?: string;
 }
 
-export default function CourseClientView({ courseId, embedded = false, initialChapterId }: CourseClientViewProps) {
+export default function CourseClientView({ courseId, embedded = false, initialChapterId, initialLessonId }: CourseClientViewProps) {
   const [chapterDialogOpen, setChapterDialogOpen] = useState(false);
   const [selectedChapter, setSelectedChapter] = useState<any>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -327,6 +328,8 @@ export default function CourseClientView({ courseId, embedded = false, initialCh
                   return (
                   <div
                     key={lesson.id}
+                    id={`lesson-${lesson.id}`}
+                    style={lesson.id === initialLessonId ? { boxShadow: "inset 3px 0 0 #f59e0b", backgroundColor: "#fffbeb" } : undefined}
                     className={`group/lesson flex items-center gap-1 transition-colors ${
                       isNext
                         ? "bg-amber-50/70 hover:bg-amber-50"

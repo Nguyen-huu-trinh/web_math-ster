@@ -43,6 +43,7 @@ function CoursesContent() {
   const searchParams = useSearchParams();
   const queryCourseId = searchParams.get("courseId");
   const queryChapterId = searchParams.get("chapterId");
+  const queryLessonId = searchParams.get("lessonId");
   const { profile } = useAuth();
   const role = profile?.role;
 
@@ -228,6 +229,7 @@ function CoursesContent() {
                   key={selectedCourseId}
                   courseId={selectedCourseId}
                   embedded={true}
+                  initialLessonId={selectedCourseId === queryCourseId ? queryLessonId ?? undefined : undefined}
                   initialChapterId={selectedCourseId === queryCourseId ? queryChapterId ?? undefined : undefined}
                 />
               ) : (

@@ -195,10 +195,24 @@ export default function LessonClientView({
     }
   }, []);
 
+  async function notifyMaterial(saved: unknown, send: boolean) {
+    if (!send) return;
+    const id = (saved as { id: string }).id;
+    try {
+      const response = await fetch("/api/notifications/material", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resourceId: id, requestId: crypto.randomUUID() }),
+      });
+      if (!response.ok) throw new Error("Notification failed");
+      toast.success("Đã gửi thông báo cho học sinh");
+    } catch {
+      toast.warning("Tài liệu đã lưu nhưng chưa gửi được thông báo. Bạn có thể mở sửa tài liệu và gửi lại.");
+    }
+  }
   async function createResource(values: any) {
     if (!lesson) return;
     try {
-      await createLessonContentMutation.mutateAsync({
+      const saved = await createLessonContentMutation.mutateAsync({
         lesson_id: lesson.id,
         title: values.title,
         type: values.type,
@@ -206,7 +220,8 @@ export default function LessonClientView({
         url: values.url,
         order_index: values.order_index,
       });
-      toast.success("Resource created");
+      await notifyMaterial(saved, values.sendNotification === true);
+      toast.success("Đã lưu tài liệu");
       setResourceDialogOpen(false);
     } catch (error) {
       console.error(error);
@@ -217,7 +232,7 @@ export default function LessonClientView({
   async function updateResource(values: any) {
     if (!selectedResource) return;
     try {
-      await updateLessonContentMutation.mutateAsync({
+      const saved = await updateLessonContentMutation.mutateAsync({
         id: selectedResource.id,
         values: {
           title: values.title,
@@ -227,7 +242,8 @@ export default function LessonClientView({
           order_index: values.order_index,
         },
       });
-      toast.success("Resource updated");
+      await notifyMaterial(saved, values.sendNotification === true);
+      toast.success("Đã cập nhật tài liệu");
       setSelectedResource(null);
       setResourceDialogOpen(false);
     } catch (error) {

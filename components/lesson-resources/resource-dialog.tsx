@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 
 import {
@@ -33,6 +33,7 @@ import {
 
 interface FormData {
 
+    sendNotification: boolean;
     title: string;
 
     type: "VIDEO" | "PDF" | "EXAM";
@@ -69,8 +70,10 @@ export function ResourceDialog({
 
 }: Props) {
 
+    const submittingRef = useRef(false);
     const form = useForm<FormData>({
         defaultValues: {
+            sendNotification: false,
             title: "",
             type: "VIDEO",
             provider: "youtube",
@@ -85,7 +88,8 @@ export function ResourceDialog({
 
         form.reset({
 
-            title: resource?.file_links?.title ?? "",
+            sendNotification: false,
+            title: resource?.title ?? resource?.file_links?.title ?? "",
 
             type: resource?.type ?? "VIDEO",
 
@@ -108,7 +112,7 @@ export function ResourceDialog({
         <Dialog
             open={open}
             onOpenChange={(v) => {
-                if (!v) onClose();
+                if (!v && !form.formState.isSubmitting) onClose();
             }}
         >
 
@@ -127,7 +131,11 @@ export function ResourceDialog({
                 </DialogHeader>
 
                 <form
-                    onSubmit={form.handleSubmit(onSubmit)}
+                    onSubmit={form.handleSubmit(async (values) => {
+                        if (submittingRef.current) return;
+                        submittingRef.current = true;
+                        try { await onSubmit(values); } finally { submittingRef.current = false; }
+                    })}
                     className="space-y-4"
                 >
 
@@ -263,19 +271,21 @@ export function ResourceDialog({
 
                     </div>
 
+                    <label className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50/50 p-3 text-sm text-slate-700"><input type="checkbox" {...form.register("sendNotification")} disabled={form.formState.isSubmitting} className="mt-1 accent-amber-500" />Gửi thông báo bài học mới đến học sinh</label>
                     <DialogFooter>
 
                         <Button
                             variant="outline"
                             type="button"
+                            disabled={form.formState.isSubmitting}
                             onClick={onClose}
                         >
                             Hủy
                         </Button>
 
-                        <Button type="submit" className="rounded-xl bg-amber-500 text-slate-950 hover:bg-amber-400">
+                        <Button disabled={form.formState.isSubmitting} type="submit" className="rounded-xl bg-amber-500 text-slate-950 hover:bg-amber-400">
 
-                            Lưu
+                            {form.formState.isSubmitting ? (form.watch("sendNotification") ? "Đang lưu và gửi thông báo..." : "Đang lưu...") : form.watch("sendNotification") ? "Lưu & Thông báo" : "Lưu thay đổi"}
 
                         </Button>
 

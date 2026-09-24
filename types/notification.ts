@@ -1,0 +1,15 @@
+export type NotificationType = "EXAM" | "LESSON_MATERIAL" | "GENERAL";
+export interface BroadcastNotification {
+  id: string;
+  title: string;
+  content: string;
+  type: NotificationType;
+  subtype?: string | null;
+  link: string;
+  created_at: string;
+  is_read: boolean;
+}
+export interface NotificationFeed {
+  items: BroadcastNotification[];
+  unreadCount: number;
+}

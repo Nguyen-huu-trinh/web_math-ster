@@ -7,13 +7,13 @@ import {
   ChevronDown,
   LogOut,
   User,
-  Bell,
 } from "lucide-react";
 
 import { useAuth } from "@/providers/auth-provider";
 import { navForRole } from "@/lib/nav";
 
 import { Icon } from "@/components/icon";
+import { NotificationBell } from "@/components/layout/notification-bell";
 import { BrandLogo } from "@/components/brand-logo";
 
 import {
@@ -126,14 +126,7 @@ export function SidebarNav({
         <div className="flex shrink-0 items-center gap-3">
           
           {/* NÚT THÔNG BÁO */}
-          <button
-            type="button"
-            className="relative flex size-10 items-center justify-center rounded-xl bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700/80 transition-colors border border-slate-700/60"
-            title="Thông báo"
-          >
-            <Bell className="size-4" />
-            <span className="absolute top-2 right-2 size-2 rounded-full bg-rose-500 ring-2 ring-[#0F172A]" />
-          </button>
+          <NotificationBell />
 
           {/* USER PILL BUTTON */}
           <DropdownMenu>

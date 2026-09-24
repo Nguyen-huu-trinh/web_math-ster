@@ -2,7 +2,7 @@ export type NotificationType = "EXAM" | "LESSON_MATERIAL" | "GENERAL";
 export interface BroadcastNotification {
   id: string;
   title: string;
-  content: string;
+  content: string | null;
   type: NotificationType;
   subtype?: string | null;
   link: string;

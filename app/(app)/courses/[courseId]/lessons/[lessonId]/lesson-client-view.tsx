@@ -195,13 +195,13 @@ export default function LessonClientView({
     }
   }, []);
 
-  async function notifyMaterial(saved: unknown, send: boolean) {
+  async function notifyMaterial(saved: unknown, send: boolean, isUpdate = false) {
     if (!send) return;
     const id = (saved as { id: string }).id;
     try {
       const response = await fetch("/api/notifications/material", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resourceId: id, requestId: crypto.randomUUID() }),
+        body: JSON.stringify({ resourceId: id, requestId: crypto.randomUUID(), isUpdate }),
       });
       if (!response.ok) throw new Error("Notification failed");
       toast.success("Đã gửi thông báo cho học sinh");
@@ -242,7 +242,7 @@ export default function LessonClientView({
           order_index: values.order_index,
         },
       });
-      await notifyMaterial(saved, values.sendNotification === true);
+      await notifyMaterial(saved, values.sendNotification === true, true);
       toast.success("Đã cập nhật tài liệu");
       setSelectedResource(null);
       setResourceDialogOpen(false);

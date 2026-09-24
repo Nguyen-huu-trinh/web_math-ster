@@ -76,7 +76,7 @@ export default function ExamsPage() {
   if (examsQuery.isLoading) {
     return (
       <div className="p-8">
-        Đang tải...
+        Đang húc . . . 
       </div>
     );
   }

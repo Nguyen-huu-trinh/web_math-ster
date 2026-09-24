@@ -448,7 +448,7 @@ export default function LessonClientView({
   <span className="font-medium text-slate-300">Chế độ rạp chiếu phim</span>
   <span className="text-slate-600">•</span>
   <Sparkles className="size-3 text-amber-400/80" />
-  <span className="font-semibold text-slate-200">Thầy Nguyễn Quang Huy</span>
+  <span className="font-semibold text-slate-200">Anh Huy MATH-STER</span>
 </div>
         </main>
         <aside className="flex min-h-0 min-w-0 flex-col border-t border-slate-800 bg-[#0f1426] lg:border-l lg:border-t-0">

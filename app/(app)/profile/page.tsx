@@ -338,7 +338,7 @@ export default function ProfilePage() {
                 <div className="space-y-1.5">
                   <Label htmlFor="email" className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
                     <Mail className="size-3.5 text-slate-400" />
-                    <span>Email</span>
+                    <span>Email đăng nhập</span>
                   </Label>
                   <Input
                     id="email"

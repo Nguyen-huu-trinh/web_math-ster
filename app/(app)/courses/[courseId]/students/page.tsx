@@ -56,7 +56,7 @@ const enrolledStudentIds =
                 />
 
                 <div className="rounded-lg border p-8 text-center text-muted-foreground">
-                    Đang tải danh sách học sinh...
+                    Đang húc . . . 
                 </div>
             </div>
         );

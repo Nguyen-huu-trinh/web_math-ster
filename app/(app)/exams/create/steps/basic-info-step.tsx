@@ -147,7 +147,7 @@ const toggleSelectAll = () => {
       <SelectValue
         placeholder={
           loading
-            ? "Đang tải khóa học..."
+            ? "Đang húc . . . "
             : "Chọn khóa học"
         }
       />
@@ -206,7 +206,7 @@ const toggleSelectAll = () => {
   <div className="mt-3 max-h-64 space-y-2 overflow-y-auto rounded-lg border p-2">
     {examsLoading ? (
       <p className="p-3 text-sm text-muted-foreground">
-        Đang tải danh sách đề thi...
+        Đang húc . . . 
       </p>
     ) : filteredExams.length === 0 ? (
       <p className="p-3 text-sm text-muted-foreground">

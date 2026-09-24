@@ -49,7 +49,7 @@ const prerequisitesQuery =
   if (examQuery.isLoading) {
     return (
       <div className="p-8">
-        Đang tải...
+        Đang húc . . . 
       </div>
     );
   }
@@ -279,7 +279,7 @@ function handleToggleStatus() {
   <CardContent>
     {prerequisitesQuery.isLoading ? (
       <p className="text-sm text-muted-foreground">
-        Đang tải...
+        Đang húc . . . 
       </p>
     ) : prerequisitesQuery.data?.length ? (
       <div className="space-y-3">

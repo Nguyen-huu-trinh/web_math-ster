@@ -186,7 +186,7 @@ export function StudentScheduleCard() {
       {/* Loading State */}
       {scheduleQuery.isLoading && (
         <div className="mt-6 rounded-xl border border-dashed py-14 text-center text-sm text-muted-foreground">
-          Đang tải thời khóa biểu...
+          Đang húc . . . 
         </div>
       )}
 

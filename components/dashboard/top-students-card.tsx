@@ -145,7 +145,7 @@ export function TopStudentsCard({
         </h3>
 
         <p className="text-xs sm:text-sm font-medium text-slate-400">
-          Vinh danh những gương mặt thống trị bài thi định kỳ tuần này
+          Vinh danh những con trâu cày giỏi nhất lớp
         </p>
       </div>
 

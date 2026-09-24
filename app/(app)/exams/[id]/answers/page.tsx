@@ -404,7 +404,7 @@ async function deleteAttempt(
   if (isLoading) {
     return (
       <div className="p-8">
-        Đang tải danh sách bài làm...
+        Đang húc . . . 
       </div>
     );
   }

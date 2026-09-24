@@ -68,7 +68,7 @@ export default function StudentExamsPage() {
   if (isLoading) {
     return (
       <div className="py-24 text-center font-medium text-slate-400">
-        Đang tải danh sách bài kiểm tra...
+        Đang húc . . . 
       </div>
     );
   }
@@ -78,7 +78,7 @@ export default function StudentExamsPage() {
       {/* 1. HEADER TRANG CHUẨN DESIGN */}
       <div className="pt-1">
         <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
-          Trung Tâm Bài Kiểm Tra & Điểm Danh (BTĐĐ)
+          Bài Kiểm Tra & Điểm Danh
         </h1>
         <p className="mt-1 text-xs sm:text-sm font-medium text-slate-500">
           Theo dõi tiến độ luyện đề định kỳ, điểm số chi tiết và cơ hội làm lại để nâng band điểm.

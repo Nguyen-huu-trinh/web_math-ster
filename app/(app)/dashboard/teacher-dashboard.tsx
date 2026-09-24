@@ -330,7 +330,7 @@ export default function TeacherDashboard() {
               {examAlertsQuery.isLoading ? (
                 <TableRow>
                   <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                    Đang tải dữ liệu cảnh báo...
+                    Đang húc . . . 
                   </TableCell>
                 </TableRow>
               ) : (examAlertsQuery.data ?? []).length === 0 ? (
@@ -430,7 +430,7 @@ export default function TeacherDashboard() {
           title="Top Học Giỏi"
           icon="🏆"
           description="Top học sinh có điểm kiểm tra cao nhất"
-          badgeLabel="Tuần Này"
+          badgeLabel="Toàn Khoá"
           entries={leaderboard.data?.excellent?.slice(3) ?? []}
           startRank={4}
         />
@@ -439,7 +439,7 @@ export default function TeacherDashboard() {
         <LeaderboardCard
           title="Khu Vực Cần Tăng Tốc"
           icon="⚡"
-          description="Nhóm học viên cần bứt phá chỉ tiêu tuần"
+          description="Top học sinh cần cố gắng rất rất nhiều"
           badgeLabel="Đôn đốc"
           variant="warning"
           entries={leaderboard.data?.lowHomework ?? []}
@@ -459,7 +459,7 @@ export default function TeacherDashboard() {
         <LeaderboardCard
           title="Thợ Săn Tiền Thưởng"
           icon="💰"
-          description="Học bổng tích luỹ từ điểm 10 định kỳ"
+          description="Chăm học có tiền"
           badgeLabel="Học Bổng"
           entries={leaderboard.data?.rewardMoney ?? []}
           valueType="money"

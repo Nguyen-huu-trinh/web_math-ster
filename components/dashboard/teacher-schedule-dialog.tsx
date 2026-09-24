@@ -331,7 +331,7 @@ export function TeacherScheduleDialog({
         <div className="flex-1 overflow-y-auto p-6 bg-muted/10">
           {scheduleQuery.isLoading && (
             <div className="rounded-xl border border-dashed py-16 text-center text-sm text-muted-foreground bg-background">
-              Đang tải thời khóa biểu...
+              Đang húc . . . 
             </div>
           )}
 

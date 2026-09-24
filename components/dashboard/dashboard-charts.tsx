@@ -56,7 +56,7 @@ export function StudentProgressChart({ averageScore }: StudentProgressChartProps
     return (
       <Card className="rounded-[28px] border border-slate-100/90 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <div className="flex h-[320px] items-center justify-center text-xs font-medium text-slate-400">
-          Đang tải dữ liệu biểu đồ...
+          Đang húc . . . 
         </div>
       </Card>
     );

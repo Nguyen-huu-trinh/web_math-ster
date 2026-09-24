@@ -32,7 +32,7 @@ import { UpdateCourseInput } from "@/validators/course.schema";
 
 export default function CoursesPage() {
   return (
-    <Suspense fallback={<div className="py-24 text-center text-slate-400">Đang tải danh sách khóa học...</div>}>
+    <Suspense fallback={<div className="py-24 text-center text-slate-400">Đang húc . . . </div>}>
       <CoursesContent />
     </Suspense>
   );
@@ -180,7 +180,7 @@ function CoursesContent() {
 
       {loading ? (
         <div className="py-24 text-center font-medium text-slate-400">
-          Đang tải danh sách khóa học...
+          Đang húc . . . 
         </div>
       ) : filteredCourses.length === 0 ? (
         <Empty className="rounded-3xl border border-slate-200 bg-white p-12">

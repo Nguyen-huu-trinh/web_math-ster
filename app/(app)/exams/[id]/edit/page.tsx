@@ -16,7 +16,7 @@ export default function EditExamPage() {
   if (examQuery.isLoading) {
     return (
       <div className="p-8">
-        Đang tải...
+        Đang húc . . . 
       </div>
     );
   }

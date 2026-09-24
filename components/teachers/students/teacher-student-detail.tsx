@@ -58,11 +58,11 @@ export function TeacherStudentDetailPage({
             <div className="space-y-6">
                 <PageHeader
                     title="Học sinh"
-                    description="Đang tải thông tin học sinh..."
+                    description="Đang húc . . . "
                 />
 
                 <div className="rounded-xl border p-10 text-center text-muted-foreground">
-                    Đang tải...
+                    Đang húc . . . 
                 </div>
             </div>
         );

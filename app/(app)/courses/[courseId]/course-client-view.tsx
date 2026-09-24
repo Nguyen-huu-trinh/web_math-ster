@@ -159,7 +159,7 @@ export default function CourseClientView({ courseId, embedded = false, initialCh
   }
 
   if (loading) {
-    return <div className="py-20 text-center text-sm text-slate-400">Đang tải khóa học...</div>;
+    return <div className="py-20 text-center text-sm text-slate-400">Đang húc . . . </div>;
   }
 
   if (!course) {

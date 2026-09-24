@@ -51,7 +51,7 @@ export default function ExamAnswerKeyPage() {
   if (examQuery.isLoading) {
     return (
       <div className="p-8">
-        Đang tải...
+        Đang húc . . . 
       </div>
     );
   }

@@ -88,7 +88,7 @@ export default function TeacherStudentsPage() {
 
             {loadingStudents ? (
                 <div className="rounded-lg border p-8 text-center text-muted-foreground">
-                    Đang tải danh sách học sinh...
+                    Đang húc . . . 
                 </div>
             ) : isError ? (
                 <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-8 text-center text-destructive">

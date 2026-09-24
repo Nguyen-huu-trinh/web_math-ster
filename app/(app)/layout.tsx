@@ -45,7 +45,7 @@ export default function AppLayout({
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen ${isLessonPage ? "bg-[#0f1426]" : "bg-background"}`}>
 
       {/* =====================================================
           NAVIGATION
@@ -61,7 +61,7 @@ export default function AppLayout({
       <main
         className={
           isLessonPage
-            ? "w-full py-4" // ĐÃ SỬA: Xóa bỏ px-4 sm:px-6 lg:px-8 để nội dung chạm mép màn hình
+            ? "min-h-[calc(100dvh-4rem)] w-full bg-[#0f1426]"
             : "flex-1 px-4 py-6 sm:px-6 lg:px-8"
         }
       >
@@ -75,8 +75,7 @@ export default function AppLayout({
            * Cho phép LessonLayout sử dụng toàn bộ
            * chiều rộng màn hình.
            */
-          // ĐÃ SỬA: Bạn có thể thêm một chút px nhẹ ở đây nếu muốn nội dung không dính chặt 100% vào viền (ví dụ: px-2 hoặc px-4)
-          <div className="w-full px-4 animate-fade-in">
+          <div className="w-full animate-fade-in">
             {children}
           </div>
 

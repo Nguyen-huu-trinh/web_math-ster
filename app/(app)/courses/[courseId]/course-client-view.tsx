@@ -39,9 +39,10 @@ import {
 interface CourseClientViewProps {
   courseId: string;
   embedded?: boolean;
+  initialChapterId?: string;
 }
 
-export default function CourseClientView({ courseId, embedded = false }: CourseClientViewProps) {
+export default function CourseClientView({ courseId, embedded = false, initialChapterId }: CourseClientViewProps) {
   const [chapterDialogOpen, setChapterDialogOpen] = useState(false);
   const [selectedChapter, setSelectedChapter] = useState<any>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -281,7 +282,7 @@ export default function CourseClientView({ courseId, embedded = false }: CourseC
 
       {/* DANH SÁCH CÁC CHAPTERS ĐỘC LẬP TỪNG THANH */}
       <div className="space-y-3 pt-2">
-        <Accordion defaultValue={[]} className="space-y-3">
+        <Accordion key={initialChapterId ?? courseId} defaultValue={initialChapterId ? [initialChapterId] : []} className="space-y-3">
           {chapters.map((chapter: any, idx: number) => (
             <ChapterCard
               key={chapter.id}

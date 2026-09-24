@@ -227,7 +227,7 @@ export function LeaderboardCard({
                     onClick={() => handleStudentClick(studentId)}
                     title={isTeacher ? "Xem trang cá nhân học sinh" : undefined}
                     className={cn(
-                      "truncate text-[14px] sm:text-[14.5px] font-bold tracking-tight text-slate-800 dark:text-slate-100",
+                      "truncate text-[14px] sm:text-[14.5px] font-semibold tracking-tight text-slate-800 dark:text-slate-200",
                       isTeacher &&
                         "cursor-pointer underline-offset-4 transition-colors hover:text-amber-600 hover:underline"
                     )}

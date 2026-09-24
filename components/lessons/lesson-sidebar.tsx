@@ -8,6 +8,7 @@ import {
   ChevronRight,
   CircleCheckBig,
   BookOpen,
+  CirclePlay,
   X,
 } from "lucide-react";
 
@@ -17,6 +18,7 @@ interface LessonSidebarProps {
   course: any;
   currentLessonId: string;
   mobile?: boolean;
+  embedded?: boolean;
   onClose?: () => void;
 }
 
@@ -24,6 +26,7 @@ export function LessonSidebar({
   course,
   currentLessonId,
   mobile = false,
+  embedded = false,
   onClose,
 }: LessonSidebarProps) {
 
@@ -122,10 +125,11 @@ function toggleChapter(chapterId: string) {
   return (
     <aside
       className={cn(
-        "rounded-xl border bg-card",
-        "sticky top-20",
+        "overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs dark:border-slate-800 dark:bg-transparent dark:text-slate-200",
+        "relative",
         "max-h-[calc(100vh-6rem)]",
         "overflow-y-auto",
+        embedded && "max-h-none rounded-none border-0 shadow-none",
         mobile &&
           "h-full max-h-none rounded-none border-0"
       )}
@@ -135,13 +139,13 @@ function toggleChapter(chapterId: string) {
           HEADER
       ====================================================== */}
 
-      <div className="flex items-center justify-between border-b px-4 py-4">
+      <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-4 py-4 dark:border-slate-800 dark:bg-transparent">
 
         <div className="flex min-w-0 items-center gap-2">
 
           {/* ICON */}
 
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
             <BookOpen className="size-4" />
           </div>
 
@@ -150,7 +154,7 @@ function toggleChapter(chapterId: string) {
           <div className="min-w-0">
 
             <h2 className="truncate text-sm font-semibold">
-              Nội dung khóa học
+              {embedded ? course.name : "Nội dung khóa học"}
             </h2>
 
             <p className="text-xs text-muted-foreground">
@@ -192,7 +196,7 @@ function toggleChapter(chapterId: string) {
           CHAPTER LIST
       ====================================================== */}
 
-      <div className="p-2">
+      <div className="divide-y divide-slate-100 dark:divide-slate-800">
 
         {course?.chapters?.map(
           (
@@ -217,7 +221,7 @@ function toggleChapter(chapterId: string) {
             return (
               <div
                 key={chapter.id}
-                className="mb-1 last:mb-0"
+                className=""
               >
 
                 {/* =================================================
@@ -232,11 +236,11 @@ function toggleChapter(chapterId: string) {
                     )
                   }
                   className={cn(
-                    "flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left transition-colors",
-                    "hover:bg-accent",
+                    "flex w-full items-center gap-2 px-4 py-3 text-left transition-colors",
+                    "hover:bg-accent dark:hover:bg-slate-800/60",
                     isCurrentChapter &&
                       !isOpen &&
-                      "bg-primary/5"
+                      "bg-amber-50/40 dark:bg-amber-500/5"
                   )}
                 >
 
@@ -252,9 +256,9 @@ function toggleChapter(chapterId: string) {
 
                   <span
                     className={cn(
-                      "flex-1 truncate text-sm font-semibold",
+                      "min-w-0 flex-1 truncate text-xs font-bold uppercase",
                       isCurrentChapter &&
-                        "text-primary"
+                        "text-amber-700 dark:text-amber-300"
                     )}
                   >
                     {chapter.title ??
@@ -279,7 +283,7 @@ function toggleChapter(chapterId: string) {
                 ================================================== */}
 
                 {isOpen && (
-                  <div className="ml-3 border-l pl-2">
+                  <div className="divide-y divide-slate-50 dark:divide-slate-800/60">
 
                     {chapter.lessons?.map(
                       (
@@ -311,10 +315,10 @@ function toggleChapter(chapterId: string) {
                           prefetch={false} // <-- Tắt prefetch tại đây
                           onClick={onClose}
                           className={cn(
-                            "flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
+                            "flex items-center gap-2.5 border-l-[3px] px-3.5 py-2.5 text-xs transition-colors",
                             active
-                              ? "bg-primary/10 font-semibold text-primary"
-                              : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                              ? "border-l-amber-500 bg-amber-50/60 font-semibold text-amber-900 dark:bg-amber-500/10 dark:text-amber-300"
+                              : "border-l-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-200"
                           )}
                         >
 
@@ -322,12 +326,12 @@ function toggleChapter(chapterId: string) {
                                 STATUS ICON
                             ================================================== */}
 
-                            {completed ? (
+                            {active ? (<CirclePlay className="size-4 shrink-0 text-amber-600" />) : completed ? (
                               <CircleCheckBig
                                 className={cn(
                                   "size-4 shrink-0",
                                   active
-                                    ? "text-primary"
+                                    ? "text-amber-700"
                                     : "text-green-600"
                                 )}
                               />
@@ -353,6 +357,7 @@ function toggleChapter(chapterId: string) {
                               {lesson.title}
                             </span>
 
+                            {active && <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-amber-500" />}
                           </Link>
                         );
                       }

@@ -112,15 +112,15 @@ export function ResourceDialog({
             }}
         >
 
-            <DialogContent className="sm:max-w-lg">
+            <DialogContent className="max-h-[90dvh] overflow-y-auto rounded-2xl border-slate-200 bg-white sm:max-w-lg">
 
                 <DialogHeader>
 
                     <DialogTitle>
 
                         {resource
-                            ? "Edit Resource"
-                            : "Add Resource"}
+                            ? "Chỉnh sửa tài liệu"
+                            : "Thêm tài liệu"}
 
                     </DialogTitle>
 
@@ -133,7 +133,7 @@ export function ResourceDialog({
 
                     <div>
 
-                        <Label>Title</Label>
+                        <Label>Tên tài liệu</Label>
 
                         <Input
                             {...form.register("title", {
@@ -145,7 +145,7 @@ export function ResourceDialog({
 
                     <div>
 
-                        <Label>Type</Label>
+                        <Label>Loại tài liệu</Label>
 
                         <Select
                             value={form.watch("type")}
@@ -186,7 +186,7 @@ export function ResourceDialog({
 
                     <div>
 
-                        <Label>Provider</Label>
+                        <Label>Nguồn tài liệu</Label>
 
                         <Select
                             value={form.watch(
@@ -247,7 +247,7 @@ export function ResourceDialog({
 
                     <div>
 
-                        <Label>Order</Label>
+                        <Label>Thứ tự</Label>
 
                         <Input
                             type="number"
@@ -270,12 +270,12 @@ export function ResourceDialog({
                             type="button"
                             onClick={onClose}
                         >
-                            Cancel
+                            Hủy
                         </Button>
 
-                        <Button type="submit">
+                        <Button type="submit" className="rounded-xl bg-amber-500 text-slate-950 hover:bg-amber-400">
 
-                            Save
+                            Lưu
 
                         </Button>
 

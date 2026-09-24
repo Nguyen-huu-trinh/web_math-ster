@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useMemo, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Search } from "lucide-react";
 
 import type { CreateCourseDto } from "@/repositories/course.repository";
@@ -30,10 +30,19 @@ import {
 import { toast } from "sonner";
 import { UpdateCourseInput } from "@/validators/course.schema";
 
-export const dynamic = 'force-static';
-
 export default function CoursesPage() {
+  return (
+    <Suspense fallback={<div className="py-24 text-center text-slate-400">Đang tải danh sách khóa học...</div>}>
+      <CoursesContent />
+    </Suspense>
+  );
+}
+
+function CoursesContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryCourseId = searchParams.get("courseId");
+  const queryChapterId = searchParams.get("chapterId");
   const { profile } = useAuth();
   const role = profile?.role;
 
@@ -47,7 +56,11 @@ export default function CoursesPage() {
   const loading = coursesQuery.isLoading;
 
   const [query, setQuery] = useState("");
-  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(queryCourseId);
+
+  useEffect(() => {
+    if (queryCourseId) setSelectedCourseId(queryCourseId);
+  }, [queryCourseId]);
 
   const filteredCourses = useMemo(() => {
     return courses.filter((course) =>
@@ -208,13 +221,14 @@ export default function CoursesPage() {
           </div>
 
           {/* CỘT PHẢI: KHUNG TRẮNG CHỨA CHI TIẾT KHÓA HỌC NHÚNG CHUẨN HÌNH MẪU */}
-          <div className="hidden lg:block">
+          <div className={queryCourseId ? "block" : "hidden lg:block"}>
             <div className="min-h-[600px] rounded-[32px] border border-slate-200/80 bg-white p-5 sm:p-7 shadow-2xs">
               {selectedCourseId ? (
                 <CourseClientView
                   key={selectedCourseId}
                   courseId={selectedCourseId}
                   embedded={true}
+                  initialChapterId={selectedCourseId === queryCourseId ? queryChapterId ?? undefined : undefined}
                 />
               ) : (
                 <div className="flex h-full min-h-[500px] flex-col items-center justify-center text-center">

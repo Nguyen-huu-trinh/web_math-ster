@@ -1,5 +1,5 @@
 'use client';
-
+import { Clapperboard, Sparkles } from "lucide-react";
 import { ResourceDialog } from "@/components/lesson-resources/resource-dialog";
 import { LessonSidebar } from "@/components/lessons/lesson-sidebar";
 import { DeleteResourceDialog } from "@/components/lesson-resources/delete-resource-dialog";
@@ -16,7 +16,6 @@ import {
   ArrowRight,
   Pencil,
   Trash2,
-  Menu,
   Maximize,
   Minimize,
   Lock,
@@ -24,7 +23,6 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/providers/auth-provider';
 import { toast } from 'sonner';
 
@@ -77,7 +75,7 @@ export default function LessonClientView({
   const [currentVideo, setCurrentVideo] = useState<any>(null);
   const [isVideoLocked, setIsVideoLocked] = useState(false);
   const [lockedExamId, setLockedExamId] = useState<string | null>(null);
-  const [showLessonSidebar, setShowLessonSidebar] = useState(false);
+  const [sidePanel, setSidePanel] = useState<"outline" | "resources">("outline");
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const videoContainerRef = useRef<HTMLDivElement>(null);
@@ -306,25 +304,48 @@ export default function LessonClientView({
 
   if (lessonIndex === -1) notFound();
 
-  return (
-    <div className="flex flex-col gap-6">
-      <Link
-        href={`/courses/${course.id}`}
-        prefetch={false}
-        className="flex w-fit items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ChevronLeft className="size-4" />
-        {course.name}
-      </Link>
+  const chapterId = lesson.chapter_id ?? lesson.chapterId ?? course.chapters?.find(
+    (chapter: any) => chapter.lessons?.some((item: any) => item.id === lesson.id)
+  )?.id;
+  const returnParams = new URLSearchParams({ courseId: course.id });
+  if (chapterId) returnParams.set("chapterId", chapterId);
 
-      <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)_340px]">
-        <div className="hidden lg:block">
-          <LessonSidebar course={course} currentLessonId={lesson.id} />
+  return (
+    <div className="dark flex min-h-[calc(100dvh-4rem)] w-full flex-col overflow-hidden bg-[#0f1426] text-slate-200 lg:h-[calc(100dvh-4rem)]">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-800 px-4 py-3">
+<div className="flex min-w-0 flex-1 items-center gap-2.5">
+  <Link
+    href={`/courses?${returnParams.toString()}`}
+    className="flex shrink-0 items-center gap-1 rounded-lg bg-slate-800 px-2 py-1.5 text-xs text-slate-300 hover:bg-slate-700"
+  >
+    <ChevronLeft className="size-3.5 shrink-0" />
+    <span className="hidden xs:inline">Về khóa học</span>
+  </Link>
+
+  <h1 className="min-w-0 flex-1 line-clamp-2 text-xs font-bold leading-tight sm:text-sm sm:leading-normal">
+    {lesson.title}
+  </h1>
+</div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="mr-2 text-xs text-slate-400">Bài {lessonIndex + 1}/{allLessons.length}</span>
+          {role === "STUDENT" && (
+            <Button variant="outline" onClick={completeLesson} disabled={completed || saveLearningProgressMutation.isPending} className="h-8 rounded-lg border-slate-700 bg-slate-800 text-xs text-slate-200 hover:bg-slate-700">
+              {completed ? <CircleCheckBig className="size-3.5" /> : <Circle className="size-3.5" />}
+              {completed ? "Đã hoàn thành" : "Đánh dấu hoàn thành"}
+            </Button>
+          )}
+          {nextLesson && (
+            <Link href={`/courses/${course.id}/lessons/${nextLesson.id}`} prefetch={false} className="inline-flex h-8 items-center gap-2 rounded-lg bg-amber-500 px-3 text-xs font-bold text-slate-950 hover:bg-amber-400">
+              Bài tiếp <ArrowRight className="size-3.5" />
+            </Link>
+          )}
         </div>
-        <div className="flex flex-col gap-5">
+      </header>
+      <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <main className="flex min-h-0 min-w-0 flex-col bg-black">
           <div
             ref={videoContainerRef}
-            className="relative aspect-video w-full overflow-hidden rounded-xl border bg-black group"
+            className="relative aspect-video w-full overflow-hidden bg-black group lg:aspect-auto lg:min-h-0 lg:flex-1"
           >
             {currentVideo ? (
               isVideoLocked ? (
@@ -406,81 +427,41 @@ export default function LessonClientView({
               </div>
             )}
           </div>
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Play className="size-3.5" />
-              {resources.filter((x: any) => x.type === "VIDEO").length} Video
-              <span aria-hidden>·</span>
-              Bài học {lessonIndex + 1} trong {allLessons.length}
-            </div>
-            <h1 className="text-2xl font-semibold tracking-tight text-balance">
-              {lesson.title}
-            </h1>
-            <p className="text-muted-foreground">
-              Bài học này có{" "}
-              <strong>{lesson.contents?.length ?? 0} tài liệu</strong>.
-            </p>
+<div className="flex shrink-0 items-center gap-2 border-t border-slate-800/80 bg-[#0D121F] px-4 py-2 text-xs text-slate-400">
+  <Clapperboard className="size-3.5 text-amber-400" />
+  <span className="font-medium text-slate-300">Chế độ rạp chiếu phim</span>
+  <span className="text-slate-600">•</span>
+  <Sparkles className="size-3 text-amber-400/80" />
+  <span className="font-semibold text-slate-200">Thầy Nguyễn Quang Huy</span>
+</div>
+        </main>
+        <aside className="flex min-h-0 min-w-0 flex-col border-t border-slate-800 bg-[#0f1426] lg:border-l lg:border-t-0">
+          <div className="grid shrink-0 grid-cols-2 border-b border-slate-800" aria-label="Nội dung bên cạnh video">
+            <button type="button" aria-pressed={sidePanel === "outline"} aria-controls="lesson-side-panel" onClick={() => setSidePanel("outline")} className={`border-b-2 px-3 py-3.5 text-xs font-bold transition-colors ${sidePanel === "outline" ? "border-amber-500 bg-amber-500/5 text-amber-400" : "border-transparent text-slate-400 hover:text-slate-200"}`}>Mục lục</button>
+            <button type="button" aria-pressed={sidePanel === "resources"} aria-controls="lesson-side-panel" onClick={() => setSidePanel("resources")} className={`border-b-2 px-3 py-3.5 text-xs font-bold transition-colors ${sidePanel === "resources" ? "border-amber-500 bg-amber-500/5 text-amber-400" : "border-transparent text-slate-400 hover:text-slate-200"}`}>Tài liệu ({resources.length})</button>
           </div>
-
-          {role === "STUDENT" ? (
-            <div className="flex flex-wrap items-center gap-3">
-              <Button
-                variant={completed ? "outline" : "default"}
-                onClick={completeLesson}
-              >
-                {completed ? (
-                  <CircleCheckBig data-icon="inline-start" />
-                ) : (
-                  <Circle data-icon="inline-start" />
-                )}
-                {completed ? "Hoàn thành" : "Đánh dấu hoàn thành"}
-              </Button>
-              {nextLesson ? (
-                <Link
-                  href={`/courses/${course.id}/lessons/${nextLesson.id}`}
-                  prefetch={false}
-                >
-                  <Button variant="ghost">
-                    Bài học tiếp theo
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              ) : null}
-            </div>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline">Chỉnh sửa bài học</Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSelectedResource(null);
-                  setResourceDialogOpen(true);
-                }}
-              >
-                Add Resource
-              </Button>
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-5">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Tài liệu</CardTitle>
-            </CardHeader>
-
-            <CardContent className="flex flex-col gap-2">
+          <div id="lesson-side-panel" className="min-h-0 max-h-[65dvh] overflow-y-auto lg:max-h-none lg:flex-1">
+            {sidePanel === "outline" ? (
+              <LessonSidebar course={course} currentLessonId={lesson.id} embedded />
+            ) : (
+              <div>
+                {role === "TEACHER" && <Button variant="outline" className="m-3 mb-0 border-slate-700 bg-slate-800 text-xs" onClick={() => { setSelectedResource(null); setResourceDialogOpen(true); }}>Thêm tài liệu</Button>}
+          <div className="p-3">
+            <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
+              Tài liệu &amp; bài tập đi kèm ({resources.length} mục)
+            </h2>
+            <div className="grid gap-2">
               {(lesson.contents ?? []).length === 0 ? (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-slate-400">
                   Chưa có tài liệu bài học này.
                 </p>
               ) : (
                 (lesson.contents ?? []).map((resource: any) => (
                   <div
                     key={resource.id}
-                    className="flex items-center gap-3 rounded-lg border p-3"
+                    className={`flex min-w-0 items-center gap-2.5 rounded-xl border p-3 transition-colors ${currentVideo?.id === resource.id ? "border-amber-500/30 bg-amber-500/10" : "border-slate-800 bg-slate-950/40 hover:bg-slate-800/60"}`}
                   >
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary">
+                    <div className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${currentVideo?.id === resource.id ? "bg-amber-500 text-white" : "bg-slate-800 text-slate-400"}`}>
                       {resource.type === "VIDEO" ? (
                         <Play className="h-4 w-4" />
                       ) : (
@@ -492,18 +473,18 @@ export default function LessonClientView({
                       <span className="truncate text-sm font-medium">
                         {resource.title}
                       </span>
-                      <span className="text-xs text-muted-foreground">
-                        {resource.provider}
+                      <span className="text-xs text-slate-400">
+                        {resource.file_links?.provider ?? resource.provider ?? (resource.type === "VIDEO" ? "Video bài học" : resource.type === "EXAM" ? "Bài kiểm tra" : "Tài liệu bài học")}
                       </span>
                     </div>
 
                     {resource.type === "VIDEO" ? (
                       <Button
                         variant="ghost"
-                        size="icon"
+                        className="h-8 shrink-0 rounded-lg px-2 text-xs font-semibold"
                         onClick={() => handleSelectVideo(resource)}
                       >
-                        <Play className="h-4 w-4" />
+                        {currentVideo?.id === resource.id ? (isVideoLocked ? "Đang khóa" : "Đang xem") : "Xem video"}
                       </Button>
                     ) : (
                       <Button
@@ -542,11 +523,13 @@ export default function LessonClientView({
                   </div>
                 ))
               )}
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
+              </div>
+            )}
+          </div>
+        </aside>
       </div>
-
       <ResourceDialog
         open={resourceDialogOpen}
         resource={selectedResource}
@@ -567,35 +550,6 @@ export default function LessonClientView({
         onDelete={deleteResource}
       />
 
-      {showLessonSidebar && (
-        <div className="fixed inset-0 z-[100] lg:hidden">
-          <button
-            type="button"
-            aria-label="Đóng danh sách bài học"
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setShowLessonSidebar(false)}
-          />
-          <div className="absolute inset-y-0 left-0 w-[320px] max-w-[85vw] bg-background shadow-2xl">
-            <LessonSidebar
-              course={course}
-              currentLessonId={lesson.id}
-              mobile
-              onClose={() => setShowLessonSidebar(false)}
-            />
-          </div>
-        </div>
-      )}
-
-      {!showLessonSidebar && (
-        <button
-          type="button"
-          onClick={() => setShowLessonSidebar(true)}
-          className="fixed bottom-5 left-5 z-50 flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-xl transition-all hover:scale-105 active:scale-95 lg:hidden"
-          aria-label="Mở danh sách bài học"
-        >
-          <Menu className="size-6" />
-        </button>
-      )}
     </div>
   );
 }

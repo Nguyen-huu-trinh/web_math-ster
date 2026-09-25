@@ -2,15 +2,12 @@
 
 import { useMemo, useState } from "react";
 import {
-  AlertCircle,
-  BookOpen,
   Calendar,
-  CheckCircle2,
   Clock,
-  FileText,
-  GraduationCap,
+  Video,
 } from "lucide-react";
 import { useStudentSchedule } from "@/hooks/use-student-schedule";
+import { useAuth } from "@/providers/auth-provider";
 
 type WeekType = "current" | "next";
 
@@ -18,19 +15,15 @@ function formatDate(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
-
   return `${year}-${month}-${day}`;
 }
 
 function getMonday(date: Date) {
   const result = new Date(date);
   result.setHours(0, 0, 0, 0);
-
   const day = result.getDay();
   const diff = day === 0 ? -6 : 1 - day;
-
   result.setDate(result.getDate() + diff);
-
   return result;
 }
 
@@ -54,11 +47,8 @@ function getWeekRange(weekType: WeekType) {
 }
 
 function formatDisplayDate(dateString: string) {
-  // Tách trực tiếp chuỗi "YYYY-MM-DD" để tránh lỗi lệch múi giờ (timezone offset)
   const [year, month, day] = dateString.split("-").map(Number);
-
   if (!day || !month) return dateString;
-
   return `${day}/${month}`;
 }
 
@@ -66,7 +56,6 @@ function formatTime(time: string) {
   return time ? time.slice(0, 5) : "";
 }
 
-// Cập nhật mảng DAYS có id riêng biệt và slot thời gian
 const DAYS = [
   { id: "mon", key: 1, label: "Thứ 2", slot: "all" },
   { id: "tue", key: 2, label: "Thứ 3", slot: "all" },
@@ -78,55 +67,27 @@ const DAYS = [
   { id: "sun-evening", key: 0, label: "Tối CN", slot: "evening" },
 ] as const;
 
-// Helper hiển thị Badge cho trường Ghi chú
-function NoteBadge({ note }: { note: string | null | undefined }) {
-  if (!note) return <span className="text-muted-foreground/30 font-normal">-</span>;
-
-  let badgeStyle =
-    "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200";
-  let Icon = FileText;
-
-  if (note.includes("Bài giảng")) {
-    badgeStyle =
-      "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800";
-    Icon = BookOpen;
-  } else if (note.includes("Chữa bài")) {
-    badgeStyle =
-      "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800";
-    Icon = CheckCircle2;
-  } else if (note.includes("Chữa đề")) {
-    badgeStyle =
-      "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800";
-    Icon = GraduationCap;
-  }
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${badgeStyle}`}
-    >
-      <Icon className="h-3.5 w-3.5 shrink-0" />
-      <span>{note}</span>
-    </span>
-  );
-}
-
 export function StudentScheduleCard() {
   const [weekType, setWeekType] = useState<WeekType>("current");
-  const today = formatDate(new Date());
+  
+  // Tính ngày hôm nay & ngày mai
+  const now = new Date();
+  const today = formatDate(now);
+  const tomorrowDate = new Date(now);
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  const tomorrow = formatDate(tomorrowDate);
 
+  const { profile } = useAuth();
   const week = useMemo(() => getWeekRange(weekType), [weekType]);
-
   const scheduleQuery = useStudentSchedule(week.startDate, week.endDate);
   const schedules = scheduleQuery.data ?? [];
 
-  // Sắp xếp các buổi học theo từng ngày/khung giờ trong tuần
   const flatSchedules = useMemo(() => {
     return DAYS.flatMap((day) => {
       const items = schedules.filter((item) => {
         const date = new Date(`${item.session_date}T00:00:00`);
         if (date.getDay() !== day.key) return false;
 
-        // Lọc theo khung giờ Sáng / Tối cho Chủ Nhật
         if (day.slot === "morning") return item.start_time < "12:00";
         if (day.slot === "evening") return item.start_time >= "12:00";
 
@@ -143,39 +104,43 @@ export function StudentScheduleCard() {
   }, [schedules]);
 
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-card p-4 sm:p-6 shadow-sm dark:border-slate-800">
+    <div className="w-full bg-white text-slate-800 p-1 sm:p-2">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200/70 pb-5 dark:border-slate-800">
+      <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-slate-100">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-foreground">
-            Thời khóa biểu
+          <h2 className="flex items-center gap-2.5 text-xl sm:text-2xl font-black tracking-tight text-slate-900">
+            <span className="flex size-8 items-center justify-center rounded-xl bg-amber-50 border border-amber-200/80 text-amber-600">
+              <Calendar className="size-4.5 stroke-[2.5]" />
+            </span>
+            Thời khóa biểu học tập
           </h2>
-          <p className="mt-1 text-sm font-medium text-muted-foreground flex items-center gap-1.5">
-            <Calendar className="h-4 w-4 text-primary" />
-            {formatDisplayDate(week.startDate)} – {formatDisplayDate(week.endDate)}
+          <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-slate-400">
+            <Clock className="size-3.5" />
+            Tuần từ {formatDisplayDate(week.startDate)} – {formatDisplayDate(week.endDate)}/
+            {new Date(week.startDate).getFullYear()}
           </p>
         </div>
 
-        <div className="flex items-center gap-1 rounded-xl border bg-muted/40 p-1.5">
+        {/* Tab tuần */}
+        <div className="inline-flex self-start sm:self-auto rounded-full bg-slate-100 p-1">
           <button
             type="button"
             onClick={() => setWeekType("current")}
-            className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-all ${
+            className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
               weekType === "current"
-                ? "bg-amber-400 text-amber-950 shadow-sm"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "bg-amber-500 text-slate-950 shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
             }`}
           >
             Tuần hiện tại
           </button>
-
           <button
             type="button"
             onClick={() => setWeekType("next")}
-            className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-all ${
+            className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
               weekType === "next"
-                ? "bg-amber-400 text-amber-950 shadow-sm"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "bg-amber-500 text-slate-950 shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
             }`}
           >
             Tuần sau
@@ -183,135 +148,161 @@ export function StudentScheduleCard() {
         </div>
       </div>
 
-      {/* Loading State */}
+      {/* Loading / Error / Empty States */}
       {scheduleQuery.isLoading && (
+
         <div className="mt-6 rounded-xl border border-dashed py-14 text-center text-sm text-muted-foreground">
           Đang húc . . . 
+
         </div>
       )}
 
-      {/* Error State */}
       {scheduleQuery.isError && (
-        <div className="mt-6 rounded-xl border border-dashed py-14 text-center text-sm text-destructive">
-          Không thể tải thời khóa biểu.
+        <div className="py-16 text-center text-sm font-semibold text-rose-500">
+          Không thể tải thời khóa biểu. Vui lòng thử lại.
         </div>
       )}
 
-      {/* Empty State */}
-      {!scheduleQuery.isLoading &&
-        !scheduleQuery.isError &&
-        flatSchedules.length === 0 && (
-          <div className="mt-6 rounded-xl border border-dashed py-14 text-center">
-            <p className="text-base font-semibold">Chưa có lịch học</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {weekType === "current"
-                ? "Hiện chưa có lịch học nào cho tuần này."
-                : "Tuần sau chưa có lịch học nào."}
-            </p>
-          </div>
-        )}
+      {!scheduleQuery.isLoading && !scheduleQuery.isError && flatSchedules.length === 0 && (
+        <div className="py-16 text-center">
+          <p className="text-base font-bold text-slate-700">Chưa có lịch học</p>
+          <p className="mt-1 text-xs text-slate-400">
+            {weekType === "current"
+              ? "Hiện chưa có lịch học nào cho tuần này."
+              : "Tuần sau chưa có lịch học nào."}
+          </p>
+        </div>
+      )}
 
-      {/* Schedule Table */}
-      {!scheduleQuery.isLoading &&
-        !scheduleQuery.isError &&
-        flatSchedules.length > 0 && (
-          <div className="mt-6 overflow-hidden rounded-xl border border-slate-200/80 bg-background shadow-xs dark:border-slate-800">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-100/80 text-xs font-bold uppercase tracking-wider text-slate-600 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300">
-                    <th className="w-[140px] px-5 py-3.5 whitespace-nowrap">
-                      Thứ / Ngày
-                    </th>
-                    <th className="w-[120px] px-5 py-3.5 whitespace-nowrap">
-                      Giờ vào lớp
-                    </th>
-                    <th className="px-5 py-3.5 min-w-[220px]">
-                      Nội dung buổi học
-                    </th>
-                    <th className="w-[150px] px-5 py-3.5 whitespace-nowrap">
-                      Ghi chú
-                    </th>
-                    <th className="w-[220px] px-5 py-3.5 min-w-[200px]">
-                      Lưu ý
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {flatSchedules.map((item) => {
-                    const isToday = item.session_date === today;
+      {/* Danh sách các buổi học dạng Card */}
+      {!scheduleQuery.isLoading && !scheduleQuery.isError && flatSchedules.length > 0 && (
+        <div className="mt-5 space-y-3">
+          {flatSchedules.map((item) => {
+            const isToday = item.session_date === today;
+            const isTomorrow = item.session_date === tomorrow;
+            const isPast = item.session_date < today;
 
-                    return (
-                    <tr
-                      key={item.id}
-                      className={`transition-colors ${isToday
-                        ? "bg-amber-50/60 dark:bg-amber-950/20"
-                        : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
-                      }`}
-                    >
-                      {/* Thứ / Ngày */}
-                      <td className={`px-5 py-4 align-top font-medium whitespace-nowrap ${isToday ? "shadow-[inset_4px_0_0_0_#f59e0b]" : ""}`}>
-                        <div className="flex items-start gap-2">
-                          <Calendar className={`h-4 w-4 shrink-0 mt-0.5 ${isToday ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`} />
-                          <div>
-                            <span className="font-semibold text-foreground">
-                              {item.dayLabel}
-                            </span>
-                            <span className="block text-xs text-muted-foreground font-normal">
-                              {formatDisplayDate(item.session_date)}
-                            </span>
-                            {isToday && (
-                              <span className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-amber-200/70 bg-amber-100/70 px-2 py-0.5 text-[10px] font-extrabold text-amber-950 dark:border-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
-                                <span aria-hidden="true" className="size-1.5 rounded-full bg-amber-700" />
-                                Hôm nay
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
+            const isMorning = item.start_time < "12:00";
+            const timePeriod = isMorning ? "Sáng" : "Tối";
+            const timeDisplay = `${formatTime(item.start_time)} ${isToday ? `${timePeriod} nay` : timePeriod}`;
 
-                      {/* Giờ vào lớp */}
-                      <td className="px-5 py-4 align-top whitespace-nowrap">
-                        <span className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold ${isToday ? "bg-amber-100/80 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}>
-                          <Clock className="h-3.5 w-3.5" />
-                          {formatTime(item.start_time)}
+            return (
+              <div
+                key={item.id}
+                className={`relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[22px] border p-4 transition-all ${
+                  isToday
+                    ? "border-amber-300/80 bg-amber-50/20 shadow-xs"
+                    : "border-slate-150 bg-white hover:border-slate-200"
+                }`}
+              >
+                {/* Khối bên trái: Thứ/Ngày + Nội dung */}
+                <div className="flex items-start sm:items-center gap-4 min-w-0">
+                  {/* Cột Thứ & Ngày */}
+                  <div className="w-16 shrink-0 text-center flex flex-col items-center justify-center">
+                    {isToday ? (
+                      /* Design chuẩn theo ảnh mẫu */
+                      <div className="flex flex-col items-center">
+                        <span className="text-[17px] font-black tracking-tight text-[#843e00] leading-none mb-1">
+                          {item.dayLabel}
                         </span>
-                      </td>
+                        <div className="w-[58px] py-1 rounded-[16px] bg-[#f59e0b] text-white flex flex-col items-center justify-center shadow-xs">
+                          <span className="text-[10px] font-black leading-tight tracking-wider">HÔM</span>
+                          <span className="text-[10px] font-black leading-tight tracking-wider">NAY</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="text-[14px] font-black text-slate-800">
+                          {item.dayLabel}
+                        </p>
+                        <p className="text-[11px] font-semibold text-slate-400 mt-0.5">
+                          {formatDisplayDate(item.session_date)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
 
-                      {/* Nội dung buổi học */}
-                      <td className="px-5 py-4 align-top font-semibold text-foreground leading-relaxed">
+                  {/* Vạch ngăn đứng màu vàng cam ở thẻ Hôm Nay */}
+                  {isToday && (
+                    <div className="hidden sm:block h-10 w-[3px] rounded-full bg-[#fcd34d] shrink-0" />
+                  )}
+
+                  {/* Nội dung buổi học */}
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3
+                        className={`break-words text-sm sm:text-[14.5px] font-black tracking-tight leading-snug ${
+                          isToday ? "text-slate-950" : "text-slate-800"
+                        }`}
+                      >
                         {item.content}
-                      </td>
+                      </h3>
 
-                      {/* Ghi chú */}
-                      <td className="px-5 py-4 align-top whitespace-nowrap">
-                        <NoteBadge note={item.note} />
-                      </td>
+                      {item.note && (
+                        <span
+                          className={`rounded-md border px-2 py-0.5 text-[10.5px] font-bold ${
+                            item.note.includes("Bài giảng")
+                              ? "border-sky-200 bg-sky-50 text-sky-600"
+                              : "border-amber-200 bg-amber-50 text-amber-700"
+                          }`}
+                        >
+                          {item.note}
+                        </span>
+                      )}
+                    </div>
 
-                      {/* Lưu ý */}
-                          <td className="px-5 py-4 align-top">
-                        {item.reminder ? (
-                          <div className="inline-flex items-start gap-1.5 rounded-lg border border-amber-200/80 bg-amber-50/70 dark:bg-amber-950/30 dark:border-amber-900/50 p-2 text-xs font-medium text-amber-800 dark:text-amber-300">
-                            <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
-                            <span className="leading-tight">
-                              {item.reminder}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground/30 font-normal">
-                            -
+                    {/* Giờ + Lưu ý */}
+                    <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
+                      <span className="flex items-center gap-1 text-slate-500">
+                        <Clock className="size-3.5" />
+                        {timeDisplay}
+                      </span>
+
+                      {item.reminder && (
+                        <>
+                          <span className="text-slate-300">•</span>
+                          <span className="flex items-center gap-1 text-amber-600 font-bold">
+                            ⚠️ {item.reminder}
                           </span>
-                        )}
-                      </td>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-                    </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+                {/* Khối bên phải: Nút Vào lớp học / Trạng thái */}
+                <div className="flex items-center justify-end shrink-0 sm:pl-2">
+                  {isToday ? (
+                    profile?.link_zoom ? (
+                      <a
+                        href={profile.link_zoom}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-2xl bg-[#ea580c] hover:bg-[#d94e08] px-5 py-2.5 text-xs font-black text-white shadow-md shadow-orange-500/20 transition-all active:scale-95"
+                      >
+                        <Video className="size-4 stroke-[2.5]" />
+                        <span>Vào lớp học</span>
+                      </a>
+                    ) : (
+                      <span className="inline-flex items-center rounded-xl bg-amber-100 px-3.5 py-1.5 text-xs font-bold text-amber-800">
+                        Hôm nay
+                      </span>
+                    )
+                  ) : isPast ? (
+                    <span className="rounded-full bg-slate-100 px-3.5 py-1 text-xs font-bold text-slate-400">
+                      Đã kết thúc
+                    </span>
+                  ) : isTomorrow ? (
+                    <span className="text-xs font-bold text-slate-400">
+                      Ngày mai
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

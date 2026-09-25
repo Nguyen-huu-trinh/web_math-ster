@@ -15,7 +15,7 @@ import { useCurrentAttendance } from "@/hooks/use-current-attendance";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Save, Bell, Check, CalendarDays } from "lucide-react";
+import { Save, Bell, Check, CalendarDays, Minus } from "lucide-react";
 import { toast } from "sonner";
 import { useLeaderboard } from '@/hooks/use-leaderboard';
 import { TeacherStatCardsGrid } from '@/components/dashboard/stat-card';
@@ -42,6 +42,7 @@ export default function TeacherDashboard() {
   const teacherDashboard = useTeacherDashboard();
   const onlineCount = useOnlineCount();
   const [readingAlertId, setReadingAlertId] = useState<string | null>(null);
+  const [deductingAlertId, setDeductingAlertId] = useState<string | null>(null);
   const leaderboard = useLeaderboard();
   const announcement = useAnnouncement();
   const queryClient = useQueryClient();
@@ -94,6 +95,58 @@ export default function TeacherDashboard() {
       );
     } finally {
       setReadingAlertId(null);
+    }
+  }
+
+ async function handleDeductPoints(alert: ExamAlert) {
+    if (!alert.studentId || !alert.examId) return;
+
+    const confirmed = window.confirm(
+      `Trừ điểm của học sinh "${alert.studentName}" vì quá hạn nộp bài?`
+    );
+    if (!confirmed) return;
+
+    try {
+      setDeductingAlertId(alert.id);
+
+      // 1. Gọi endpoint trừ điểm
+      const response = await fetch(`/api/exams/${alert.examId}/points`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          studentId: alert.studentId,
+          action: "decrease",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Không thể cập nhật điểm.");
+      }
+
+      const oldPoints = Number(data.oldPoints ?? 0);
+      const newPoints = Number(data.newPoints ?? 0);
+      const amount = Math.abs(Number(data.change ?? 0));
+
+      toast.success(`Đã trừ ${amount} điểm`, {
+        description: `Điểm của ${alert.studentName}: ${oldPoints} → ${newPoints}`,
+      });
+
+      // 2. Tự động đánh dấu "Đã xem" để xóa cảnh báo này khỏi bảng
+      await handleReadExamAlert(alert);
+
+      // 3. Làm mới bảng xếp hạng học sinh
+      void queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
+    } catch (error) {
+      console.error("[ADJUST POINTS ERROR]", error);
+      toast.error(
+        error instanceof Error ? error.message : "Không thể cập nhật điểm."
+      );
+    } finally {
+      setDeductingAlertId(null);
     }
   }
 
@@ -330,7 +383,7 @@ export default function TeacherDashboard() {
               {examAlertsQuery.isLoading ? (
                 <TableRow>
                   <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                    Đang húc . . . 
+                    Đang tải cảnh báo...
                   </TableCell>
                 </TableRow>
               ) : (examAlertsQuery.data ?? []).length === 0 ? (
@@ -384,20 +437,49 @@ export default function TeacherDashboard() {
                       {alert.type === "OVERDUE" && alert.overdueDays != null && `Quá ${alert.overdueDays} ngày`}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-8 px-2.5 text-xs font-bold"
-                        disabled={readingAlertId === alert.id}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void handleReadExamAlert(alert);
-                        }}
-                      >
-                        <Check className="mr-1 h-3.5 w-3.5 text-emerald-600" />
-                        {readingAlertId === alert.id ? "Lưu..." : "Đã xem"}
-                      </Button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        {/* NÚT TRỪ 50 ĐIỂM: Chỉ xuất hiện khi bài thi QUÁ HẠN */}
+ {alert.type === "OVERDUE" && (
+  <Button
+    type="button"
+    variant="outline"
+    size="sm"
+    title="Trừ điểm vì quá hạn"
+    aria-label={`Trừ điểm của ${alert.studentName}`}
+    className="h-8 px-2 text-xs font-black text-rose-600 border-rose-200 bg-rose-50/70 hover:bg-rose-100 hover:text-rose-700 hover:border-rose-300 transition-all shadow-2xs"
+    disabled={
+      deductingAlertId === alert.id ||
+      readingAlertId === alert.id
+    }
+    onClick={(event) => {
+      event.stopPropagation();
+      void handleDeductPoints(alert);
+    }}
+  >
+    <Minus className="mr-0.5 h-3.5 w-3.5 stroke-[3]" />
+    {deductingAlertId === alert.id ? "Đang trừ..." : "Trừ điểm"}
+  </Button>
+)}
+
+                        {/* NÚT ĐÃ XEM */}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-2.5 text-xs font-bold"
+                          disabled={
+                            readingAlertId === alert.id ||
+                            deductingAlertId === alert.id
+                          }
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void handleReadExamAlert(alert);
+                          }}
+                        >
+                          <Check className="mr-1 h-3.5 w-3.5 text-emerald-600" />
+                          {readingAlertId === alert.id ? "Lưu..." : "Đã xem"}
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

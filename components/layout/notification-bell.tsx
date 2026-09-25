@@ -1,9 +1,24 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, BookOpen, FileText, Megaphone, CalendarCheck, Video, FileDown } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  Bell,
+  BookOpen,
+  FileText,
+  Megaphone,
+  CalendarCheck,
+  Video,
+  FileDown,
+} from "lucide-react";
 import { toast } from "sonner";
-import { Popover, PopoverTrigger, PopoverContent, PopoverTitle } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverTitle,
+} from "@/components/ui/popover";
 import { useNotifications } from "@/hooks/use-notifications";
 import { notificationLink } from "@/lib/notification-link";
 
@@ -16,53 +31,249 @@ function relativeTime(value: string) {
   if (seconds < 86400) return formatter.format(-Math.floor(seconds / 3600), "hour");
   return formatter.format(-Math.floor(seconds / 86400), "day");
 }
+
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const queryClient = useQueryClient();
   const feed = useNotifications();
+
   return (
-    <Popover open={open} onOpenChange={(value) => {
-      setOpen(value);
-      if (value && (!feed.dataUpdatedAt || Date.now() - feed.dataUpdatedAt > 60_000)) void feed.refetch();
-    }}>
-      <PopoverTrigger aria-label={`Thông báo${feed.unreadCount ? `, ${feed.unreadCount} chưa đọc` : ""}`} className="relative flex size-10 items-center justify-center rounded-xl border border-slate-700/60 bg-slate-800/80 text-slate-300 hover:bg-slate-700 hover:text-white">
+    <Popover
+      open={open}
+      onOpenChange={(value) => {
+        setOpen(value);
+        if (value && (!feed.dataUpdatedAt || Date.now() - feed.dataUpdatedAt > 60_000)) {
+          void feed.refetch();
+        }
+      }}
+    >
+      <PopoverTrigger
+        aria-label={`Thông báo${feed.unreadCount ? `, ${feed.unreadCount} chưa đọc` : ""}`}
+        className="relative flex size-10 items-center justify-center rounded-xl border border-slate-700/60 bg-slate-800/80 text-slate-300 hover:bg-slate-700 hover:text-white"
+      >
         <Bell className="size-4" />
-        {feed.unreadCount > 0 && <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-rose-500 px-1 text-center text-[10px] font-bold leading-4 text-white ring-2 ring-slate-900">{feed.unreadCount > 99 ? "99+" : feed.unreadCount}</span>}
+        {feed.unreadCount > 0 && (
+          <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-rose-500 px-1 text-center text-[10px] font-bold leading-4 text-white ring-2 ring-slate-900">
+            {feed.unreadCount > 99 ? "99+" : feed.unreadCount}
+          </span>
+        )}
       </PopoverTrigger>
-      <PopoverContent align="end" sideOffset={12} className="w-[460px] max-w-[calc(100vw-1.5rem)] gap-0 overflow-hidden rounded-[24px] border border-slate-200/80 bg-white p-0 text-slate-800 shadow-2xl shadow-slate-900/15">
-        <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-white px-5 py-5">
-          <PopoverTitle className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-slate-950">Thông báo{feed.unreadCount > 0 && <span aria-hidden="true" className="size-2 rounded-full bg-amber-500" />}</PopoverTitle>
-          <button type="button" disabled={feed.isMarking || !feed.notifications.some((item) => !item.is_read)} onClick={() => { void feed.markAllAsRead().catch(() => toast.error("Không thể đánh dấu đã đọc. Vui lòng thử lại.")); }} className="rounded-lg py-1.5 text-xs font-bold text-amber-700 transition-colors hover:text-amber-900 focus-visible:outline-2 focus-visible:outline-amber-500 disabled:text-slate-400">Đọc tất cả đang hiển thị</button>
+
+      <PopoverContent
+        align="end"
+        sideOffset={12}
+        className="w-[440px] max-w-[calc(100vw-1.5rem)] gap-0 overflow-hidden rounded-[26px] border border-slate-100 bg-white p-0 text-slate-800 shadow-2xl shadow-slate-900/10"
+      >
+        {/* Header popover */}
+        <div className="flex items-center justify-between border-b border-slate-100/90 bg-white px-6 py-4.5">
+          <PopoverTitle className="flex items-center gap-2 text-[17px] font-black tracking-tight text-slate-900">
+            Thông báo
+            {feed.unreadCount > 0 && (
+              <span aria-hidden="true" className="size-2 rounded-full bg-[#f59e0b]" />
+            )}
+          </PopoverTitle>
+
+          <button
+            type="button"
+            disabled={feed.isMarking || !feed.notifications.some((item) => !item.is_read)}
+            onClick={() => {
+              void feed.markAllAsRead().catch(() =>
+                toast.error("Không thể đánh dấu đã đọc. Vui lòng thử lại.")
+              );
+            }}
+            className="text-xs font-black text-[#c27803] hover:text-[#9a5b00] disabled:text-slate-300 transition-colors"
+          >
+            Đọc tất cả
+          </button>
         </div>
-        <div className="max-h-[min(65dvh,480px)] overflow-y-auto space-y-3 bg-white p-4">
-          {feed.isPending ? <p className="p-6 text-center text-sm text-slate-400">Đang húc . . . </p> : feed.isError ? <div className="p-5 text-center text-sm"><p>Không thể tải thông báo.</p><button type="button" onClick={() => void feed.refetch()} className="mt-2 text-amber-700">Thử lại</button></div> : feed.notifications.length === 0 ? <p className="p-6 text-center text-sm text-slate-400">Chưa có thông báo.</p> : feed.notifications.map((item) => {
-            const Icon = item.type === "EXAM" ? (item.subtype === "ATTENDANCE" ? CalendarCheck : FileText) : item.type === "LESSON_MATERIAL" ? (item.subtype === "VIDEO" ? Video : item.subtype === "PDF" ? FileDown : BookOpen) : Megaphone;
-            const colors = item.type === "EXAM"
-              ? item.subtype === "ATTENDANCE"
-                ? { surface: "border-emerald-200/70 from-emerald-50/80 to-white", accent: "bg-emerald-100 text-emerald-800", dot: "bg-emerald-500" }
-                : { surface: "border-amber-200/70 from-amber-50/80 to-white", accent: "bg-amber-100 text-amber-800", dot: "bg-amber-500" }
-              : item.type === "LESSON_MATERIAL"
-                ? { surface: "border-sky-200/80 from-sky-50/60 to-white", accent: "bg-sky-100 text-sky-800", dot: "bg-sky-500" }
-                : { surface: "border-violet-200/70 from-violet-50/80 to-white", accent: "bg-violet-100 text-violet-800", dot: "bg-violet-500" };
-            return <button type="button" key={item.id} onClick={() => {
-              if (!item.is_read) void feed.markAsRead(item.id).catch(() => toast.error("Chưa lưu được trạng thái đã đọc."));
-              setOpen(false);
-              router.push(notificationLink(item));
-            }} className={`block w-full rounded-2xl border p-4 text-left transition-colors hover:border-slate-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 ${item.is_read ? "border-slate-200 bg-white hover:bg-slate-50" : `bg-gradient-to-br ${colors.surface}`}`}>
-              <span className="mb-2.5 flex items-center gap-2">
-                <span className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-extrabold uppercase ${item.is_read ? "bg-slate-100 text-slate-600" : colors.accent}`}>
-                  <Icon className="size-4 shrink-0" />
-                  {item.type === "EXAM" ? (item.subtype === "ATTENDANCE" ? "Điểm danh" : "Định kì") : item.type === "LESSON_MATERIAL" ? "Tài liệu" : "Thông báo chung"}
-                </span>
-                {!item.is_read && <span aria-label="Chưa đọc" className={`ml-auto size-2 shrink-0 rounded-full ${colors.dot}`} />}
-              </span>
-              <span className="block break-words text-[14.5px] font-black text-slate-900 leading-snug">{item.title}</span>
-              {item.content?.trim() && <span className="block whitespace-pre-line break-words text-xs font-medium text-slate-600 mt-1 leading-relaxed">{item.content}</span>}
-              <time dateTime={item.created_at} className="block text-[11.5px] font-medium text-slate-400 mt-2.5">{relativeTime(item.created_at)}</time>
-            </button>;
-          })}
+
+        {/* Danh sách thông báo */}
+        <div className="max-h-[min(65dvh,480px)] overflow-y-auto divide-y divide-slate-100/80 bg-white">
+          {feed.isPending ? (
+            <p className="p-8 text-center text-xs font-semibold text-slate-400">
+              Đang tải thông báo...
+            </p>
+          ) : feed.isError ? (
+            <div className="p-6 text-center text-xs">
+              <p className="text-slate-500">Không thể tải thông báo.</p>
+              <button
+                type="button"
+                onClick={() => void feed.refetch()}
+                className="mt-2 font-bold text-amber-600 hover:underline"
+              >
+                Thử lại
+              </button>
+            </div>
+          ) : feed.notifications.length === 0 ? (
+            <p className="p-8 text-center text-xs font-semibold text-slate-400">
+              Chưa có thông báo nào.
+            </p>
+          ) : (
+            feed.notifications.map((item) => {
+              let Icon = BookOpen;
+              let badgeLabel = "";
+              let styles = {
+                unreadRowBg: "bg-sky-50/40 hover:bg-sky-50/70",
+                iconBg: "bg-sky-100/70 text-[#0284c7]",
+                badgeBg: "bg-sky-100/80 text-[#0284c7]",
+                dot: "bg-[#0284c7]",
+              };
+
+              if (item.type === "EXAM") {
+                if (item.subtype === "ATTENDANCE") {
+                  Icon = CalendarCheck;
+                  badgeLabel = "ĐIỂM DANH";
+                  styles = {
+                    unreadRowBg: "bg-[#f0fdf4]/50 hover:bg-[#f0fdf4]/80",
+                    iconBg: "bg-[#dcfce7] text-[#059669]",
+                    badgeBg: "bg-[#dcfce7] text-[#059669]",
+                    dot: "bg-[#10b981]",
+                  };
+                } else {
+                  Icon = FileText;
+                  badgeLabel = "ĐỊNH KÌ";
+                  styles = {
+                    unreadRowBg: "bg-[#fffbeb]/50 hover:bg-[#fffbeb]/80",
+                    iconBg: "bg-[#fef3c7] text-[#d97706]",
+                    badgeBg: "bg-[#fef3c7] text-[#d97706]",
+                    dot: "bg-[#f59e0b]",
+                  };
+                }
+              } else if (item.type === "LESSON_MATERIAL") {
+                if (item.subtype === "VIDEO") {
+                  Icon = Video;
+                  badgeLabel = "";
+                  styles = {
+                    unreadRowBg: "bg-[#f0f9ff]/50 hover:bg-[#f0f9ff]/80",
+                    iconBg: "bg-[#e0f2fe] text-[#0284c7]",
+                    badgeBg: "bg-[#e0f2fe] text-[#0284c7]",
+                    dot: "bg-[#0284c7]",
+                  };
+                } else if (item.subtype === "PDF") {
+                  Icon = FileDown;
+                  badgeLabel = "";
+                  styles = {
+                    unreadRowBg: "bg-[#f8fafc]/60 hover:bg-[#f1f5f9]/60",
+                    iconBg: "bg-[#e2e8f0] text-[#475569]",
+                    badgeBg: "bg-[#e2e8f0] text-[#475569]",
+                    dot: "bg-[#64748b]",
+                  };
+                } else {
+                  Icon = BookOpen;
+                  badgeLabel = "";
+                  styles = {
+                    unreadRowBg: "bg-[#f8fafc]/60 hover:bg-[#f1f5f9]/60",
+                    iconBg: "bg-[#e2e8f0] text-[#475569]",
+                    badgeBg: "bg-[#e2e8f0] text-[#475569]",
+                    dot: "bg-[#64748b]",
+                  };
+                }
+              } else if (item.type === "ANNOUNCEMENT") {
+                Icon = Megaphone;
+                badgeLabel = "THÔNG BÁO";
+                styles = {
+                  unreadRowBg: "bg-[#faf5ff]/50 hover:bg-[#faf5ff]/80",
+                  iconBg: "bg-[#f3e8ff] text-[#7c3aed]",
+                  badgeBg: "bg-[#f3e8ff] text-[#7c3aed]",
+                  dot: "bg-[#8b5cf6]",
+                };
+              }
+
+              return (
+                <button
+                  type="button"
+                  key={item.id}
+                  onClick={() => {
+                    if (item.type === "ANNOUNCEMENT") {
+                      void queryClient.invalidateQueries({
+                        queryKey: ["announcement"],
+                      });
+                    }
+                    if (!item.is_read) {
+                      void feed
+                        .markAsRead(item.id)
+                        .catch(() =>
+                          toast.error("Chưa lưu được trạng thái đã đọc.")
+                        );
+                    }
+                    setOpen(false);
+                    router.push(notificationLink(item));
+                  }}
+                  className={`flex w-full items-start gap-3.5 px-6 py-4 text-left transition-colors ${
+                    !item.is_read
+                      ? `${styles.unreadRowBg}`
+                      : "bg-white hover:bg-slate-50/70"
+                  }`}
+                >
+                  {/* Khối Icon dạng squircle */}
+                  <div
+                    className={`flex size-10 shrink-0 items-center justify-center rounded-[14px] ${styles.iconBg}`}
+                  >
+                    <Icon className="size-4.5 stroke-[2.2]" />
+                  </div>
+
+                  {/* Nội dung thông báo */}
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`truncate text-[13.5px] tracking-tight leading-snug ${
+                          !item.is_read
+                            ? "font-black text-slate-900"
+                            : "font-bold text-slate-700"
+                        }`}
+                      >
+                        {item.title}
+                      </span>
+
+                      {badgeLabel && (
+                        <span
+                          className={`rounded px-1.5 py-0.5 text-[9.5px] font-extrabold uppercase shrink-0 ${styles.badgeBg}`}
+                        >
+                          {badgeLabel}
+                        </span>
+                      )}
+                    </div>
+
+                    {item.content?.trim() && (
+                      <p
+                        className={`line-clamp-2 text-xs leading-relaxed ${
+                          !item.is_read
+                            ? "font-medium text-slate-600"
+                            : "font-normal text-slate-400"
+                        }`}
+                      >
+                        {item.content}
+                      </p>
+                    )}
+
+                    <time
+                      dateTime={item.created_at}
+                      className="block text-[11px] font-semibold text-slate-400 mt-1"
+                    >
+                      {relativeTime(item.created_at)}
+                    </time>
+                  </div>
+
+                  {/* Chấm tròn chưa đọc ở góc phải */}
+                  {!item.is_read && (
+                    <span
+                      aria-label="Chưa đọc"
+                      className={`mt-1.5 size-2 shrink-0 rounded-full ${styles.dot}`}
+                    />
+                  )}
+                </button>
+              );
+            })
+          )}
         </div>
-        <p className="border-t border-slate-100 bg-slate-50/80 px-4 py-3.5 text-center text-xs font-semibold text-slate-500">20 thông báo mới nhất</p>
+
+        {/* Footer
+        <div className="border-t border-slate-100 bg-[#fbfcfd] px-4 py-3.5 text-center">
+          <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[#64748b]">
+            XEM 20 THÔNG BÁO GẦN NHẤT
+          </span>
+        </div> */}
       </PopoverContent>
     </Popover>
   );

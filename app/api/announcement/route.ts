@@ -1,4 +1,6 @@
 import { NextRequest } from "next/server";
+import { z } from "zod";
+import { requireTeacher } from "@/lib/auth/teacher";
 
 import { success } from "@/lib/api/api-response";
 import { handleError } from "@/lib/api/handle-error";
@@ -9,10 +11,10 @@ export async function GET() {
     const data = await announcementService.get();
     const response = success(data);
 
-    // Thông báo chung có thể cache public 1 giờ (3600s)
+    // Fetch the latest announcement when students follow a broadcast.
     response.headers.set(
       "Cache-Control",
-      "public, max-age=3600, stale-while-revalidate=300"
+      "no-store"
     );
 
     return response;
@@ -24,7 +26,12 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const body = await request.json();
+    await requireTeacher();
+    const body = z.object({
+      id: z.string().uuid(),
+      title: z.string().refine((value) => value.trim().length > 0),
+      content: z.string().nullable().optional().transform((value) => value ?? ""),
+    }).parse(await request.json());
 
     await announcementService.update(
       body.id,

@@ -32,6 +32,7 @@ export function useUpdateAnnouncement() {
             announcementClientService.update,
 
         onSuccess() {
+            void queryClient.invalidateQueries({ queryKey: ["notifications"] });
 
             queryClient.invalidateQueries({
 

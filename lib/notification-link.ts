@@ -1,8 +1,10 @@
-export function notificationLink(item: { type: string; link: string }): string {
-  const { link } = item;
+export function notificationLink(item: { type: string; link: string | null }): string {
+  const link = item.link || "/dashboard";
   if (!link.startsWith("/") || link.startsWith("//") || /[\\\u0000-\u0020]/.test(link)) {
     return "/dashboard";
   }
+
+  if (item.type === "ANNOUNCEMENT") return link;
 
   // Older material broadcasts point to the course list instead of the player.
   const url = new URL(link, "https://math-ster.local");

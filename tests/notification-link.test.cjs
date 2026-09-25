@@ -10,6 +10,13 @@ const context = { exports: {}, URL };
 vm.runInNewContext(output, context);
 const resolve = (link, type = 'LESSON_MATERIAL') => context.exports.notificationLink({ type, link });
 
+test('announcements use their safe link or fall back to the dashboard', () => {
+  for (const link of [null, '', '/dashboard', '//example.com', 'https://example.com']) {
+    assert.equal(resolve(link, 'ANNOUNCEMENT'), '/dashboard');
+  }
+  assert.equal(resolve('/dashboard?announcement=1', 'ANNOUNCEMENT'), '/dashboard?announcement=1');
+});
+
 test('legacy material notification opens its lesson player', () => {
   assert.equal(resolve('/courses?courseId=course-1&chapterId=chapter-2&lessonId=lesson-3'), '/courses/course-1/lessons/lesson-3');
 });

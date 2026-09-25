@@ -1,4 +1,4 @@
-export type NotificationType = "EXAM" | "LESSON_MATERIAL" | "GENERAL";
+export type NotificationType = "EXAM" | "LESSON_MATERIAL" | "GENERAL" | "ANNOUNCEMENT";
 export interface BroadcastNotification {
   id: string;
   title: string;

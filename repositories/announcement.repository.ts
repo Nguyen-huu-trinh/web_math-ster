@@ -38,21 +38,11 @@ export class AnnouncementRepository {
         const supabase =
             await createClient();
 
-        const { error } = await supabase
-
-            .from("announcements")
-
-            .update({
-
-                title,
-
-                content,
-
-                updated_at: new Date(),
-
-            })
-
-            .eq("id", id);
+        const { error } = await supabase.rpc("save_announcement", {
+            announcement_id: id,
+            title_value: title,
+            content_value: content,
+        });
 
         if (error) throw error;
 

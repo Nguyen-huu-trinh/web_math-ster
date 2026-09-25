@@ -75,7 +75,7 @@ export default function LessonClientView({
   const [currentVideo, setCurrentVideo] = useState<any>(null);
   const [isVideoLocked, setIsVideoLocked] = useState(false);
   const [lockedExamId, setLockedExamId] = useState<string | null>(null);
-  const [sidePanel, setSidePanel] = useState<"outline" | "resources">("outline");
+  const [sidePanel, setSidePanel] = useState<"outline" | "resources">("resources");
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const videoContainerRef = useRef<HTMLDivElement>(null);

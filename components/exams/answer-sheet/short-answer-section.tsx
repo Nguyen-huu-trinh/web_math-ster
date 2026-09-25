@@ -1,8 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
-
 import type { ExamAnswers } from "./types";
 
 const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
@@ -15,23 +14,15 @@ interface ShortAnswerSectionProps {
   submitted: boolean;
   showAnswer: boolean;
   questionOffset?: number;
-
   markedQuestions: Set<string>;
-
   onChoose: (
     questionIndex: number,
     columnIndex: number,
     value: string
   ) => void;
-
-  onToggleMark: (
-    key: string
-  ) => void;
+  onToggleMark: (key: string) => void;
 }
 
-/**
- * Chuẩn hóa đáp án của một câu trả lời ngắn.
- */
 function normalizeShortAnswerRow(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value
@@ -59,25 +50,24 @@ export default function ShortAnswerSection({
   onChoose,
   onToggleMark,
 }: ShortAnswerSectionProps) {
-  if (count <= 0) {
-    return null;
-  }
+  if (count <= 0) return null;
 
   return (
-    <section className="mb-8 rounded-xl border border-border bg-card p-4">
-      {/* HEADER */}
-      <div className="mb-3 border-b pb-2">
-        <h3 className="font-bold">
-          <span className="text-primary">PHẦN III.</span> Trả lời ngắn
+    <section className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-2xs">
+      {/* HEADER SECTION */}
+      <div className="mb-3 flex items-center justify-between rounded-lg bg-slate-50/80 px-3 py-1.5 border border-slate-100">
+        <h3 className="text-xs font-black tracking-tight text-slate-800">
+          <span>PHẦN III.</span> TRẮC NGHIỆM TRẢ LỜI NGẮN ({questionOffset + 1} – {questionOffset + count})
         </h3>
+        <span className="text-[10px] font-bold text-slate-400">
+          Tô ô OMR (0.5đ/câu)
+        </span>
       </div>
 
-      {/* QUESTIONS GRID */}
-      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 min-[2560px]:grid-cols-4">
+      {/* QUESTION GRID: Linh hoạt responsive 1, 2 hoặc 3 cột */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: count }).map((_, index) => {
-          const selectedRow = normalizeShortAnswerRow(
-            answers.shortAnswer?.[index]
-          );
+          const selectedRow = normalizeShortAnswerRow(answers.shortAnswer?.[index]);
           const correctRow = normalizeShortAnswerRow(answerKey[index]);
 
           while (selectedRow.length < SHORT_ANSWER_COLUMNS) {
@@ -107,145 +97,182 @@ export default function ShortAnswerSection({
           const isCorrect =
             hasAnswer &&
             correctAnswer.length > 0 &&
-            selectedAnswer === correctAnswer;
+            (selectedAnswer === correctAnswer ||
+              parseFloat(selectedAnswer) === parseFloat(correctAnswer));
 
           return (
             <div
               key={questionKey}
-              className="rounded-lg border border-border/60 p-3"
+              id={`question-${questionKey}`}
+              tabIndex={-1}
+              className="rounded-2xl border border-slate-200/90 bg-white p-3 shadow-2xs transition-all hover:border-slate-300 focus:outline-2 focus:outline-slate-900"
             >
-              {/* QUESTION HEADER */}
-              <div className="mb-3 flex items-center justify-between">
-                <button
-                  type="button"
-                  disabled={submitted}
-                  onClick={() => onToggleMark(questionKey)}
-                  className={cn(
-                    "flex h-7 min-w-fit items-center justify-center rounded-full px-2 font-bold whitespace-nowrap transition-colors",
-                    isMarked
-                      ? "bg-red-100 text-red-700 ring-2 ring-red-400 hover:bg-red-200"
-                      : "text-foreground hover:bg-muted"
-                  )}
-                >
-                  Câu {questionNumber}
-                </button>
+              {/* TOP HEADER: Câu X, Kết quả review, Xoá, Cắm cờ */}
+              <div className="mb-2 flex items-center justify-between gap-1">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-[13px] font-black text-slate-900 shrink-0">
+                    Câu {questionNumber}
+                  </span>
 
-                {showAnswer && (
-                  <div className="flex items-center gap-2">
-                    {correctAnswer && (
-                      <span className="text-xs font-semibold text-blue-600">
-                        Đáp án: {correctAnswer}
-                      </span>
-                    )}
-                    {hasAnswer && (
+                  {/* Hiển thị giá trị đang tô hoặc kết quả khi Review */}
+                  {!showAnswer ? (
+                    <div className="rounded border border-slate-100 bg-slate-50 px-1.5 py-0.2">
                       <span
                         className={cn(
-                          "font-bold text-lg",
-                          isCorrect ? "text-green-600" : "text-red-600"
+                          "font-mono text-[11px] font-black tracking-wider",
+                          hasAnswer ? "text-slate-900" : "text-slate-400 font-semibold"
                         )}
                       >
-                        {isCorrect ? "✓" : "✕"}
+                        {selectedAnswer || "Chưa tô"}
                       </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1 text-[11.5px] font-black tracking-tight truncate">
+                      {isCorrect ? (
+                        <span className="text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                          {selectedAnswer}
+                        </span>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <span className="text-rose-600 line-through">
+                            {selectedAnswer || "Chưa tô"}
+                          </span>
+                          <span className="text-slate-400 font-normal">➔</span>
+                          <span className="text-slate-950 font-black">
+                            {correctAnswer}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Cụm nút: Xoá + Flag */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    disabled={submitted || !hasAnswer}
+                    onClick={() => {
+                      for (let col = 0; col < SHORT_ANSWER_COLUMNS; col++) {
+                        onChoose(index, col, "");
+                      }
+                    }}
+                    className="text-[11px] font-bold text-slate-400 hover:text-slate-700 px-1 py-0.5 rounded transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                  >
+                    Xoá
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={submitted}
+                    onClick={() => onToggleMark(questionKey)}
+                    title={isMarked ? "Bỏ cắm cờ" : "Cắm cờ câu này"}
+                    aria-label={`Đánh dấu câu ${questionNumber}`}
+                    className={cn(
+                      "flex size-5 items-center justify-center rounded transition-colors",
+                      isMarked
+                        ? "text-amber-500 hover:text-amber-600"
+                        : "text-slate-300 hover:text-amber-500"
                     )}
-                  </div>
-                )}
+                  >
+                    <Flag
+                      className={cn(
+                        "size-3",
+                        isMarked ? "fill-amber-500 text-amber-500" : "text-current"
+                      )}
+                    />
+                  </button>
+                </div>
               </div>
 
-              {/* BẢNG TÔ ĐÁP ÁN (4 CỘT) */}
-              <div className="grid grid-cols-4 gap-1">
-                {Array.from({ length: SHORT_ANSWER_COLUMNS }).map(
-                  (_, columnIndex) => {
+              {/* BẢNG TÔ OMR (4 CỘT DỌC CHUẨN MẪU) */}
+              <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-2 flex justify-center">
+                <div className="grid grid-cols-4 gap-1.5 text-center">
+                  {Array.from({ length: SHORT_ANSWER_COLUMNS }).map((_, columnIndex) => {
                     const current = selectedRow[columnIndex] ?? "";
-                    const correct = correctRow[columnIndex] ?? "";
 
                     return (
                       <div
                         key={columnIndex}
                         className="flex flex-col items-center gap-1"
                       >
-                        {/* Ô Hiển Thị Ký Tự Đã Chọn */}
+                        {/* Ô preview ký tự đã chọn ở hàng đỉnh */}
                         <div
                           className={cn(
-                            "relative flex h-11 w-11 items-center justify-center rounded border font-bold transition-all",
-
-                            !showAnswer &&
-                              current &&
-                              "border-primary bg-primary/10",
-
-                            showAnswer &&
-                              current === correct &&
-                              current !== "" &&
-                              "bg-green-600 border-green-600 text-white",
-
-                            showAnswer &&
-                              current !== "" &&
-                              current !== correct &&
-                              "bg-red-600 border-red-600 text-white"
+                            "flex size-5 items-center justify-center rounded border text-[11px] font-black tracking-tight mb-0.5 shadow-2xs transition-all",
+                            current
+                              ? "border-slate-900 bg-slate-900 text-white"
+                              : "border-slate-200/90 bg-white text-slate-400"
                           )}
                         >
-                          {current}
+                          {current || "-"}
                         </div>
 
-                        {/* Danh sách nút bấm chọn ký tự */}
-                        <div className="flex flex-col gap-1">
-                          {/* Dấu âm '-' (Chỉ áp dụng cột 0) */}
-                          <Button
-                            size="sm"
-                            className={cn(
-                              "h-7 w-7 p-0 text-sm font-semibold",
-                              current === "-"
-                                ? "bg-primary text-primary-foreground border-primary hover:bg-primary hover:text-primary-foreground hover:border-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary dark:hover:text-primary-foreground"
-                                : "bg-background text-foreground border-input hover:bg-background hover:text-foreground dark:bg-background dark:text-foreground dark:hover:bg-background dark:hover:text-foreground"
-                            )}
-                            variant="outline"
-                            disabled={submitted || columnIndex !== 0}
-                            onClick={() => onChoose(index, columnIndex, "-")}
-                          >
-                            {columnIndex === 0 ? "-" : ""}
-                          </Button>
-
-                          {/* Dấu thập phân '.' (Chỉ áp dụng cột 1 hoặc 2) */}
-                          <Button
-                            size="sm"
-                            className={cn(
-                              "h-7 w-7 p-0 text-xs font-semibold",
-                              current === "."
-                                ? "bg-primary text-primary-foreground border-primary hover:bg-primary hover:text-primary-foreground hover:border-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary dark:hover:text-primary-foreground"
-                                : "bg-background text-foreground border-input hover:bg-background hover:text-foreground dark:bg-background dark:text-foreground dark:hover:bg-background dark:hover:text-foreground"
-                            )}
-                            variant="outline"
-                            disabled={
-                              submitted ||
-                              !(columnIndex === 1 || columnIndex === 2)
+                        {/* Hàng nút dấu: Cột 0 là dấu âm '-', các cột 1-3 là dấu '.' */}
+                        {columnIndex === 0 ? (
+                          <button
+                            type="button"
+                            disabled={submitted}
+                            onClick={() =>
+                              onChoose(index, columnIndex, current === "-" ? "" : "-")
                             }
-                            onClick={() => onChoose(index, columnIndex, ".")}
+                            aria-label={`Câu ${questionNumber}, cột 1: dấu âm`}
+                            className={cn(
+                              "flex size-[21px] items-center justify-center rounded-full border text-[11px] font-black transition-all active:scale-95 disabled:pointer-events-none",
+                              current === "-"
+                                ? "border-slate-900 bg-slate-900 text-white shadow-2xs"
+                                : "border-slate-200 bg-white text-slate-600 hover:border-slate-400"
+                            )}
                           >
-                            {columnIndex === 1 || columnIndex === 2 ? "." : ""}
-                          </Button>
+                            -
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={submitted}
+                            onClick={() =>
+                              onChoose(index, columnIndex, current === "." ? "" : ".")
+                            }
+                            aria-label={`Câu ${questionNumber}, cột ${columnIndex + 1}: dấu chấm`}
+                            className={cn(
+                              "flex size-[21px] items-center justify-center rounded-full border text-[11px] font-black transition-all active:scale-95 disabled:pointer-events-none",
+                              current === "."
+                                ? "border-slate-900 bg-slate-900 text-white shadow-2xs"
+                                : "border-slate-200 bg-white text-slate-600 hover:border-slate-400"
+                            )}
+                          >
+                            .
+                          </button>
+                        )}
 
-                          {/* Các chữ số từ 0 đến 9 */}
-                          {DIGITS.map((d) => (
-                            <Button
+                        {/* Các số từ 0 đến 9 dạng tròn OMR */}
+                        {DIGITS.map((d) => {
+                          const isDigitSelected = current === d;
+
+                          return (
+                            <button
                               key={d}
-                              size="sm"
-                              className={cn(
-                                "h-7 w-7 p-0 text-xs font-semibold",
-                                current === d
-                                  ? "bg-primary text-primary-foreground border-primary hover:bg-primary hover:text-primary-foreground hover:border-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary dark:hover:text-primary-foreground"
-                                  : "bg-background text-foreground border-input hover:bg-background hover:text-foreground dark:bg-background dark:text-foreground dark:hover:bg-background dark:hover:text-foreground"
-                              )}
-                              variant="outline"
+                              type="button"
                               disabled={submitted}
-                              onClick={() => onChoose(index, columnIndex, d)}
+                              onClick={() =>
+                                onChoose(index, columnIndex, isDigitSelected ? "" : d)
+                              }
+                              aria-label={`Câu ${questionNumber}, cột ${columnIndex + 1}: ${d}`}
+                              className={cn(
+                                "flex size-[21px] items-center justify-center rounded-full border text-[10.5px] font-extrabold transition-all active:scale-95 disabled:pointer-events-none",
+                                isDigitSelected
+                                  ? "border-slate-900 bg-slate-900 text-white shadow-2xs"
+                                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-400"
+                              )}
                             >
                               {d}
-                            </Button>
-                          ))}
-                        </div>
+                            </button>
+                          );
+                        })}
                       </div>
                     );
-                  }
-                )}
+                  })}
+                </div>
               </div>
             </div>
           );

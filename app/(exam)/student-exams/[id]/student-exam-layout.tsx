@@ -331,7 +331,7 @@ useEffect(() => {
 }, []);
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-100">
+    <div className="h-dvh overflow-hidden bg-slate-100">
 
       {
   !review && !examStarted && (
@@ -397,11 +397,11 @@ useEffect(() => {
           DESKTOP
       ========================================== */}
       {isDesktop && (
-      <div className=" h-full md:flex">
+      <div className="h-full gap-3 bg-slate-50 p-3 pt-[68px] md:flex">
 
         {/* PDF */}
 
-        <div className="w-1/2 overflow-hidden border-r bg-white">
+        <div className="min-w-0 flex-1 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xs">
 
           <PdfViewer
             url={pdfUrl}
@@ -411,7 +411,7 @@ useEffect(() => {
 
         {/* ANSWER SHEET */}
 
-        <div className="w-1/2 overflow-y-auto bg-[#f8f6ef]">
+        <div className="min-w-0 flex-1 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-2xs">
 
           <AnswerSheetNew
             attempt={attempt}
@@ -446,9 +446,9 @@ useEffect(() => {
       : "opacity-0 pointer-events-none"
   )}
 >
-   <div className="flex items-center justify-between border-b bg-card px-4 py-3">
+   <div className="flex h-14 items-center justify-between gap-3 border-b border-slate-800 bg-[#0f172a] px-4">
 
-    <span className="truncate text-sm font-semibold">
+    <span className="truncate text-sm font-extrabold text-white">
       {exam.title}
     </span>
 
@@ -457,8 +457,8 @@ useEffect(() => {
       className={cn(
         "flex items-center gap-1 rounded-lg px-2 py-1 font-mono text-sm font-bold",
         lowTime
-          ? "bg-red-100 text-red-600"
-          : "bg-primary/10"
+          ? "border border-rose-500/40 bg-rose-500/10 text-rose-300"
+          : "border border-slate-700 bg-slate-800/90 text-slate-200"
       )}
     >
       <Clock className="size-4" />

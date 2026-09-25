@@ -93,17 +93,11 @@ export function useExamAnswers({
           previous: ExamAnswers
         ) => ExamAnswers
       ) => {
-        setAnswers(
-          (previous) => {
-            const next =
-              updater(previous);
-
-            answersRef.current =
-              next;
-
-            return next;
-          }
-        );
+        // Submission can run before React commits a queued render (for example,
+        // on timeout or fullscreen exit). Keep the payload current synchronously.
+        const next = updater(answersRef.current);
+        answersRef.current = next;
+        setAnswers(next);
       },
       []
     );

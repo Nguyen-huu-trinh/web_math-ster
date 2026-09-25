@@ -11,13 +11,15 @@ import {
 import { useRouter } from "next/navigation";
 
 import {
-  Clock,
+  Home,
+  ListChecks,
   Send,
 } from "lucide-react";
 
 import { toast } from "sonner";
 
 import ExamHeader from "./exam-header";
+import QuestionNavigation from "./question-navigation";
 
 import MultipleChoiceSection from "./multiple-choice-section";
 import TrueFalseSection from "./true-false-section";
@@ -46,7 +48,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { cn } from "@/lib/utils";
 
 interface ExamAnswers {
   multipleChoice: string[];
@@ -654,13 +655,17 @@ console.log(
   : null;
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-full min-h-0 flex-col bg-white text-slate-800">
       {/* =====================================================
           HEADER
       ===================================================== */}
 
       <ExamHeader
         title={exam.title}
+        examCode={exam.code}
+        onBack={handleBack}
+        onRetry={handleRetry}
+        canRetry={(exam.max_attempts ?? 1) > attempt.attempt_number}
         displayTime={
           displayTime
         }
@@ -679,36 +684,21 @@ console.log(
           CONTENT
       ===================================================== */}
 
-      <div className="flex-1 overflow-y-auto bg-[#f8f6ef]">
-        <div className="space-y-6 p-4">
-          {/* ==================================================
-              PROGRESS
-          ================================================== */}
-
-          {!submitted && (
-            <div className="rounded-xl border border-border bg-card p-4">
-              <div className="mb-2 flex items-center justify-between text-sm">
-                <span className="font-medium">
-                  Tiến độ làm bài
-                </span>
-
-                <span className="font-semibold">
-                  {answeredCount}/
-                  {totalQuestions}
-                </span>
-              </div>
-
-              <div className="h-2 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-primary transition-all"
-                  style={{
-                    width: `${progress}%`,
-                  }}
-                />
-              </div>
-            </div>
-          )}
-
+      <div className="@container/sheet flex min-h-0 flex-1 flex-col">
+      <QuestionNavigation
+        config={questionConfig}
+        answers={answers}
+        answerKey={answerKey}
+        answeredCount={answeredCount}
+        totalQuestions={totalQuestions}
+        progress={progress}
+        submitted={submitted}
+        showAnswer={showAnswer}
+        markedQuestions={markedQuestions}
+        onToggleMark={toggleMark}
+      />
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white [scrollbar-width:thin]">
+        <div className="space-y-4 p-3 @min-[560px]/sheet:p-3.5">
           {/* ==================================================
               PHẦN I
           ================================================== */}
@@ -851,34 +841,18 @@ console.log(
             </Card>
           )}
 
-          {/* ==================================================
-              SUBMIT BUTTON
-          ================================================== */}
-
-          {!submitted && (
-            <Card className="rounded-2xl border shadow-sm">
-              <CardContent className="pt-6">
-                <Button
-                  className="h-12 w-full text-base font-semibold"
-                  disabled={
-                    submitting
-                  }
-                  onClick={() =>
-                    setSubmitDialogOpen(
-                      true
-                    )
-                  }
-                >
-                  <Send className="mr-2 size-4" />
-
-                  {submitting
-                    ? "Đang nộp bài..."
-                    : "Nộp bài"}
-                </Button>
-              </CardContent>
-            </Card>
-          )}
         </div>
+      </div>
+
+      <footer className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-slate-100 bg-slate-50/70 p-2.5 pb-20 md:pb-2.5">
+        {submitted ? <>
+          <Button variant="outline" onClick={() => router.push("/dashboard")} className="h-8 rounded-xl border-slate-200 bg-white px-2 text-[10px] font-bold text-slate-700 hover:bg-slate-100 @min-[480px]/sheet:text-xs"><Home className="size-3.5" />Về Trang Chủ</Button>
+          <Button onClick={handleBack} className="h-8 rounded-xl bg-slate-900 px-2 text-[10px] font-black text-white hover:bg-slate-800 @min-[480px]/sheet:text-xs"><ListChecks className="size-3.5 text-amber-400" />Quay Lại Danh Sách Bài Thi</Button>
+        </> : <>
+          <span className="text-[10px] font-medium text-slate-400">© Math-Ster · Khảo thí trực tuyến</span>
+          <Button disabled={submitting} onClick={() => setSubmitDialogOpen(true)} className="h-8 rounded-xl bg-slate-900 px-3 text-xs font-black text-white shadow-2xs hover:bg-slate-800"><Send className="size-3.5 text-amber-400" />{submitting ? "Đang nộp bài..." : "Nộp bài ngay"}</Button>
+        </>}
+      </footer>
       </div>
 
       {/* =====================================================

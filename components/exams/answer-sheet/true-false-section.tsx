@@ -1,15 +1,12 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  TRUE_FALSE_OPTIONS,
-  type ExamAnswers,
-} from "./types";
+import { type ExamAnswers } from "./types";
 
 interface TrueFalseSectionProps {
   count: number;
-  questionOffset?: number; // Đã đổi tên offsetIndex -> questionOffset
+  questionOffset?: number;
   answers: ExamAnswers;
   answerKey?: unknown[];
   submitted: boolean;
@@ -30,7 +27,7 @@ function normalizeTrueFalseRow(value: unknown): string[] {
 
 export default function TrueFalseSection({
   count,
-  questionOffset = 0, // Đã đổi tên offsetIndex -> questionOffset
+  questionOffset = 0,
   answers,
   answerKey = [],
   submitted,
@@ -42,16 +39,16 @@ export default function TrueFalseSection({
   if (count <= 0) return null;
 
   return (
-    <section className="rounded-xl border border-border bg-card p-4 mb-8">
+    <section className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-2xs">
       {/* HEADER */}
-      <div className="mb-3 flex justify-between border-b pb-2">
-        <h3 className="font-bold">
-          <span className="text-primary">PHẦN II.</span> Đúng / Sai
+      <div className="mb-3 flex items-center justify-between rounded-lg bg-slate-50/80 px-3 py-1.5 border border-slate-100">
+        <h3 className="text-xs font-black tracking-tight text-slate-800">
+          <span>PHẦN II.</span> TRẮC NGHIỆM ĐÚNG / SAI ({questionOffset + 1} – {questionOffset + count})
         </h3>
       </div>
 
-      {/* QUESTION GRID */}
-      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-4 min-[2560px]:grid-cols-5">
+      {/* QUESTION GRID: Linh hoạt 1, 2, 4 cột theo độ rộng màn hình */}
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: count }).map((_, questionIndex) => {
           const selectedRow = [
             ...(answers.trueFalse?.[questionIndex] ?? []),
@@ -64,127 +61,173 @@ export default function TrueFalseSection({
           }
 
           const correctRow = normalizeTrueFalseRow(answerKey[questionIndex]);
-
           const questionKey = `tf-${questionIndex}`;
           const isMarked = markedQuestions.has(questionKey);
 
-          const hasAnswer = selectedRow.some((value) => value !== "");
-          const isQuestionCorrect =
-            hasAnswer &&
-            selectedRow.every(
-              (value, colIdx) =>
-                value !== "" && value === correctRow[colIdx]
-            );
+          // Đếm số ý đúng khi review
+          let correctCount = 0;
+          if (showAnswer) {
+            correctRow.forEach((val, i) => {
+              if (val && selectedRow[i] === val) correctCount++;
+            });
+          }
 
           return (
-            <div key={questionIndex} className="rounded-lg border p-3">
-              {/* TOP ITEM: STT & TRẠNG THÁI ĐÚNG/SAI BÀI TẬP */}
-              <div className="mb-3 flex items-center justify-between">
+            <div
+              key={questionIndex}
+              id={`question-${questionKey}`}
+              tabIndex={-1}
+              className="flex flex-col justify-between rounded-xl border border-slate-200/80 bg-white p-2.5 transition-all hover:border-slate-300 focus:outline-2 focus:outline-slate-900"
+            >
+              {/* TOP: STT & NÚT CẮM CỜ */}
+              <div className="mb-2 flex items-center justify-between border-b border-slate-100 pb-1.5">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[12px] font-black text-slate-800">
+                    Câu {questionOffset + questionIndex + 1}
+                  </span>
+                  {showAnswer && (
+                    <span className="rounded bg-slate-100 px-1 py-0.2 text-[9.5px] font-bold text-slate-600">
+                      {correctCount}/4 ý
+                    </span>
+                  )}
+                </div>
+
                 <button
                   type="button"
                   disabled={submitted}
                   onClick={() => onToggleMark(questionKey)}
+                  title={isMarked ? "Bỏ cắm cờ" : "Cắm cờ câu này"}
+                  aria-label={`Đánh dấu câu ${questionOffset + questionIndex + 1}`}
                   className={cn(
-                    "flex h-7 min-w-fit px-2 items-center justify-center rounded-full font-bold whitespace-nowrap transition-colors",
+                    "flex size-5 items-center justify-center rounded transition-colors",
                     isMarked
-                      ? "bg-red-100 text-red-700 ring-2 ring-red-400 hover:bg-red-200"
-                      : "text-foreground hover:bg-muted"
+                      ? "text-amber-500 hover:text-amber-600"
+                      : "text-slate-300 hover:text-amber-500"
                   )}
                 >
-                  Câu {questionOffset + questionIndex + 1}
+                  <Flag
+                    className={cn(
+                      "size-3",
+                      isMarked ? "fill-amber-500 text-amber-500" : "text-current"
+                    )}
+                  />
                 </button>
-
-                {showAnswer && hasAnswer && (
-                  isQuestionCorrect ? (
-                    <span className="text-green-600 text-lg">✓</span>
-                  ) : (
-                    <span className="text-red-600 text-lg">✕</span>
-                  )
-                )}
               </div>
 
-              {/* LIST CÁC CÂU HỎI CON (a, b, c, d) */}
-              {["a", "b", "c", "d"].map((label, columnIndex) => {
-                const selected = selectedRow[columnIndex];
-                const correct = correctRow[columnIndex];
-                const markKey = `tf-${questionIndex}-${columnIndex}`;
-                const isSubMarked = markedQuestions.has(markKey);
+              {/* LIST CÁC Ý a, b, c, d */}
+              <div className="space-y-1.5">
+                {["a", "b", "c", "d"].map((label, columnIndex) => {
+                  const selected = selectedRow[columnIndex];
+                  const correct = correctRow[columnIndex];
+                  const markKey = `tf-${questionIndex}-${columnIndex}`;
+                  const isSubMarked = markedQuestions.has(markKey);
 
-                return (
-                  <div
-                    key={columnIndex}
-                    className="flex justify-between items-center mb-2"
-                  >
-                    <button
-                      type="button"
-                      disabled={submitted}
-                      onClick={() => onToggleMark(markKey)}
-                      className={cn(
-                        "rounded-md px-2 py-1 font-semibold transition-colors",
-                        isSubMarked
-                          ? "bg-red-100 text-red-700 ring-2 ring-red-400 hover:bg-red-200"
-                          : "text-foreground hover:bg-muted"
-                      )}
+                  // Hàm sinh style cho từng nút Đ và S
+                  const getBtnStyle = (optionValue: "Đ" | "S") => {
+                    const isSelected = selected === optionValue;
+                    const isCorrect = correct === optionValue;
+
+                    // 1. Trạng thái đang làm bài
+                    if (!showAnswer) {
+                      return isSelected
+                        ? "border-slate-900 bg-slate-900 text-white font-black shadow-2xs"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-400 hover:text-slate-900";
+                    }
+
+                    // 2. Trạng thái xem lại (Review)
+                    if (isCorrect) {
+                      // Đáp án đúng chuẩn của đề (học sinh làm đúng sẽ thấy nút đen)
+                      return "border-slate-900 bg-slate-900 text-white font-black shadow-2xs";
+                    }
+
+                    if (isSelected && !isCorrect) {
+                      // Học sinh chọn SAI: Nền đỏ pastel + gạch chéo 45 độ nằm gọn trong nút
+                      return "border-rose-300 bg-rose-50 text-rose-600 font-extrabold shadow-2xs relative overflow-hidden after:absolute after:h-[1.5px] after:w-full after:bg-rose-500 after:rotate-45 after:pointer-events-none";
+                    }
+
+                    // Lựa chọn còn lại không chọn
+                    return "border-slate-100 bg-white text-slate-300 pointer-events-none";
+                  };
+
+                  return (
+                    <div
+                      key={columnIndex}
+                      className="flex items-center justify-between gap-1 py-0.5"
                     >
-                      {label})
-                    </button>
-
-                    <div className="flex gap-2">
-                      {/* NÚT ĐÚNG (Đ) */}
-                      <Button
-                        size="sm"
-                        variant="outline"
+                      <button
+                        type="button"
                         disabled={submitted}
-                        onClick={() =>
-                          onChoose(questionIndex, columnIndex, "Đ")
-                        }
+                        onClick={() => onToggleMark(markKey)}
                         className={cn(
-                          !showAnswer &&
-                            selected === "Đ" &&
-                            "bg-primary text-primary-foreground border-primary hover:bg-primary hover:text-primary-foreground hover:border-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary dark:hover:text-primary-foreground",
-
-                          showAnswer &&
-                            correct === "Đ" &&
-                            "bg-green-600 text-white border-green-600 hover:bg-green-600 hover:text-white hover:border-green-600 dark:bg-green-600 dark:text-white dark:border-green-600 dark:hover:bg-green-600 dark:hover:text-white dark:hover:border-green-600",
-
-                          showAnswer &&
-                            selected === "Đ" &&
-                            selected !== correct &&
-                            "bg-red-600 text-white border-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 dark:bg-red-600 dark:text-white dark:border-red-600 dark:hover:bg-red-600 dark:hover:text-white dark:hover:border-red-600"
+                          "rounded px-1 text-[11px] font-black transition-colors",
+                          isSubMarked
+                            ? "text-amber-600"
+                            : "text-slate-600 hover:text-slate-900"
                         )}
                       >
-                        Đ
-                      </Button>
+                        {label})
+                      </button>
 
-                      {/* NÚT SAI (S) */}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={submitted}
-                        onClick={() =>
-                          onChoose(questionIndex, columnIndex, "S")
-                        }
-                        className={cn(
-                          !showAnswer &&
-                            selected === "S" &&
-                            "bg-primary text-primary-foreground border-primary hover:bg-primary hover:text-primary-foreground hover:border-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary dark:hover:text-primary-foreground",
+                      <div className="flex items-center gap-1">
+                        {/* NÚT ĐÚNG (Đ) */}
+                        <button
+                          type="button"
+                          disabled={submitted}
+                          onClick={() => onChoose(questionIndex, columnIndex, "Đ")}
+                          className={cn(
+                            "flex h-5.5 w-7 shrink-0 items-center justify-center rounded-[5px] border text-[10.5px] font-extrabold transition-all active:scale-95 disabled:pointer-events-none",
+                            getBtnStyle("Đ")
+                          )}
+                        >
+                          Đ
+                        </button>
 
-                          showAnswer &&
-                            correct === "S" &&
-                            "bg-green-600 text-white border-green-600 hover:bg-green-600 hover:text-white hover:border-green-600 dark:bg-green-600 dark:text-white dark:border-green-600 dark:hover:bg-green-600 dark:hover:text-white dark:hover:border-green-600",
-
-                          showAnswer &&
-                            selected === "S" &&
-                            selected !== correct &&
-                            "bg-red-600 text-white border-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 dark:bg-red-600 dark:text-white dark:border-red-600 dark:hover:bg-red-600 dark:hover:text-white dark:hover:border-red-600"
-                        )}
-                      >
-                        S
-                      </Button>
+                        {/* NÚT SAI (S) */}
+                        <button
+                          type="button"
+                          disabled={submitted}
+                          onClick={() => onChoose(questionIndex, columnIndex, "S")}
+                          className={cn(
+                            "flex h-5.5 w-7 shrink-0 items-center justify-center rounded-[5px] border text-[10.5px] font-extrabold transition-all active:scale-95 disabled:pointer-events-none",
+                            getBtnStyle("S")
+                          )}
+                        >
+                          S
+                        </button>
+                      </div>
                     </div>
+                  );
+                })}
+              </div>
+
+              {/* DÒNG ĐÁP ÁN CHUẨN HIGHLIGHT CÂU SAI CHUẨN THEO ẢNH */}
+              {showAnswer && (
+                <div className="mt-2.5 border-t border-slate-100 pt-2 text-[10px]">
+                  <p className="mb-1 text-[9.5px] font-bold text-slate-400">
+                    Đáp án chuẩn:
+                  </p>
+                  <div className="flex items-center justify-between gap-1">
+                    {correctRow.map((val, idx) => {
+                      const optLabel = ["a", "b", "c", "d"][idx];
+                      const isItemCorrect = selectedRow[idx] === val && val !== "";
+
+                      return (
+                        <span
+                          key={idx}
+                          className={cn(
+                            "flex-1 text-center rounded-md py-0.5 text-[10px] font-black tracking-tight",
+                            isItemCorrect
+                              ? "bg-slate-100 text-slate-600"
+                              : "border border-amber-300/90 bg-amber-100/80 text-slate-950 shadow-2xs"
+                          )}
+                        >
+                          {optLabel}: <b>{val || "—"}</b>
+                        </span>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                </div>
+              )}
             </div>
           );
         })}

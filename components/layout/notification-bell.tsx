@@ -169,14 +169,14 @@ export function NotificationBell() {
                     dot: "bg-[#64748b]",
                   };
                 }
-              } else if (item.type === "ANNOUNCEMENT") {
+                } else if (item.type === "ANNOUNCEMENT") {
                 Icon = Megaphone;
                 badgeLabel = "THÔNG BÁO";
                 styles = {
-                  unreadRowBg: "bg-[#faf5ff]/50 hover:bg-[#faf5ff]/80",
-                  iconBg: "bg-[#f3e8ff] text-[#7c3aed]",
-                  badgeBg: "bg-[#f3e8ff] text-[#7c3aed]",
-                  dot: "bg-[#8b5cf6]",
+                  unreadRowBg: "bg-rose-50/60 hover:bg-rose-50/90",
+                  iconBg: "bg-rose-100 text-rose-600",
+                  badgeBg: "bg-rose-100 text-rose-700",
+                  dot: "bg-rose-500",
                 };
               }
 

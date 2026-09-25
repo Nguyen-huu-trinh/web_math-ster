@@ -1,12 +1,12 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ExamAnswers } from "./types";
+import type { ExamAnswers } from "./types";
 
 interface MultipleChoiceSectionProps {
   count: number;
-answers: ExamAnswers;
+  answers: ExamAnswers;
   answerKey?: string[];
   submitted: boolean;
   showAnswer: boolean;
@@ -19,7 +19,7 @@ const MC = ["A", "B", "C", "D"];
 
 export default function MultipleChoiceSection({
   count,
-  answers ,
+  answers,
   answerKey = [],
   submitted,
   showAnswer,
@@ -30,16 +30,16 @@ export default function MultipleChoiceSection({
   if (count <= 0) return null;
 
   return (
-    <section className="mb-8 rounded-xl border border-border bg-card p-4">
-      {/* HEADER */}
-      <div className="mb-3 flex items-baseline justify-between border-b pb-2">
-        <h3 className="text-base font-bold">
-          <span className="text-primary">PHẦN I.</span> Trắc nghiệm nhiều lựa chọn
+    <section className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-2xs">
+      {/* HEADER SECTION */}
+      <div className="mb-3 flex items-center justify-between rounded-lg bg-slate-50/80 px-3 py-1.5 border border-slate-100">
+        <h3 className="text-xs font-black tracking-tight text-slate-800">
+          <span>PHẦN I.</span> TRẮC NGHIỆM 4 PHƯƠNG ÁN (1 – {count})
         </h3>
       </div>
 
-      {/* QUESTION GRID */}
-      <div className="columns-1 gap-x-6 sm:columns-1 md:columns-2 lg:columns-2 2xl:columns-3 min-[1920px]:columns-5 min-[2560px]:columns-6">
+      {/* QUESTION GRID: Linh hoạt 1 cột (mobile), 2 cột (tablet), 3 cột (desktop) */}
+     <div className="columns-1 sm:columns-2 lg:columns-3 gap-2.5 space-y-2">
         {Array.from({ length: count }).map((_, index) => {
           const selected = answers.multipleChoice[index] ?? "";
           const correct = answerKey[index];
@@ -49,74 +49,85 @@ export default function MultipleChoiceSection({
           return (
             <div
               key={index}
-              className="mb-3 flex items-center justify-start gap-3 break-inside-avoid rounded-lg px-2 py-1.5"
+              id={`question-${questionKey}`}
+              tabIndex={-1}
+            className="break-inside-avoid mb-2 flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2 transition-all hover:border-slate-200 focus:outline-2 focus:outline-slate-900"
             >
-              {/* Cụm Icon (✓ / ✕) + STT đứng sát nhau */}
+              {/* STT & CỜ ĐÁNH DẤU NẰM CẠNH NHAU */}
               <div className="flex items-center gap-1.5">
-                <div className="flex h-6 w-5 items-center justify-center text-base font-bold">
-                  {showAnswer && (
-                    <span
-                      className={
-                        selected === correct
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }
-                    >
-                      {selected === correct ? "✓" : "✕"}
-                    </span>
-                  )}
-                </div>
+                <span className="w-5 text-center text-[11.5px] font-black text-slate-700">
+                  {index + 1}
+                </span>
 
                 <button
                   type="button"
                   disabled={submitted}
                   onClick={() => onToggleMark(questionKey)}
+                  title={isMarked ? "Bỏ cắm cờ" : "Cắm cờ câu này"}
+                  aria-label={`Đánh dấu câu ${index + 1}`}
                   className={cn(
-                    "flex h-7 w-7 items-center justify-center rounded-md font-bold transition-colors",
+                    "flex size-5 items-center justify-center rounded transition-colors",
                     isMarked
-                      ? "bg-red-100 text-red-700 ring-2 ring-red-400 hover:bg-red-200"
-                      : "text-foreground hover:bg-muted"
+                      ? "text-amber-500 hover:text-amber-600"
+                      : "text-slate-300 hover:text-amber-500"
                   )}
                 >
-                  {index + 1}
+                  <Flag
+                    className={cn(
+                      "size-3",
+                      isMarked ? "fill-amber-500 text-amber-500" : "text-current"
+                    )}
+                  />
                 </button>
               </div>
 
-              {/* Các nút A, B, C, D nằm ngay liền sau STT */}
-              <div className="flex gap-2">
+              {/* NÚT TRÒN A, B, C, D */}
+              <div className="flex items-center gap-1">
                 {MC.map((item) => {
                   const isSelected = selected === item;
                   const isCorrect = item === correct;
 
+                  // 1. Trạng thái đang làm bài
+                  let buttonStyle =
+                    "border-slate-200 bg-white text-slate-600 hover:border-slate-400 hover:text-slate-900";
+
+                  if (!showAnswer && isSelected) {
+                    buttonStyle =
+                      "border-slate-900 bg-slate-900 text-white font-black shadow-2xs";
+                  }
+
+                  // 2. Trạng thái xem lại đáp án (Review)
+                  if (showAnswer) {
+                    if (isCorrect) {
+                      // Đáp án đúng chuẩn của đề
+                      buttonStyle =
+                        "border-slate-900 bg-slate-900 text-white font-black shadow-2xs ring-1 ring-slate-900";
+                    } else if (isSelected && !isCorrect) {
+                      // Học sinh chọn SAI: Nền đỏ pastel + gạch chéo 45 độ gọn trong hình tròn
+                      buttonStyle =
+                        "border-rose-300 bg-rose-50 text-rose-600 font-extrabold shadow-2xs relative overflow-hidden after:absolute after:h-[1.5px] after:w-full after:bg-rose-500 after:rotate-45 after:pointer-events-none";
+                    } else {
+                      // Các lựa chọn còn lại
+                      buttonStyle =
+                        "border-slate-100 bg-white text-slate-300 pointer-events-none";
+                    }
+                  }
+
                   return (
-                    <Button
+                    <button
                       key={item}
-                      size="sm"
+                      type="button"
                       disabled={submitted}
-                      variant="outline"
                       onClick={() => onChoose(index, item)}
+                      aria-label={`Câu ${index + 1}: ${item}`}
+                      aria-pressed={isSelected}
                       className={cn(
-                        "h-8 w-8 rounded-full p-0 transition-colors",
-
-                        // 1. Chưa nộp bài + học sinh đã chọn
-                        !showAnswer &&
-                          isSelected &&
-                          "bg-primary text-primary-foreground border-primary hover:bg-primary hover:text-primary-foreground hover:border-primary dark:bg-primary dark:text-primary-foreground dark:border-primary dark:hover:bg-primary dark:hover:text-primary-foreground dark:hover:border-primary",
-
-                        // 2. Đã nộp bài + đáp án đúng
-                        showAnswer &&
-                          isCorrect &&
-                          "bg-green-600 text-white border-green-600 hover:bg-green-600 hover:text-white hover:border-green-600 dark:bg-green-600 dark:text-white dark:border-green-600 dark:hover:bg-green-600 dark:hover:text-white dark:hover:border-green-600",
-
-                        // 3. Đã nộp bài + học sinh chọn sai
-                        showAnswer &&
-                          isSelected &&
-                          !isCorrect &&
-                          "bg-red-600 text-white border-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 dark:bg-red-600 dark:text-white dark:border-red-600 dark:hover:bg-red-600 dark:hover:text-white dark:hover:border-red-600"
+                        "flex size-6.5 shrink-0 items-center justify-center rounded-full border text-[11px] font-extrabold transition-all active:scale-95 disabled:pointer-events-none",
+                        buttonStyle
                       )}
                     >
                       {item}
-                    </Button>
+                    </button>
                   );
                 })}
               </div>
@@ -127,24 +138,3 @@ export default function MultipleChoiceSection({
     </section>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

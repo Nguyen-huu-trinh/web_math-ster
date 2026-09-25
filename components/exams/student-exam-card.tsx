@@ -59,19 +59,19 @@ export function StudentExamCard({ exam }: Props) {
       }
     : isPassed
     ? {
-        surface: "border-emerald-200/70 to-emerald-50/80 hover:border-emerald-300",
-        accent: "before:border-l-emerald-500",
-        dot: "bg-emerald-500 ring-4 ring-emerald-100/70",
+        surface: "border-emerald-300/90 to-emerald-100/60 hover:border-emerald-400",
+        accent: "before:border-l-emerald-600",
+        dot: "bg-emerald-600 ring-4 ring-emerald-200/80",
         progress: "from-emerald-400 to-emerald-600",
-        title: "group-hover:text-emerald-700",
+        title: "group-hover:text-emerald-800",
       }
     : isFailed
     ? {
-        surface: "border-red-200/70 to-red-50/70 hover:border-red-300",
-        accent: "before:border-l-red-500",
-        dot: "bg-red-400 ring-4 ring-red-100/70",
-        progress: "from-red-300 to-red-500",
-        title: "group-hover:text-red-700",
+        surface: "border-red-300/90 to-red-100/60 hover:border-red-400",
+        accent: "before:border-l-red-600",
+        dot: "bg-red-500 ring-4 ring-red-200/80",
+        progress: "from-red-400 to-red-600",
+        title: "group-hover:text-red-800",
       }
     : {
         surface: "border-slate-200 to-amber-50/30 hover:border-amber-200",
@@ -315,7 +315,13 @@ export function StudentExamCard({ exam }: Props) {
           
           {/* CỘT 1: THÔNG TIN BÀI THI (Chiếm 5 cột trên Desktop) */}
           <div className="flex items-start gap-3 min-w-0 lg:col-span-5">
-            <div className={`mt-1.5 size-2.5 shrink-0 rounded-full ${palette.dot}`} />
+   <div
+  className={`mt-1.5 size-2.5 shrink-0 rounded-full ${
+    exam.category === "PERIODIC"
+      ? palette.dot
+      : "bg-slate-300 ring-4 ring-slate-100"
+  }`}
+/>
             
             <div className="min-w-0 flex-1 space-y-1">
               <h3 className={`truncate text-[14px] font-black tracking-tight text-slate-900 transition-colors ${palette.title}`}>

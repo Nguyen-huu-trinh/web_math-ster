@@ -169,7 +169,7 @@ export default function ShortAnswerSection({
                     title={isMarked ? "Bỏ cắm cờ" : "Cắm cờ câu này"}
                     aria-label={`Đánh dấu câu ${questionNumber}`}
                     className={cn(
-                      "flex size-5 items-center justify-center rounded transition-colors",
+                      "flex size-6.5 items-center justify-center rounded-lg border text-xs font-black tracking-tight mb-1 shadow-2xs transition-all",
                       isMarked
                         ? "text-amber-500 hover:text-amber-600"
                         : "text-slate-300 hover:text-amber-500"
@@ -199,7 +199,7 @@ export default function ShortAnswerSection({
                         {/* Ô preview ký tự đã chọn ở hàng đỉnh */}
                         <div
                           className={cn(
-                            "flex size-5 items-center justify-center rounded border text-[11px] font-black tracking-tight mb-0.5 shadow-2xs transition-all",
+                            "flex size-6.5 items-center justify-center rounded-lg border text-xs font-black tracking-tight mb-1 shadow-2xs transition-all",
                             current
                               ? "border-slate-900 bg-slate-900 text-white"
                               : "border-slate-200/90 bg-white text-slate-400"
@@ -218,7 +218,7 @@ export default function ShortAnswerSection({
                             }
                             aria-label={`Câu ${questionNumber}, cột 1: dấu âm`}
                             className={cn(
-                              "flex size-[21px] items-center justify-center rounded-full border text-[11px] font-black transition-all active:scale-95 disabled:pointer-events-none",
+                             "flex size-6.5 items-center justify-center rounded-full border text-xs font-black transition-all active:scale-95 disabled:pointer-events-none",
                               current === "-"
                                 ? "border-slate-900 bg-slate-900 text-white shadow-2xs"
                                 : "border-slate-200 bg-white text-slate-600 hover:border-slate-400"
@@ -235,7 +235,7 @@ export default function ShortAnswerSection({
                             }
                             aria-label={`Câu ${questionNumber}, cột ${columnIndex + 1}: dấu chấm`}
                             className={cn(
-                              "flex size-[21px] items-center justify-center rounded-full border text-[11px] font-black transition-all active:scale-95 disabled:pointer-events-none",
+"flex size-6.5 items-center justify-center rounded-full border text-xs font-black transition-all active:scale-95 disabled:pointer-events-none",
                               current === "."
                                 ? "border-slate-900 bg-slate-900 text-white shadow-2xs"
                                 : "border-slate-200 bg-white text-slate-600 hover:border-slate-400"
@@ -259,7 +259,7 @@ export default function ShortAnswerSection({
                               }
                               aria-label={`Câu ${questionNumber}, cột ${columnIndex + 1}: ${d}`}
                               className={cn(
-                                "flex size-[21px] items-center justify-center rounded-full border text-[10.5px] font-extrabold transition-all active:scale-95 disabled:pointer-events-none",
+                                "flex size-6.5 items-center justify-center rounded-full border text-xs font-black transition-all active:scale-95 disabled:pointer-events-none",
                                 isDigitSelected
                                   ? "border-slate-900 bg-slate-900 text-white shadow-2xs"
                                   : "border-slate-200 bg-white text-slate-600 hover:border-slate-400"

@@ -136,15 +136,15 @@ export default function QuestionNavigation({
                 "border-slate-900 bg-gradient-to-b from-slate-800 to-slate-950 text-white font-black shadow-xs shadow-slate-900/20";
             }
           } else {
-            // Đúng: Nền xanh + Chữ xanh lục đậm
+// Đúng (Xanh ngọc nhạt)
             if (question.status === "correct") {
               buttonAppearance =
-                "border-emerald-400/90 bg-gradient-to-b from-emerald-50/90 via-emerald-100 to-emerald-200/90 text-emerald-800 font-black shadow-2xs shadow-emerald-500/15";
+                "border-emerald-300 bg-emerald-50 text-emerald-800 font-black shadow-2xs";
             }
-            // Sai: Nền đỏ + Chữ đỏ sẫm
+            // Sai (Hồng đỏ nhạt)
             else if (question.status === "wrong") {
               buttonAppearance =
-                "border-rose-400/90 bg-gradient-to-b from-rose-50/90 via-rose-100 to-rose-200/90 text-rose-800 font-black shadow-2xs shadow-rose-500/15";
+                "border-rose-200 bg-rose-50/70 text-rose-700 font-black shadow-2xs";
             }
           }
 
@@ -201,15 +201,15 @@ export default function QuestionNavigation({
         />
       </div>
 
-      {/* CHÚ THÍCH TRẠNG THÁI */}
+{/* CHÚ THÍCH TRẠNG THÁI */}
       {showAnswer && (
         <div className="mt-2.5 flex flex-wrap items-center gap-4 text-[10.5px] font-black">
           <span className="flex items-center gap-1.5 text-emerald-800">
-            <span className="size-2.5 rounded-full border border-emerald-400 bg-gradient-to-b from-emerald-100 to-emerald-200 shadow-2xs" />
+            <span className="size-2.5 rounded-full border border-emerald-300 bg-emerald-50 shadow-2xs" />
             Đúng
           </span>
-          <span className="flex items-center gap-1.5 text-rose-800">
-            <span className="size-2.5 rounded-full border border-rose-400 bg-gradient-to-b from-rose-100 to-rose-200 shadow-2xs" />
+          <span className="flex items-center gap-1.5 text-rose-700">
+            <span className="size-2.5 rounded-full border border-rose-200 bg-rose-50/70 shadow-2xs" />
             Sai
           </span>
         </div>

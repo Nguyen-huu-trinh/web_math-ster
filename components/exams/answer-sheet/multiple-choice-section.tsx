@@ -39,7 +39,7 @@ export default function MultipleChoiceSection({
       </div>
 
       {/* QUESTION GRID: Linh hoạt 1 cột (mobile), 2 cột (tablet), 3 cột (desktop) */}
-     <div className="columns-1 sm:columns-2 lg:columns-3 gap-2.5 space-y-2">
+     <div className="columns-[220px] gap-2.5">
         {Array.from({ length: count }).map((_, index) => {
           const selected = answers.multipleChoice[index] ?? "";
           const correct = answerKey[index];
@@ -51,8 +51,8 @@ export default function MultipleChoiceSection({
               key={index}
               id={`question-${questionKey}`}
               tabIndex={-1}
-            className="break-inside-avoid mb-2 flex items-center justify-between rounded-xl border border-slate-100 bg-white p-2 transition-all hover:border-slate-200 focus:outline-2 focus:outline-slate-900"
-            >
+              className="break-inside-avoid mb-2 flex w-full min-w-0 items-center justify-between rounded-xl border border-slate-100 bg-white px-2.5 py-1.5 transition-all hover:border-slate-200 focus:outline-2 focus:outline-slate-900"
+              >
               {/* STT & CỜ ĐÁNH DẤU NẰM CẠNH NHAU */}
               <div className="flex items-center gap-1.5">
                 <span className="w-5 text-center text-[11.5px] font-black text-slate-700">

@@ -372,7 +372,7 @@ export default function StudentDashboard() {
 
         {/* 2. KHU VỰC CẦN TĂNG TỐC (Màu đỏ cảnh báo) */}
         <LeaderboardCard
-          title="Khu Vực Cần Tăng Tốc"
+          title="Top Học Dở"
           icon="⚡"
           description="Top học sinh cần cố gắng rất rất nhiều"
           badgeLabel="Đôn đốc"

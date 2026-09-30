@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { UserRole } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/require-role";
 import { teacherStudentService } from "@/services/teacher-student.service";
+import { UpdateTeacherStudentSchema } from "@/validators/teacher-student.schema";
 
 interface Context {
     params: Promise<{
@@ -71,80 +72,19 @@ export async function PATCH(
         const body =
             await request.json();
 
-        const values: {
-            personalEmail?: string | null;
-            points?: number;
-            rewardMoney?: number;
-        } = {};
+        const result = UpdateTeacherStudentSchema.safeParse(body);
 
-        if (
-            body.personalEmail !==
-            undefined
-        ) {
-            values.personalEmail =
-                body.personalEmail
-                    ? String(
-                          body.personalEmail
-                      ).trim()
-                    : null;
-        }
-
-        if (
-            body.points !== undefined
-        ) {
-            const points =
-                Number(body.points);
-
-            if (
-                !Number.isFinite(points)
-            ) {
-                return NextResponse.json(
-                    {
-                        error:
-                            "Points không hợp lệ.",
-                    },
-                    {
-                        status: 400,
-                    }
-                );
-            }
-
-            values.points = points;
-        }
-
-        if (
-            body.rewardMoney !==
-            undefined
-        ) {
-            const rewardMoney =
-                Number(
-                    body.rewardMoney
-                );
-
-            if (
-                !Number.isFinite(
-                    rewardMoney
-                )
-            ) {
-                return NextResponse.json(
-                    {
-                        error:
-                            "Reward money không hợp lệ.",
-                    },
-                    {
-                        status: 400,
-                    }
-                );
-            }
-
-            values.rewardMoney =
-                rewardMoney;
+        if (!result.success) {
+            return NextResponse.json(
+                { error: result.error.issues[0]?.message ?? "Thông tin học sinh không hợp lệ." },
+                { status: 400 }
+            );
         }
 
         const updated =
             await teacherStudentService.update(
                 studentId,
-                values
+                result.data
             );
 
         return NextResponse.json(
@@ -156,6 +96,13 @@ export async function PATCH(
             error
         );
 
+        const status = error instanceof SyntaxError
+            ? 400
+            : typeof error === "object" && error !== null &&
+                "status" in error && error.status === 403
+                ? 403
+                : 500;
+
         return NextResponse.json(
             {
                 error:
@@ -164,7 +111,7 @@ export async function PATCH(
                         : "Không thể cập nhật học sinh.",
             },
             {
-                status: 500,
+                status,
             }
         );
     }

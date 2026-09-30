@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api/client";
+import type { UpdateTeacherStudentInput } from "@/validators/teacher-student.schema";
 
 export interface TeacherStudentListItem {
     id: string;
@@ -35,6 +36,7 @@ export interface TeacherStudentExam {
 export interface TeacherStudentDetail {
     profile: {
         id: string;
+        created_at: string;
         fullName: string;
         studentCode: string;
         email: string;
@@ -106,11 +108,7 @@ addToCourse(courseId: string, studentIds: string[]) {
 
     update(
         id: string,
-        values: {
-            personalEmail?: string | null;
-            points?: number;
-            rewardMoney?: number;
-        }
+        values: UpdateTeacherStudentInput
     ) {
         return apiClient.patch(
             `/api/teachers/students/${id}`,

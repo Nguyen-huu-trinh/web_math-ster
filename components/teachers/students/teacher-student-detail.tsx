@@ -134,6 +134,7 @@ export function TeacherStudentDetailPage({
 
             {/* PROFILE */}
             <StudentProfileCard
+                key={data.profile.id}
                 profile={
                     data.profile
                 }

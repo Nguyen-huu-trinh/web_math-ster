@@ -1,4 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
+import type { UpdateTeacherStudentInput } from "@/validators/teacher-student.schema";
+
+export type { UpdateTeacherStudentInput } from "@/validators/teacher-student.schema";
 
 export interface TeacherStudentListItem {
     id: string;
@@ -16,6 +19,7 @@ export interface TeacherStudentListItem {
 export interface TeacherStudentDetail {
     profile: {
         id: string;
+        created_at: string;
         fullName: string;
         studentCode: string;
         email: string;
@@ -54,12 +58,6 @@ export interface TeacherStudentExam {
     category: string;
     duration: number;
     attempts: TeacherStudentExamAttempt[];
-}
-
-export interface UpdateTeacherStudentInput {
-    personalEmail?: string | null;
-    points?: number;
-    rewardMoney?: number;
 }
 
 export class TeacherStudentRepository {
@@ -297,7 +295,7 @@ async addToCourse(
 
     async getById(
         studentId: string
-    ) {
+    ): Promise<TeacherStudentDetail> {
         const supabase = await createClient();
 
         // --------------------------------------
@@ -311,6 +309,7 @@ async addToCourse(
             .from("profiles")
             .select(`
                 id,
+                created_at,
                 full_name,
                 student_code,
                 email,
@@ -467,6 +466,7 @@ async addToCourse(
         return {
             profile: {
                 id: profile.id,
+                created_at: profile.created_at,
                 fullName:
                     profile.full_name,
                 studentCode:
@@ -536,6 +536,11 @@ async addToCourse(
             unknown
         > = {};
 
+        if (values.joinedDate !== undefined) {
+            // Store midnight in Vietnam so the selected calendar date is preserved.
+            updateData.created_at = `${values.joinedDate}T00:00:00+07:00`;
+        }
+
         if (
             values.personalEmail !==
             undefined
@@ -567,6 +572,7 @@ async addToCourse(
             .update(updateData)
             .eq("id", studentId)
             .eq("role", "STUDENT")
+            .is("deleted_at", null)
             .select(`
                 id,
                 full_name,

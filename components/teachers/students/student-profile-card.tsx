@@ -6,8 +6,6 @@ import {
 } from "react";
 
 import {
-    Mail,
-    Pencil,
     Target,
 } from "lucide-react";
 
@@ -20,6 +18,8 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { JoinedDateSchema } from "@/validators/teacher-student.schema";
 
 import {
     Label,
@@ -37,6 +37,30 @@ interface Props {
     profile: TeacherStudentDetail["profile"];
 }
 
+const joinedDateFormatter = new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "Asia/Ho_Chi_Minh",
+});
+
+function formatJoinedDate(value: string) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+        ? "Chưa cập nhật"
+        : joinedDateFormatter.format(date);
+}
+
+function getJoinedDateInput(value: string) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+
+    const parts = joinedDateFormatter.formatToParts(date);
+    return ["year", "month", "day"]
+        .map((type) => parts.find((part) => part.type === type)?.value)
+        .join("-");
+}
+
 export function StudentProfileCard({
     profile,
 }: Props) {
@@ -45,6 +69,7 @@ export function StudentProfileCard({
         "personalEmail" |
         "points" |
         "rewardMoney" |
+        "joinedDate" |
         null
     >(null);
     const [personalEmail, setPersonalEmail] =
@@ -61,6 +86,10 @@ export function StudentProfileCard({
         useState(
             String(profile.rewardMoney)
         );
+
+    const [joinedDate, setJoinedDate] = useState(
+        getJoinedDateInput(profile.created_at)
+    );
 
     const updateStudent =
         useUpdateTeacherStudent(
@@ -79,10 +108,12 @@ export function StudentProfileCard({
         setRewardMoney(
             String(profile.rewardMoney)
         );
+        setJoinedDate(getJoinedDateInput(profile.created_at));
     }, [
         profile.personalEmail,
         profile.points,
         profile.rewardMoney,
+        profile.created_at,
     ]);
 
     function getInitials(
@@ -112,6 +143,8 @@ function getAvatarUrl(url?: string | null) {
 }
 
     function handleCancel() {
+        if (updateStudent.isPending) return;
+
         setPersonalEmail(
             profile.personalEmail ?? ""
         );
@@ -125,10 +158,25 @@ function getAvatarUrl(url?: string | null) {
         );
 
         setEditingField(null);
+        setJoinedDate(getJoinedDateInput(profile.created_at));
     }
 
   function handleSave() {
-    if (!editingField) {
+    if (!editingField || updateStudent.isPending) {
+        return;
+    }
+
+    if (editingField === "joinedDate") {
+        const result = JoinedDateSchema.safeParse(joinedDate);
+        if (!result.success) {
+            toast.error("Vui lòng chọn ngày vào lớp hợp lệ.");
+            return;
+        }
+
+        updateStudent.mutate(
+            { joinedDate: result.data },
+            { onSuccess: () => setEditingField(null) }
+        );
         return;
     }
 
@@ -228,7 +276,6 @@ function getAvatarUrl(url?: string | null) {
                     </div>
                 </div>
 
-                
             </div>
 
             {/* INFORMATION */}
@@ -266,6 +313,7 @@ function getAvatarUrl(url?: string | null) {
                     {editingField === "personalEmail" ? (
                         <div className="flex gap-2">
                             <Input
+                                disabled={updateStudent.isPending}
                                 value={personalEmail}
                                 onChange={(e) =>
                                     setPersonalEmail(
@@ -324,6 +372,7 @@ function getAvatarUrl(url?: string | null) {
 
                     {editingField === "points" ? (
                         <Input
+                            disabled={updateStudent.isPending}
                             type="number"
                             min="0"
                             value={points}
@@ -366,6 +415,7 @@ function getAvatarUrl(url?: string | null) {
 
                     {editingField === "rewardMoney" ? (
                         <Input
+                            disabled={updateStudent.isPending}
                             type="number"
                             min="0"
                             value={rewardMoney}
@@ -399,7 +449,55 @@ function getAvatarUrl(url?: string | null) {
                         </div>
                     )}
                 </div>
+
+                {/* JOINED DATE */}
+                <div className="space-y-2">
+                    <Label htmlFor="student-joined-date">Ngày vào lớp</Label>
+                    {editingField === "joinedDate" ? (
+                        <Input
+                            id="student-joined-date"
+                            type="date"
+                            value={joinedDate}
+                            disabled={updateStudent.isPending}
+                            onChange={(event) => setJoinedDate(event.target.value)}
+                            autoFocus
+                            onKeyDown={(event) => {
+                                if (event.key === "Enter") {
+                                    event.preventDefault();
+                                    handleSave();
+                                }
+                                if (event.key === "Escape") {
+                                    handleCancel();
+                                }
+                            }}
+                        />
+                    ) : (
+                        <button
+                            id="student-joined-date"
+                            type="button"
+                            className="w-full cursor-pointer rounded-md border bg-muted/30 px-3 py-2 text-left text-sm hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                            disabled={updateStudent.isPending}
+                            onClick={() => {
+                                setJoinedDate(getJoinedDateInput(profile.created_at));
+                                setEditingField("joinedDate");
+                            }}
+                        >
+                            {formatJoinedDate(profile.created_at)}
+                        </button>
+                    )}
+                </div>
             </div>
+
+            {editingField && (
+                <div className="flex justify-end gap-2 border-t p-6">
+                    <Button variant="outline" disabled={updateStudent.isPending} onClick={handleCancel}>
+                        Hủy
+                    </Button>
+                    <Button disabled={updateStudent.isPending} onClick={handleSave}>
+                        {updateStudent.isPending ? "Đang lưu..." : "Lưu thay đổi"}
+                    </Button>
+                </div>
+            )}
 
         </div>
     );

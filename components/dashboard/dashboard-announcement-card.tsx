@@ -1,7 +1,7 @@
 "use client";
 import { StartExamDialog } from "@/components/exams/start-exam-dialog";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useId } from "react";
 import { useRouter } from "next/navigation";
 import {
   BellRing,
@@ -31,6 +31,14 @@ export function DashboardAnnouncementCard({
 }: Props) {
   const router = useRouter();
   const startExam = useStartExam();
+  const notificationsId = useId();
+  const [showAllNotifications, setShowAllNotifications] = useState(false);
+  const availableNotifications = periodicNotifications.filter(
+    (exam) => exam.periodicDaysRemaining != null
+  );
+  const visibleNotifications = showAllNotifications
+    ? availableNotifications
+    : availableNotifications.slice(0, 3);
 
   const [selectedExam, setSelectedExam] = useState<StudentExamItem | null>(null);
   const [isStarting, setIsStarting] = useState(false);
@@ -159,9 +167,9 @@ export function DashboardAnnouncementCard({
         )}
 
         {/* DANH SÁCH BÀI THI QUÁ HẠN / SẮP HẾT HẠN */}
-        {periodicNotifications.length > 0 && (
-          <div className="mt-4 space-y-2.5">
-            {periodicNotifications.map((exam) => {
+        {availableNotifications.length > 0 && (
+          <div id={notificationsId} className="mt-4 space-y-2.5">
+            {visibleNotifications.map((exam) => {
               const days = exam.periodicDaysRemaining;
               if (days === null || days === undefined) return null;
 
@@ -241,6 +249,22 @@ export function DashboardAnnouncementCard({
                 </div>
               );
             })}
+            {availableNotifications.length > 3 && (
+              <div className="flex justify-center pt-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  aria-expanded={showAllNotifications}
+                  aria-controls={notificationsId}
+                  onClick={() => setShowAllNotifications((previous) => !previous)}
+                  className="rounded-full text-sm font-bold text-amber-900 hover:bg-amber-100 hover:text-amber-950"
+                >
+                  {showAllNotifications
+                    ? "Thu gọn"
+                    : `Xem tất cả (${availableNotifications.length})`}
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -76,13 +76,14 @@ test("study filters, shuffle, completion and skipped cards", () => {
     { id: "c", progress: { is_starred: true, status: "REVIEW_NEEDED" } },
   ];
   assert.deepEqual([...study.studyQueue(cards, "starred")], ["b", "c"]);
-  assert.deepEqual([...study.studyQueue(cards, "review")], ["a", "c"]);
+  assert.deepEqual([...study.studyQueue(cards, "all")], ["a", "b", "c"]);
   const queue = ["a", "b", "c"];
   assert.deepEqual([...study.shuffleCards(queue, () => 0)].sort(), queue);
   assert.deepEqual(queue, ["a", "b", "c"]);
-  assert.equal(study.nextUnrated(queue, { c: "LEARNED" }, 2), 0);
-  assert.equal(study.sessionStats(queue, { a: "LEARNED", c: "REVIEW_NEEDED" }).percent, 67);
-  assert.equal(study.nextUnrated(queue, { a: "LEARNED", b: "LEARNED", c: "REVIEW_NEEDED" }, 2), -1);
+  assert.equal(study.nextUnrated(queue, { c: true }, 2), 0);
+  assert.equal(study.sessionStats(queue, { a: true, c: true }).percent, 67);
+  assert.equal(study.nextUnrated(queue, { a: true, b: true, c: true }, 2), -1);
+  assert.equal(study.nextUnrated(["a"], { a: true }, 0), -1);
   assert.equal(study.sessionStats([], {}).percent, 0);
 });
 
@@ -90,9 +91,9 @@ test("server input rejects blank, oversized, malformed and injected fields", () 
   assert.equal(validation.deckInputSchema.safeParse({ title: "   " }).success, false);
   assert.equal(validation.deckInputSchema.safeParse({ title: "Oxyz", is_published: true }).success, false);
   assert.equal(validation.cardInputSchema.safeParse({ question: "q", answer: "a".repeat(10001) }).success, false);
-  assert.equal(validation.progressInputSchema.safeParse({}).success, false);
-  assert.equal(validation.progressInputSchema.safeParse({ status: "LEARNED", user_id: randomUUID() }).success, false);
-  assert.equal(validation.progressInputSchema.safeParse({ isStarred: false }).success, true);
+  assert.equal(validation.starBatchSchema.safeParse([]).success, false);
+  assert.equal(validation.starBatchSchema.safeParse([{ cardId: randomUUID(), isStarred: true, user_id: randomUUID() }]).success, false);
+  assert.equal(validation.starBatchSchema.safeParse([{ cardId: randomUUID(), isStarred: false }]).success, true);
   const id = randomUUID();
   assert.equal(validation.reorderInputSchema.safeParse([id, id]).success, false);
   assert.equal(validation.flashcardIdSchema.safeParse("not-a-uuid").success, false);
@@ -124,6 +125,7 @@ test("PostgreSQL migration, RLS, CRUD, reordering and personal progress", async 
       await db.query("insert into profiles values ($1, $2, $3)", [id, role, active]);
     }
     await db.exec(readFileSync(new URL("../supabase/migrations/202610030001_math_flashcards.sql", import.meta.url), "utf8"));
+    await db.exec(readFileSync(new URL("../supabase/migrations/202610030002_flashcard_stars.sql", import.meta.url), "utf8"));
 
     await t.test("teacher creates draft and cards; timestamps and order are generated", async () => {
       await asUser(teacher);
@@ -196,6 +198,24 @@ test("PostgreSQL migration, RLS, CRUD, reordering and personal progress", async 
       assert.equal(catalog[0].learned_count, 1);
     });
 
+    await t.test("batch stars validate atomically without changing review history", async () => {
+      await asUser(student);
+      const before = await scalar("select to_jsonb(p) as value from flashcard_student_progress p where card_id=$1", [cards[0].id]);
+      const batch = [{ cardId: cards[0].id, isStarred: true }];
+      await db.query("select update_flashcard_stars($1, $2::jsonb)", [deck, JSON.stringify(batch)]);
+      const after = await scalar("select to_jsonb(p) as value from flashcard_student_progress p where card_id=$1", [cards[0].id]);
+      assert.equal(after.is_starred, true);
+      assert.equal(after.status, before.status);
+      assert.equal(after.reviewed_at, before.reviewed_at);
+      for (const invalid of [[], [...batch, ...batch], [{ cardId: cards[0].id, isStarred: "false" }]]) {
+        await assert.rejects(db.query("select update_flashcard_stars($1, $2::jsonb)", [deck, JSON.stringify(invalid)]), { code: "22023" });
+      }
+      await assert.rejects(db.query("select update_flashcard_stars($1, $2::jsonb)", [deck, JSON.stringify([{ cardId: cards[0].id, isStarred: false }, { cardId: randomUUID(), isStarred: true }])]), { code: "P0002" });
+      assert.equal(await scalar("select is_starred as value from flashcard_student_progress where card_id=$1", [cards[0].id]), true);
+      await asUser(teacher);
+      await assert.rejects(db.query("select update_flashcard_stars($1, $2::jsonb)", [deck, JSON.stringify(batch)]), { code: "42501" });
+    });
+
     await t.test("progress is private and cannot be written for another student", async () => {
       await asUser(otherStudent);
       assert.equal(await scalar("select count(*)::int as value from flashcard_student_progress"), 0);
@@ -225,6 +245,33 @@ test("PostgreSQL migration, RLS, CRUD, reordering and personal progress", async 
       assert.deepEqual(await scalar("select get_flashcard_decks() as value"), []);
       await asUser(admin);
       assert.equal((await scalar("select get_flashcard_decks() as value")).length, 1);
+    });
+
+    await t.test("catalog progress derives from personal stars instead of old ratings", async () => {
+      await db.exec("reset role");
+      await db.exec(readFileSync(new URL("../supabase/migrations/202610030003_flashcard_catalog_stars.sql", import.meta.url), "utf8"));
+      await asUser(student);
+      let catalog = await scalar("select get_flashcard_decks() as value");
+      assert.equal(catalog[0].starred_count, 1);
+      assert.equal(catalog[0].card_count - catalog[0].starred_count, 2);
+      assert.equal(catalog[0].learned_count, undefined);
+      assert.equal((await scalar("select get_flashcard_deck_detail($1) as value", [deck])).starred_count, 1);
+      await db.query("select update_flashcard_stars($1, $2::jsonb)", [deck, JSON.stringify([{ cardId: cards[0].id, isStarred: false }])]);
+      assert.equal((await scalar("select get_flashcard_decks() as value"))[0].starred_count, 0);
+      await db.query("select update_flashcard_stars($1, $2::jsonb)", [deck, JSON.stringify(cards.map((card) => ({ cardId: card.id, isStarred: true })))]);
+      assert.equal((await scalar("select get_flashcard_decks() as value"))[0].starred_count, 3);
+      await asUser(otherStudent);
+      assert.equal((await scalar("select get_flashcard_decks() as value"))[0].starred_count, 0);
+      await asUser(teacher);
+      const empty = await scalar("insert into flashcard_decks(title, is_published) values ('Empty', true) returning id as value");
+      await asUser(student);
+      catalog = await scalar("select get_flashcard_decks() as value");
+      assert.equal(catalog.find((item) => item.id === empty).card_count, 0);
+      assert.equal(catalog.find((item) => item.id === empty).starred_count, 0);
+      await asUser(teacher);
+      await db.query("delete from flashcard_decks where id=$1", [empty]);
+      await db.exec("reset role");
+      await db.query("delete from flashcard_student_progress where card_id=any($1::uuid[])", [cards.slice(1).map((card) => card.id)]);
     });
 
     await t.test("large decks retain all cards and cascading deletes remove progress", async () => {

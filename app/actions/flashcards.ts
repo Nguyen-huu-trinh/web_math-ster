@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { cardInputSchema, deckInputSchema, flashcardIdSchema, progressInputSchema, reorderInputSchema } from "@/lib/flashcards/validation";
+import { cardInputSchema, deckInputSchema, flashcardIdSchema, starBatchSchema, reorderInputSchema } from "@/lib/flashcards/validation";
 import { checkFlashcardError, flashcardContext, readFlashcardDeck, readFlashcardDecks } from "@/services/flashcard.service";
-import type { DeckInput, FlashcardActionResult, FlashcardInput, FlashcardProgress, ProgressInput } from "@/types/flashcards";
+import type { DeckInput, FlashcardActionResult, FlashcardInput, StarInput } from "@/types/flashcards";
 
 function refresh(deckId?: string) {
   revalidatePath("/flashcards");
@@ -120,15 +120,15 @@ export async function reorderFlashcards(id: string, order: string[]) {
   });
 }
 
-export async function updateCardProgress(id: string, input: ProgressInput) {
-  return action<FlashcardProgress>(async () => {
+export async function updateCardStars(id: string, input: StarInput[]) {
+  return action(async () => {
+    const deckId = flashcardIdSchema.parse(id);
+    const changes = starBatchSchema.parse(input);
     const { db } = await flashcardContext("student");
-    const progress = progressInputSchema.parse(input);
-    const { data, error } = await db.rpc("update_flashcard_progress", {
-      p_card_id: flashcardIdSchema.parse(id), p_status: progress.status ?? null, p_is_starred: progress.isStarred ?? null,
+    const { error } = await db.rpc("update_flashcard_stars", {
+      p_deck_id: deckId, p_changes: changes,
     });
     checkFlashcardError(error);
     revalidatePath("/flashcards");
-    return data as FlashcardProgress;
   });
 }

@@ -54,7 +54,7 @@ export default function AppLayout({
           NAVIGATION
       ====================================================== */}
 
-      {!isLessonPage && !isFlashcardStudyPage && <SidebarNav />}
+      {!isLessonPage && <SidebarNav />}
 
 
       {/* =====================================================
@@ -64,7 +64,7 @@ export default function AppLayout({
       <main
         className={
           isFlashcardStudyPage
-            ? "min-h-dvh w-full bg-slate-50"
+            ? "min-h-[calc(100dvh-4rem)] w-full bg-slate-50"
             : isLessonPage
             ? "min-h-dvh w-full bg-[#0f1426]"
             : "flex-1 px-4 py-6 sm:px-6 lg:px-8"

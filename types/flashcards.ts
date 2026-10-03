@@ -1,12 +1,5 @@
-export type FlashcardStatus = "LEARNED" | "REVIEW_NEEDED";
-
 export interface FlashcardProgress {
-  id: string;
-  user_id: string;
-  card_id: string;
   is_starred: boolean;
-  status: FlashcardStatus;
-  reviewed_at: string | null;
 }
 
 export interface Flashcard {
@@ -29,7 +22,7 @@ export interface FlashcardDeck {
   created_at: string;
   updated_at: string;
   card_count: number;
-  learned_count: number;
+  starred_count: number;
 }
 
 export interface FlashcardDeckDetail extends FlashcardDeck {
@@ -47,9 +40,9 @@ export interface FlashcardInput {
   note?: string | null;
 }
 
-export interface ProgressInput {
-  status?: FlashcardStatus;
-  isStarred?: boolean;
+export interface StarInput {
+  cardId: string;
+  isStarred: boolean;
 }
 
 export type FlashcardActionResult<T> =

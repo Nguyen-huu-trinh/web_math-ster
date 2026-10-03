@@ -10,9 +10,9 @@ export const cardInputSchema = z.object({
   answer: z.string().trim().min(1, "Vui lòng nhập đáp án.").max(10000),
   note: z.string().trim().max(5000).nullable().optional(),
 }).strict();
-export const progressInputSchema = z.object({
-  status: z.enum(["LEARNED", "REVIEW_NEEDED"]).optional(),
-  isStarred: z.boolean().optional(),
-}).strict().refine((value) => value.status !== undefined || value.isStarred !== undefined, "Chưa có thay đổi cần lưu.");
+export const starBatchSchema = z.array(z.object({
+  cardId: flashcardIdSchema,
+  isStarred: z.boolean(),
+}).strict()).min(1).max(200).refine((items) => new Set(items.map((item) => item.cardId)).size === items.length, "Danh sách chứa thẻ trùng lặp.");
 export const reorderInputSchema = z.array(flashcardIdSchema)
   .refine((ids) => new Set(ids).size === ids.length, "Danh sách thứ tự chứa thẻ trùng lặp.");

@@ -6,8 +6,9 @@ Module riêng dùng Next.js App Router, Server Actions, Supabase/PostgreSQL và 
 
 1. Cài dependencies: `pnpm install --frozen-lockfile`.
 2. Áp dụng **một lần** file `supabase/migrations/202610030001_math_flashcards.sql` vào Supabase qua quy trình migration hoặc SQL Editor. File chạy trong transaction, tạo bảng, enum, RLS, trigger và RPC. Không chạy lại trên database đã có các đối tượng này.
-3. Dùng cấu hình Supabase hiện có: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Module không dùng service-role key.
-4. Chạy `pnpm dev`, đăng nhập tài khoản giáo viên/học sinh có `profiles.is_active = true`.
+3. Áp dụng tiếp `supabase/migrations/202610030002_flashcard_stars.sql` để thêm RPC lưu sao theo nhóm. Database đã có migration đầu chỉ cần chạy migration mới. Dùng cấu hình Supabase hiện có: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Module không dùng service-role key.
+4. Áp dụng tiếp `supabase/migrations/202610030003_flashcard_catalog_stars.sql` để danh mục trả số sao của học sinh, thay cho số đã nhớ cũ.
+5. Chạy `pnpm dev`, đăng nhập tài khoản giáo viên/học sinh có `profiles.is_active = true`.
 
 Migration chưa được tự động áp dụng lên Supabase triển khai. Các kiểm thử chỉ dùng PostgreSQL nhúng, không truy cập database thật.
 
@@ -17,8 +18,8 @@ Migration chưa được tự động áp dụng lên Supabase triển khai. Cá
 | --- | --- | --- |
 | `/teacher/flashcards` | TEACHER, ADMIN | Tạo, đếm thẻ, xuất bản/nháp, sửa và xóa bộ |
 | `/teacher/flashcards/[deckId]` | TEACHER, ADMIN | Sửa thông tin, CRUD thẻ, xem trước LaTeX, sắp xếp lên/xuống |
-| `/flashcards` | STUDENT | Danh mục đã xuất bản và tỷ lệ đã nhớ |
-| `/flashcards/[deckId]` | STUDENT | Không gian học toàn trang, ẩn thanh điều hướng chung |
+| `/flashcards` | STUDENT | Danh mục đã xuất bản, tiến độ đã nhớ = (tổng thẻ − thẻ gắn sao) / tổng thẻ |
+| `/flashcards/[deckId]` | STUDENT | Giữ thanh điều hướng chung; thanh công cụ gọn gồm quay lại, tên bộ, bộ lọc và xáo trộn |
 
 Thư viện chung cho các giáo viên/admin, không chia quyền sở hữu từng bộ. Mỗi route có loading, error, not-found và kiểm tra quyền phía server.
 
@@ -27,11 +28,12 @@ Thư viện chung cho các giáo viên/admin, không chia quyền sở hữu t�
 - `app/actions/flashcards.ts`: các Server Actions trong đặc tả; mutation trả `{ ok: true, data }` hoặc `{ ok: false, error }` để client hiển thị toast.
 - `services/flashcard.service.ts`: xác thực người dùng, role/active, đọc dữ liệu, xử lý lỗi database.
 - `types/flashcards.ts`: kiểu dữ liệu chung.
-- `lib/flashcards/validation.ts`: Zod kiểm tra UUID, nội dung, trạng thái, thứ tự và từ chối trường ngoài schema.
-- `lib/flashcards/study.ts`: lọc, Fisher–Yates shuffle, thống kê và tìm thẻ chưa đánh giá.
+- `lib/flashcards/validation.ts`: Zod kiểm tra UUID, nội dung, nhóm thay đổi sao, thứ tự và từ chối trường ngoài schema.
+- `lib/flashcards/study.ts`: lọc, Fisher–Yates shuffle, thống kê và tìm thẻ chưa học trong lượt.
+- `lib/flashcards/use-star-sync.ts`: cập nhật sao tức thì, gom thay đổi và lưu nền tuần tự, giữ thay đổi chưa lưu để thử lại.
 - `components/flashcards/deck-catalog.tsx`: danh mục giáo viên/học sinh.
 - `components/flashcards/deck-editor.tsx`: biên tập với live preview.
-- `components/flashcards/study-room.tsx`: thẻ lật 3D, phím tắt, lưu tiến độ và tổng kết.
+- `components/flashcards/study-room.tsx`: thẻ lật 3D khi chạm, phím tắt, sao cần xem lại và tổng kết lượt học.
 - `components/flashcards/math-text.tsx`: dùng chung cho câu hỏi, đáp án, ghi chú và live preview; import CSS KaTeX, render cả phía server và khi nội dung thay đổi.
 - `lib/flashcards/math.ts`: nhận `$...$`, `$$...$$`, `\(...\)`, `\[...\]` và tự nhận diện các cụm có lệnh LaTeX chưa bọc dấu. Văn bản thường được escape HTML; chỉ KaTeX sinh HTML với `trust: false` và giới hạn mở rộng macro.
 
@@ -46,22 +48,24 @@ Thư viện chung cho các giáo viên/admin, không chia quyền sở hữu t�
 ## Database và phân quyền
 
 - Ba bảng: `flashcard_decks`, `flashcards`, `flashcard_student_progress`. FK học sinh trỏ tới `profiles`, theo cấu trúc hiện có của dự án.
-- Enum trạng thái `LEARNED`/`REVIEW_NEEDED`; UNIQUE(user_id, card_id). Gắn sao trước khi học tạo bản ghi với `reviewed_at = NULL`.
+- UNIQUE(user_id, card_id). Các cột trạng thái và RPC tiến độ cũ được giữ để tương thích, không được luồng học mới sử dụng. Không xóa lịch sử hoặc sao có sẵn. Bản ghi sao mới có `reviewed_at = NULL`; trạng thái mặc định cũ không mang ý nghĩa trong giao diện mới.
 - RLS chặn học sinh đọc bản nháp, sửa nội dung hoặc đọc/ghi tiến độ người khác, kể cả gọi Supabase trực tiếp. Chặn anonymous và tài khoản không hoạt động.
 - RPC đọc tổng hợp JSON để không bị cắt ngầm ở giới hạn hàng của PostgREST.
 - RPC tạo thẻ khóa bộ trước khi cấp thứ tự. Reorder kiểm tra đủ và đúng tập ID, dùng constraint deferred và transaction để hoán đổi nguyên tử.
-- RPC progress lấy `auth.uid()` từ phiên đăng nhập, cập nhật từng phần nguyên tử. Gắn sao không ghi đè trạng thái đã nhớ hoặc thời điểm ôn.
+- RPC `update_flashcard_stars` lấy `auth.uid()` từ phiên đăng nhập, kiểm tra toàn bộ nhóm thuộc bộ thẻ được phép đọc, cập nhật tối đa 200 thẻ trong một transaction. Chỉ thay đổi sao, không ghi thời điểm ôn hoặc trạng thái học. Giá trị sao không đổi không gây UPDATE.
 - Chuyển bộ về nháp giữ lại tiến độ; xuất bản lại cho phép đọc lại. Xóa bộ/thẻ xóa tiến độ liên quan qua cascade.
 
 ## Quy tắc buổi học
 
-- Lật lần đầu lưu trạng thái cần ôn nếu chưa xem; không tự đánh dấu đã nhớ.
-- Space lật, mũi tên chuyển thẻ, 1/2 đánh dấu chưa nhớ/đã nhớ. Bỏ qua phím tắt khi nhập liệu hoặc giữ Ctrl/Alt/Meta.
-- Chỉ đánh giá lưu thành công mới tính vào tiến trình. Lỗi mạng giữ vị trí để thử lại, không báo hoàn thành giả.
-- Di chuyển qua thẻ không tính hoàn thành; đánh giá xong chuyển đến thẻ chưa đánh giá tiếp theo, kể cả thẻ đã bỏ qua.
-- Tổng kết khi tất cả thẻ của lượt đã đánh giá. Ôn lại chỉ lấy thẻ chưa nhớ trong lượt đó; học lại từ đầu lấy toàn bộ bộ thẻ.
-- Đổi bộ lọc bắt đầu lượt mới; xáo trộn giữ đánh giá trong lượt. Bỏ sao trong bộ lọc gắn sao loại thẻ khỏi lượt.
-- Trạng thái đã nhớ/gắn sao lưu bền vững. Vị trí, thứ tự xáo trộn và thống kê lượt chỉ lưu trong trang; tải lại bắt đầu lượt mới.
+- Chạm thẻ hoặc Space để xem đáp án; không có nút lật riêng và không gọi database.
+- Tiếp tục/mũi tên phải tính thẻ là đã học trong lượt rồi chuyển đến thẻ chưa học. Thẻ cuối hoàn thành lượt, kể cả bộ chỉ có một thẻ. Quay lại không tăng số đã học.
+- Gắn sao/S đánh dấu cần xem lại; không còn nút hoặc phím 1/2 nhớ/chưa nhớ. Bỏ qua phím tắt khi nhập liệu hoặc giữ Ctrl/Alt/Meta.
+- Đã học là số thẻ đã đi qua, không phải đánh giá mức ghi nhớ. Thẻ đã học vẫn có thể được gắn sao để xem lại.
+- Đổi bộ lọc bắt đầu lượt mới; xáo trộn giữ số đã học. Bỏ sao giữ nguyên hàng đợi hiện tại, lượt ôn sau dùng danh sách sao mới nhất.
+- Chỉ sao lưu bền vững. Tiến trình, vị trí và thứ tự của lượt học nằm trong bộ nhớ trang; tải lại bắt đầu lượt mới.
+- Thanh tiến độ danh mục tính thẻ không gắn sao là đã nhớ; không dùng trạng thái học cũ. Bộ chưa có sao hiển thị 100% kể cả chưa học, bộ rỗng hiển thị 0%. Lưu sao thành công làm mới cache danh mục để khi quay lại hiển thị số mới.
+- Gom thay đổi sao sau 1 giây ngừng thao tác; tối đa 10 giây sẽ thử lưu khi còn thay đổi. Các request chạy tuần tự, giữ thay đổi mới phát sinh trong lúc lưu. Không khóa nút học và không toast thành công sau mỗi thao tác.
+- Khi hoàn thành, đổi bộ lọc, ẩn trang hoặc rời trang sẽ thử lưu. Nút Bộ thẻ đợi lưu xong trước khi chuyển. Lỗi có nút thử lại, tự thử khi có mạng trở lại; đóng/tải lại trang khi còn thay đổi sẽ có cảnh báo của trình duyệt. Đóng cưỡng bức vẫn có thể mất các sao chưa lưu.
 
 ## Kiểm thử
 
@@ -70,14 +74,14 @@ pnpm test:flashcards
 pnpm typecheck:flashcards
 ```
 
-Tests chạy migration thật trên PostgreSQL nhúng (PGlite) với schema auth/profiles tối thiểu mô phỏng dự án. Kiểm tra RLS, bản nháp, CRUD/cascade, reorder nguyên tử, tiến độ từng phần, cách ly tài khoản, bộ trên 1.000 thẻ, validation và logic học. Không thay thế kiểm thử tích hợp với các policy profiles hiện có trên Supabase triển khai.
+Tests chạy cả hai migration thật trên PostgreSQL nhúng (PGlite) với schema auth/profiles tối thiểu mô phỏng dự án. Kiểm tra RLS, bản nháp, CRUD/cascade, reorder nguyên tử, tương thích dữ liệu cũ, nhóm cập nhật sao nguyên tử, cách ly tài khoản, bộ trên 1.000 thẻ, validation và logic học. Không thay thế kiểm thử tích hợp với các policy profiles hiện có trên Supabase triển khai.
 
 Kiểm tra giao diện sau migration:
 
 1. Tạo bộ nháp, nhập `Tính $\vec{a} \cdot \vec{b}$` và `$$a_1b_1+a_2b_2+a_3b_3$$`; xem preview, lưu, sửa, đổi thứ tự.
 2. Xác nhận học sinh không thấy bản nháp; xuất bản rồi mở danh mục/trang học.
-3. Thử chuột/Space, mũi tên, 1/2, gắn sao, lọc, bỏ sao thẻ cuối, xáo trộn, tổng kết và ôn lại.
-4. Tải lại để kiểm tra tiến độ; đăng nhập học sinh khác để kiểm tra cách ly.
+3. Thử chuột/Space, mũi tên, S, gắn sao liên tiếp, lọc, bỏ sao thẻ cuối, bộ một thẻ, xáo trộn, tổng kết và ôn lại.
+4. Tải lại để kiểm tra sao được giữ và lượt học bắt đầu mới; đăng nhập học sinh khác để kiểm tra cách ly.
 5. Thử nội dung dài, công thức rộng trên mobile, focus bàn phím, reduced motion và lỗi mạng khi lưu.
 
 Tài liệu: [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [KaTeX auto-render](https://katex.org/docs/autorender.html).

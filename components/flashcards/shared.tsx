@@ -67,11 +67,11 @@ export function FlashcardError({ reset }: { error: Error & { digest?: string }; 
   </div>;
 }
 
-export function ProgressBar({ value, label }: { value: number; label: string }) {
+export function ProgressBar({ value, label, tone = "amber" }: { value: number; label: string; tone?: "amber" | "navy" }) {
   return <div>
-    <div className="mb-2.5 flex justify-between gap-3 text-xs font-medium text-slate-400"><span>{label}</span><span className="shrink-0 tabular-nums text-slate-600">{value}%</span></div>
+    <div className={`mb-2.5 flex justify-between gap-3 text-xs font-medium ${tone === "navy" ? "text-slate-500" : "text-slate-400"}`}><span>{label}</span><span className={`shrink-0 tabular-nums ${tone === "navy" ? "font-bold text-slate-900" : "text-slate-600"}`}>{value}%</span></div>
     <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} className="h-1.5 overflow-hidden rounded-full bg-slate-100">
-      <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-400 transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${value}%` }} />
+      <div className={`h-full rounded-full transition-[width] duration-500 motion-reduce:transition-none ${tone === "navy" ? "bg-[#101527]" : "bg-gradient-to-r from-amber-400 to-orange-400"}`} style={{ width: `${value}%` }} />
     </div>
   </div>;
 }

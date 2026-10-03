@@ -1,12 +1,11 @@
 "use client";
 import { StartExamDialog } from "@/components/exams/start-exam-dialog";
 
-import { useState, useRef, useId } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   BellRing,
   ArrowRight,
-  Play,
   AlertTriangle,
   Flame,
 } from "lucide-react";
@@ -31,14 +30,11 @@ export function DashboardAnnouncementCard({
 }: Props) {
   const router = useRouter();
   const startExam = useStartExam();
-  const notificationsId = useId();
-  const [showAllNotifications, setShowAllNotifications] = useState(false);
-  const availableNotifications = periodicNotifications.filter(
-    (exam) => exam.periodicDaysRemaining != null
-  );
-  const visibleNotifications = showAllNotifications
-    ? availableNotifications
-    : availableNotifications.slice(0, 3);
+  // Filter creates a new array: sorting never mutates the parent's query data.
+  // Most overdue first, then today, then the nearest upcoming deadline.
+  const availableNotifications = periodicNotifications
+    .filter((exam) => exam.periodicDaysRemaining != null)
+    .sort((a, b) => a.periodicDaysRemaining! - b.periodicDaysRemaining!);
 
   const [selectedExam, setSelectedExam] = useState<StudentExamItem | null>(null);
   const [isStarting, setIsStarting] = useState(false);
@@ -55,12 +51,12 @@ export function DashboardAnnouncementCard({
     (announcement?.content && announcement.content.trim() !== "")
   );
 
-  const overdueCount = periodicNotifications.filter(
+  const overdueCount = availableNotifications.filter(
     (exam) => (exam.periodicDaysRemaining ?? 0) < 0
   ).length;
 
   // Nếu không có thông báo và cũng không có bài kiểm tra đến hạn -> Ẩn toàn bộ
-  if (!hasTeacherAnnouncement && periodicNotifications.length === 0) {
+  if (!hasTeacherAnnouncement && availableNotifications.length === 0) {
     return null;
   }
 
@@ -168,8 +164,13 @@ export function DashboardAnnouncementCard({
 
         {/* DANH SÁCH BÀI THI QUÁ HẠN / SẮP HẾT HẠN */}
         {availableNotifications.length > 0 && (
-          <div id={notificationsId} className="mt-4 space-y-2.5">
-            {visibleNotifications.map((exam) => {
+          <div
+            role="region"
+            aria-label="Hạn nộp bài thi, ưu tiên bài quá hạn và hạn gần nhất"
+            tabIndex={0}
+            className="mt-4 max-h-64 space-y-2.5 overflow-y-auto overscroll-y-contain rounded-2xl border border-amber-200/70 bg-amber-50/40 p-2 [scrollbar-gutter:stable] [scrollbar-width:thin] [scrollbar-color:#fbbf24_#fef3c7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 sm:p-3"
+          >
+            {availableNotifications.map((exam) => {
               const days = exam.periodicDaysRemaining;
               if (days === null || days === undefined) return null;
 
@@ -249,22 +250,6 @@ export function DashboardAnnouncementCard({
                 </div>
               );
             })}
-            {availableNotifications.length > 3 && (
-              <div className="flex justify-center pt-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  aria-expanded={showAllNotifications}
-                  aria-controls={notificationsId}
-                  onClick={() => setShowAllNotifications((previous) => !previous)}
-                  className="rounded-full text-sm font-bold text-amber-900 hover:bg-amber-100 hover:text-amber-950"
-                >
-                  {showAllNotifications
-                    ? "Thu gọn"
-                    : `Xem tất cả (${availableNotifications.length})`}
-                </Button>
-              </div>
-            )}
           </div>
         )}
       </div>

@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "incremental": false },
+  "include": [
+    "app/actions/flashcards.ts",
+    "app/(app)/flashcards/**/*.tsx",
+    "app/(app)/teacher/flashcards/**/*.tsx",
+    "components/flashcards/**/*.tsx",
+    "lib/flashcards/**/*.ts",
+    "services/flashcard.service.ts",
+    "types/flashcards.ts"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

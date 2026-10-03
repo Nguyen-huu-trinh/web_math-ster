@@ -26,6 +26,9 @@ export default function AppLayout({
   const isLessonPage =
     pathname.startsWith("/courses/") &&
     pathname.includes("/lessons/");
+  const isFlashcardStudyPage = /^\/flashcards\/[^/]+\/?$/.test(pathname);
+  const isFlashcardPage = pathname === "/flashcards" || pathname.startsWith("/flashcards/")
+    || pathname === "/teacher/flashcards" || pathname.startsWith("/teacher/flashcards/");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -45,13 +48,13 @@ export default function AppLayout({
   }
 
   return (
-    <div className={`min-h-screen ${isLessonPage ? "bg-[#0f1426]" : "bg-background"}`}>
+    <div className={`min-h-screen ${isLessonPage ? "bg-[#0f1426]" : isFlashcardPage ? "bg-gradient-to-br from-[#F1F5F9] via-[#F8FAFC] to-[#FFFBEB]" : "bg-background"}`}>
 
       {/* =====================================================
           NAVIGATION
       ====================================================== */}
 
-      {!isLessonPage && <SidebarNav />}
+      {!isLessonPage && !isFlashcardStudyPage && <SidebarNav />}
 
 
       {/* =====================================================
@@ -60,13 +63,15 @@ export default function AppLayout({
 
       <main
         className={
-          isLessonPage
+          isFlashcardStudyPage
+            ? "min-h-dvh w-full bg-slate-50"
+            : isLessonPage
             ? "min-h-dvh w-full bg-[#0f1426]"
             : "flex-1 px-4 py-6 sm:px-6 lg:px-8"
         }
       >
 
-        {isLessonPage ? (
+        {isLessonPage || isFlashcardStudyPage ? (
 
           /*
            * LESSON PAGE

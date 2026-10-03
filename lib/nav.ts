@@ -35,7 +35,12 @@ export const NAV_ITEMS: NavItem[] = [
   icon: "BookOpen",
   roles: ["teacher", "student"],
 },
-
+  {
+    label: "Flashcard",
+    href: "/flashcards",
+    icon: "Library",
+    roles: ["student"],
+  },
 
   {
     label: "Quản Lý Bài Kiểm Tra",
@@ -56,6 +61,12 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/students",
     icon: "Users",
     roles: ["teacher"],
+  },
+    {
+    label: "Flashcard",
+    href: "/teacher/flashcards",
+    icon: "Library",
+    roles: ["teacher", "admin"],
   },
 
   // {

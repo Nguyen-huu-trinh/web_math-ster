@@ -1,18 +1,31 @@
+import "server-only";
 import { redirect } from "next/navigation";
-import { authService } from "@/services/auth.service";
-import { profileService } from "@/services/profile.service";
+import { createClient } from "@/lib/supabase/server";
+import type { Profile } from "@/types/profile";
 
 export async function requireAuth() {
-  const user = await authService.getUser();
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (authError || !user) {
     redirect("/login");
   }
 
-  const profile = await profileService.getCurrentProfile();
+  const { data, error: profileError } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (profileError) throw profileError;
+  const profile = data as Profile | null;
 
   if (!profile) {
     redirect("/login");
+  }
+
+  if (!profile.is_active) {
+    redirect("/403");
   }
 
   return {

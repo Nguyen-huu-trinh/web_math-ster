@@ -1,5 +1,5 @@
 "use client";
-
+import { ShieldAlert, Maximize2, AppWindowMac, AlertTriangle, Play } from "lucide-react";
 import { useMediaQuery } from "usehooks-ts";
 import dynamic from "next/dynamic";
 import {
@@ -347,44 +347,68 @@ useEffect(() => {
       "
     >
 
-<div className="w-[90%] max-w-md rounded-xl bg-white p-8 text-center shadow-xl">
 
-  <h2 className="mb-4 text-xl font-bold">
-    Lưu ý
-  </h2>
 
-  <div className="mb-6 space-y-3 text-left text-sm leading-6 text-gray-600">
-
-    <p>
-      Hệ thống sẽ chuyển sang chế độ
-      <strong className="text-gray-900">
-        {" "}toàn màn hình
-      </strong>
-      {" "}khi bạn bắt đầu làm bài.
-    </p>
-
-    <p>
-      Học sinh không được sử dụng bàn phím
-      trong quá trình làm bài.
-    </p>
-
-    <p>
-      Nếu sử dụng phím tắt để thoát khỏi
-      chế độ toàn màn hình, hệ thống sẽ
-      <strong className="text-red-600">
-        {" "}nộp bài ngay lập tức.
-      </strong>
-    </p>
-
+<div className="w-[90%] max-w-md rounded-3xl bg-white p-6 shadow-xl sm:p-7">
+  {/* Header */}
+  <div className="mb-6 flex items-center gap-4">
+    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-amber-200 bg-amber-50 text-amber-500">
+      <ShieldAlert className="h-7 w-7" />
+    </div>
+    <div>
+      <h2 className="text-xl font-bold tracking-tight text-slate-900">
+        Quy Chế Phòng Thi
+      </h2>
+      <p className="mt-0.5 text-sm text-slate-500">
+        Đọc kỹ trước khi xác nhận làm bài
+      </p>
+    </div>
   </div>
 
-  <Button
-    className="w-full"
-    onClick={startFullscreen}
-  >
-    Bắt đầu
-  </Button>
+  {/* Rules List */}
+  <div className="space-y-3.5">
+    {/* Rule 1 */}
+    <div className="flex items-center gap-3.5 rounded-2xl bg-slate-50/80 p-4">
+      <Maximize2 className="h-5 w-5 shrink-0 text-slate-600" />
+      <p className="text-sm font-normal text-slate-700">
+        Hệ thống tự động kích hoạt chế độ{" "}
+        <strong className="font-bold text-slate-900">
+          toàn màn hình (Full-screen)
+        </strong>
+        .
+      </p>
+    </div>
 
+    {/* Rule 2 */}
+    <div className="flex items-center gap-3.5 rounded-2xl bg-slate-50/80 p-4">
+      <AppWindowMac className="h-5 w-5 shrink-0 text-slate-600" />
+      <p className="text-sm font-normal text-slate-700">
+        Trong lúc làm bài có các vấn đề về kỹ thuật hãy tắt tab trình duyệt và mở lại để tiếp tục làm bài.
+      </p>
+    </div>
+
+    {/* Rule 3 (Warning) */}
+    <div className="flex items-center gap-3.5 rounded-2xl border border-red-100 bg-red-50/60 p-4">
+      <AlertTriangle className="h-5 w-5 shrink-0 text-red-500" />
+      <p className="text-sm font-medium text-red-700">
+        Nếu cố ý thoát toàn màn hình, bài thi sẽ bị{" "}
+        <strong className="font-bold text-red-900">
+          thu bài và chấm điểm ngay lập tức
+        </strong>
+        .
+      </p>
+    </div>
+  </div>
+
+  {/* CTA Button */}
+  <button
+    type="button"
+    onClick={startFullscreen}
+    className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0f172a] py-3.5 text-base font-semibold text-white transition-opacity hover:opacity-90 active:scale-[0.99]"
+  >
+    <Play className="h-4 w-4 fill-amber-400 text-amber-400" />
+    <span>Đã hiểu &amp; Bắt đầu làm bài</span>
+  </button>
 </div>
 
             </div>

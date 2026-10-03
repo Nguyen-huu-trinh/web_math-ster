@@ -1,5 +1,5 @@
 "use client";
-
+import { HelpCircle, CheckCircle2 } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -881,91 +881,88 @@ console.log(
           }
         }
       >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Xác nhận nộp bài
-            </AlertDialogTitle>
 
-            <AlertDialogDescription>
-              Sau khi nộp bài bạn sẽ
-              không thể thay đổi đáp
-              án. Bạn có chắc chắn
-              muốn nộp bài?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
 
-          {/* =================================================
-              ANSWER SUMMARY
-          ================================================= */}
+<AlertDialogContent className="w-[90%] max-w-md rounded-3xl border-0 p-6 shadow-2xl sm:p-7">
+  {/* Header với Icon tròn bên trái */}
+  <div className="flex items-center gap-3.5 text-left">
+    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
+      <HelpCircle className="h-6 w-6 stroke-[2]" />
+    </div>
+    <div>
+      <AlertDialogTitle className="text-lg font-bold tracking-tight text-slate-900">
+        Xác Nhận Nộp Bài?
+      </AlertDialogTitle>
+      <p className="mt-0.5 text-xs text-slate-500">
+        Hệ thống sẽ khóa bài làm và chấm điểm
+      </p>
+    </div>
+  </div>
 
-          <div className="rounded-lg border bg-muted/40 p-4">
-            <div className="flex items-center justify-between text-sm">
-              <span>
-                Đã trả lời
-              </span>
+  {/* Nội dung cảnh báo */}
+  <p className="text-left text-sm leading-relaxed text-slate-600">
+    Sau khi nộp bài, bạn sẽ không thể thay đổi đáp án đã chọn. Vui lòng kiểm tra lại số câu còn trống.
+  </p>
 
-              <span className="font-semibold">
-                {answeredCount}/
-                {totalQuestions}
-              </span>
-            </div>
+  {/* =================================================
+      ANSWER SUMMARY BOX
+  ================================================= */}
+  <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+    {/* Dòng tiến độ */}
+    <div className="flex items-center justify-between">
+      <span className="text-sm font-medium text-slate-600">
+        Tiến độ bài thi:
+      </span>
+      <span className="text-base font-bold text-slate-900">
+        {answeredCount} / {totalQuestions} câu
+      </span>
+    </div>
 
-            {answeredCount <
-              totalQuestions && (
-              <div className="mt-3 text-sm text-amber-600">
-                Còn{" "}
-                <strong>
-                  {totalQuestions -
-                    answeredCount}
-                </strong>{" "}
-                câu chưa trả lời.
-              </div>
-            )}
-          </div>
+    {/* Phân cách mờ */}
+    {answeredCount < totalQuestions && (
+      <div className="my-3 border-t border-slate-200/60" />
+    )}
 
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              disabled={
-                submitting
-              }
-            >
-              Huỷ
-            </AlertDialogCancel>
+    {/* Cảnh báo câu chưa trả lời */}
+    {answeredCount < totalQuestions && (
+      <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center gap-2 font-medium text-amber-700">
+          <span className="h-2 w-2 rounded-full bg-amber-500" />
+          <span>Còn {totalQuestions - answeredCount} câu chưa điền</span>
+        </div>
 
-            <AlertDialogAction
-              disabled={
-                submitting
-              }
-              onClick={async (
-                event
-              ) => {
-                /*
-                 * Không để AlertDialog
-                 * tự đóng trước khi API
-                 * submit hoàn thành.
-                 */
 
-                event.preventDefault();
+      </div>
+    )}
+  </div>
 
-                if (
-                  submitting ||
-                  submitStartedRef.current
-                ) {
-                  return;
-                }
+  {/* Footer các nút hành động */}
+  <AlertDialogFooter className="mt-2 flex flex-row items-center gap-3 sm:space-x-0">
+    <AlertDialogCancel
+      disabled={submitting}
+      className="m-0 h-12 flex-1 rounded-2xl border border-slate-200 bg-white font-semibold text-slate-700 hover:bg-slate-50"
+    >
+      Xem lại bài
+    </AlertDialogCancel>
 
-                await handleSubmit(
-                  "manual"
-                );
-              }}
-            >
-              {submitting
-                ? "Đang nộp bài..."
-                : "Nộp bài"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
+    <AlertDialogAction
+      disabled={submitting}
+      className="m-0 h-12 flex-1 gap-2 rounded-2xl bg-[#0f172a] font-semibold text-white hover:bg-slate-800"
+      onClick={async (event) => {
+        event.preventDefault();
+
+        if (submitting || submitStartedRef.current) {
+          return;
+        }
+
+        await handleSubmit("manual");
+      }}
+    >
+      <CheckCircle2 className="h-4 w-4 text-amber-400" />
+      <span>{submitting ? "Đang nộp..." : "Nộp bài ngay"}</span>
+    </AlertDialogAction>
+  </AlertDialogFooter>
+</AlertDialogContent>
       </AlertDialog>
     </div>
   );

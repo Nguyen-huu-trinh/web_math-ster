@@ -89,27 +89,7 @@ export default function ExamResult({
         )}
       </div>
 
-      {/* Bảng điểm chi tiết từng phần */}
-      <div className="mx-auto my-3 grid max-w-md grid-cols-3 divide-x divide-slate-100 rounded-xl bg-slate-50/70 py-2 text-center">
-        <div>
-          <p className="text-[10px] font-medium text-slate-400">Phần I</p>
-          <p className="mt-0.5 text-xs font-bold text-slate-800">
-            {result?.part1Score ?? "0/12"}
-          </p>
-        </div>
-        <div>
-          <p className="text-[10px] font-medium text-slate-400">Phần II</p>
-          <p className="mt-0.5 text-xs font-bold text-slate-800">
-            {result?.part2Score ?? "0/4"}
-          </p>
-        </div>
-        <div>
-          <p className="text-[10px] font-medium text-slate-400">Phần III</p>
-          <p className="mt-0.5 text-xs font-bold text-slate-800">
-            {result?.part3Score ?? "0/6"}
-          </p>
-        </div>
-      </div>
+
 
       {/* Hàng nút hành động */}
       <div className="mx-auto max-w-md pt-1">

@@ -310,6 +310,8 @@ onSuccess: (data) => {
       submitStartedRef.current =
         false;
 
+      window.dispatchEvent(new Event("submit-error"));
+
       toast.error(
         error.message ||
           "Nộp bài thất bại."
@@ -477,13 +479,18 @@ useEffect(() => {
   // FORCE SUBMIT
   //
   // StudentExamLayout sẽ dispatch event này
-  // khi học sinh thoát fullscreen.
+  // khi hết 30 giây cảnh báo thoát fullscreen.
   // ==========================================================
 
   useEffect(() => {
     if (review) {
       return;
     }
+
+    const closeSubmitDialogOnExit = () => {
+      if (!document.fullscreenElement) setSubmitDialogOpen(false);
+    };
+    document.addEventListener("fullscreenchange", closeSubmitDialogOnExit);
 
     const forceSubmit =
       () => {
@@ -502,6 +509,7 @@ useEffect(() => {
     );
 
     return () => {
+      document.removeEventListener("fullscreenchange", closeSubmitDialogOnExit);
       window.removeEventListener(
         "force-submit",
         forceSubmit

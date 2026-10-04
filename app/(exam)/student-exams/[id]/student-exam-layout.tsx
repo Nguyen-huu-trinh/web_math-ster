@@ -18,6 +18,14 @@ import { cn } from "@/lib/utils";
 import AnswerSheetNew from "@/components/exams/answer-sheet/answer-sheet-new";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { useFullscreenGrace } from "@/components/exams/use-fullscreen-grace";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 const PdfViewer = dynamic(
   () => import("./pdf-viewer"),
   {
@@ -80,6 +88,21 @@ const wakeLockRef =
   useMediaQuery("(min-width:768px)");
 const [examStarted, setExamStarted] =
   useState(review);
+const { secondsLeft: fullscreenSecondsLeft, submitFailed, retrySubmit } =
+  useFullscreenGrace(examStarted && !review && !submitted, attempt.id);
+const [restoringFullscreen, setRestoringFullscreen] = useState(false);
+
+async function restoreFullscreen() {
+  if (fullscreenSecondsLeft === 0 || restoringFullscreen) return;
+  setRestoringFullscreen(true);
+  try {
+    await document.documentElement.requestFullscreen();
+  } catch {
+    toast.error("Không thể bật toàn màn hình. Vui lòng bấm thử lại trước khi hết thời gian.");
+  } finally {
+    setRestoringFullscreen(false);
+  }
+}
 useEffect(() => {
   if (review) {
     setSubmitted(true);
@@ -238,47 +261,6 @@ const displayTime = useMemo(() => {
 const lowTime = timeLeft <= 300;
 
 useEffect(() => {
-  function handleFullscreenChange() {
-    // Đang xem lại bài thì không cần fullscreen
-    if (review) {
-      return;
-    }
-
-    // Bài đã nộp rồi thì không xử lý nữa
-    if (finishExamRef.current) {
-      return;
-    }
-
-    // Vẫn đang fullscreen
-    if (document.fullscreenElement) {
-      return;
-    }
-
-    console.warn(
-      "[EXAM] Fullscreen exited - submitting exam"
-    );
-
-    // Không hiện cảnh báo.
-    // Nộp bài ngay lập tức.
-    window.dispatchEvent(
-      new Event("force-submit")
-    );
-  }
-
-  document.addEventListener(
-    "fullscreenchange",
-    handleFullscreenChange
-  );
-
-  return () => {
-    document.removeEventListener(
-      "fullscreenchange",
-      handleFullscreenChange
-    );
-  };
-}, [review]);
-
-useEffect(() => {
   async function handleSubmitSuccess() {
     console.log("[EXAM] SUBMIT SUCCESS");
 
@@ -391,11 +373,11 @@ useEffect(() => {
     <div className="flex items-center gap-3.5 rounded-2xl border border-red-100 bg-red-50/60 p-4">
       <AlertTriangle className="h-5 w-5 shrink-0 text-red-500" />
       <p className="text-sm font-medium text-red-700">
-        Nếu cố ý thoát toàn màn hình, bài thi sẽ bị{" "}
+        Nếu thoát toàn màn hình, hãy quay lại trong vòng{" "}
         <strong className="font-bold text-red-900">
-          thu bài và chấm điểm ngay lập tức
+          30 giây để tiếp tục làm bài
         </strong>
-        .
+        . Hết thời gian này, hệ thống sẽ tự động nộp bài.
       </p>
     </div>
   </div>
@@ -416,6 +398,33 @@ useEffect(() => {
             )
             }
 
+
+      <AlertDialog open={!review && !submitted && fullscreenSecondsLeft !== null}>
+        <AlertDialogContent className="z-[10000] w-[calc(100%-2rem)] rounded-3xl p-6 sm:max-w-md">
+          <AlertDialogTitle className="flex items-center gap-2 text-lg font-bold text-slate-900">
+            <ShieldAlert className="size-6 shrink-0 text-amber-500" />
+            Bạn đã thoát chế độ toàn màn hình
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-sm leading-relaxed text-slate-600">
+            Hệ thống sẽ tự động nộp bài sau 30 giây. Vui lòng quay lại chế độ toàn màn hình để tiếp tục.
+          </AlertDialogDescription>
+          <div role="timer" aria-label="Thời gian còn lại trước khi tự động nộp bài" className="py-3 text-center text-5xl font-bold tabular-nums text-rose-600">
+            {fullscreenSecondsLeft ?? 30}<span className="ml-2 text-base font-medium">giây</span>
+          </div>
+          <p className="text-center text-xs text-slate-500">Thời gian làm bài vẫn tiếp tục được tính.</p>
+          {fullscreenSecondsLeft === 0 ? (
+            submitFailed ? <>
+              <p role="alert" className="text-sm text-rose-600">Nộp bài chưa thành công. Vui lòng kiểm tra kết nối và thử lại.</p>
+              <Button onClick={retrySubmit}>Thử nộp lại</Button>
+            </> : <p role="status" className="text-center text-sm font-semibold">Đang tự động nộp bài…</p>
+          ) : (
+            <Button disabled={restoringFullscreen} onClick={restoreFullscreen} className="h-auto min-h-12 whitespace-normal rounded-2xl bg-slate-900 px-4 py-3 text-white hover:bg-slate-800">
+              <Maximize2 className="size-4 shrink-0 text-amber-400" />
+              {restoringFullscreen ? "Đang bật toàn màn hình…" : "Quay lại chế độ toàn màn hình"}
+            </Button>
+          )}
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ==========================================
           DESKTOP

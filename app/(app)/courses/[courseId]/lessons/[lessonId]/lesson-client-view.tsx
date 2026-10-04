@@ -2,7 +2,6 @@
 import { Clapperboard, Sparkles } from "lucide-react";
 import { ResourceDialog } from "@/components/lesson-resources/resource-dialog";
 import { LessonSidebar } from "@/components/lessons/lesson-sidebar";
-import { LessonVideoFrame } from "@/components/lessons/lesson-video-frame";
 import { DeleteResourceDialog } from "@/components/lesson-resources/delete-resource-dialog";
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import Link from 'next/link';
@@ -101,7 +100,7 @@ export default function LessonClientView({
   // Lắng nghe sự kiện đổi trạng thái Fullscreen
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(document.fullscreenElement === videoContainerRef.current);
+      setIsFullscreen(!!document.fullscreenElement);
     };
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     return () => {
@@ -185,18 +184,14 @@ export default function LessonClientView({
     }
   }, [resources, checkResourceAccess]);
 
-  const toggleFullscreen = useCallback(async () => {
-    const container = videoContainerRef.current;
-    if (!container) return;
-    try {
-      if (document.fullscreenElement === container) {
-        await document.exitFullscreen();
-      } else {
-        await container.requestFullscreen();
-      }
-    } catch (error) {
-      console.error("[VIDEO FULLSCREEN]", error);
-      toast.error("Không thể thay đổi chế độ toàn màn hình trên trình duyệt này.");
+  const toggleFullscreen = useCallback(() => {
+    if (!videoContainerRef.current) return;
+    if (!document.fullscreenElement) {
+      videoContainerRef.current.requestFullscreen().catch((err) => {
+        console.error("Error attempting to enable fullscreen:", err);
+      });
+    } else {
+      document.exitFullscreen();
     }
   }, []);
 
@@ -367,11 +362,6 @@ export default function LessonClientView({
           <div
             ref={videoContainerRef}
             className="relative aspect-video w-full overflow-hidden bg-black group lg:aspect-auto lg:min-h-0 lg:flex-1"
-            onDoubleClick={(event) => {
-              if (!currentVideo || isVideoLocked || (event.target as HTMLElement).closest("button, a")) return;
-              event.preventDefault();
-              void toggleFullscreen();
-            }}
           >
             {currentVideo ? (
               isVideoLocked ? (
@@ -434,15 +424,16 @@ export default function LessonClientView({
                   <div 
                     className="absolute bottom-[3px] left-0 right-0 h-[3px] bg-white/20 z-20 pointer-events-none backdrop-blur-[1px]"
                   />
-                  <LessonVideoFrame
+                  <iframe
                     key={currentVideo?.id}
+                    className="w-full h-full border-0 relative z-10"
                     src={
                       currentVideo?.file_links?.url
                         ? getYoutubeEmbedUrl(currentVideo.file_links.url)
                         : undefined
                     }
                     title={currentVideo?.title}
-                    onToggleFullscreen={() => void toggleFullscreen()}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   />
                 </>
               )

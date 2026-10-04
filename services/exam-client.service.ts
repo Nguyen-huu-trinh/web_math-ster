@@ -84,14 +84,14 @@ export class ExamClientService {
   }
 
   publish(id: string) {
-    return apiClient.post(
+    return apiClient.post<Exam>(
       `/api/exams/${id}/publish`,
       {}
     );
   }
 
  deactivate(id: string) {
-  return apiClient.post(
+  return apiClient.post<Exam>(
     `/api/exams/${id}/deactivate`,
     {}
   );

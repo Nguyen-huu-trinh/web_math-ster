@@ -15,10 +15,12 @@ export function useSubmitAttendance() {
             attendanceClientService.submit(code),
 
         onSuccess: async () => {
-            await queryClient.invalidateQueries({
+            await Promise.all([queryClient.invalidateQueries({
                 queryKey:
                     queryKeys.dashboard.student,
-            });
+            }), queryClient.invalidateQueries({
+                queryKey: queryKeys.dashboard.leaderboard,
+            })]);
         },
     });
 }

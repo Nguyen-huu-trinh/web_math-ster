@@ -9,7 +9,7 @@ import { queryKeys } from "@/lib/react-query/query-keys";
 import type { Exam } from "@/types/exam";
 import { UpdateExamSchema } from "@/validators/exam.schema";
 
-type EditableField = "attendance_min_score" | "exam_duration_days";
+type EditableField = "attendance_min_score" | "exam_duration_days" | "duration_minutes";
 
 export function ExamEditableNumber({ exam, field }: { exam: Exam; field: EditableField }) {
   const update = useUpdateExam();
@@ -19,7 +19,8 @@ export function ExamEditableNumber({ exam, field }: { exam: Exam; field: Editabl
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
   const isDays = field === "exam_duration_days";
-  const label = isDays ? "Số ngày được phép làm" : "Điểm điểm danh";
+  const isDuration = field === "duration_minutes";
+  const label = isDuration ? "Thời gian làm bài" : isDays ? "Số ngày được phép làm" : "Điểm điểm danh";
   const value = exam[field];
 
   async function save() {
@@ -27,7 +28,7 @@ export function ExamEditableNumber({ exam, field }: { exam: Exam; field: Editabl
     const nextValue = draft.trim() === "" ? null : Number(draft);
     const payload = { [field]: nextValue };
     if (!UpdateExamSchema.safeParse(payload).success || (isDays && nextValue !== null && nextValue > 2147483647)) {
-      setError(isDays ? "Nhập số ngày nguyên từ 1 đến 2147483647 hoặc để trống." : "Nhập điểm từ 0 đến 10 hoặc để trống.");
+      setError(isDuration ? "Nhập số phút nguyên từ 1 đến 600." : isDays ? "Nhập số ngày nguyên từ 1 đến 2147483647 hoặc để trống." : "Nhập điểm từ 0 đến 10 hoặc để trống.");
       return;
     }
     if (nextValue === value) {
@@ -61,16 +62,17 @@ export function ExamEditableNumber({ exam, field }: { exam: Exam; field: Editabl
       aria-label={`Sửa ${label.toLowerCase()} của ${exam.title}`}
       title="Bấm để sửa, Enter để lưu"
       onClick={() => { setDraft(value == null ? "" : String(value)); setError(""); setEditing(true); }}
-    >{value == null ? (isDays ? "Không giới hạn" : "--") : `${value}${isDays ? " ngày" : ""}`}</button>;
+    >{value == null ? (isDays ? "Không giới hạn" : "--") : `${value}${isDuration ? " phút" : isDays ? " ngày" : ""}`}</button>;
   }
 
   return <div className="min-w-32 max-w-56">
     <Input
       autoFocus
       type="number"
-      min={isDays ? 1 : 0}
-      max={isDays ? 2147483647 : 10}
-      step={isDays ? 1 : "any"}
+      required={isDuration}
+      min={isDays || isDuration ? 1 : 0}
+      max={isDuration ? 600 : isDays ? 2147483647 : 10}
+      step={isDays || isDuration ? 1 : "any"}
       value={draft}
       readOnly={update.isPending}
       aria-busy={update.isPending}

@@ -1,7 +1,7 @@
 "use client";
 import { toast } from "sonner";
 import Link from "next/link";
-import { ExamStatusBadge } from "./exam-status-badge";
+import { ExamEditableStatus } from "./exam-editable-status";
 import { ExamEditableNumber } from "./exam-editable-number";
 import { Button } from "@/components/ui/button";
 import {
@@ -146,7 +146,7 @@ export function ExamTable({
             </Link>
         </div>
 
-        <p className="text-sm text-muted-foreground">Bấm vào điểm hoặc số ngày để sửa. Enter để lưu, Esc để hủy. Để trống số ngày nếu không giới hạn.</p>
+        <p className="text-sm text-muted-foreground">Bấm vào điểm, số ngày, thời gian hoặc trạng thái để sửa. Enter để lưu, Esc để hủy. Để trống số ngày nếu không giới hạn.</p>
 
         <Table>
 
@@ -211,15 +211,13 @@ export function ExamTable({
 
                 <TableCell>
 
-                  {exam.duration_minutes} phút
+                  <ExamEditableNumber exam={exam} field="duration_minutes" />
 
                 </TableCell>
 
                 <TableCell>
 
-                  <ExamStatusBadge
-                    status={exam.status}
-                />
+                  <ExamEditableStatus exam={exam} />
 
                 </TableCell>
 

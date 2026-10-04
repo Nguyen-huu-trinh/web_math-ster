@@ -31,6 +31,7 @@ import {
   X,
   Video,
   CalendarDays,
+  Zap,
 } from "lucide-react";
 import { useSubmitAttendance } from "@/hooks/use-submit-attendance";
 import { useUpdateLearningGoal } from "@/hooks/use-update-learning-goal";
@@ -82,7 +83,12 @@ export default function StudentDashboard() {
     displayPoints ??
     dashboard?.profile?.points ??
     profile?.points ??
-    100;
+    0;
+
+  const topPoints = Number(leaderboard.data?.dotrau?.[0]?.points ?? 0);
+  const formPercent = topPoints > 0 && Number.isFinite(topPoints)
+    ? Math.min(100, Math.max(0, Math.round(Number(points) / topPoints * 100)))
+    : 0;
 
   useEffect(() => {
     if (dashboard?.profile?.points !== undefined) {
@@ -97,6 +103,7 @@ export default function StudentDashboard() {
   }, [dashboard?.profile?.learning_goal]);
 
   async function handleSaveAttendance() {
+    if (submitAttendance.isPending) return;
     const code = attendanceCode.trim();
 
     if (!code) {
@@ -286,46 +293,50 @@ export default function StudentDashboard() {
         </div>
 
         {/* KHỐI 3: Độ trâu / Mã điểm danh */}
-        <div
-          className={`col-span-1 flex flex-col items-center justify-center rounded-xl border p-4 text-center shadow-xs transition-colors lg:col-span-5 ${
-            points < 50 ? "border-red-300 bg-red-100" : "bg-card"
-          }`}
-        >
-          <p className="text-base font-semibold tracking-wide text-foreground sm:text-xl">
-            Độ trâu
-          </p>
-
-          <div className="mt-1">
-            <span className="text-2xl font-bold leading-none tabular-nums text-primary sm:text-3xl">
-              {points}
-            </span>
-            <span className="ml-1 text-xs font-semibold text-foreground sm:text-sm">
-              máu
+        <div className="col-span-1 flex min-w-0 flex-col justify-between rounded-[28px] border-2 border-slate-200/80 bg-white p-4 sm:p-5 lg:col-span-5 dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-extrabold uppercase tracking-wide text-slate-400 sm:text-base">Độ trâu</p>
+            <span className="inline-flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-base font-extrabold tabular-nums text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
+              <Zap aria-hidden="true" className="size-4 shrink-0 fill-amber-500 text-amber-500" />
+              {points} máu
             </span>
           </div>
 
-          <div className="mt-3 flex w-full max-w-[200px] items-center justify-center gap-1 sm:gap-2">
+          <div className="my-5 space-y-2">
+            <div
+              role="progressbar"
+              aria-label="Phong độ so với học sinh đứng đầu bảng Độ trâu"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={formPercent}
+              className="h-2.5 overflow-hidden rounded-full border border-slate-200/80 bg-slate-100 p-0.5 dark:border-slate-700 dark:bg-slate-800"
+            >
+              <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-[width] duration-300 motion-reduce:transition-none" style={{ width: `${formPercent}%` }} />
+            </div>
+            <p className="text-right text-xs font-bold tabular-nums text-slate-400 sm:text-sm">Phong độ: {formPercent}%</p>
+          </div>
+
+          <form className="border-t border-slate-100 pt-3 dark:border-slate-800" onSubmit={(event) => { event.preventDefault(); void handleSaveAttendance(); }}>
+            <div className="flex min-w-0 items-center gap-1 rounded-2xl border-2 border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-800">
             <Input
               value={attendanceCode}
               onChange={(e) => setAttendanceCode(e.target.value)}
-              placeholder="Mã điểm danh"
+              aria-label="Mã điểm danh"
+              placeholder="Mã điểm danh…"
               maxLength={100}
               disabled={submitAttendance.isPending}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") void handleSaveAttendance();
-              }}
-              className="h-8 w-full text-center text-xs sm:h-9 sm:text-sm"
+              className="h-9 min-w-0 flex-1 rounded-xl border-0 bg-transparent px-2 text-xs font-bold shadow-none placeholder:text-slate-400 sm:text-sm dark:bg-transparent"
             />
             <Button
-              type="button"
+              type="submit"
               size="sm"
               disabled={submitAttendance.isPending || !attendanceCode.trim()}
-              onClick={() => void handleSaveAttendance()}
-              className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm"
+              className="h-9 shrink-0 rounded-xl bg-[#101527] px-3 text-xs font-bold text-white hover:bg-slate-800 sm:text-sm"
             >
               {submitAttendance.isPending ? "..." : "Lưu"}
             </Button>
-          </div>
+            </div>
+          </form>
         </div>
       </div>
 

@@ -19,6 +19,7 @@ export function DeckEditor({ deck }: { deck: FlashcardDeckDetail }) {
   const { busy, run } = useFlashcardMutation();
   const [title, setTitle] = useState(deck.title);
   const [description, setDescription] = useState(deck.description ?? "");
+  const [orderIndex, setOrderIndex] = useState(String(deck.order_index));
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<FlashcardInput>(emptyCard);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -42,8 +43,10 @@ export function DeckEditor({ deck }: { deck: FlashcardDeckDetail }) {
       <button disabled={busy} className={deck.is_published ? buttonClass : primaryClass} onClick={() => void run(() => togglePublishDeck(deck.id, !deck.is_published), deck.is_published ? "Đã chuyển về bản nháp." : "Đã xuất bản bộ thẻ.")}>{deck.is_published ? "Đã xuất bản · Chuyển về nháp" : "Xuất bản bộ thẻ"}</button>
     </header>
 
-    <form className={panelClass} onSubmit={async (event) => { event.preventDefault(); await run(() => updateDeck(deck.id, { title, description }), "Đã lưu thông tin bộ thẻ."); }}>
+    <form className={panelClass} onSubmit={async (event) => { event.preventDefault(); await run(() => updateDeck(deck.id, { title, description, order_index: Number(orderIndex) }), "Đã lưu thông tin bộ thẻ."); }}>
       <fieldset disabled={busy} className="min-w-0 space-y-4"><legend className="mb-4 text-lg font-semibold tracking-tight">Thông tin bộ thẻ</legend>
+        <label className="block space-y-2 text-sm font-semibold"><span>Thứ tự hiển thị</span><input type="number" required min={0} max={2147483647} step={1} className={inputClass} value={orderIndex} onChange={(e) => setOrderIndex(e.target.value)} aria-describedby="deck-order-help" /></label>
+        <p id="deck-order-help" className="text-sm text-slate-500">Số nhỏ hiển thị trước. Nếu trùng số, bộ tạo mới hơn hiển thị trước.</p>
         <label className="block space-y-2 text-sm font-semibold"><span>Tên chuyên đề</span><input className={inputClass} value={title} onChange={(e) => setTitle(e.target.value)} required maxLength={200} /></label>
         <label className="block space-y-2 text-sm font-semibold"><span>Mô tả</span><textarea className={inputClass} value={description} onChange={(e) => setDescription(e.target.value)} rows={2} maxLength={5000} /></label>
         <button className={buttonClass} disabled={!title.trim()}><Save className="size-4" />Lưu thông tin</button>

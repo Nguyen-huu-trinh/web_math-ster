@@ -99,6 +99,16 @@ test("server input rejects blank, oversized, malformed and injected fields", () 
   assert.equal(validation.flashcardIdSchema.safeParse("not-a-uuid").success, false);
 });
 
+test("deck display order accepts only PostgreSQL nonnegative integers", () => {
+  for (const order_index of [0, 1, 2147483647]) {
+    assert.equal(validation.deckInputSchema.parse({ title: "Deck", order_index }).order_index, order_index);
+  }
+  for (const order_index of [-1, 1.5, 2147483648, NaN, Infinity, "1", "", null]) {
+    assert.equal(validation.deckInputSchema.safeParse({ title: "Deck", order_index }).success, false);
+  }
+  assert.equal(Object.hasOwn(validation.deckInputSchema.parse({ title: "Deck" }), "order_index"), false);
+});
+
 test("PostgreSQL migration, RLS, CRUD, reordering and personal progress", async (t) => {
   const db = new PGlite();
   const teacher = randomUUID(), student = randomUUID(), otherStudent = randomUUID(), inactive = randomUUID(), admin = randomUUID();
@@ -272,6 +282,44 @@ test("PostgreSQL migration, RLS, CRUD, reordering and personal progress", async 
       await db.query("delete from flashcard_decks where id=$1", [empty]);
       await db.exec("reset role");
       await db.query("delete from flashcard_student_progress where card_id=any($1::uuid[])", [cards.slice(1).map((card) => card.id)]);
+    });
+
+    await t.test("deck ordering migration preserves data, sorts catalogs and enforces permissions", async () => {
+      await asUser(teacher);
+      const extra = [];
+      for (const title of ["Older", "Newer", "Draft"]) {
+        extra.push(await scalar("insert into flashcard_decks(title, is_published, created_at) values ($1, $2, '2020-01-01') returning id as value", [title, title !== "Draft"]));
+      }
+      await db.query("update flashcard_decks set created_at='2020-01-02' where id=$1", [extra[1]]);
+      const before = await scalar("select get_flashcard_decks() as value");
+      await db.exec("reset role");
+      await db.exec(readFileSync(new URL("../supabase/migrations/202610040001_flashcard_deck_order.sql", import.meta.url), "utf8"));
+      await asUser(teacher);
+      assert.deepEqual(await scalar("select get_flashcard_decks() as value"), before.map((item) => ({ ...item, order_index: 0 })));
+      for (const [id, order] of [[deck, 20], [extra[0], 10], [extra[1], 10], [extra[2], 1]]) {
+        await db.query("update flashcard_decks set order_index=$1 where id=$2", [order, id]);
+      }
+      assert.deepEqual((await scalar("select get_flashcard_decks() as value")).map((item) => item.id), [extra[2], extra[1], extra[0], deck]);
+      assert.equal((await scalar("select get_flashcard_deck_detail($1) as value", [deck])).order_index, 20);
+      await db.query("update flashcard_decks set created_at='2020-01-01' where id=$1", [extra[1]]);
+      assert.deepEqual((await scalar("select get_flashcard_decks() as value")).slice(1, 3).map((item) => item.id), extra.slice(0, 2).sort());
+      await assert.rejects(db.query("update flashcard_decks set order_index=-1 where id=$1", [deck]), { code: "23514" });
+      await assert.rejects(db.query("update flashcard_decks set order_index=null where id=$1", [deck]), { code: "23502" });
+      await assert.rejects(db.query("update flashcard_decks set order_index=2147483648 where id=$1", [deck]), { code: "22003" });
+      const defaultDeck = await scalar("insert into flashcard_decks(title) values ('Default') returning to_jsonb(flashcard_decks) as value");
+      assert.equal(defaultDeck.order_index, 0);
+      extra.push(defaultDeck.id);
+      const customDeck = await scalar("insert into flashcard_decks(title, order_index) values ('Custom', 5) returning to_jsonb(flashcard_decks) as value");
+      assert.equal(customDeck.order_index, 5);
+      extra.push(customDeck.id);
+      await asUser(student);
+      assert.deepEqual((await scalar("select get_flashcard_decks() as value")).map((item) => item.id), [...extra.slice(0, 2).sort(), deck]);
+      assert.equal((await db.query("update flashcard_decks set order_index=0 where id=$1 returning id", [deck])).rows.length, 0);
+      assert.equal((await scalar("select get_flashcard_deck_detail($1) as value", [deck])).order_index, 20);
+      await asUser(admin);
+      await db.query("update flashcard_decks set order_index=2 where id=$1", [deck]);
+      assert.equal((await scalar("select get_flashcard_decks() as value")).find((item) => item.id === deck).order_index, 2);
+      await db.query("delete from flashcard_decks where id=any($1::uuid[])", [extra]);
     });
 
     await t.test("large decks retain all cards and cascading deletes remove progress", async () => {

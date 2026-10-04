@@ -18,6 +18,7 @@ export function DeckCatalog({ decks, teacher = false }: { decks: FlashcardDeck[]
   const [creating, setCreating] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [orderIndex, setOrderIndex] = useState("0");
   const [deleting, setDeleting] = useState<string | null>(null);
 
   return <section className={`${pageClass} rounded-3xl bg-[#F8F9FC] p-2 sm:p-4`}>
@@ -31,10 +32,12 @@ export function DeckCatalog({ decks, teacher = false }: { decks: FlashcardDeck[]
 
     {teacher && creating && <form id="new-deck-form" className={`${panelClass} space-y-4`} onSubmit={async (event) => {
       event.preventDefault();
-      const result = await run(() => createDeck({ title, description }), "Đã tạo bộ thẻ nháp.");
+      const result = await run(() => createDeck({ title, description, order_index: Number(orderIndex) }), "Đã tạo bộ thẻ nháp.");
       if (result) router.push(`/teacher/flashcards/${result.data}`);
     }}>
       <h2 className="font-bold">Bộ thẻ mới</h2>
+      <label className="block space-y-2 text-sm font-semibold"><span>Thứ tự hiển thị</span><input type="number" required min={0} max={2147483647} step={1} value={orderIndex} onChange={(e) => setOrderIndex(e.target.value)} className={inputClass} aria-describedby="new-deck-order-help" /></label>
+      <p id="new-deck-order-help" className="text-sm text-slate-500">Số nhỏ hiển thị trước. Nếu trùng số, bộ tạo mới hơn hiển thị trước.</p>
       <label className="block space-y-2 text-sm font-semibold"><span>Tên bộ thẻ</span><input autoFocus required maxLength={200} value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} placeholder="Ví dụ: Vectơ và tọa độ Oxyz" /></label>
       <label className="block space-y-2 text-sm font-semibold"><span>Mô tả (không bắt buộc)</span><textarea maxLength={5000} value={description} onChange={(e) => setDescription(e.target.value)} className={inputClass} rows={3} /></label>
       <button disabled={busy || !title.trim()} className={primaryClass}>{busy ? "Đang tạo…" : "Tạo và biên tập"}</button>
@@ -50,6 +53,7 @@ export function DeckCatalog({ decks, teacher = false }: { decks: FlashcardDeck[]
             <span className={`rounded-lg bg-slate-100 px-3 py-1 text-xs font-bold ${hasCards ? "text-slate-900" : "text-slate-400"}`}>{deck.card_count} thẻ</span></div>
           <div className="flex-1 pb-2"><h2 className="break-words text-2xl font-black tracking-tight text-black">{deck.title}</h2><p className="mt-2 line-clamp-3 break-words text-sm font-medium leading-6 text-slate-700">{deck.description || "Ôn tập khái niệm và công thức toán học."}</p></div>
           {teacher ? <>
+            <p className="text-sm font-semibold text-slate-600">Thứ tự hiển thị: {deck.order_index}</p>
             <button disabled={busy} aria-pressed={deck.is_published} onClick={() => void run(() => togglePublishDeck(deck.id, !deck.is_published), deck.is_published ? "Đã chuyển về bản nháp." : "Đã xuất bản bộ thẻ.")}
               className={deck.is_published ? primaryClass : mutedButton}>{deck.is_published ? "Đã xuất bản" : "Bản nháp"}</button>
             <div className="flex gap-2"><Link className={`${primaryClass} flex-1`} href={`/teacher/flashcards/${deck.id}`}><Pencil className="size-4" />Biên tập</Link>
@@ -62,7 +66,10 @@ export function DeckCatalog({ decks, teacher = false }: { decks: FlashcardDeck[]
               <ProgressBar value={progress} label={`Đã nhớ ${remembered}/${deck.card_count} thẻ`} tone="navy" />
               <p className="text-xs font-medium text-slate-700">{deck.starred_count} thẻ gắn sao cần xem lại</p>
             </div>
-            <Link className={hasCards ? primaryClass : mutedButton} href={`/flashcards/${deck.id}`}>Bắt đầu học<ArrowRight className={`size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transform-none ${hasCards ? "text-[#FBBF24]" : "text-slate-600"}`} /></Link>
+            <Link className={`${hasCards ? primaryClass : mutedButton} !rounded-lg`} href={`/flashcards/${deck.id}`}>
+  Bắt đầu học
+  <ArrowRight className={`size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transform-none ${hasCards ? "text-[#FBBF24]" : "text-slate-600"}`} />
+</Link>
           </>}
         </article>;
       })}</div>}

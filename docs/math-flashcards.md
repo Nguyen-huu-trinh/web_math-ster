@@ -8,9 +8,10 @@ Module riêng dùng Next.js App Router, Server Actions, Supabase/PostgreSQL và 
 2. Áp dụng **một lần** file `supabase/migrations/202610030001_math_flashcards.sql` vào Supabase qua quy trình migration hoặc SQL Editor. File chạy trong transaction, tạo bảng, enum, RLS, trigger và RPC. Không chạy lại trên database đã có các đối tượng này.
 3. Áp dụng tiếp `supabase/migrations/202610030002_flashcard_stars.sql` để thêm RPC lưu sao theo nhóm. Database đã có migration đầu chỉ cần chạy migration mới. Dùng cấu hình Supabase hiện có: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Module không dùng service-role key.
 4. Áp dụng tiếp `supabase/migrations/202610030003_flashcard_catalog_stars.sql` để danh mục trả số sao của học sinh, thay cho số đã nhớ cũ.
-5. Chạy `pnpm dev`, đăng nhập tài khoản giáo viên/học sinh có `profiles.is_active = true`.
+5. Áp dụng tiếp `supabase/migrations/202610040001_flashcard_deck_order.sql` trước khi triển khai giao diện mới để thêm thứ tự hiển thị bộ thẻ.
+6. Chạy `pnpm dev`, đăng nhập tài khoản giáo viên/học sinh có `profiles.is_active = true`.
 
-Migration chưa được tự động áp dụng lên Supabase triển khai. Các kiểm thử chỉ dùng PostgreSQL nhúng, không truy cập database thật.
+Ngày 04/10/2026 đã xác minh Supabase liên kết có cột, constraint, index và RPC của migration `202610040001_flashcard_deck_order.sql`. Với môi trường khác, áp dụng các migration theo thứ tự trên. Các kiểm thử tự động chỉ dùng PostgreSQL nhúng, không truy cập database thật.
 
 ## Routes
 
@@ -48,6 +49,7 @@ Thư viện chung cho các giáo viên/admin, không chia quyền sở hữu t�
 ## Database và phân quyền
 
 - Ba bảng: `flashcard_decks`, `flashcards`, `flashcard_student_progress`. FK học sinh trỏ tới `profiles`, theo cấu trúc hiện có của dự án.
+- `flashcard_decks.order_index`: số nguyên từ 0 đến 2147483647, mặc định 0 cho cả bộ cũ và bộ mới. Danh mục giáo viên/học sinh xếp tăng dần theo cột này, rồi `created_at DESC, id ASC` khi trùng thứ tự. Giáo viên/admin nhập trong form tạo hoặc biên tập; danh mục quản lý hiển thị giá trị hiện tại. Sửa tên/mô tả mà không gửi thứ tự sẽ giữ giá trị đã lưu. Migration giữ nguyên dữ liệu và cách xếp cũ cho đến khi giáo viên đổi thứ tự.
 - UNIQUE(user_id, card_id). Các cột trạng thái và RPC tiến độ cũ được giữ để tương thích, không được luồng học mới sử dụng. Không xóa lịch sử hoặc sao có sẵn. Bản ghi sao mới có `reviewed_at = NULL`; trạng thái mặc định cũ không mang ý nghĩa trong giao diện mới.
 - RLS chặn học sinh đọc bản nháp, sửa nội dung hoặc đọc/ghi tiến độ người khác, kể cả gọi Supabase trực tiếp. Chặn anonymous và tài khoản không hoạt động.
 - RPC đọc tổng hợp JSON để không bị cắt ngầm ở giới hạn hàng của PostgREST.
@@ -74,7 +76,7 @@ pnpm test:flashcards
 pnpm typecheck:flashcards
 ```
 
-Tests chạy cả hai migration thật trên PostgreSQL nhúng (PGlite) với schema auth/profiles tối thiểu mô phỏng dự án. Kiểm tra RLS, bản nháp, CRUD/cascade, reorder nguyên tử, tương thích dữ liệu cũ, nhóm cập nhật sao nguyên tử, cách ly tài khoản, bộ trên 1.000 thẻ, validation và logic học. Không thay thế kiểm thử tích hợp với các policy profiles hiện có trên Supabase triển khai.
+Tests chạy các migration Flashcard thật trên PostgreSQL nhúng (PGlite) với schema auth/profiles tối thiểu mô phỏng dự án. Kiểm tra RLS, bản nháp, CRUD/cascade, reorder nguyên tử, tương thích dữ liệu cũ, thứ tự danh mục và phân quyền sửa thứ tự, nhóm cập nhật sao nguyên tử, cách ly tài khoản, bộ trên 1.000 thẻ, validation và logic học. Không thay thế kiểm thử tích hợp với các policy profiles hiện có trên Supabase triển khai.
 
 Kiểm tra giao diện sau migration:
 

@@ -17,6 +17,7 @@ export interface Flashcard {
 export interface FlashcardDeck {
   id: string;
   title: string;
+  order_index: number;
   description: string | null;
   is_published: boolean;
   created_at: string;
@@ -32,6 +33,7 @@ export interface FlashcardDeckDetail extends FlashcardDeck {
 export interface DeckInput {
   title: string;
   description?: string | null;
+  order_index?: number;
 }
 
 export interface FlashcardInput {

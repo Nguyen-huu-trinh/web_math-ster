@@ -2,6 +2,7 @@
 import { toast } from "sonner";
 import Link from "next/link";
 import { ExamStatusBadge } from "./exam-status-badge";
+import { ExamEditableNumber } from "./exam-editable-number";
 import { Button } from "@/components/ui/button";
 import {
   FileText,
@@ -52,6 +53,8 @@ import { Exam } from "@/types/exam";
 
 interface Props {
   exams: Exam[];
+  keyword: string;
+  onKeywordChange: (value: string) => void;
   onPublish?: (id: string) => void;
   onDeactivate?: (id: string) => void;
   onDuplicate?: (id: string) => void;
@@ -100,6 +103,8 @@ const copyExamLink = async (examId: string) => {
 
 export function ExamTable({
   exams,
+  keyword,
+  onKeywordChange,
   onPublish,
   onDeactivate,
   onDuplicate,
@@ -115,9 +120,9 @@ export function ExamTable({
 
       <CardContent className="space-y-6 p-6">
 
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
 
-          <div className="relative w-96">
+          <div className="relative w-full sm:w-96">
 
             <Search
               className="absolute left-3 top-3 h-4 w-4 text-muted-foreground"
@@ -125,6 +130,9 @@ export function ExamTable({
 
             <Input
               placeholder="Tìm đề thi..."
+              aria-label="Tìm đề thi"
+              value={keyword}
+              onChange={(event) => onKeywordChange(event.target.value)}
               className="pl-9"
             />
 
@@ -138,6 +146,8 @@ export function ExamTable({
             </Link>
         </div>
 
+        <p className="text-sm text-muted-foreground">Bấm vào điểm hoặc số ngày để sửa. Enter để lưu, Esc để hủy. Để trống số ngày nếu không giới hạn.</p>
+
         <Table>
 
           <TableHeader>
@@ -146,9 +156,9 @@ export function ExamTable({
 
               <TableHead>Tên đề</TableHead>
 
-              <TableHead>Loại</TableHead>
+              <TableHead>Điểm điểm danh</TableHead>
 
-              <TableHead>Danh mục</TableHead>
+              <TableHead>Số ngày được phép làm</TableHead>
 
               <TableHead>Thời gian</TableHead>
 
@@ -161,6 +171,7 @@ export function ExamTable({
           </TableHeader>
 
           <TableBody>
+            {exams.length === 0 && <TableRow><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">Không tìm thấy đề thi phù hợp.</TableCell></TableRow>}
 
             {exams.map((exam) => (
 
@@ -188,13 +199,13 @@ export function ExamTable({
 
                 <TableCell>
 
-                  {exam.exam_type}
+                  <ExamEditableNumber exam={exam} field="attendance_min_score" />
 
                 </TableCell>
 
                 <TableCell>
 
-                  {exam.category}
+                  <ExamEditableNumber exam={exam} field="exam_duration_days" />
 
                 </TableCell>
 

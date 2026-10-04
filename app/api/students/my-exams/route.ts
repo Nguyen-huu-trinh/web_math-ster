@@ -25,10 +25,10 @@ export async function GET() {
     // 2. Tải danh sách đề thi từ Service
     const exams = await studentExamService.getMyExams(student.id);
 
-    // 3. Trả về kết quả kèm Header Cache chỉ dành riêng cho Browser của học sinh đó (private)
+    // Trạng thái lượt làm phải cập nhật ngay sau khi bắt đầu hoặc nộp bài.
     return NextResponse.json(exams, {
       headers: {
-        "Cache-Control": "private, max-age=60, stale-while-revalidate=120",
+        "Cache-Control": "private, no-store, max-age=0",
       },
     });
 

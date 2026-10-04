@@ -31,6 +31,57 @@ function deferredReact() {
 
 const plain = (value) => JSON.parse(JSON.stringify(value));
 const config = { multipleChoice: 2, trueFalse: 1, shortAnswer: 1 };
+const { QueryClient } = require('@tanstack/react-query');
+const { queryKeys } = load('lib/react-query/query-keys.ts');
+
+test('submission refreshes a fresh inactive exam list for manual and automatic submits', async () => {
+  for (const reason of ['manual', 'timeout', 'fullscreen_exit']) {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } });
+    const key = queryKeys.student.myExams();
+    let completed = false;
+    let reads = 0;
+    let success = false;
+    try {
+      await client.fetchQuery({ queryKey: key, staleTime: 600000, queryFn: async () => {
+        reads++;
+        return [{ id: 'exam-1', inProgress: !completed, canRetake: completed, lastAttemptId: completed ? 'attempt-1' : null }];
+      } });
+      const { useExamSubmit } = load('components/exams/answer-sheet/use-exam-submit.ts', {
+        react: deferredReact(),
+        '@tanstack/react-query': { useQueryClient: () => client },
+        '@/lib/react-query/query-keys': { queryKeys },
+        '@/lib/api/client': { apiClient: { post: async () => {
+          completed = true;
+          return { success: true, attemptId: 'attempt-1', reason };
+        } } },
+      });
+      const { submit } = useExamSubmit({ attemptId: 'attempt-1', onSuccess: () => { success = true; } });
+      await submit({ multipleChoice: [], trueFalse: [], shortAnswer: [] }, reason);
+      await new Promise(resolve => setImmediate(resolve));
+      assert.equal(success, true);
+      assert.equal(reads, 2);
+      assert.deepEqual(client.getQueryData(key), [{ id: 'exam-1', inProgress: false, canRetake: true, lastAttemptId: 'attempt-1' }]);
+    } finally { client.clear(); }
+  }
+});
+
+test('failed submission leaves the cached exam state unchanged', async () => {
+  let invalidations = 0;
+  let success = false;
+  let failure = false;
+  const { useExamSubmit } = load('components/exams/answer-sheet/use-exam-submit.ts', {
+    react: deferredReact(),
+    '@tanstack/react-query': { useQueryClient: () => ({ invalidateQueries: async () => { invalidations++; } }) },
+    '@/lib/react-query/query-keys': { queryKeys },
+    '@/lib/api/client': { apiClient: { post: async () => { throw new Error('offline'); } } },
+  });
+  const { submit } = useExamSubmit({ attemptId: 'attempt-1', onSuccess: () => { success = true; }, onError: () => { failure = true; } });
+  await assert.rejects(submit({ multipleChoice: [], trueFalse: [], shortAnswer: [] }), /offline/);
+  assert.equal(invalidations, 0);
+  assert.equal(success, false);
+  assert.equal(failure, true);
+});
+
 function answersHook(savedAnswers) {
   const react = deferredReact();
   const { useExamAnswers } = load('components/exams/answer-sheet/use-exam-answers.ts', { react });
@@ -76,6 +127,8 @@ test('submit sends the unchanged matrix contract and uses the server score', asy
   const serverResult = { success: true, score: 7.25, isPassed: true };
   const { useExamSubmit } = load('components/exams/answer-sheet/use-exam-submit.ts', {
     react: deferredReact(),
+    '@tanstack/react-query': { useQueryClient: () => ({ invalidateQueries: async () => {} }) },
+    '@/lib/react-query/query-keys': load('lib/react-query/query-keys.ts'),
     '@/lib/api/client': { apiClient: { post: async (url, body) => {
       request = { url, body: plain(body) };
       return serverResult;

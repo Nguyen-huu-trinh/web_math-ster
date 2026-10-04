@@ -364,9 +364,9 @@ useEffect(() => {
     {/* Rule 2 */}
     <div className="flex items-center gap-3.5 rounded-2xl bg-slate-50/80 p-4">
       <AppWindowMac className="h-5 w-5 shrink-0 text-slate-600" />
-      <p className="text-sm font-normal text-slate-700">
-        Trong lúc làm bài có các vấn đề về kỹ thuật hãy tắt tab trình duyệt và mở lại để tiếp tục làm bài.
-      </p>
+<p className="text-sm font-normal text-slate-700">
+  Trong lúc làm bài có các <strong>vấn đề</strong> về kỹ thuật hãy <strong>tắt</strong> tab trình duyệt và <strong>mở lại</strong> để tiếp tục làm bài.
+</p>
     </div>
 
     {/* Rule 3 (Warning) */}

@@ -205,18 +205,22 @@ export function DashboardAnnouncementCard({
                         </span>
 
                         {isOverdue ? (
-                          <span className="rounded-md border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-600">
-                            Quá hạn {Math.abs(days)} ngày
-                          </span>
-                        ) : isToday ? (
-                          <span className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
-                            Hết hạn hôm nay
-                          </span>
-                        ) : (
-                          <span className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
-                            Còn {days} ngày
-                          </span>
-                        )}
+  <span className="rounded-md border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-600">
+    Quá hạn {Math.abs(days)} ngày
+  </span>
+) : isToday ? (
+  <span className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
+    Hết hạn hôm nay
+  </span>
+) : days === 1 ? (
+  <span className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
+    Hết hạn ngày mai
+  </span>
+) : (
+  <span className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
+    Còn {days} ngày
+  </span>
+)}
                       </div>
 
                       {exam.description && (

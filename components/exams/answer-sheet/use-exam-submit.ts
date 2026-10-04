@@ -7,6 +7,8 @@ import {
 } from "react";
 
 import { apiClient } from "@/lib/api/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/react-query/query-keys";
 
 export type SubmitReason =
   | "manual"
@@ -51,6 +53,7 @@ export function useExamSubmit({
   onSuccess,
   onError,
 }: UseExamSubmitOptions) {
+  const queryClient = useQueryClient();
   const [
     submitting,
     setSubmitting,
@@ -122,6 +125,18 @@ export function useExamSubmit({
         // 4. SUCCESS
         // ====================================================
 
+        // The exam list is normally unmounted during an attempt. Refresh inactive
+        // queries too, so returning to the list uses the server's retake/review state.
+        // A refresh failure must not turn a successful submission into a failure.
+        void Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.student.myExams(),
+            refetchType: "all",
+          }),
+          queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.student }),
+          queryClient.invalidateQueries({ queryKey: queryKeys.attempt.detail(attemptId) }),
+        ]).catch((error) => console.error("[EXAM] Cache refresh failed", error));
+
         onSuccess?.(result);
 
         return result;
@@ -166,6 +181,7 @@ export function useExamSubmit({
     },
     [
       attemptId,
+      queryClient,
       onSuccess,
       onError,
     ]

@@ -1,13 +1,7 @@
-import { BookOpen, CalendarCheck, FileText, ArrowRight } from 'lucide-react'
+import { Pin, ArrowRight } from 'lucide-react'
 import { NOTIFICATIONS } from '@/lib/mock-data'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-
-const ICONS = {
-  lesson: BookOpen,
-  attendance: CalendarCheck,
-  exam: FileText,
-}
 
 export function NotificationsCard() {
   return (
@@ -17,14 +11,14 @@ export function NotificationsCard() {
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
         {NOTIFICATIONS.map((n) => {
-          const Ico = ICONS[n.type]
           return (
             <div
               key={n.id}
               className="flex items-center gap-3 rounded-xl border border-border p-3 transition-colors hover:border-primary/40 hover:bg-muted/40"
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                <Ico className="size-4" />
+              {/* Đổi sang icon Pin và chỉnh màu nền vàng đậm, icon tối màu giống hình */}
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#FBBF24] text-slate-950">
+                <Pin className="size-4" />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{n.title}</p>

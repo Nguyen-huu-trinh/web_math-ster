@@ -8,6 +8,7 @@ import {
   ArrowRight,
   AlertTriangle,
   Flame,
+  Pin,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -114,46 +115,45 @@ export function DashboardAnnouncementCard({
 
   return (
     <>
-      <div className="rounded-[28px] border border-amber-200/80 bg-[#FFFDF8] p-5 sm:p-6 shadow-2xs">
-        {/* HEADER CỐ ĐỊNH: ICON CHUÔNG HIỆN ĐẠI & TIÊU ĐỀ */}
+      <div className="rounded-[24px] border border-slate-200/80 bg-white p-4 sm:p-5 shadow-2xs">
+        {/* HEADER CỐ ĐỊNH: ICON CHUÔNG & TIÊU ĐỀ */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2">
-          <div className="flex items-start gap-3.5">
-            {/* Icon Squircle chuông gradient vàng hổ phách tinh tế */}
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-amber-500 text-white shadow-xs">
-              <BellRing className="size-5.5 stroke-[2.3]" />
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 text-white shadow-xs">
+              <BellRing className="size-4.5 stroke-[2.2]" />
             </div>
 
-<h3 className="self-center text-xl sm:text-[21px] font-black tracking-tight text-slate-900 leading-none">
-  Thông Báo Học Vụ Quan Trọng
-</h3>
+            <h3 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 leading-none">
+              Thông Báo Học Vụ Quan Trọng
+            </h3>
           </div>
 
           {/* Badge đếm số bài quá hạn ở góc phải */}
           {overdueCount > 0 && (
-            <div className="inline-flex items-center gap-1.5 self-start sm:self-center rounded-full border border-rose-200 bg-rose-50 px-3.5 py-1.5 text-xs font-bold text-rose-600 shadow-2xs">
-              <Flame className="size-3.5 fill-rose-500 text-rose-500" />
+            <div className="inline-flex items-center gap-1.5 self-start sm:self-center rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600 shadow-2xs">
+              <Flame className="size-3 fill-rose-500 text-rose-500" />
               <span>{overdueCount} Bài Quá Hạn</span>
             </div>
           )}
         </div>
 
-        {/* KHỐI THÔNG BÁO TỪ GIÁO VIÊN (NỔI BẬT & DỄ THẤY) */}
+        {/* KHỐI THÔNG BÁO TỪ GIÁO VIÊN */}
         {hasTeacherAnnouncement && (
-          <div className="mt-3.5 rounded-2xl border-2 border-amber-300/90 bg-gradient-to-r from-amber-100/80 via-amber-50/90 to-amber-100/50 p-4 sm:p-5 shadow-xs">
-            <div className="flex items-start gap-3">
-              <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-500 text-white font-bold text-xs shadow-xs">
-                📢
+          <div className="mt-3 rounded-2xl border border-amber-300/80 bg-gradient-to-r from-amber-50/90 via-amber-50/50 to-amber-50/90 p-3.5 sm:p-4 shadow-2xs">
+            <div className="flex items-start gap-2.5">
+              <div className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-[#FBBF24] text-slate-950 shadow-2xs mt-0.5">
+                <Pin className="size-3.5" />
               </div>
 
               <div className="flex-1 space-y-1">
                 {announcement?.title && announcement.title.trim() !== "" && (
-                  <h4 className="text-sm sm:text-base font-black uppercase tracking-tight text-amber-950">
+                  <h4 className="text-xs sm:text-sm font-bold uppercase tracking-tight text-amber-950">
                     {announcement.title}
                   </h4>
                 )}
 
                 {announcement?.content && announcement.content.trim() !== "" && (
-                  <p className="text-xs sm:text-[18px] font-semibold leading-relaxed text-amber-900 whitespace-pre-line">
+                  <p className="text-xs sm:text-sm font-medium leading-relaxed text-amber-900 whitespace-pre-line">
                     {announcement.content}
                   </p>
                 )}
@@ -162,13 +162,13 @@ export function DashboardAnnouncementCard({
           </div>
         )}
 
-        {/* DANH SÁCH BÀI THI QUÁ HẠN / SẮP HẾT HẠN */}
+        {/* DANH SÁCH BÀI THI QUÁ HẠN / SẮP HẾT HẠN (Đã giới hạn chiều cao hiển thị đúng 3 dòng) */}
         {availableNotifications.length > 0 && (
           <div
             role="region"
             aria-label="Hạn nộp bài thi, ưu tiên bài quá hạn và hạn gần nhất"
             tabIndex={0}
-            className="mt-4 max-h-64 space-y-2.5 overflow-y-auto overscroll-y-contain rounded-2xl border border-amber-200/70 bg-amber-50/40 p-2 [scrollbar-gutter:stable] [scrollbar-width:thin] [scrollbar-color:#fbbf24_#fef3c7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 sm:p-3"
+            className="mt-3 max-h-[10.5rem] divide-y divide-slate-100 overflow-y-auto overscroll-y-contain bg-white [scrollbar-gutter:stable] [scrollbar-width:thin] [scrollbar-color:#cbd5e1_#ffffff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500"
           >
             {availableNotifications.map((exam) => {
               const days = exam.periodicDaysRemaining;
@@ -176,74 +176,75 @@ export function DashboardAnnouncementCard({
 
               const isOverdue = days < 0;
               const isToday = days === 0;
+              const title = exam.title.trim();
+              const trailingNumber = title.match(/\d+$/)?.[0];
+              const examLabel = trailingNumber
+                ? trailingNumber.padStart(2, "0")
+                : Array.from(title).pop() ?? "—";
 
               return (
                 <div
                   key={exam.id}
-                  className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white p-3.5 sm:px-5 sm:py-3.5 shadow-2xs transition-all hover:border-slate-300"
+                  className="flex flex-col justify-between gap-3 bg-white py-3.5 sm:flex-row sm:items-center sm:gap-4"
                 >
-                  {/* Cột trái: Icon ! màu hồng/xanh + Tên bài thi + Badge ngày */}
-                  <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="flex min-w-0 items-center gap-3.5">
                     <div
-                      className={`flex size-9 shrink-0 items-center justify-center rounded-full font-black text-xs ${
+                      className={`flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl border px-2 text-sm font-bold tabular-nums ${
                         isOverdue
-                          ? "bg-rose-50 text-rose-600 border border-rose-100"
-                          : "bg-amber-50 text-amber-600 border border-amber-100"
+                          ? "border-rose-200 bg-rose-50 text-rose-600"
+                          : "border-amber-200 bg-amber-50 text-amber-700"
                       }`}
                     >
-                      !
+                      {examLabel}
                     </div>
 
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="truncate text-sm sm:text-[14.5px] font-black text-slate-800">
+                        <span className="break-words text-sm font-bold tracking-tight text-slate-900">
                           Bài thi {exam.title}
                         </span>
 
                         {isOverdue ? (
-                          <span className="rounded-full border border-rose-100 bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-600">
+                          <span className="rounded-md border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-600">
                             Quá hạn {Math.abs(days)} ngày
                           </span>
                         ) : isToday ? (
-                          <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-black text-amber-700">
+                          <span className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
                             Hết hạn hôm nay
                           </span>
                         ) : (
-                          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-600">
+                          <span className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
                             Còn {days} ngày
                           </span>
                         )}
                       </div>
 
                       {exam.description && (
-                        <p className="mt-0.5 truncate text-[11.5px] font-medium text-slate-400 max-w-xl">
+                        <p className="mt-0.5 max-w-xl break-words text-xs font-medium text-slate-400">
                           Chuyên đề: {exam.description}
                         </p>
                       )}
                     </div>
                   </div>
 
-                  {/* Cột phải: Nút hành động chuẩn theo điều kiện hạn chót */}
                   <div className="shrink-0 self-end sm:self-center">
                     {isOverdue ? (
-                      /* ĐỀ ĐÃ QUÁ HẠN (< 0 ngày) -> Nút đỏ "Nộp bài bù ngay" */
                       <button
                         type="button"
                         onClick={() => handleExamActionClick(exam)}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-[#E11D48] px-5 py-2 text-xs font-black text-white shadow-xs hover:bg-rose-700 active:scale-[0.98] transition-all"
+                        className="inline-flex min-h-9 items-center justify-center gap-2 rounded-xl bg-[#E91148] px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-rose-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500"
                       >
                         <span>Nộp bài bù ngay</span>
-                        <ArrowRight className="size-3.5 stroke-[2.5]" />
+                        <ArrowRight className="size-3.5 stroke-[2.2]" />
                       </button>
                     ) : (
-                      /* ĐỀ SẮP HẾT HẠN (Hôm nay hoặc còn hạn) -> Nút "Vào làm bài ngay" */
                       <button
                         type="button"
                         onClick={() => handleExamActionClick(exam)}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50/80 px-4.5 py-2 text-xs font-bold text-amber-900 hover:bg-amber-100 active:scale-[0.98] transition-all"
+                        className="inline-flex min-h-9 items-center justify-center gap-2 rounded-xl bg-[#101527] px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500"
                       >
                         <span>Vào làm bài ngay</span>
-                        <ArrowRight className="size-3.5 text-amber-700" />
+                        <ArrowRight className="size-3.5 text-[#FBBF24]" />
                       </button>
                     )}
                   </div>
@@ -254,9 +255,6 @@ export function DashboardAnnouncementCard({
         )}
       </div>
 
-      {/* ====================================================
-          MODAL XÁC NHẬN BẮT ĐẦU BÀI THI
-      ==================================================== */}
       {showStartDialog && selectedExam && (
         <StartExamDialog exam={selectedExam} busy={isStarting || startExam.isPending} onClose={() => { if (!isStarting) setShowStartDialog(false); }} onStart={handleStartExam} />
       )}
@@ -268,34 +266,34 @@ export function DashboardAnnouncementCard({
             onClick={() => setShowPrerequisiteDialog(false)}
           />
 
-          <div className="relative w-full max-w-md overflow-hidden rounded-[24px] border border-slate-150 bg-white p-6 shadow-2xl animate-in zoom-in-95">
+          <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-slate-150 bg-white p-5 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center gap-3">
-              <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
-                <AlertTriangle className="size-5" />
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
+                <AlertTriangle className="size-4.5" />
               </div>
               <div>
-                <h2 className="text-lg font-black text-slate-900">
+                <h2 className="text-base font-bold text-slate-900">
                   Chưa thể bắt đầu bài thi
                 </h2>
-                <p className="text-xs font-semibold text-slate-400">
+                <p className="text-xs font-medium text-slate-400">
                   Cần hoàn thành các bài kiểm tra trước
                 </p>
               </div>
             </div>
 
-            <div className="mt-4 space-y-2">
+            <div className="mt-3.5 space-y-2">
               <p className="text-xs text-slate-500">
                 Bạn cần làm và đạt điểm các bài kiểm tra sau trước khi mở đề này:
               </p>
 
-              <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+              <div className="max-h-52 space-y-1.5 overflow-y-auto pr-1">
                 {missingPrerequisites.map((item, idx) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs font-bold text-slate-700"
+                    className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs font-bold text-slate-700"
                   >
                     <span>{idx + 1}. {item.title}</span>
-                    <span className="rounded-md bg-rose-100 px-2 py-0.5 text-[10px] text-rose-700">
+                    <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] text-rose-700">
                       Cần làm
                     </span>
                   </div>
@@ -303,11 +301,11 @@ export function DashboardAnnouncementCard({
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end">
+            <div className="mt-5 flex justify-end">
               <Button
                 type="button"
                 onClick={() => setShowPrerequisiteDialog(false)}
-                className="h-10 rounded-xl bg-slate-900 px-5 text-xs font-bold text-white hover:bg-slate-800"
+                className="h-9 rounded-xl bg-slate-900 px-4 text-xs font-bold text-white hover:bg-slate-800"
               >
                 Đã hiểu
               </Button>

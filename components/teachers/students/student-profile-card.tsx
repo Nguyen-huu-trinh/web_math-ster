@@ -201,8 +201,7 @@ function getAvatarUrl(url?: string | null) {
             Number(points);
 
         if (
-            !Number.isFinite(parsedPoints) ||
-            parsedPoints < 0
+            !Number.isFinite(parsedPoints)
         ) {
             return;
         }
@@ -374,7 +373,6 @@ function getAvatarUrl(url?: string | null) {
                         <Input
                             disabled={updateStudent.isPending}
                             type="number"
-                            min="0"
                             value={points}
                             onChange={(e) =>
                                 setPoints(e.target.value)

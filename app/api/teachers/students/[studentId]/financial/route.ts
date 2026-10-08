@@ -37,8 +37,7 @@ export async function PATCH(
                 Number(body.points);
 
             if (
-                !Number.isFinite(points) ||
-                points < 0
+                !Number.isFinite(points)
             ) {
                 return NextResponse.json(
                     {

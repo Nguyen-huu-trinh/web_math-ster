@@ -84,10 +84,8 @@ async adjustStudentPoints(
       ? delta
       : -delta;
 
-  const newPoints = Math.max(
-    0,
-    profile.points + change
-  );
+  // Preserve negative points so the database trigger can deactivate the account.
+  const newPoints = profile.points + change;
 
   // =====================================================
   // 5. UPDATE PROFILE

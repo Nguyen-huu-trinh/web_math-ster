@@ -74,7 +74,10 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
     if (!editingCell) return;
 
     const value = Number(editValue);
-    if (!Number.isFinite(value) || value < 0) return;
+    if (
+      !Number.isFinite(value) ||
+      (editingCell.field === "rewardMoney" && value < 0)
+    ) return;
 
     try {
       await updateFinancial.mutateAsync({
@@ -398,7 +401,6 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
                         <div className="flex items-center justify-end gap-1">
                           <input
                             type="number"
-                            min="0"
                             value={editValue}
                             onChange={(e) => setEditValue(e.target.value)}
                             onClick={(e) => e.stopPropagation()}

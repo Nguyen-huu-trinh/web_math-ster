@@ -66,7 +66,8 @@ test("blank personal email clears the stored value", async () => {
 test("invalid input and protected profile fields are rejected before saving", async () => {
     for (const body of [
         {}, null, [], { fullName: " " }, { fullName: 123 }, { phone: "0901234567" },
-        { personalEmail: "invalid" }, { points: -1 }, { rewardMoney: "100" },
+        { personalEmail: "invalid" }, { points: "invalid" }, { points: NaN }, { points: Infinity },
+        { rewardMoney: -1 }, { rewardMoney: "100" },
         { joinedDate: "2026-09-30", role: "TEACHER" }, { created_at: "2026-01-01" },
         { email: "new-login@example.com" },
         { joinedDate: "" }, { joinedDate: null }, { joinedDate: "30/09/2026" },
@@ -204,4 +205,75 @@ test("successful mutations invalidate detail and both student lists and report f
     mutation.onError(new Error("Save failed"));
     assert.equal(messages[1], "Save failed");
     client.clear();
+});
+
+test("profile API accepts negative points for account-locking trigger", async () => {
+    const api = route();
+    const response = await api.PATCH({ json: async () => ({ points: -30 }) }, context);
+    assert.equal(response.status, 200);
+    assert.deepEqual(api.saved.values, { points: -30 });
+});
+
+test("both profile repository updates preserve negative points", async () => {
+    for (const method of ["update", "updateFinancialInfo"]) {
+        const { repository: repo, calls } = repository({ profiles: { data: { id: "student-1", points: -30, is_active: false } } });
+        const result = await repo[method]("student-1", { points: -30 });
+        assert.deepEqual(calls[0].update, { points: -30 });
+        assert.equal(result.is_active, false);
+    }
+});
+
+test("financial API accepts negative points but rejects invalid numbers and negative rewards", async () => {
+    for (const [body, status] of [
+        [{ points: -30 }, 200], [{ points: 0 }, 200], [{ points: 50 }, 200],
+        [{ points: "invalid" }, 400], [{ points: Infinity }, 400],
+        [{ rewardMoney: -1 }, 400], [{ rewardMoney: 0 }, 200],
+    ]) {
+        let saved;
+        const { PATCH } = load("app/api/teachers/students/[studentId]/financial/route.ts", {
+            "@/lib/auth/roles": { UserRole: { TEACHER: "TEACHER" } },
+            "@/lib/auth/require-role": { requireRole: async () => {} },
+            "@/services/teacher-student.service": {
+                teacherStudentService: { updateFinancialInfo: async (id, values) => {
+                    saved = plain(values);
+                    return { id, ...values };
+                } },
+            },
+        });
+        const response = await PATCH({ json: async () => body }, context);
+        assert.equal(response.status, status);
+        assert.deepEqual(saved, status === 200 ? body : undefined);
+    }
+});
+
+test("manual exam deductions cross zero and preserve existing negative balances", async () => {
+    for (const [category, initial, action, expected] of [
+        ["PERIODIC", 20, "decrease", -30],
+        ["ATTENDANCE", 0, "decrease", -10],
+        ["PERIODIC", -30, "decrease", -80],
+        ["PERIODIC", -80, "increase", -30],
+        ["PERIODIC", 50, "decrease", 0],
+    ]) {
+        let saved;
+        const { StudentExamRepository } = load("repositories/student-exam.repository.ts", {
+            "@/lib/supabase/admin": { adminClient: {} },
+            "@/lib/supabase/server": { createClient: async () => ({
+                from(table) {
+                    const query = {
+                        select() { return query; }, eq() { return query; }, is() { return query; },
+                        update(values) { saved = plain(values); return query; },
+                        single: async () => ({ data: table === "exams"
+                            ? { id: "exam-1", category }
+                            : { id: "student-1", points: saved ? saved.points : initial } }),
+                    };
+                    return query;
+                },
+            }) },
+        });
+        const result = await new StudentExamRepository().adjustStudentPoints("exam-1", "student-1", action);
+        assert.deepEqual(saved, { points: expected });
+        assert.equal(result.oldPoints, initial);
+        assert.equal(result.newPoints, expected);
+        assert.equal(result.change, expected - initial);
+    }
 });

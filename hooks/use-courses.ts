@@ -25,10 +25,12 @@ function useCourseMutation<TVariables>(
 
   return useMutation({
     mutationFn,
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.course.all,
-      }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.course.all }),
+        queryClient.invalidateQueries({ queryKey: ["course"] }),
+      ]);
+    },
   });
 }
 

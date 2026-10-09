@@ -14,8 +14,10 @@ export const CreateCourseSchema = z.object({
 
   thumbnail_url: z
     .string()
-    .url()
+    .url().or(z.literal(""))
     .optional(),
+
+  course_order: z.number().int().min(0).max(2147483647).default(0),
 
   is_active: z
     .boolean()
@@ -23,7 +25,10 @@ export const CreateCourseSchema = z.object({
 });
 
 export const UpdateCourseSchema =
-  CreateCourseSchema.partial();
+  CreateCourseSchema.partial().extend({
+    course_order: z.number().int().min(0).max(2147483647).optional(),
+    is_active: z.boolean().optional(),
+  });
 
 export type CreateCourseInput =
   z.infer<typeof CreateCourseSchema>;

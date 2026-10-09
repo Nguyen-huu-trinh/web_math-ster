@@ -21,7 +21,8 @@ export class CourseDetailRepository {
         )
       `)
       .eq("id", courseId)
-      .single();
+      .is("deleted_at", null)
+      .maybeSingle();
 
     if (error) throw error;
     if (!data) return null;

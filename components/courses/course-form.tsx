@@ -12,6 +12,7 @@ export interface CourseFormValues {
   description: string;
   thumbnail_url: string;
   is_active: boolean;
+  course_order: number;
 }
 
 interface CourseFormProps {
@@ -64,6 +65,20 @@ export function CourseForm({
           }
           placeholder="Course description..."
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="course_order">Thứ tự khóa học</Label>
+        <Input
+          id="course_order"
+          type="number"
+          min={0}
+          max={2147483647}
+          step={1}
+          value={Number.isNaN(value.course_order) ? "" : value.course_order}
+          onChange={(e) => update("course_order", e.target.valueAsNumber)}
+        />
+        <p className="text-sm text-muted-foreground">Số nhỏ hiển thị trước.</p>
       </div>
 
       <ThumbnailUpload

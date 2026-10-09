@@ -1,6 +1,8 @@
 export interface Course {
   id: string;
 
+  course_order: number;
+
   name: string;
 
   description: string | null;

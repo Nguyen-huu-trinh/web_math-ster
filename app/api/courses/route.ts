@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { CreateCourseSchema } from "@/validators/course.schema";
 import { courseService } from "@/services/course.service";
 import { UserRole } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/require-role";
@@ -19,8 +20,7 @@ export async function GET() {
 
     return NextResponse.json(data, {
       headers: {
-        // Cache ở Browser 60 giây, CDN SWR 5 phút (300s) giúp dữ liệu cập nhật linh hoạt hơn
-        "Cache-Control": "private, max-age=60, stale-while-revalidate=300",
+        "Cache-Control": "private, no-store",
       },
     });
   } catch (err: any) {
@@ -40,7 +40,11 @@ export async function POST(req: NextRequest) {
     await requireRole([UserRole.TEACHER]);
     const body = await req.json();
 
-    const course = await courseService.create(body);
+    const values = CreateCourseSchema.safeParse(body);
+    if (!values.success) {
+      return NextResponse.json({ error: "Dữ liệu khóa học không hợp lệ" }, { status: 400 });
+    }
+    const course = await courseService.create(values.data);
 
     return NextResponse.json(course, { status: 201 });
   } catch (err: any) {

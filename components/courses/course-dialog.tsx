@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { CreateCourseSchema } from "@/validators/course.schema";
 
 import {
   Dialog,
@@ -33,6 +35,7 @@ const defaultValues: CourseFormValues = {
   description: "",
   thumbnail_url: "",
   is_active: true,
+  course_order: 0,
 };
 
 export function CourseDialog({
@@ -56,6 +59,7 @@ export function CourseDialog({
     }
 
     setForm({
+      course_order: course.course_order ?? 0,
       name: course.name ?? "",
       description:
         course.description ?? "",
@@ -67,14 +71,16 @@ export function CourseDialog({
   }, [course, open]);
 
   async function handleSubmit() {
-    if (!form.name.trim()) {
+    const parsed = CreateCourseSchema.safeParse(form);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Dữ liệu không hợp lệ");
       return;
     }
 
     try {
       setLoading(true);
 
-      await onSubmit(form);
+      await onSubmit({ ...form, ...parsed.data });
 
     } finally {
       setLoading(false);

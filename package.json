@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test:courses": "node --test tests/courses.test.mjs",
     "test:flashcards": "node --test tests/flashcards.test.mjs",
     "typecheck:flashcards": "tsc --noEmit --project tsconfig.flashcards.json",
     "dev": "next dev",

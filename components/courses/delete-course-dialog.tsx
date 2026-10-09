@@ -37,7 +37,7 @@ export function DeleteCourseDialog({
     <Dialog
       open={open}
       onOpenChange={(value) => {
-        if (!value) onClose();
+        if (!value && !loading) onClose();
       }}
     >
       <DialogContent className="sm:max-w-md">
@@ -73,6 +73,7 @@ export function DeleteCourseDialog({
         <DialogFooter>
           <Button
             variant="outline"
+            disabled={loading}
             onClick={onClose}
           >
             Cancel

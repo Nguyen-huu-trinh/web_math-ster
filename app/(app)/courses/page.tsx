@@ -263,6 +263,7 @@ function CoursesContent() {
 
       <DeleteCourseDialog
         open={deleteOpen}
+        loading={deleteCourseMutation.isPending}
         course={editingCourse}
         onClose={() => {
           setDeleteOpen(false);

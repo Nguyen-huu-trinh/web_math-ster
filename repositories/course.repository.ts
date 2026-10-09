@@ -5,6 +5,7 @@ export interface CreateCourseDto {
   description?: string;
   thumbnail_url?: string;
   is_active?: boolean;
+  course_order?: number;
 }
 
 export class CourseRepository {
@@ -19,6 +20,7 @@ export class CourseRepository {
           .select(`
             courses!inner (
               id,
+              course_order,
               name,
               description,
               thumbnail_url,
@@ -47,7 +49,8 @@ export class CourseRepository {
             totalLessons: 0,
             chapters: [],
           };
-        });
+        }).sort((a, b) => a.course_order - b.course_order ||
+          a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id));
       }
 
       // GIÁO VIÊN: Lấy toàn bộ khóa học chưa bị xóa
@@ -55,6 +58,7 @@ export class CourseRepository {
         .from("courses")
         .select(`
           id,
+          course_order,
           name,
           description,
           thumbnail_url,
@@ -64,7 +68,9 @@ export class CourseRepository {
           updated_at
         `)
         .is("deleted_at", null)
-        .order("created_at", { ascending: true });
+        .order("course_order", { ascending: true })
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true });
 
       if (error) throw error;
 
@@ -89,9 +95,10 @@ export class CourseRepository {
 
     const { data, error } = await supabase
       .from("courses")
-      .select("id, name, description, thumbnail_url, is_active, deleted_at, created_at, updated_at")
+      .select("id, name, course_order, description, thumbnail_url, is_active, deleted_at, created_at, updated_at")
       .eq("id", id)
-      .single();
+      .is("deleted_at", null)
+      .maybeSingle();
 
     if (error) throw error;
     if (!data) return null;
@@ -128,8 +135,9 @@ export class CourseRepository {
       .from("courses")
       .update(values)
       .eq("id", id)
+      .is("deleted_at", null)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) throw error;
     return data;
@@ -138,14 +146,18 @@ export class CourseRepository {
   async delete(id: string) {
     const supabase = await createClient();
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("courses")
       .update({
         deleted_at: new Date().toISOString(),
       })
-      .eq("id", id);
+      .eq("id", id)
+      .is("deleted_at", null)
+      .select("id")
+      .maybeSingle();
 
     if (error) throw error;
+    return data;
   }
 
   async restore(id: string) {

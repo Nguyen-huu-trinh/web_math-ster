@@ -719,9 +719,7 @@ async function deleteAttempt(
                       Điểm
                     </TableHead>
 
-                    <TableHead>
-                      Trạng thái
-                    </TableHead>
+
 
                     <TableHead>
                       Thời điểm nộp
@@ -729,6 +727,10 @@ async function deleteAttempt(
 
                     <TableHead>
                       Thời gian làm
+                    </TableHead>
+
+                    <TableHead>
+                      Trạng thái
                     </TableHead>
 
                     <TableHead>
@@ -792,6 +794,31 @@ async function deleteAttempt(
 
                         </TableCell>
 
+                        
+
+                        <TableCell>
+
+                          {formatDate(
+                            attempt.submitted_at
+                          )}
+
+                        </TableCell>
+
+                        <TableCell>
+
+                          <span className="flex items-center gap-1 text-muted-foreground">
+
+                            <Clock className="size-3.5" />
+
+                            {formatDuration(
+                            attempt.started_at,
+                            attempt.submitted_at
+                            )}
+
+                          </span>
+
+                        </TableCell>
+
                         <TableCell>
 
                           {attempt.is_passed === true ? (
@@ -824,29 +851,6 @@ async function deleteAttempt(
                             </Badge>
 
                           )}
-
-                        </TableCell>
-
-                        <TableCell>
-
-                          {formatDate(
-                            attempt.submitted_at
-                          )}
-
-                        </TableCell>
-
-                        <TableCell>
-
-                          <span className="flex items-center gap-1 text-muted-foreground">
-
-                            <Clock className="size-3.5" />
-
-                            {formatDuration(
-                            attempt.started_at,
-                            attempt.submitted_at
-                            )}
-
-                          </span>
 
                         </TableCell>
 

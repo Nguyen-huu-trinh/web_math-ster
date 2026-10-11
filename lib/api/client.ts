@@ -68,9 +68,11 @@ const error = new Error(message) as Error & {
 
   post<T>(
     url: string,
-    body?: unknown
+    body?: unknown,
+    options?: Pick<RequestInit, "signal">
   ): Promise<T> {
     return this.request<T>(url, {
+      ...options,
       method: "POST",
       body:
         body !== undefined

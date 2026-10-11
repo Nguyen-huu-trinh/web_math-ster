@@ -133,6 +133,7 @@ export default function AnswerSheetNew({
   } = useExamAnswers({
     config: questionConfig,
     savedAnswers,
+    draftAttemptId: !review && !attempt.submitted_at ? attempt.id : undefined,
   });
 
   // ==========================================================

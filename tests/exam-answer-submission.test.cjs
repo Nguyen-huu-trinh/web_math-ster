@@ -5,6 +5,12 @@ const vm = require('node:vm');
 const ts = require('typescript');
 
 function load(file, dependencies = {}) {
+  dependencies['@/lib/exam/submit/client'] ??= {
+    readExamDraft: () => undefined,
+    draftKey: (id) => `exam-submit:v1:${id}`,
+    submitExamWithRecovery: (id, answers, reason) => dependencies['@/lib/api/client'].apiClient.post(
+      `/api/students/attempts/${id}/submit`, { answers, reason }),
+  };
   const scope = { exports: {}, console, require: (name) => dependencies[name] ?? require(name) };
   vm.runInNewContext(ts.transpileModule(fs.readFileSync(file, 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
@@ -25,6 +31,7 @@ function deferredReact() {
     },
     useRef: (current) => ({ current }),
     useCallback: (fn) => fn,
+    useEffect: () => {},
     flush: () => { while (pending.length) pending.shift()(); },
   };
 }

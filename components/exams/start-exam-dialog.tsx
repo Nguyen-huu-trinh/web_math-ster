@@ -63,7 +63,7 @@ export function StartExamDialog({ exam, busy, onClose, onStart }: Props) {
               <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">{remaining <= 1 ? "Không được làm lại sau khi nộp" : "Mỗi lần bắt đầu sử dụng một lượt"}</p>
             </div>
           </div>
-          <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-3.5 text-rose-700"><AlertCircle className="mt-0.5 size-5 shrink-0" /><div className="text-xs leading-relaxed"><p className="mb-1 font-extrabold uppercase">Lưu ý quan trọng</p><p>Không thoát hoặc tải lại trang trong khi làm bài. Đồng hồ vẫn tiếp tục tính sau khi bạn bắt đầu; hãy nộp bài trước khi hết giờ.</p></div></div>
+          <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-3.5 text-rose-700"><AlertCircle className="mt-0.5 size-5 shrink-0" /><div className="text-xs leading-relaxed"><p className="mb-1 font-extrabold uppercase">Lưu ý quan trọng</p><p>Lỗi load đề hoặc không nộp bài được thì tắt tab đi xong vô lại nhanh bấm làm tiếp</p></div></div>
           <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-semibold leading-relaxed text-slate-600"><input type="checkbox" checked={ready} onChange={(event) => setReady(event.target.checked)} disabled={busy} className="mt-0.5 size-4 shrink-0 accent-amber-500" /><span>Tôi đã chuẩn bị máy tính Casio, nháp và sẵn sàng vào thi.</span></label>
         </div>
         <div className="flex justify-end gap-2 border-t border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6">

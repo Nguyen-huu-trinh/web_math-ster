@@ -2,6 +2,7 @@
 
 import {
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -10,6 +11,7 @@ import type {
   ExamAnswers,
   QuestionConfig,
 } from "./types";
+import { draftKey, readExamDraft } from "@/lib/exam/submit/client";
 
 function cloneAnswers(
   answers: ExamAnswers
@@ -63,10 +65,12 @@ function createEmptyAnswers(
 export function useExamAnswers({
   config,
   savedAnswers,
+  draftAttemptId,
 }: {
   config: QuestionConfig;
 
   savedAnswers?: ExamAnswers;
+  draftAttemptId?: string;
 }) {
   const [
     answers,
@@ -86,6 +90,16 @@ export function useExamAnswers({
   const answersRef =
     useRef(answers);
 
+  useEffect(() => {
+    if (!draftAttemptId) return;
+    const draft = readExamDraft(draftAttemptId);
+    if (!draft || draft.multipleChoice.length !== config.multipleChoice ||
+        draft.trueFalse.length !== config.trueFalse || draft.shortAnswer.length !== config.shortAnswer ||
+        ![...draft.trueFalse, ...draft.shortAnswer].every((row) => row.length === 4)) return;
+    answersRef.current = cloneAnswers(draft);
+    setAnswers(answersRef.current);
+  }, [draftAttemptId, config.multipleChoice, config.trueFalse, config.shortAnswer]);
+
   const updateAnswers =
     useCallback(
       (
@@ -98,8 +112,12 @@ export function useExamAnswers({
         const next = updater(answersRef.current);
         answersRef.current = next;
         setAnswers(next);
+        if (draftAttemptId) {
+          try { localStorage.setItem(draftKey(draftAttemptId), JSON.stringify({ answers: next })); }
+          catch { /* Submission also attempts to back up the final payload. */ }
+        }
       },
-      []
+      [draftAttemptId]
     );
 
   const chooseMultipleChoice =

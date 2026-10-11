@@ -4,6 +4,16 @@ import { submitExam } from "@/lib/exam/submit/orchestrator";
 import { submitContextRepository } from "@/lib/exam/submit/supabase-context-repository";
 import type { SubmitReason } from "@/lib/exam/submit/types";
 
+export const dynamic = "force-dynamic";
+
+function json(body: unknown, init?: ResponseInit) {
+  const response = NextResponse.json(body, init);
+  response.headers.set("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0");
+  response.headers.set("Expires", "0");
+  response.headers.set("Pragma", "no-cache");
+  return response;
+}
+
 interface Context {
   params: Promise<{
     id: string;
@@ -19,10 +29,12 @@ export async function POST(
     let student;
     try {
       student = await requireStudent();
-    } catch {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+    } catch (error) {
+      const e = error as Error & { status?: number };
+      if (e.message !== "Unauthorized" && e.status !== 401 && e.status !== 403) throw error;
+      return json(
+        { error: e.status === 403 ? "Forbidden" : "Unauthorized" },
+        { status: e.status === 403 ? 403 : 401 }
       );
     }
 
@@ -30,7 +42,7 @@ export async function POST(
     const attemptId = resolvedParams?.id;
 
     if (!attemptId) {
-      return NextResponse.json(
+      return json(
         { error: "Thiếu mã lượt làm bài." },
         { status: 400 }
       );
@@ -41,14 +53,14 @@ export async function POST(
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json(
+      return json(
         { error: "Dữ liệu gửi lên không hợp lệ." },
         { status: 400 }
       );
     }
 
     if (!body?.answers) {
-      return NextResponse.json(
+      return json(
         { error: "Không có dữ liệu đáp án." },
         { status: 400 }
       );
@@ -76,7 +88,7 @@ export async function POST(
       submitContextRepository
     );
 
-    return NextResponse.json({
+    return json({
       success: true,
       attemptId: result.attempt.id,
       score: result.grading.score,
@@ -89,33 +101,27 @@ export async function POST(
   } catch (error: any) {
     const message = error instanceof Error ? error.message : String(error);
 
-    // 4. Xử lý trường hợp bài làm ĐÃ ĐƯỢC NỘP TRƯỚC ĐÓ (Tránh coi đây là lỗi system 500)
-    if (message === "Bài làm đã được nộp." || message.includes("already submitted")) {
-      return NextResponse.json(
-        {
-          success: true,
-          alreadySubmitted: true,
-          message: "Bài làm này đã được hoàn tất trước đó.",
-        },
-        { status: 200 } // Đưa về HTTP 200 Idempotent để Client ngưng retry
-      );
+    // Only the orchestrator can confirm success and return the persisted result.
+    if (message === "Unauthorized" || error?.status === 401 ||
+        error?.code === "PGRST301" || error?.code === "PGRST303") {
+      return json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (error?.status === 403) {
+      return json({ error: "Forbidden" }, { status: 403 });
     }
 
     if (message === "Không tìm thấy lượt làm bài.") {
-      return NextResponse.json({ error: message }, { status: 404 });
+      return json({ error: message }, { status: 404 });
     }
 
     if (message === "Không xác định được thời gian làm bài.") {
-      return NextResponse.json({ error: message }, { status: 400 });
+      return json({ error: message }, { status: 400 });
     }
 
     console.error("[SUBMIT EXAM SYSTEM ERROR]:", error);
 
-    return NextResponse.json(
+    return json(
       { error: message || "Lỗi hệ thống khi chấm bài." },
       { status: 500 }
     );

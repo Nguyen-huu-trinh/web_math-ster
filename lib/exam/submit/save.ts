@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { withSubmitRetry } from "./server-retry";
 
 import type {
   ExamAnswers,
@@ -199,7 +200,7 @@ export async function saveExamSubmit(
   const {
     data,
     error,
-  } = await supabase
+  } = await withSubmitRetry((supabase) => supabase
     .from("exam_attempts")
     .update({
       answers:
@@ -229,6 +230,7 @@ export async function saveExamSubmit(
       "submitted_at",
       null
     )
+    .abortSignal(AbortSignal.timeout(15_000))
     .select(`
       id,
       exam_id,
@@ -243,7 +245,7 @@ export async function saveExamSubmit(
       created_at,
       updated_at
     `)
-    .maybeSingle();
+    .maybeSingle());
 
   // ==========================================================
   // 2. DATABASE ERROR

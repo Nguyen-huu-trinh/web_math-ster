@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 
-import { apiClient } from "@/lib/api/client";
+import { submitExamWithRecovery } from "@/lib/exam/submit/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/react-query/query-keys";
 
@@ -113,13 +113,7 @@ export function useExamSubmit({
         // ====================================================
 
         const result =
-          await apiClient.post<SubmitExamResponse>(
-            `/api/students/attempts/${attemptId}/submit`,
-            {
-              answers,
-              reason,
-            }
-          );
+          await submitExamWithRecovery(attemptId, answers, reason);
 
         // ====================================================
         // 4. SUCCESS

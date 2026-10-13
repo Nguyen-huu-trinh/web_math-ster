@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { ExamEditableStatus } from "./exam-editable-status";
 import { ExamEditableNumber } from "./exam-editable-number";
+import { ExamEditableCourse } from "./exam-editable-course";
 import { Button } from "@/components/ui/button";
 import {
   FileText,
@@ -146,7 +147,7 @@ export function ExamTable({
             </Link>
         </div>
 
-        <p className="text-sm text-muted-foreground">Bấm vào điểm, số ngày, thời gian hoặc trạng thái để sửa. Enter để lưu, Esc để hủy. Để trống số ngày nếu không giới hạn.</p>
+        <p className="text-sm text-muted-foreground">Bấm vào khóa học, điểm, số ngày, thời gian hoặc trạng thái để sửa. Enter để lưu, Esc để hủy. Để trống số ngày nếu không giới hạn.</p>
 
         <Table>
 
@@ -155,6 +156,8 @@ export function ExamTable({
             <TableRow>
 
               <TableHead>Tên đề</TableHead>
+
+              <TableHead>Khóa học</TableHead>
 
               <TableHead>Điểm đạt</TableHead>
 
@@ -171,7 +174,7 @@ export function ExamTable({
           </TableHeader>
 
           <TableBody>
-            {exams.length === 0 && <TableRow><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">Không tìm thấy đề thi phù hợp.</TableCell></TableRow>}
+            {exams.length === 0 && <TableRow><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">Không tìm thấy đề thi phù hợp.</TableCell></TableRow>}
 
             {exams.map((exam) => (
 
@@ -194,6 +197,12 @@ export function ExamTable({
                     </p>
 
                   </div>
+
+                </TableCell>
+
+                <TableCell>
+
+                  <ExamEditableCourse exam={exam} />
 
                 </TableCell>
 

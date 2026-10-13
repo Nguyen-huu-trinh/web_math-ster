@@ -34,6 +34,11 @@ export interface Exam {
 
   course_id: string | null;
 
+  courses?: {
+    id: string;
+    name: string;
+  } | null;
+
   exam_file_url: string;
 
   exam_type: ExamType;

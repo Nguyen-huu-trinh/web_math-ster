@@ -156,9 +156,9 @@ export function ExamTable({
 
               <TableHead>Tên đề</TableHead>
 
-              <TableHead>Điểm điểm danh</TableHead>
+              <TableHead>Điểm đạt</TableHead>
 
-              <TableHead>Số ngày được phép làm</TableHead>
+              <TableHead>Hạn làm bài</TableHead>
 
               <TableHead>Thời gian</TableHead>
 

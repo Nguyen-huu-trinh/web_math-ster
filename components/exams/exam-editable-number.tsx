@@ -62,7 +62,7 @@ export function ExamEditableNumber({ exam, field }: { exam: Exam; field: Editabl
       aria-label={`Sửa ${label.toLowerCase()} của ${exam.title}`}
       title="Bấm để sửa, Enter để lưu"
       onClick={() => { setDraft(value == null ? "" : String(value)); setError(""); setEditing(true); }}
-    >{value == null ? (isDays ? "Không giới hạn" : "--") : `${value}${isDuration ? " phút" : isDays ? " ngày" : ""}`}</button>;
+    >{value == null ? (isDays ? "--" : "--") : `${value}${isDuration ? " phút" : isDays ? " ngày" : ""}`}</button>;
   }
 
   return <div className="min-w-32 max-w-56">

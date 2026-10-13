@@ -154,10 +154,10 @@ export function NotificationBell() {
                   Icon = FileDown;
                   badgeLabel = "";
                   styles = {
-                    unreadRowBg: "bg-[#f8fafc]/60 hover:bg-[#f1f5f9]/60",
-                    iconBg: "bg-[#e2e8f0] text-[#475569]",
-                    badgeBg: "bg-[#e2e8f0] text-[#475569]",
-                    dot: "bg-[#64748b]",
+                    unreadRowBg: "bg-[#f0f9ff]/50 hover:bg-[#f0f9ff]/80",
+                    iconBg: "bg-[#e0f2fe] text-[#0284c7]",
+                    badgeBg: "bg-[#e0f2fe] text-[#0284c7]",
+                    dot: "bg-[#0284c7]",
                   };
                 } else {
                   Icon = BookOpen;

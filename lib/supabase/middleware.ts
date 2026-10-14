@@ -41,7 +41,27 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (user && !request.nextUrl.pathname.startsWith("/api/")) {
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("must_change_password")
+      .eq("id", user.id)
+      .single();
+
+    if (error) throw error;
+
+    if (profile?.must_change_password) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/change-password";
+      url.search = "";
+      const redirect = NextResponse.redirect(url);
+      response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+      redirect.headers.set("Cache-Control", "private, no-store");
+      return redirect;
+    }
+  }
 
   return response;
 }

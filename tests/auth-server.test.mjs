@@ -8,9 +8,9 @@ const code = ts.transpileModule(readFileSync(new URL("../lib/auth.ts", import.me
   compilerOptions: { module: ts.ModuleKind.CommonJS },
 }).outputText;
 
-function guards({ user = { id: "current-user" }, role = "STUDENT", active = true, profileMissing = false, authError = null } = {}) {
+function guards({ user = { id: "current-user" }, role = "STUDENT", active = true, mustChangePassword = false, profileMissing = false, authError = null } = {}) {
   const exports = {};
-  const profile = profileMissing ? null : { id: user?.id, role, is_active: active };
+  const profile = profileMissing ? null : { id: user?.id, role, is_active: active, must_change_password: mustChangePassword };
   const db = {
     auth: { getUser: async () => ({ data: { user }, error: authError }) },
     from(table) {
@@ -49,4 +49,11 @@ test("wrong roles and inactive accounts remain blocked", async () => {
   await assert.rejects(guards({ role: "TEACHER" }).requireStudent(), /redirect:\/403/);
   await assert.rejects(guards({ role: "TEACHER" }).requireAdmin(), /redirect:\/403/);
   await assert.rejects(guards({ active: false }).requireStudent(), /redirect:\/403/);
+});
+
+test("accounts requiring a password change cannot enter protected pages", async () => {
+  for (const role of ["STUDENT", "TEACHER", "ADMIN"]) {
+    await assert.rejects(guards({ role, mustChangePassword: true }).requireAuth(), /redirect:\/change-password/);
+  }
+  assert.equal((await guards({ mustChangePassword: false }).requireAuth()).profile.must_change_password, false);
 });

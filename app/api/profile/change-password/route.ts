@@ -19,6 +19,13 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
+    if (typeof body.newPassword !== "string" || body.newPassword.length === 0) {
+      return NextResponse.json(
+        { message: "Vui lòng nhập mật khẩu mới." },
+        { status: 400 }
+      );
+    }
+
     await profileServerService.changePassword(
       user.id,
       body.newPassword

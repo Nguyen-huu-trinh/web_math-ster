@@ -28,6 +28,10 @@ export async function requireAuth() {
     redirect("/403");
   }
 
+  if (profile.must_change_password) {
+    redirect("/change-password");
+  }
+
   return {
     user,
     profile,

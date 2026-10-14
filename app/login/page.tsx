@@ -31,7 +31,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (loading) return;
     if (!user || !profile) return;
-    router.replace("/dashboard");
+    router.replace(profile.must_change_password ? "/change-password" : "/dashboard");
   }, [loading, user, profile, router]);
 
   async function handleSubmit(e: React.FormEvent) {

@@ -5,6 +5,7 @@ import { LessonSidebar } from "@/components/lessons/lesson-sidebar";
 import { DeleteResourceDialog } from "@/components/lesson-resources/delete-resource-dialog";
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import Link from 'next/link';
+import videoStyles from './video-fullscreen.module.css';
 import { notFound } from 'next/navigation';
 
 import {
@@ -77,6 +78,8 @@ export default function LessonClientView({
   const [lockedExamId, setLockedExamId] = useState<string | null>(null);
   const [sidePanel, setSidePanel] = useState<"outline" | "resources">("resources");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isMobileFullscreen, setIsMobileFullscreen] = useState(false);
+  const orientationLockedRef = useRef(false);
 
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const resourceAccessCache = useRef<Record<string, boolean>>({});
@@ -100,13 +103,33 @@ export default function LessonClientView({
   // Lắng nghe sự kiện đổi trạng thái Fullscreen
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const active = document.fullscreenElement === videoContainerRef.current;
+      setIsFullscreen(active);
+      if (!active && orientationLockedRef.current) {
+        screen.orientation?.unlock();
+        orientationLockedRef.current = false;
+      }
     };
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      if (orientationLockedRef.current) screen.orientation?.unlock();
     };
   }, []);
+
+  useEffect(() => {
+    if (!isMobileFullscreen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsMobileFullscreen(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMobileFullscreen]);
 
   useEffect(() => {
     if (!lesson) return;
@@ -184,16 +207,42 @@ export default function LessonClientView({
     }
   }, [resources, checkResourceAccess]);
 
-  const toggleFullscreen = useCallback(() => {
-    if (!videoContainerRef.current) return;
-    if (!document.fullscreenElement) {
-      videoContainerRef.current.requestFullscreen().catch((err) => {
-        console.error("Error attempting to enable fullscreen:", err);
-      });
-    } else {
-      document.exitFullscreen();
+  const toggleFullscreen = useCallback(async () => {
+    const container = videoContainerRef.current;
+    if (!container) return;
+    if (isMobileFullscreen) {
+      setIsMobileFullscreen(false);
+      return;
     }
-  }, []);
+    if (document.fullscreenElement === container) {
+      await document.exitFullscreen().catch(console.error);
+      return;
+    }
+    const mobile = window.matchMedia('(pointer: coarse)').matches;
+    try {
+      if (!container.requestFullscreen) throw new Error('Fullscreen unavailable');
+      await container.requestFullscreen();
+    } catch (error) {
+      // iPhone browsers may not support fullscreen for a container with an iframe.
+      if (mobile) setIsMobileFullscreen(true);
+      else console.error('Error attempting to enable fullscreen:', error);
+      return;
+    }
+    if (mobile && document.fullscreenElement === container) {
+      const orientation = screen.orientation as ScreenOrientation & {
+        lock?: (orientation: 'landscape') => Promise<void>;
+      };
+      try {
+        await orientation?.lock?.('landscape');
+        if (orientation?.lock) {
+          if (document.fullscreenElement === container) orientationLockedRef.current = true;
+          else orientation.unlock();
+        }
+      } catch {
+        // CSS rotates the player if the browser cannot lock screen orientation.
+      }
+    }
+  }, [isMobileFullscreen]);
 
   async function notifyMaterial(saved: unknown, send: boolean, isUpdate = false) {
     if (!send) return;
@@ -361,8 +410,9 @@ export default function LessonClientView({
         <main className="flex min-h-0 min-w-0 flex-col bg-black">
           <div
             ref={videoContainerRef}
-            className="relative aspect-video w-full overflow-hidden bg-black group lg:aspect-auto lg:min-h-0 lg:flex-1"
+            className={`relative aspect-video w-full overflow-hidden bg-black group lg:aspect-auto lg:min-h-0 lg:flex-1 ${videoStyles.container} ${isMobileFullscreen ? videoStyles.mobileFullscreen : ''}`}
           >
+            <div className={videoStyles.player}>
             {currentVideo ? (
               isVideoLocked ? (
                 /* Giao diện hiển thị khi Video bị khóa */
@@ -413,9 +463,10 @@ export default function LessonClientView({
                     type="button"
                     onClick={toggleFullscreen}
                     className="absolute bottom-3 right-3 z-30 p-2 text-white bg-black/60 hover:bg-black/90 rounded-md transition-all pointer-events-auto"
-                    title={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
+                    aria-label={isFullscreen || isMobileFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
+                    title={isFullscreen || isMobileFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
                   >
-                    {isFullscreen ? (
+                    {isFullscreen || isMobileFullscreen ? (
                       <Minimize className="size-4" />
                     ) : (
                       <Maximize className="size-4" />
@@ -442,6 +493,7 @@ export default function LessonClientView({
                 No video
               </div>
             )}
+            </div>
           </div>
 <div className="flex shrink-0 items-center gap-2 border-t border-slate-800/80 bg-[#0D121F] px-4 py-2 text-xs text-slate-400">
   <Clapperboard className="size-3.5 text-amber-400" />

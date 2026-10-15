@@ -1,0 +1,34 @@
+.player {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.container:fullscreen {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+}
+
+.container.mobileFullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100dvw;
+  height: 100dvh;
+  aspect-ratio: auto;
+}
+
+/* Keep the iframe and all its controls together in landscape when native
+   orientation locking is unavailable or the phone is locked in portrait. */
+@media (pointer: coarse) and (orientation: portrait) {
+  .container:fullscreen .player,
+  .mobileFullscreen .player {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 100dvh;
+    height: 100dvw;
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+}

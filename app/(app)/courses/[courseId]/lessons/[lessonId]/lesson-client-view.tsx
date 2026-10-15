@@ -395,7 +395,7 @@ export default function LessonClientView({
 
                   {/* Lớp phủ che YouTube UI */}
                   <div
-                    className="absolute top-0 left-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
+                    className="absolute top-0 left-0 right-[170px] h-16 z-20 bg-transparent pointer-events-auto cursor-default"
                     onClick={(e) => e.stopPropagation()}
                   />
 

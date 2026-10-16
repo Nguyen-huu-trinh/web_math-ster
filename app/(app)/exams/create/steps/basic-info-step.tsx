@@ -118,6 +118,7 @@ const toggleSelectAll = () => {
   <Label>KHÓA HỌC</Label>
 
   <Select
+    items={courses.map((course) => ({ value: course.id, label: course.name }))}
     value={form.course_id || undefined}
     onValueChange={(value) =>
       setForm((prev) => ({
@@ -160,6 +161,10 @@ const toggleSelectAll = () => {
             <Label>DANH MỤC</Label>
 
             <Select
+              items={[
+                { value: "PERIODIC", label: "Kiểm tra định kỳ" },
+                { value: "ATTENDANCE", label: "Điểm danh" },
+              ]}
               value={form.category}
               onValueChange={(value) =>
                 setForm({

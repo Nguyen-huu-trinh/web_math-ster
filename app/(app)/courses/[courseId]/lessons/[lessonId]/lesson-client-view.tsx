@@ -236,12 +236,13 @@ export default function LessonClientView({
       return;
     }
     if (mobile && document.fullscreenElement === container) {
-      const orientation = screen.orientation as ScreenOrientation & {
+      const orientation = screen.orientation as {
         lock?: (orientation: 'landscape') => Promise<void>;
+        unlock: () => void;
       };
       try {
-        await orientation?.lock?.('landscape');
-        if (orientation?.lock) {
+        if (typeof orientation?.lock === 'function') {
+          await orientation.lock('landscape');
           if (document.fullscreenElement === container) orientationLockedRef.current = true;
           else orientation.unlock();
         }

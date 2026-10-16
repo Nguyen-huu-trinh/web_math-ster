@@ -1,5 +1,6 @@
 "use client";
 import { toast } from "sonner";
+import "./answers.css";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +25,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 
 import {
@@ -109,25 +109,6 @@ function formatDuration(
 
   return `${remainingSeconds} giây`;
 }
-function getDurationSeconds(
-  startedAt: string | null,
-  submittedAt: string | null
-) {
-  if (!startedAt || !submittedAt) {
-    return 0;
-  }
-
-  return Math.max(
-    0,
-    Math.floor(
-      (
-        new Date(submittedAt).getTime() -
-        new Date(startedAt).getTime()
-      ) / 1000
-    )
-  );
-}
-
 function isOverdue(
   attempt: ExamAttemptStudent,
   examDurationDays: number | null,
@@ -215,6 +196,14 @@ const submittedCount = useMemo(
     ).length,
   [attempts]
 );
+
+const passedCount = attempts.filter((item) => item.id !== null && item.is_passed === true).length;
+const failedCount = attempts.filter((item) => item.id !== null && item.is_passed === false).length;
+const notSubmittedCount = attempts.length - submittedCount;
+const passedPercentage = submittedCount ? Math.round(passedCount / submittedCount * 100) : 0;
+const highestScore = submittedCount
+  ? Math.max(...attempts.filter((item) => item.id !== null).map((item) => Number(item.score ?? 0)))
+  : 0;
 
 const filteredAttempts = useMemo(() => {
   switch (statusFilter) {
@@ -404,7 +393,7 @@ async function deleteAttempt(
   if (isLoading) {
     return (
       <div className="p-8">
-        Đang húc . . . 
+        Đang tải bài làm…
       </div>
     );
   }
@@ -424,218 +413,74 @@ async function deleteAttempt(
   }
 
   return (
-    <div className="space-y-6">
-
-      {/* HEADER */}
-
-      <div className="flex items-center gap-3">
-
-        <Link href="/exams">
-
-          <button
-            type="button"
-            className="
-              flex
-              size-9
-              items-center
-              justify-center
-              rounded-lg
-              border
-              hover:bg-accent
-            "
-          >
-            <ArrowLeft className="size-4" />
-          </button>
-
+    <div className="exam-answers space-y-7">
+      <div className="flex items-center gap-4">
+        <Link href="/exams" aria-label="Quay lại quản lý đề thi" className="flex size-12 shrink-0 items-center justify-center rounded-[20px] border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-100">
+          <ArrowLeft className="size-5" />
         </Link>
-
         <div>
-
-          <h1 className="text-3xl font-bold">
-            Bài làm học sinh
-          </h1>
-
-          <p className="mt-1 text-lg font-semibold text-primary">
-              {examTitle}
-            </p>
-
-          <p className="mt-1 text-muted-foreground">
-            Danh sách học sinh đã nộp bài kiểm tra
-          </p>
-
+          <Badge className="mb-1.5 rounded-lg border-amber-200 bg-amber-50 px-2.5 py-1 font-bold text-amber-700">
+            {category === "PERIODIC" ? "Định kỳ (KTĐK)" : category === "ATTENDANCE" ? "Điểm danh (BTDD)" : "Bài kiểm tra"}
+          </Badge>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">Bài Làm Học Sinh: {examTitle}</h1>
         </div>
-
       </div>
 
-      {/* SUMMARY */}
-
-      <div className="grid gap-4 sm:grid-cols-2">
-
-        <Card>
-
-          <CardContent className="flex items-center gap-3 p-5">
-
-            <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Users className="size-5" />
-            </div>
-
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Card className="answers-summary">
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="summary-icon border-slate-900 bg-slate-900 text-amber-400"><Users className="size-6" /></div>
             <div>
-
-              <p className="text-sm text-muted-foreground">
-                Đã nộp bài
-              </p>
-
-              <p className="text-2xl font-bold">
-                {submittedCount}
-              </p>
-
+              <p className="summary-label">Đã nộp bài</p>
+              <p className="summary-value text-slate-900">{submittedCount} <span className="text-sm font-bold text-slate-400">/ {attempts.length} HS</span></p>
             </div>
-
           </CardContent>
-
         </Card>
-
-        <Card>
-
-          <CardContent className="flex items-center gap-3 p-5">
-
-            <div className="flex size-10 items-center justify-center rounded-lg bg-yellow-500/10 text-yellow-600">
-              <Trophy className="size-5" />
-            </div>
-
+        <Card className="answers-summary">
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="summary-icon border-emerald-200 bg-emerald-50 text-emerald-600"><CheckCircle2 className="size-6" /></div>
             <div>
-
-              <p className="text-sm text-muted-foreground">
-                Điểm cao nhất
-              </p>
-
-              <p className="text-2xl font-bold">
-
-            {submittedCount
-              ? Math.max(
-                  ...attempts
-                    .filter(
-                      (item) => item.id !== null
-                    )
-                    .map(
-                      (item) =>
-                        Number(
-                          item.score ?? 0
-                        )
-                    )
-                )
-              : 0}
-
-              </p>
-
+              <p className="summary-label">Đạt chuẩn</p>
+              <p className="summary-value text-emerald-700">{passedCount} <span className="text-base font-bold text-emerald-600">({passedPercentage}%)</span></p>
             </div>
-
           </CardContent>
-
         </Card>
-
-        {/* <Card>
-
-          <CardContent className="flex items-center gap-3 p-5">
-
-            <div className="flex size-10 items-center justify-center rounded-lg bg-green-500/10 text-green-600">
-              <Clock className="size-5" />
-            </div>
-
+        <Card className="answers-summary">
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="summary-icon border-amber-200 bg-amber-50 text-amber-600"><Trophy className="size-6" /></div>
             <div>
-
-              <p className="text-sm text-muted-foreground">
-                Thời gian trung bình
-              </p>
-
-              <p className="text-2xl font-bold">
-
-                {attempts.length
-                  ? formatDuration(
-                        null,
-                        new Date(
-                            Date.now() +
-                            (
-                                attempts.reduce(
-                                (sum, item) =>
-                                    sum +
-                                    getDurationSeconds(
-                                    item.started_at,
-                                    item.submitted_at
-                                    ),
-                                0
-                                ) /
-                                attempts.length
-                            ) *
-                                1000
-                        ).toISOString()
-                        )
-                  : "—"}
-
-              </p>
-
+              <p className="summary-label">Điểm cao nhất</p>
+              <p className="summary-value text-slate-900">{highestScore.toFixed(1)}</p>
             </div>
-
           </CardContent>
-
-        </Card> */}
-
+        </Card>
+        <Card className="answers-summary">
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="summary-icon border-rose-200 bg-rose-50 text-rose-500"><Clock className="size-6" /></div>
+            <div>
+              <p className="summary-label">Chưa nộp bài</p>
+              <p className="summary-value text-rose-600">{notSubmittedCount} <span className="text-sm font-bold text-rose-500">cần đôn đốc</span></p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* TABLE */}
-
-      <Card>
-<CardHeader>
-
-  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-
-  <CardTitle>
-    Danh sách bài làm
-  </CardTitle>
-
-  <div className="flex flex-wrap items-center gap-2">
-
-    {/* BỘ LỌC TRẠNG THÁI */}
-    <select
-      value={statusFilter}
-      onChange={(e) =>
-        setStatusFilter(
-          e.target.value as
-            | "all"
-            | "passed"
-            | "failed"
-            | "not_started"
-        )
-      }
-      className="
-        h-9
-        rounded-md
-        border
-        bg-background
-        px-3
-        text-sm
-        outline-none
-        focus:ring-2
-        focus:ring-primary/30
-      "
-    >
-      <option value="all">
-        Tất cả
-      </option>
-
-      <option value="passed">
-        Đạt
-      </option>
-
-      <option value="failed">
-        Chưa đạt
-      </option>
-
-      <option value="not_started">
-        Chưa làm
-      </option>
-    </select>
-
+      <Card className="answers-table gap-0 rounded-[30px] bg-white py-0 shadow-none">
+        <CardHeader className="px-5 py-5 sm:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Lọc trạng thái bài làm">
+              {([
+                { value: "all", label: `Tất cả (${attempts.length})` },
+                { value: "passed", label: `Đạt (${passedCount})` },
+                { value: "failed", label: `Chưa đạt (${failedCount})` },
+                { value: "not_started", label: `Chưa nộp (${notSubmittedCount})` },
+              ] as const).map((filter) => (
+                <button key={filter.value} type="button" data-filter={filter.value} aria-pressed={statusFilter === filter.value} onClick={() => setStatusFilter(filter.value)} className="answers-filter rounded-2xl px-4 py-2.5 text-sm font-bold transition-colors">
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
     {/* SẮP XẾP */}
     <select
       value={sortBy}
@@ -660,7 +505,7 @@ async function deleteAttempt(
       "
     >
       <option value="student_code">
-        Mã học sinh
+        Sắp xếp: Mã học sinh
       </option>
 
       <option value="score_desc">
@@ -678,7 +523,7 @@ async function deleteAttempt(
 
 </CardHeader>
 
-        <CardContent>
+        <CardContent className="p-0">
 
           {sortedAttempts.length === 0 ? (
 
@@ -687,11 +532,11 @@ async function deleteAttempt(
               <Users className="mx-auto size-10 text-muted-foreground/40" />
 
               <p className="mt-3 font-medium">
-                Chưa có học sinh nào nộp bài
+                Không có học sinh phù hợp với bộ lọc
               </p>
 
               <p className="mt-1 text-sm text-muted-foreground">
-                Danh sách sẽ xuất hiện khi học sinh hoàn thành bài kiểm tra.
+                Hãy chọn trạng thái khác để xem danh sách bài làm.
               </p>
 
             </div>
@@ -700,7 +545,7 @@ async function deleteAttempt(
 
             <div className="overflow-x-auto">
 
-              <Table>
+              <Table className="min-w-[1100px]">
 
                 <TableHeader>
 
@@ -735,7 +580,8 @@ async function deleteAttempt(
 
                     <TableHead>
                       Vào lớp
-                    </TableHead>                    
+                    </TableHead>
+                    <TableHead className="text-right">Thao tác</TableHead>
 
                   </TableRow>
 
@@ -748,6 +594,8 @@ async function deleteAttempt(
 
                     <TableRow
                       key={attempt.student_id}
+                      data-submitted={attempt.id !== null}
+                      data-overdue={isOverdue(attempt, examDurationDays, category)}
                       className={
                         isOverdue(
                           attempt,
@@ -771,7 +619,7 @@ async function deleteAttempt(
 
                         <TableCell>
 
-                          <span className="font-mono font-semibold text-primary">
+                          <span className="student-code">
                             {attempt.student_code}
                           </span>
 
@@ -779,7 +627,7 @@ async function deleteAttempt(
 
                         <TableCell>
 
-                          <span className="font-medium">
+                          <span className="font-extrabold">
                             {attempt.full_name}
                           </span>
 
@@ -787,7 +635,7 @@ async function deleteAttempt(
 
                         <TableCell>
 
-                          <span className="font-bold">
+                          <span className={attempt.is_passed ? "text-lg font-extrabold text-emerald-700" : "text-lg font-extrabold"}>
                             {attempt.score ??
                               "—"}
                           </span>
@@ -823,7 +671,7 @@ async function deleteAttempt(
 
                           {attempt.is_passed === true ? (
 
-                            <Badge className="gap-1">
+                            <Badge className="gap-1 rounded-lg border-emerald-200 bg-emerald-50 px-2.5 py-1 font-extrabold text-emerald-700">
 
                               <CheckCircle2 className="size-3" />
 
@@ -835,7 +683,7 @@ async function deleteAttempt(
 
                             <Badge
                               variant="destructive"
-                              className="gap-1"
+                              className="gap-1 rounded-lg border-rose-200 bg-rose-50 px-2.5 py-1 font-extrabold text-rose-700"
                             >
 
                               <XCircle className="size-3" />
@@ -846,8 +694,8 @@ async function deleteAttempt(
 
                           ) : (
 
-                            <Badge variant="secondary">
-                              —
+                            <Badge variant="secondary" className="rounded-lg border-transparent bg-slate-100 px-2.5 py-1 font-bold text-slate-500">
+                              {attempt.id === null ? "Chưa nộp" : "—"}
                             </Badge>
 
                           )}
@@ -868,7 +716,7 @@ async function deleteAttempt(
                             type="button"
                             size="icon"
                             variant="outline"
-                            className="h-7 w-7 p-0"
+                            className="size-9 rounded-xl border-slate-200 bg-white p-0 text-slate-700 shadow-none hover:bg-slate-100"
                             disabled={
                               adjustingAttemptId === attempt.student_id
                             }
@@ -888,7 +736,7 @@ async function deleteAttempt(
                             type="button"
                             size="icon"
                             variant="outline"
-                            className="h-7 w-7 p-0"
+                            className="size-9 rounded-xl border-slate-200 bg-white p-0 text-slate-700 shadow-none hover:bg-slate-100"
                             disabled={
                               adjustingAttemptId === attempt.student_id
                             }
@@ -907,7 +755,8 @@ async function deleteAttempt(
                           <Button
                             type="button"
                             size="icon"
-                            variant="destructive"
+                            variant="outline"
+                            className="size-9 rounded-xl border-rose-200 bg-white text-rose-500 shadow-none hover:bg-rose-50 hover:text-rose-600"
                             disabled={
                               !attempt.id ||
                               deletingAttemptId === attempt.id

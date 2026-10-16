@@ -91,11 +91,11 @@ export function StudentExamHistory({ studentId, exams }: Props) {
     });
 
     return (
-        <div className="rounded-xl border bg-card">
+        <div className="student-history rounded-[26px] border border-slate-200 bg-white">
             {/* HEADER METADATA & 3 NÚT BỘ LỌC */}
             <div className="flex flex-col gap-4 border-b p-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h2 className="text-lg font-semibold">Bài kiểm tra</h2>
+                    <h2 className="text-lg font-extrabold text-slate-900">Tiến Độ & Lịch Sử Làm Bài</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
                         Lịch sử các bài kiểm tra và lượt làm của học sinh.
                     </p>
@@ -107,7 +107,7 @@ export function StudentExamHistory({ studentId, exams }: Props) {
                         type="button"
                         variant={filterCategory === "ALL" ? "default" : "ghost"}
                         size="sm"
-                        className="h-8 text-xs font-medium"
+                        className={`h-8 rounded-lg text-xs font-bold ${filterCategory === "ALL" ? "bg-slate-900 text-white hover:bg-slate-800" : "text-slate-500"}`}
                         onClick={() => setFilterCategory("ALL")}
                     >
                         Tất cả
@@ -116,7 +116,7 @@ export function StudentExamHistory({ studentId, exams }: Props) {
                         type="button"
                         variant={filterCategory === "PERIODIC" ? "default" : "ghost"}
                         size="sm"
-                        className="h-8 text-xs font-medium"
+                        className={`h-8 rounded-lg text-xs font-bold ${filterCategory === "PERIODIC" ? "bg-slate-900 text-white hover:bg-slate-800" : "text-slate-500"}`}
                         onClick={() => setFilterCategory("PERIODIC")}
                     >
                         Đề định kỳ
@@ -125,7 +125,7 @@ export function StudentExamHistory({ studentId, exams }: Props) {
                         type="button"
                         variant={filterCategory === "ATTENDANCE" ? "default" : "ghost"}
                         size="sm"
-                        className="h-8 text-xs font-medium"
+                        className={`h-8 rounded-lg text-xs font-bold ${filterCategory === "ATTENDANCE" ? "bg-slate-900 text-white hover:bg-slate-800" : "text-slate-500"}`}
                         onClick={() => setFilterCategory("ATTENDANCE")}
                     >
                         Đề điểm danh
@@ -149,7 +149,7 @@ export function StudentExamHistory({ studentId, exams }: Props) {
                                 <th className="px-5 py-3 text-center font-medium">Điểm</th>
                                 <th className="px-5 py-3 text-center font-medium">Thời gian làm bài</th>
                                 <th className="px-5 py-3 text-center font-medium">Thời điểm nộp bài</th>
-                                <th className="w-24 px-3 py-3 text-center font-medium">Action</th>
+                                <th className="w-24 px-3 py-3 text-center font-medium">Thao tác</th>
                             </tr>
                         </thead>
 
@@ -176,27 +176,27 @@ export function StudentExamHistory({ studentId, exams }: Props) {
                                     >
                                         <td className="px-5 py-4">
                                             <div className="min-w-0">
-                                                <p className="font-medium">{exam.title}</p>
+                                                <p className="font-bold text-slate-900">{exam.title}</p>
                                             </div>
                                         </td>
 
                                         <td className="px-5 py-4 text-center">
-                                            <Badge variant="outline">
+                                            <Badge variant="outline" className={exam.category === "PERIODIC" ? "rounded-md border-amber-400 bg-amber-400 font-bold text-slate-900" : "rounded-md border-transparent bg-slate-100 font-bold text-slate-600"}>
                                                 {formatCategory(exam.category)}
                                             </Badge>
                                         </td>
 
                                         <td className="px-5 py-4 text-center">
                                             {status === "passed" ? (
-                                                <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+                                                <Badge className="rounded-md border-emerald-200 bg-emerald-50 font-bold text-emerald-700">
                                                     Đạt
                                                 </Badge>
                                             ) : status === "failed" ? (
-                                                <Badge variant="destructive">
+                                                <Badge variant="destructive" className="rounded-md border-rose-200 bg-rose-50 font-bold text-rose-600">
                                                     Chưa đạt
                                                 </Badge>
                                             ) : (
-                                                <Badge variant="secondary">
+                                                <Badge variant="secondary" className="rounded-md border-amber-200 bg-amber-50 font-bold text-amber-700">
                                                     Chưa làm
                                                 </Badge>
                                             )}

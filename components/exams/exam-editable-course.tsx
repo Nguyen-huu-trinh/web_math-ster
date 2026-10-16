@@ -11,16 +11,19 @@ import type { Exam } from "@/types/exam";
 export function ExamEditableCourse({ exam }: { exam: Exam }) {
   const [editing, setEditing] = useState(false);
   const name = exam.courses?.name;
+  const courseLabel = name?.split("-")[0].trim();
+  const courseCode = courseLabel?.toUpperCase().match(/^(?:KHÓA\s+)?([STER])$/)?.[1];
 
   if (editing) return <CourseEditor exam={exam} onClose={() => setEditing(false)} />;
 
   return <button
     type="button"
+    data-course-code={courseCode}
     className="min-h-9 rounded px-2 text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
     aria-label={`Sửa khóa học của ${exam.title}`}
     title={name ? `${name} — Bấm để sửa` : "Bấm để gắn khóa học"}
     onClick={() => setEditing(true)}
-  >{name ? name.split("-")[0].trim() : <span className="text-muted-foreground">Chưa gắn khóa học</span>}</button>;
+  >{name ? courseLabel : <span className="text-muted-foreground">Chưa gắn khóa học</span>}</button>;
 }
 
 function CourseEditor({ exam, onClose }: { exam: Exam; onClose: () => void }) {

@@ -1,18 +1,13 @@
 "use client";
 
+import { getStudentAvatarUrl as getAvatarUrl } from "@/lib/avatar";
+
 import { useMemo, useState } from "react";
-import { MoreHorizontal, Eye, Ban, Trash2, UserCheck, UserX, Search } from "lucide-react";
+import { MoreVertical, Zap, Eye, Ban, Trash2, UserCheck, UserX, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEnableTeacherStudent } from "@/hooks/use-enable-teacher-student";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useUpdateTeacherStudentFinancial } from "@/hooks/use-update-teacher-student-financial";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +34,11 @@ interface Props {
 
 export function TeacherStudentsTable({ students, courseId }: Props) {
   const router = useRouter();
-  
+  const maxPoints = useMemo(
+    () => students.reduce((highest, student) => Math.max(highest, student.points), 0),
+    [students]
+  );
+
   // State tìm kiếm & lọc
   const [searchTerm, setSearchTerm] = useState("");
  // Mặc định chọn "Đang hoạt động" khi vào trang
@@ -164,14 +163,7 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
       .join("");
   }
 
-  function getAvatarUrl(url?: string | null) {
-    if (!url) return undefined;
-    const match = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
-    if (match?.[1]) {
-      return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
-    }
-    return url;
-  }
+
 
   function handleDisable(student: TeacherStudentListItem) {
     if (!student.isActive) return;
@@ -219,13 +211,14 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
   }
 
   return (
-    <Card>
+    <Card className="students-table">
       {/* Thanh Tìm kiếm & Lọc */}
 {/* Thanh Tìm kiếm & Bộ lọc bộ pill button */}
       <CardHeader className="border-b p-4">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex w-full flex-wrap items-center gap-3 xl:w-auto">
           {/* Ô tìm kiếm */}
-          <div className="relative flex-1 w-full max-w-sm">
+          <div className="relative w-full sm:w-80 lg:w-96">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Tìm theo tên hoặc mã HS..."
@@ -235,6 +228,22 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
             />
           </div>
 
+          <select aria-label="Sắp xếp học sinh" value={sortKey ? `${sortKey}:${sortDirection}` : "default"} onChange={(event) => {
+            if (event.target.value === "default") { setSortKey(null); return; }
+            const [key, direction] = event.target.value.split(":");
+            setSortKey(key as SortKey); setSortDirection(direction as SortDirection);
+          }} className="student-sort">
+            <option value="default">Sắp xếp: Mặc định</option>
+            <option value="studentCode:asc">Mã học sinh: Tăng dần</option>
+            <option value="studentCode:desc">Mã học sinh: Giảm dần</option>
+            <option value="points:desc">Độ trâu: Cao → thấp</option>
+            <option value="points:asc">Độ trâu: Thấp → cao</option>
+            <option value="rewardMoney:desc">Quỹ thưởng: Cao → thấp</option>
+            <option value="rewardMoney:asc">Quỹ thưởng: Thấp → cao</option>
+            <option value="averageScore:desc">ĐTB: Cao → thấp</option>
+            <option value="averageScore:asc">ĐTB: Thấp → cao</option>
+          </select>
+          </div>
           {/* Bộ lọc dạng Pill Tabs */}
           <div className="inline-flex items-center gap-1 rounded-full border bg-slate-50/80 p-1 text-sm font-medium">
             <button
@@ -242,29 +251,29 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
               onClick={() => setStatusFilter("active")}
               className={`rounded-full px-4 py-1.5 transition-all duration-200 ${
                 statusFilter === "active"
-                  ? "bg-[#FACC15] text-slate-900 shadow-sm font-semibold"
+                  ? "bg-slate-900 text-white shadow-sm font-bold"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
               }`}
             >
-              Đang hoạt động
+              Đang hoạt động ({students.filter((student) => student.isActive).length})
             </button>
             <button
               type="button"
               onClick={() => setStatusFilter("inactive")}
               className={`rounded-full px-4 py-1.5 transition-all duration-200 ${
                 statusFilter === "inactive"
-                  ? "bg-[#FACC15] text-slate-900 shadow-sm font-semibold"
+                  ? "bg-slate-900 text-white shadow-sm font-bold"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
               }`}
             >
-              Đã vô hiệu hóa
+              Đã vô hiệu hóa ({students.filter((student) => !student.isActive).length})
             </button>
             <button
               type="button"
               onClick={() => setStatusFilter("all")}
               className={`rounded-full px-4 py-1.5 transition-all duration-200 ${
                 statusFilter === "all"
-                  ? "bg-[#FACC15] text-slate-900 shadow-sm font-semibold"
+                  ? "bg-slate-900 text-white shadow-sm font-bold"
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
               }`}
             >
@@ -337,7 +346,7 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
                     )}
                   </button>
                 </th>
-                <th className="w-12 px-3 py-3" />
+                <th className="w-12 px-3 py-3">Thao tác</th>
               </tr>
             </thead>
 
@@ -352,6 +361,7 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
                 filteredAndSortedStudents.map((student) => (
                   <tr
                     key={student.id}
+                    data-low-hp={student.isActive && student.points < 50}
                     className="border-b last:border-0 cursor-pointer hover:bg-muted/30"
                     onClick={() =>
                       router.push(
@@ -363,7 +373,7 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
                   >
                     {/* Code */}
                     <td className="px-5 py-4">
-                      <span className="font-mono text-sm">
+                      <span className="student-list-code">
                         {student.studentCode}
                       </span>
                     </td>
@@ -371,17 +381,17 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
                     {/* Name & Avatar */}
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9 shrink-0 border">
-                          <AvatarImage
+                        <Avatar className="size-10 shrink-0 border border-slate-200">
+                          <AvatarImage referrerPolicy="no-referrer"
                             src={getAvatarUrl(student.avatarUrl)}
                             alt={student.fullName}
                             className="object-cover"
                           />
-                          <AvatarFallback className="text-sm font-semibold">
+                          <AvatarFallback className="bg-slate-900 text-sm font-extrabold text-amber-400">
                             {getInitials(student.fullName)}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="truncate font-medium">
+                        <span className="truncate font-extrabold text-slate-900">
                           {student.fullName}
                         </span>
                       </div>
@@ -427,7 +437,8 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
                             }}
                             className="ml-auto block cursor-pointer rounded-md px-2 py-1 text-sm font-medium hover:bg-muted"
                           >
-                            {student.points.toLocaleString("vi-VN")}
+                            <span className={`flex items-center justify-end gap-1 ${student.isActive && student.points < 50 ? "text-rose-600" : "text-slate-700"}`}><Zap className="size-3.5 text-amber-500" />{student.points.toLocaleString("vi-VN")} <span className="text-[10px] font-bold text-slate-400">HP</span></span>
+                            <span aria-hidden="true" className="mt-1.5 ml-auto block h-1 w-24 overflow-hidden rounded-full bg-slate-100"><span className={`block h-full rounded-full ${student.points < 50 ? "bg-rose-500" : student.points < 500 ? "bg-amber-500" : "bg-emerald-500"}`} style={{ width: `${maxPoints > 0 ? Math.max(0, Math.min(100, student.points / maxPoints * 100)) : 0}%` }} /></span>
                           </button>
                         </div>
                       )}
@@ -467,7 +478,7 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
                             }}
                             className="ml-auto block cursor-pointer rounded-md px-2 py-1 text-sm font-medium hover:bg-muted"
                           >
-                            {student.rewardMoney.toLocaleString("vi-VN")}
+                            <span className={student.rewardMoney > 0 ? "font-mono font-bold text-emerald-700" : "font-mono font-bold text-slate-400"}>{student.rewardMoney.toLocaleString("vi-VN")}đ</span>
                           </button>
                         </div>
                       )}
@@ -479,8 +490,8 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
                         variant="secondary"
                         className={
                           student.isActive
-                            ? ""
-                            : "border-zinc-300 bg-zinc-200 text-zinc-700"
+                            ? student.averageScore >= 7 ? "rounded-lg border-emerald-200 bg-emerald-50 font-extrabold text-emerald-700" : "rounded-lg border-rose-200 bg-rose-50 font-extrabold text-rose-600"
+                            : "rounded-lg border-zinc-300 bg-zinc-200 text-zinc-700"
                         }
                       >
                         {student.averageScore.toFixed(2)}
@@ -497,7 +508,7 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
                           className="inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <MoreHorizontal className="h-4 w-4" />
+                          <MoreVertical className="h-4 w-4" />
                           <span className="sr-only">Mở menu</span>
                         </DropdownMenuTrigger>
 

@@ -1,12 +1,14 @@
 "use client";
 
+import { getStudentAvatarUrl as getAvatarUrl } from "@/lib/avatar";
+
 import {
     useEffect,
     useState,
 } from "react";
 
 import {
-    Target,
+    Target, Zap,
 } from "lucide-react";
 
 import {
@@ -15,7 +17,6 @@ import {
     AvatarImage,
 } from "@/components/ui/avatar";
 
-import { Button } from "@/components/ui/button";
 
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -128,19 +129,7 @@ export function StudentProfileCard({
             )
             .join("");
     }
-function getAvatarUrl(url?: string | null) {
-    if (!url) return undefined;
 
-    const match = url.match(
-        /drive\.google\.com\/file\/d\/([^/]+)/
-    );
-
-    if (match?.[1]) {
-        return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
-    }
-
-    return url;
-}
 
     function handleCancel() {
         if (updateStudent.isPending) return;
@@ -245,40 +234,16 @@ function getAvatarUrl(url?: string | null) {
     }
 }
 
-        
+
 
     return (
-        <div className="rounded-xl border bg-card">
-            {/* HEADER */}
-            <div className="flex flex-col gap-5 border-b p-6 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-4">
-                    <Avatar className="h-20 w-20">
-                        <AvatarImage
-                            src={getAvatarUrl(profile.avatarUrl)}
-                            alt={profile.fullName}
-                            className="object-cover"
-                        />
-
-                        <AvatarFallback className="text-xl">
-                            {getInitials(
-                                profile.fullName
-                            )}
-                        </AvatarFallback>
-                    </Avatar>
-
-                    <div>
-                        <h2 className="text-3xl font-semibold">
-                            {profile.fullName}
-                        </h2>
-
-                  
-                    </div>
-                </div>
-
+        <div className="space-y-6">
+          <section className="student-profile-panel">
+            <div className="mb-6 flex items-center gap-4 border-b border-slate-100 pb-5">
+              <Avatar className="size-20 shrink-0 rounded-2xl border-2 border-amber-400"><AvatarImage referrerPolicy="no-referrer" src={getAvatarUrl(profile.avatarUrl)} alt={profile.fullName} className="rounded-2xl object-cover" /><AvatarFallback className="rounded-2xl bg-slate-900 text-xl font-extrabold text-amber-400">{getInitials(profile.fullName)}</AvatarFallback></Avatar>
+              <div className="min-w-0"><div className="mb-2 flex flex-wrap gap-2"><span className="rounded-md bg-slate-900 px-2 py-1 font-mono text-xs font-bold text-amber-400">{profile.studentCode}</span><span className={`rounded-md border px-2 py-1 text-xs font-bold ${profile.isActive ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-600"}`}>{profile.isActive ? "Đang học" : "Đã khóa"}</span></div><h2 className="text-xl font-extrabold tracking-tight text-slate-900">{profile.fullName}</h2><p className="mt-1 text-xs font-medium text-slate-400">Ngày vào lớp: {formatJoinedDate(profile.created_at)}</p></div>
             </div>
-
-            {/* INFORMATION */}
-            <div className="grid gap-6 p-6 md:grid-cols-2">
+            <div className="space-y-5">
                 {/* EMAIL */}
                 <div className="space-y-2">
                     <Label>
@@ -290,10 +255,10 @@ function getAvatarUrl(url?: string | null) {
                     </div>
                 </div>
 
-                {/* STUDENT CODE */}
+                {/* STUDENT CODE
                 <div className="space-y-2">
                     <Label>
-                        Student Code
+                        Mã học sinh
                     </Label>
 
                     <div className="rounded-md border bg-muted/30 px-3 py-2 font-mono text-sm">
@@ -301,12 +266,12 @@ function getAvatarUrl(url?: string | null) {
                             profile.studentCode
                         }
                     </div>
-                </div>
+                </div> */}
 
                 {/* PERSONAL EMAIL */}
                 <div className="space-y-2">
                     <Label>
-                        Personal Email
+                        Email cá nhân
                     </Label>
 
                     {editingField === "personalEmail" ? (
@@ -332,7 +297,7 @@ function getAvatarUrl(url?: string | null) {
                                 }}
                             />
 
-                            
+
                         </div>
                     ) : (
                         <div
@@ -352,7 +317,7 @@ function getAvatarUrl(url?: string | null) {
                 {/* LEARNING GOAL */}
                 <div className="space-y-2">
                     <Label>
-                        Learning Goal
+                        Mục tiêu cày cuốc
                     </Label>
 
                     <div className="flex min-h-10 items-center gap-2 rounded-md border bg-muted/30 px-3 py-2 text-sm">
@@ -363,10 +328,51 @@ function getAvatarUrl(url?: string | null) {
                     </div>
                 </div>
 
+                {/* JOINED DATE */}
+                <div className="space-y-2">
+                    <Label htmlFor="student-joined-date">Ngày vào lớp</Label>
+                    {editingField === "joinedDate" ? (
+                        <Input
+                            id="student-joined-date"
+                            type="date"
+                            value={joinedDate}
+                            disabled={updateStudent.isPending}
+                            onChange={(event) => setJoinedDate(event.target.value)}
+                            autoFocus
+                            onKeyDown={(event) => {
+                                if (event.key === "Enter") {
+                                    event.preventDefault();
+                                    handleSave();
+                                }
+                                if (event.key === "Escape") {
+                                    handleCancel();
+                                }
+                            }}
+                        />
+                    ) : (
+                        <button
+                            id="student-joined-date"
+                            type="button"
+                            className="w-full cursor-pointer rounded-md border bg-muted/30 px-3 py-2 text-left text-sm hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                            disabled={updateStudent.isPending}
+                            onClick={() => {
+                                setJoinedDate(getJoinedDateInput(profile.created_at));
+                                setEditingField("joinedDate");
+                            }}
+                        >
+                            {formatJoinedDate(profile.created_at)}
+                        </button>
+                    )}
+                </div>
+            </div>
+          </section>
+          <section className="student-finance-panel">
+            <h2 className="mb-5 flex items-center gap-2 text-sm font-extrabold uppercase text-amber-400"><Zap className="size-4" />Quản lý máu & học bổng</h2>
+            <div className="space-y-4">
                 {/* POINTS */}
                 <div className="space-y-2">
                     <Label>
-                        Points
+                        Độ trâu hiện tại (HP)
                     </Label>
 
                     {editingField === "points" ? (
@@ -408,7 +414,7 @@ function getAvatarUrl(url?: string | null) {
                 {/* REWARD */}
                 <div className="space-y-2">
                     <Label>
-                        Reward Money
+                        Tiền thưởng tích lũy (VNĐ)
                     </Label>
 
                     {editingField === "rewardMoney" ? (
@@ -448,55 +454,9 @@ function getAvatarUrl(url?: string | null) {
                     )}
                 </div>
 
-                {/* JOINED DATE */}
-                <div className="space-y-2">
-                    <Label htmlFor="student-joined-date">Ngày vào lớp</Label>
-                    {editingField === "joinedDate" ? (
-                        <Input
-                            id="student-joined-date"
-                            type="date"
-                            value={joinedDate}
-                            disabled={updateStudent.isPending}
-                            onChange={(event) => setJoinedDate(event.target.value)}
-                            autoFocus
-                            onKeyDown={(event) => {
-                                if (event.key === "Enter") {
-                                    event.preventDefault();
-                                    handleSave();
-                                }
-                                if (event.key === "Escape") {
-                                    handleCancel();
-                                }
-                            }}
-                        />
-                    ) : (
-                        <button
-                            id="student-joined-date"
-                            type="button"
-                            className="w-full cursor-pointer rounded-md border bg-muted/30 px-3 py-2 text-left text-sm hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                            disabled={updateStudent.isPending}
-                            onClick={() => {
-                                setJoinedDate(getJoinedDateInput(profile.created_at));
-                                setEditingField("joinedDate");
-                            }}
-                        >
-                            {formatJoinedDate(profile.created_at)}
-                        </button>
-                    )}
-                </div>
             </div>
-
-            {editingField && (
-                <div className="flex justify-end gap-2 border-t p-6">
-                    <Button variant="outline" disabled={updateStudent.isPending} onClick={handleCancel}>
-                        Hủy
-                    </Button>
-                    <Button disabled={updateStudent.isPending} onClick={handleSave}>
-                        {updateStudent.isPending ? "Đang lưu..." : "Lưu thay đổi"}
-                    </Button>
-                </div>
-            )}
-
+          </section>
+          <p className="px-2 text-xs text-slate-500">Bấm vào thông tin để sửa. Nhấn Enter để lưu, Esc để hủy.</p>
         </div>
     );
 }

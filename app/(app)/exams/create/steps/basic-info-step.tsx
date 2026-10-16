@@ -1,6 +1,6 @@
 "use client";
 
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useState, ReactNode } from "react";
 import { useCourses } from "@/hooks/use-courses";
 import { useExams } from "@/hooks/use-exams";
 import {
@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/card";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -31,6 +30,8 @@ interface Props {
   selectedPrerequisiteIds: string[];
   setSelectedPrerequisiteIds: Dispatch<SetStateAction<string[]>>;
   currentExamId?: string;
+  structure?: ReactNode;
+  footer?: ReactNode;
 }
 const preventWheelChange = (
   e: React.WheelEvent<HTMLInputElement>
@@ -43,6 +44,8 @@ export function BasicInfoStep({
   selectedPrerequisiteIds,
   setSelectedPrerequisiteIds,
   currentExamId,
+  structure,
+  footer,
 }: Props) {
   const { courses, loading } = useCourses();
   const { data: exams = [], isLoading: examsLoading } = useExams();
@@ -90,13 +93,14 @@ const toggleSelectAll = () => {
 };
 
    return (
-    <Card>
-      <CardContent className="grid gap-6 p-6">
-
+    <div className="grid items-start gap-6 lg:grid-cols-[1.35fr_0.95fr]">
+      <Card className="wizard-panel">
+        <CardContent className="space-y-5 p-6">
+          <h2 className="wizard-section-title">1. Thông tin cơ bản & file PDF</h2>
         {/* Title */}
 
         <div>
-          <Label>Tên đề thi</Label>
+          <Label>TÊN ĐỀ THI</Label>
 
           <Input
             value={form.title}
@@ -109,28 +113,9 @@ const toggleSelectAll = () => {
           />
         </div>
 
-        {/* Description */}
+<div className="grid gap-4 sm:grid-cols-2"><div>
 
-        <div>
-          <Label>Mô tả</Label>
-
-          <Textarea
-            rows={4}
-            value={form.description ?? ""}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                description: e.target.value,
-              })
-            }
-          />
-        </div>
-
-        {/* Course */}
-
-        <div>
-
-  <Label>Khóa học</Label>
+  <Label>KHÓA HỌC</Label>
 
   <Select
     value={form.course_id || undefined}
@@ -147,7 +132,7 @@ const toggleSelectAll = () => {
       <SelectValue
         placeholder={
           loading
-            ? "Đang húc . . . "
+            ? "Đang tải khóa học…"
             : "Chọn khóa học"
         }
       />
@@ -171,17 +156,73 @@ const toggleSelectAll = () => {
 
   </Select>
 
-</div>
+</div>          <div>
+            <Label>DANH MỤC</Label>
+
+            <Select
+              value={form.category}
+              onValueChange={(value) =>
+                setForm({
+                  ...form,
+                  category: value as CreateExamDto["category"],
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="PERIODIC">
+                  Kiểm tra định kỳ
+                </SelectItem>
+
+                <SelectItem value="ATTENDANCE">
+                  Điểm danh
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+</div>        {/* Description */}
+
+        <div>
+          <Label>MÔ TẢ</Label>
+
+          <Textarea
+            rows={2}
+            value={form.description ?? ""}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                description: e.target.value,
+              })
+            }
+          />
+        </div>
+
+        {/* PDF URL */}
+
+        <div>
+          <Label>LINK PDF ĐỀ THI</Label>
+
+          <Input
+            placeholder="https://drive.google.com/file/..."
+            value={form.exam_file_url}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                exam_file_url: e.target.value,
+              })
+            }
+          />
+
+        </div>
 
 {/* Prerequisite Exams */}
 
 <div>
-  <Label>Đề thi tiên quyết</Label>
-
-  <p className="mt-1 text-sm text-muted-foreground">
-    Học sinh phải từng nộp bài các đề được chọn trước khi làm đề này.
-    Không yêu cầu phải đạt.
-  </p>
+  <Label>ĐỀ TIÊN QUYẾT (bắt buộc nộp trước)</Label>
 
 <div className="mt-3 flex gap-2">
   <Input
@@ -206,7 +247,7 @@ const toggleSelectAll = () => {
   <div className="mt-3 max-h-64 space-y-2 overflow-y-auto rounded-lg border p-2">
     {examsLoading ? (
       <p className="p-3 text-sm text-muted-foreground">
-        Đang húc . . . 
+        Đang tải đề thi…
       </p>
     ) : filteredExams.length === 0 ? (
       <p className="p-3 text-sm text-muted-foreground">
@@ -223,7 +264,7 @@ const toggleSelectAll = () => {
             onClick={() => togglePrerequisite(exam.id)}
             className={`flex w-full items-center justify-between rounded-md border p-3 text-left transition ${
               selected
-                ? "border-primary bg-muted"
+                ? "border-amber-300 bg-amber-50"
                 : "hover:bg-muted/50"
             }`}
           >
@@ -260,92 +301,16 @@ const toggleSelectAll = () => {
   )}
 </div>
 
-        {/* PDF URL */}
 
-        <div>
-          <Label>Link PDF đề thi</Label>
-
-          <Input
-            placeholder="https://drive.google.com/file/..."
-            value={form.exam_file_url}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                exam_file_url: e.target.value,
-              })
-            }
-          />
-
-          <p className="mt-2 text-xs text-muted-foreground">
-            Dán link Google Drive, OneDrive hoặc đường dẫn PDF công khai.
-          </p>
-        </div>
-
-        {/* Exam Type + Category */}
-
-        <div className="grid grid-cols-2 gap-4">
-
-          <div>
-            <Label>Loại đề</Label>
-
-            <Select
-              value={form.exam_type}
-              onValueChange={(value) =>
-                setForm({
-                  ...form,
-                  exam_type: value as any,
-                })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="MOET">
-                  THPT 2025
-                </SelectItem>
-
-                <SelectItem value="FREE">
-                  Tự do
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label>Danh mục</Label>
-
-            <Select
-              value={form.category}
-              onValueChange={(value) =>
-                setForm({
-                  ...form,
-                  category: value as any,
-                })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="PERIODIC">
-                  Kiểm tra định kỳ
-                </SelectItem>
-
-                <SelectItem value="ATTENDANCE">
-                  Điểm danh
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-        </div>
-
+        </CardContent>
+      </Card>
+      <div className="space-y-6">
+        {structure}
+        <Card className="wizard-panel"><CardContent className="space-y-5 p-6">
+          <h2 className="wizard-section-title">3. Quy định làm bài</h2>
           {/* Duration */}
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
             {/* Thời gian làm bài */}
 
@@ -369,7 +334,7 @@ const toggleSelectAll = () => {
             {/* Số ngày được phép làm */}
 
             <div>
-              <Label>Số ngày được phép làm</Label>
+              <Label>Hạn làm bài</Label>
 
               <Input
                 type="number"
@@ -390,10 +355,6 @@ const toggleSelectAll = () => {
                 }}
                 onWheel={preventWheelChange}
               />
-
-              <p className="mt-1 text-xs text-muted-foreground">
-                Để trống nếu không giới hạn.
-              </p>
             </div>
 
             {/* Số lượt làm */}
@@ -464,7 +425,9 @@ const toggleSelectAll = () => {
 
         </div>
 
-      </CardContent>
-    </Card>
+          {footer}
+        </CardContent></Card>
+      </div>
+    </div>
   );
 }

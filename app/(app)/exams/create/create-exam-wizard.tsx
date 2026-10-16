@@ -3,7 +3,9 @@ import { useState,useEffect, } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import Link from "next/link";
+import { ArrowLeft, ArrowRight, CheckCircle2, ChevronRight } from "lucide-react";
+import "./create-exam.css";
 
 import {
   useCreateExam,
@@ -22,7 +24,6 @@ import {
 
 import { BasicInfoStep } from "./steps/basic-info-step";
 import { QuestionConfigStep } from "./steps/question-config-step";
-import { ScoringStep } from "./steps/scoring-step";
 import { AnswerKeyStep } from "./steps/answer-key-step";
 
 interface Props {
@@ -184,7 +185,7 @@ function updateQuestionConfig(
 }
 
   function next() {
-    setStep((s) => Math.min(4, s + 1));
+    setStep((s) => Math.min(2, s + 1));
   }
 
   function previous() {
@@ -288,109 +289,39 @@ async function submit() {
   }
 }
 
+  const totalQuestions = form.question_config.multipleChoice + form.question_config.trueFalse + form.question_config.shortAnswer;
+  const completedAnswers = form.answer_key.multipleChoice.filter(Boolean).length
+    + form.answer_key.trueFalse.filter((row) => row.length === 4 && row.every(Boolean)).length
+    + form.answer_key.shortAnswer.filter(Boolean).length;
+
   return (
-    <Card>
-
-      <CardContent className="space-y-8 p-6">
-
-        {/* Step */}
-
-        <div className="flex items-center justify-center gap-4">
-
-          {[1, 2, 3, 4].map((value) => (
-
-            <div
-              key={value}
-              className={`flex h-10 w-10 items-center justify-center rounded-full border text-sm font-semibold
-              ${
-                value === step
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-background"
-              }`}
-            >
-              {value}
-            </div>
-
-          ))}
-
+    <div className="create-exam space-y-6">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div className="flex items-center gap-3">
+          {step === 1 ? <Link href="/exams" aria-label="Quay lại danh sách đề" className="wizard-back"><ArrowLeft className="size-4" /></Link> : <button type="button" onClick={previous} aria-label="Quay lại cấu hình đề" className="wizard-back"><ArrowLeft className="size-4" /></button>}
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">{step === 1 ? mode === "edit" ? "Chỉnh Sửa Đề Thi" : "Thiết Lập Đề Thi Mới" : "Thiết Lập Đáp Án Chuẩn OMR"}</h1>
+            <p className="mt-1 text-sm font-medium text-slate-500">{step === 1 ? "Cấu hình thông tin chung, file PDF và điều kiện làm bài." : `Đề thi: ${form.title || "Chưa đặt tên"} • Đã nhập ${completedAnswers}/${totalQuestions} câu`}</p>
+          </div>
         </div>
-
-        {/* Body */}
-
-        {step === 1 && (
-          <BasicInfoStep
-            form={form}
-            setForm={setForm}
-            selectedPrerequisiteIds={selectedPrerequisiteIds}
-            setSelectedPrerequisiteIds={setSelectedPrerequisiteIds}
-            currentExamId={initialData?.id}
-          />
-        )}
-
-        {step === 2 && (
-        <QuestionConfigStep
-          form={form}
-          setForm={setForm}
-          onConfigChange={updateQuestionConfig}
+        <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white p-1.5 text-xs font-bold sm:text-sm" aria-label={`Bước ${step} trên 2`}>
+          {(["Cấu hình đề thi", "Nhập đáp án OMR"] as const).map((label, index) => <div key={label} className={`flex items-center gap-2 rounded-xl px-3 py-2 ${step === index + 1 ? "bg-slate-900 text-white" : "text-slate-500"}`}><span className={`flex size-5 items-center justify-center rounded-full ${step === index + 1 ? "bg-amber-500 text-slate-900" : "bg-slate-100"}`}>{index + 1}</span>{label}{index === 0 && <ChevronRight className="size-3" />}</div>)}
+        </div>
+      </header>
+      {step === 1 ? (
+        <BasicInfoStep form={form} setForm={setForm} selectedPrerequisiteIds={selectedPrerequisiteIds} setSelectedPrerequisiteIds={setSelectedPrerequisiteIds} currentExamId={initialData?.id}
+          structure={<QuestionConfigStep form={form} setForm={setForm} onConfigChange={updateQuestionConfig} />}
+          footer={<Button onClick={next} className="h-11 w-full rounded-2xl bg-slate-900 font-bold text-white hover:bg-slate-800">Tiếp tục: Thiết lập đáp án OMR <ArrowRight className="ml-2 size-4 text-amber-400" /></Button>}
         />
+      ) : (
+        <>
+          <AnswerKeyStep form={form} setForm={setForm} />
+          <div className="flex items-center justify-between gap-3">
+            <Button variant="outline" onClick={previous} className="rounded-xl">Quay lại cấu hình</Button>
+            <Button onClick={submit} disabled={createExam.isPending || updateExam.isPending} className="h-11 rounded-2xl bg-slate-900 px-6 font-bold text-white hover:bg-slate-800"><CheckCircle2 className="mr-2 size-4 text-amber-400" />{mode === "edit" ? updateExam.isPending ? "Đang lưu..." : "Lưu thay đổi" : createExam.isPending ? "Đang tạo..." : "Lưu bộ đáp án & tạo đề"}</Button>
+          </div>
+        </>
       )}
-
-        {step === 3 && (
-          <ScoringStep
-            form={form}
-            setForm={setForm}
-          />
-        )}
-
-        {step === 4 && (
-          <AnswerKeyStep
-            form={form}
-            setForm={setForm}
-          />
-        )}
-
-        {/* Footer */}
-
-        <div className="flex justify-between">
-
-          <Button
-            variant="outline"
-            disabled={step === 1}
-            onClick={previous}
-          >
-            Quay lại
-          </Button>
-
-          {step < 4 ? (
-
-            <Button onClick={next}>
-              Tiếp tục
-            </Button>
-
-          ) : (
-
-            <Button
-              onClick={submit}
-              disabled={
-                createExam.isPending ||
-                updateExam.isPending
-              }
-            >
-              {mode === "edit"
-                ? updateExam.isPending
-                  ? "Đang lưu..."
-                  : "Lưu thay đổi"
-                : createExam.isPending
-                ? "Đang tạo..."
-                : "Tạo đề"}
-            </Button>
-
-          )}
-
-        </div>
-
-      </CardContent>
-
-    </Card>
+    </div>
   );
 }

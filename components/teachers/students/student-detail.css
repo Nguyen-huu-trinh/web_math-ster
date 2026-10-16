@@ -1,0 +1,19 @@
+.student-detail { position: relative; isolation: isolate; color: #334155; }
+.student-detail::before { content: ""; position: fixed; inset: 0; z-index: -1; background: #f8fafc; pointer-events: none; }
+.student-profile-panel { border: 1px solid #e2e8f0; border-radius: 28px; background: white; padding: 24px; }
+.student-detail [data-slot="label"] { font-size: 12px; line-height: 1.5; font-weight: 800; text-transform: uppercase; color: #64748b; }
+.student-profile-panel .space-y-2 > div:not(.flex), .student-profile-panel .space-y-2 > button, .student-profile-panel .space-y-2 > .flex.min-h-10 { border-color: #e2e8f0; border-radius: 14px; background: #f8fafc; font-weight: 600; overflow-wrap: anywhere; }
+.student-detail input { border-color: #e2e8f0; border-radius: 14px; min-height: 40px; box-shadow: none; }
+.student-finance-panel { border: 1px solid #334155; border-radius: 28px; padding: 24px; background: #0f172a; color: #f8fafc; }
+.student-finance-panel .space-y-2 { border: 1px solid #253047; border-radius: 20px; padding: 16px; }
+.student-finance-panel [data-slot="label"] { color: #94a3b8; }
+.student-finance-panel .space-y-2 > div { border-color: #334155; background: #1e293b; border-radius: 14px; color: #34d399; font-size: 18px; font-weight: 800; }
+.student-finance-panel .space-y-2:first-child > div { color: #fbbf24; font-size: 28px; }
+.student-finance-panel input { background: #1e293b; border-color: #475569; color: white; }
+.student-history { overflow: hidden; }
+.student-history table { min-width: 850px; }
+.student-history th { height: 48px; background: #fafcff; color: #94a3b8; font-size: 11px; font-weight: 800; text-transform: uppercase; white-space: nowrap; }
+.student-history td { border-color: #f1f5f9; font-size: 13px; }
+.student-history thead, .student-history tbody { border-color: #f1f5f9; }
+.student-history td:not(:first-child) { white-space: nowrap; }
+@media (max-width: 640px) { .student-profile-panel, .student-finance-panel { padding: 20px; } }

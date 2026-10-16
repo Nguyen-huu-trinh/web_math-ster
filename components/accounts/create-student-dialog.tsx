@@ -1,12 +1,11 @@
 "use client";
 import { toast } from "sonner";
+import { StudentDialogHeader, StudentCourseChoices } from "./student-dialog-parts";
 import { useState } from "react";
 
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 
@@ -19,15 +18,7 @@ import {
 } from "@/components/ui/label";
 
 import {
-  ScrollArea,
-} from "@/components/ui/scroll-area";
-
-import {
-  Checkbox,
-} from "@/components/ui/checkbox";
-
-import {
-  Plus,
+  Plus, Check,
 } from "lucide-react";
 
 interface Course {
@@ -120,123 +111,27 @@ export function CreateStudentDialog({
       open={open}
       onOpenChange={setOpen}
     >
-      <DialogTrigger>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Thêm học sinh
-        </Button>
+      <DialogTrigger
+        render={<Button className="h-11 gap-2 rounded-2xl bg-slate-900 px-5 font-bold text-white hover:bg-slate-800" />}
+      >
+        <Plus className="size-4 text-amber-400" />
+        Thêm học sinh
       </DialogTrigger>
 
-      <DialogContent className="max-w-xl">
-        <DialogTrigger
-        render={<Button />}
-        >
-        Tạo học sinh
-        </DialogTrigger>
-
-        <div className="space-y-5">
-
-          <div className="space-y-2">
-            <Label>
-              Student Code *
-            </Label>
-
-            <Input
-              value={studentCode}
-              onChange={(e) =>
-                setStudentCode(e.target.value)
-              }
-              placeholder="VD: HS0001"
-            />
+      <DialogContent className="student-enrollment-dialog sm:max-w-[640px]" showCloseButton={false}>
+        <StudentDialogHeader />
+        <div className="student-dialog-body space-y-6">
+          <div className="grid gap-4 sm:grid-cols-[0.65fr_1.35fr]">
+            <div className="space-y-2"><Label htmlFor="new-student-code">Mã HS <span className="text-rose-500">*</span></Label><Input id="new-student-code" value={studentCode} onChange={(event) => setStudentCode(event.target.value)} placeholder="MS054" disabled={loading} /></div>
+            <div className="space-y-2"><Label htmlFor="new-student-name">Họ và Tên <span className="text-rose-500">*</span></Label><Input id="new-student-name" value={fullName} onChange={(event) => setFullName(event.target.value)} placeholder="VD: Nguyễn Văn A" disabled={loading} /></div>
           </div>
-
-          <div className="space-y-2">
-            <Label>
-              Full Name *
-            </Label>
-
-            <Input
-              value={fullName}
-              onChange={(e) =>
-                setFullName(e.target.value)
-              }
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>
-              Personal Email
-            </Label>
-
-            <Input
-              value={personalEmail}
-              onChange={(e) =>
-                setPersonalEmail(e.target.value)
-              }
-              placeholder="abc@gmail.com"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>
-              Khóa học
-            </Label>
-
-            <ScrollArea className="h-52 rounded-md border p-3">
-
-              <div className="space-y-3">
-
-                {courses.map((course) => (
-
-                  <div
-                    key={course.id}
-                    className="flex items-center gap-3"
-                  >
-
-                    <Checkbox
-                      checked={selectedCourses.includes(
-                        course.id
-                      )}
-                      onCheckedChange={() =>
-                        toggleCourse(course.id)
-                      }
-                    />
-
-                    <span>
-                      {course.name}
-                    </span>
-
-                  </div>
-
-                ))}
-
-              </div>
-
-            </ScrollArea>
-          </div>
-
-          <div className="flex justify-end gap-3">
-
-            <Button
-              variant="outline"
-              onClick={() => setOpen(false)}
-            >
-              Hủy
-            </Button>
-
-            <Button
-              disabled={loading}
-              onClick={handleSubmit}
-            >
-              {loading
-                ? "Đang tạo..."
-                : "Tạo học sinh"}
-            </Button>
-
-          </div>
-
+          <div className="space-y-2"><Label htmlFor="new-student-email">Email cá nhân (Nhận thông báo)</Label><Input id="new-student-email" type="email" value={personalEmail} onChange={(event) => setPersonalEmail(event.target.value)} placeholder="hocsinh@gmail.com" disabled={loading} /></div>
+          <div className="space-y-3"><Label>Ghi danh vào Khóa học</Label><StudentCourseChoices courses={courses} selectedIds={selectedCourses} onToggle={toggleCourse} prefix="create-student-course" disabled={loading} /></div>
         </div>
-
+        <div className="student-dialog-footer">
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={loading} className="border-slate-200 bg-white text-slate-700 hover:bg-slate-100">Hủy bỏ</Button>
+          <Button disabled={loading} onClick={handleSubmit} className="gap-2 bg-slate-900 text-white hover:bg-slate-800"><Check className="size-4 text-amber-400" />{loading ? "Đang tạo..." : "Tạo học sinh"}</Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

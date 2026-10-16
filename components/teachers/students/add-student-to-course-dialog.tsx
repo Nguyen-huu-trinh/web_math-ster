@@ -1,5 +1,7 @@
 "use client";
 
+import { getStudentAvatarUrl as getAvatarUrl } from "@/lib/avatar";
+
 import { useMemo, useState } from "react";
 import { Check, Search, UserPlus } from "lucide-react";
 
@@ -90,21 +92,7 @@ export function AddStudentToCourseDialog({
             .join("");
     }
 
-    function getAvatarUrl(url?: string | null) {
-        if (!url) {
-            return undefined;
-        }
 
-        const match = url.match(
-            /drive\.google\.com\/file\/d\/([^/]+)/
-        );
-
-        if (match?.[1]) {
-            return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w400`;
-        }
-
-        return url;
-    }
 
     function handleOpenChange(nextOpen: boolean) {
         if (!nextOpen) {
@@ -275,7 +263,7 @@ export function AddStudentToCourseDialog({
                                             </div>
 
                                             <Avatar className="h-9 w-9 shrink-0 border">
-                                                <AvatarImage
+                                                <AvatarImage referrerPolicy="no-referrer"
                                                     src={getAvatarUrl(
                                                         student.avatarUrl
                                                     )}

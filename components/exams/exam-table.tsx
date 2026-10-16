@@ -4,7 +4,6 @@ import Link from "next/link";
 import { ExamEditableStatus } from "./exam-editable-status";
 import { ExamEditableNumber } from "./exam-editable-number";
 import { ExamEditableCourse } from "./exam-editable-course";
-import { Button } from "@/components/ui/button";
 import {
   FileText,
   Pencil,
@@ -21,9 +20,6 @@ import {
   Badge,
 } from "@/components/ui/badge";
 
-import {
-  Input,
-} from "@/components/ui/input";
 
 import {
   Table,
@@ -42,9 +38,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import {
-  MoreHorizontal,
-  Plus,
-  Search,
+  MoreVertical,
+  Sparkles,
   Link2,
   Copy,
   Users,
@@ -54,45 +49,12 @@ import { Exam } from "@/types/exam";
 
 interface Props {
   exams: Exam[];
-  keyword: string;
-  onKeywordChange: (value: string) => void;
   onPublish?: (id: string) => void;
   onDeactivate?: (id: string) => void;
   onDuplicate?: (id: string) => void;
   onDelete?: (id: string) => void;
 }
 
-// function statusBadge(status: string) {
-//   switch (status) {
-//     case "DRAFT":
-//       return (
-//         <Badge variant="secondary">
-//           Draft
-//         </Badge>
-//       );
-
-//     case "PUBLISHED":
-//       return (
-//         <Badge>
-//           Published
-//         </Badge>
-//       );
-
-//     case "CLOSED":
-//       return (
-//         <Badge variant="destructive">
-//           Closed
-//         </Badge>
-//       );
-
-//     default:
-//       return (
-//         <Badge variant="outline">
-//           {status}
-//         </Badge>
-//       );
-//   }
-// }
 const copyExamLink = async (examId: string) => {
   const url =
     `${window.location.origin}/student-exams/open/${examId}`;
@@ -104,8 +66,6 @@ const copyExamLink = async (examId: string) => {
 
 export function ExamTable({
   exams,
-  keyword,
-  onKeywordChange,
   onPublish,
   onDeactivate,
   onDuplicate,
@@ -117,57 +77,31 @@ export function ExamTable({
 
   return (
 
-    <Card>
-
-      <CardContent className="space-y-6 p-6">
-
-        <div className="flex flex-wrap items-center justify-between gap-3">
-
-          <div className="relative w-full sm:w-96">
-
-            <Search
-              className="absolute left-3 top-3 h-4 w-4 text-muted-foreground"
-            />
-
-            <Input
-              placeholder="Tìm đề thi..."
-              aria-label="Tìm đề thi"
-              value={keyword}
-              onChange={(event) => onKeywordChange(event.target.value)}
-              className="pl-9"
-            />
-
-          </div>
-
-          <Link href="/exams/create">
-            <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Tạo đề
-            </Button>
-            </Link>
+    <Card className="exam-list gap-0 overflow-hidden rounded-[30px] border-slate-200 bg-white py-0 shadow-none">
+      <CardContent className="p-0">
+        <div className="flex items-start gap-2 border-b border-slate-100 bg-slate-50/80 px-5 py-4 text-sm font-medium text-slate-500 sm:px-8">
+          <Sparkles className="size-5 shrink-0 text-amber-500" />
+          <p><strong>Mẹo:</strong> Bấm trực tiếp vào <span className="underline decoration-dotted underline-offset-4">Khóa, Điểm đạt, Hạn làm bài, Thời gian</span> hoặc <span className="underline decoration-dotted underline-offset-4">Trạng thái</span> để sửa nhanh. <span className="sr-only">Enter để lưu, Esc để hủy. Để trống số ngày nếu không giới hạn.</span></p>
         </div>
-
-        <p className="text-sm text-muted-foreground">Bấm vào khóa học, điểm, số ngày, thời gian hoặc trạng thái để sửa. Enter để lưu, Esc để hủy. Để trống số ngày nếu không giới hạn.</p>
-
-        <Table>
+        <Table className="min-w-[1000px]">
 
           <TableHeader>
 
             <TableRow>
 
-              <TableHead>Tên đề</TableHead>
+              <TableHead className="w-[40%]">Tên đề thi &amp; phân loại</TableHead>
 
-              <TableHead>Khóa học</TableHead>
+              <TableHead>Khóa</TableHead>
 
               <TableHead>Điểm đạt</TableHead>
 
-              <TableHead>Hạn làm bài</TableHead>
+              <TableHead>Hạn mở</TableHead>
 
               <TableHead>Thời gian</TableHead>
 
               <TableHead>Trạng thái</TableHead>
 
-              <TableHead></TableHead>
+              <TableHead className="text-right">Thao tác nhanh</TableHead>
 
             </TableRow>
 
@@ -182,20 +116,22 @@ export function ExamTable({
 
                 <TableCell>
 
-                  <div>
-
-                    <p className="font-medium">
+                  <div className="flex items-center gap-4">
+                    <Badge className={exam.category === "PERIODIC" ? "rounded-xl border-amber-500 bg-amber-500 px-2.5 py-2 text-slate-950" : "rounded-xl border-slate-200 bg-slate-100 px-2.5 py-2 text-slate-600"}>{exam.category === "PERIODIC" ? "KTĐK" : "BTDD"}</Badge>
+                    <div>
+                    <p className="text-base font-extrabold tracking-tight text-slate-900">
 
                       {exam.title}
 
                     </p>
 
-                    <p className="text-sm text-muted-foreground">
+                    <p className="mt-0.5 text-sm font-medium text-slate-400">
 
-                      {exam.description}
+                      {exam.description || `${exam.max_attempts == null ? "Không giới hạn" : exam.max_attempts} lượt làm • ${exam.exam_type === "FREE" ? "Đề tự do" : "Chuẩn THPT"}`}
 
                     </p>
 
+                  </div>
                   </div>
 
                 </TableCell>
@@ -224,7 +160,7 @@ export function ExamTable({
 
                 </TableCell>
 
-                <TableCell>
+                <TableCell data-exam-status={exam.status}>
 
                   <ExamEditableStatus exam={exam} />
 
@@ -232,19 +168,14 @@ export function ExamTable({
 
                 <TableCell align="right">
 
+                  <div className="flex items-center justify-end gap-2">
+                    <Link href={`/exams/${exam.id}/answers`} aria-label={`Xem bài làm của ${exam.title}`} title="Xem bài làm" className="exam-quick-action bg-slate-100"><Users className="size-4" /></Link>
+                    <Link href={`/exams/${exam.id}/answer-key`} aria-label={`Đáp án của ${exam.title}`} title="Đáp án" className="exam-quick-action"><KeyRound className="size-4" /></Link>
+                    <Link href={`/exams/${exam.id}`} aria-label={`Chi tiết ${exam.title}`} title="Chi tiết" className="exam-quick-action"><FileText className="size-4" /></Link>
                   <DropdownMenu>
 
-                   <DropdownMenuTrigger>
-
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                    >
-
-                        <MoreHorizontal className="h-4 w-4" />
-
-                    </Button>
-
+                    <DropdownMenuTrigger aria-label={`Thao tác khác cho ${exam.title}`} className="flex size-9 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100">
+                      <MoreVertical className="size-5" />
                     </DropdownMenuTrigger>
 
                     <DropdownMenuContent align="end">
@@ -340,6 +271,7 @@ export function ExamTable({
                     </DropdownMenuContent>
 
                   </DropdownMenu>
+                  </div>
 
                 </TableCell>
 

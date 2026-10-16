@@ -1,0 +1,21 @@
+.students-management { position: relative; isolation: isolate; color: #334155; }
+.students-management::before { content: ""; position: fixed; inset: 0; z-index: -1; background: #f8fafc; pointer-events: none; }
+.student-summary { display: flex; align-items: center; gap: 16px; min-height: 108px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 28px; background: white; }
+.student-summary-icon { display: flex; width: 52px; height: 52px; flex-shrink: 0; align-items: center; justify-content: center; border-width: 1px; border-style: solid; border-radius: 18px; }
+.student-summary-label { font-size: 13px; font-weight: 700; color: #8292a8; }
+.student-summary-value { margin-top: 4px; font-size: 28px; line-height: 1.2; font-weight: 800; }
+.students-management .students-header-actions [data-slot="dialog-trigger"] { height: 44px; border-radius: 16px; background: #0f172a; color: white; font-weight: 700; padding-inline: 20px; }
+.students-management .students-header-actions [data-slot="dialog-trigger"] svg { color: #fbbf24; }
+.students-management .students-table { padding: 0; gap: 0; background: transparent; box-shadow: none; overflow: visible; --tw-ring-color: transparent; }
+.students-management .students-table > [data-slot="card-header"] { border: 1px solid #e2e8f0; border-radius: 22px; background: white; padding: 16px; margin-bottom: 24px; }
+.students-management .students-table > [data-slot="card-content"] { border: 1px solid #e2e8f0; border-radius: 28px; background: white; overflow: hidden; }
+.students-management .students-table input, .students-management .student-sort { height: 38px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; font-size: 13px; box-shadow: none; }
+.students-management .student-sort { max-width: 100%; padding: 0 12px; color: #475569; font-weight: 700; }
+.students-management .students-table table { min-width: 1000px; }
+.students-management .students-table th { height: 48px; background: #fafcff; color: #8292a8; font-size: 12px; font-weight: 800; text-transform: uppercase; white-space: nowrap; }
+.students-management .students-table tr { border-color: #f1f5f9; }
+.students-management .students-table tbody tr:hover { background: #f8fafc; }
+.students-management .students-table tbody tr[data-low-hp="true"] { background: #fff1f2; }
+.students-management .students-table tbody tr[data-low-hp="true"]:hover { background: #ffe4e6; }
+.students-management .students-table td { height: 80px; }
+.student-list-code { border-radius: 5px; background: #f1f5f9; padding: 3px 7px; color: #64748b; font-family: monospace; font-size: 12px; font-weight: 700; }

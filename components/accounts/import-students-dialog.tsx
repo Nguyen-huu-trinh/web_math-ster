@@ -1,20 +1,17 @@
 "use client";
 
 import { toast } from "sonner";
+import { StudentDialogHeader, StudentCourseChoices } from "./student-dialog-parts";
 import { useState } from "react";
 
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Upload } from "lucide-react";
+import { Upload, FileSpreadsheet } from "lucide-react";
 
 interface Course {
   id: string;
@@ -66,80 +63,23 @@ export default function ImportStudentsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] w-full p-6">
-        <DialogHeader>
-          <DialogTitle>Import học sinh từ Excel</DialogTitle>
-        </DialogHeader>
-
-        {/* Khung chứa các phần nhập liệu, giới hạn chiều cao tối đa và cho phép cuộn khi quá dài */}
-        <div className="space-y-4 my-2 max-h-[60vh] overflow-y-auto pr-1">
-          {/* Khối 1: Upload File */}
-          <div className="rounded-xl border p-4 bg-card text-card-foreground space-y-3 w-full box-border">
-            <Label htmlFor="excel-file" className="font-semibold block">
-              File Excel
-            </Label>
-
-            <Input
-              id="excel-file"
-              type="file"
-              accept=".xlsx,.xls"
-              className="cursor-pointer"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            />
-
-            <div className="text-xs text-muted-foreground space-y-1">
-              <p>File gồm 3 cột bắt buộc:</p>
-              <ul className="list-disc list-inside pl-1 space-y-0.5">
-                <li><code className="font-mono">student_code</code></li>
-                <li><code className="font-mono">full_name</code></li>
-                <li><code className="font-mono">personal_email</code></li>
-              </ul>
+      <DialogContent className="student-enrollment-dialog sm:max-w-[640px]" showCloseButton={false}>
+        <StudentDialogHeader importing />
+        <div className="student-dialog-body space-y-6">
+          <div className="space-y-3">
+            <Label htmlFor="excel-file">Danh sách học sinh (Excel) <span className="text-rose-500">*</span></Label>
+            <div className="space-y-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5">
+              <div className="flex items-center gap-3"><FileSpreadsheet className="size-7 shrink-0 text-emerald-600" /><div><p className="text-sm font-bold text-slate-800">{file ? file.name : "Chọn file Excel để thêm học sinh"}</p><p className="mt-1 text-xs text-slate-500">Hỗ trợ định dạng .xlsx và .xls</p></div></div>
+              <Input id="excel-file" type="file" accept=".xlsx,.xls" disabled={loading} className="cursor-pointer pt-3" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
             </div>
+            <div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4 text-xs leading-relaxed text-slate-600"><p className="mb-2 font-bold text-slate-700">File gồm 3 cột bắt buộc:</p><div className="flex flex-wrap gap-2">{["student_code", "full_name", "personal_email"].map((column) => <code key={column} className="rounded-md border border-amber-200 bg-white px-2 py-1 text-xs font-semibold">{column}</code>)}</div></div>
           </div>
-
-          {/* Khối 2: Chọn khóa học */}
-          <div className="rounded-xl border p-4 bg-card text-card-foreground space-y-3 w-full box-border">
-            <Label className="font-semibold block">Chọn khóa học</Label>
-
-            <div className="space-y-2.5 max-h-[160px] overflow-y-auto pr-2">
-              {courses.map((course) => (
-                <div key={course.id} className="flex items-center space-x-2.5">
-                  <Checkbox
-                    id={`course-${course.id}`}
-                    checked={courseIds.includes(course.id)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setCourseIds((prev) => [...prev, course.id]);
-                      } else {
-                        setCourseIds((prev) =>
-                          prev.filter((x) => x !== course.id)
-                        );
-                      }
-                    }}
-                  />
-                  <label
-                    htmlFor={`course-${course.id}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer select-none"
-                  >
-                    {course.name}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
+          <div className="space-y-3"><Label>Ghi danh vào Khóa học</Label><StudentCourseChoices courses={courses} selectedIds={courseIds} prefix="import-student-course" disabled={loading} onToggle={(id) => setCourseIds((prev) => prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id])} /></div>
         </div>
-
-        {/* Nút bấm ở chân Dialog */}
-        <DialogFooter className="pt-2">
-          <Button
-            className="w-full"
-            disabled={loading}
-            onClick={handleImport}
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            {loading ? "Đang import..." : "Import"}
-          </Button>
-        </DialogFooter>
+        <div className="student-dialog-footer">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading} className="border-slate-200 bg-white text-slate-700 hover:bg-slate-100">Hủy bỏ</Button>
+          <Button disabled={loading} onClick={handleImport} className="gap-2 bg-slate-900 text-white hover:bg-slate-800"><Upload className="size-4 text-amber-400" />{loading ? "Đang import..." : "Import học sinh"}</Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

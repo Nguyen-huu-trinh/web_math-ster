@@ -1,0 +1,25 @@
+.exam-answers { position: relative; isolation: isolate; color: #334155; }
+.exam-answers::before { content: ""; position: fixed; inset: 0; z-index: -1; background: #f8fafc; pointer-events: none; }
+.exam-answers .answers-summary { border-radius: 30px; padding: 0; background: white; box-shadow: none; --tw-ring-color: #e2e8f0; }
+.summary-icon { display: flex; width: 56px; height: 56px; flex-shrink: 0; align-items: center; justify-content: center; border-width: 1px; border-style: solid; border-radius: 20px; }
+.summary-label { color: #64748b; font-size: 14px; font-weight: 700; }
+.summary-value { margin-top: 4px; font-size: 30px; line-height: 1.2; font-weight: 800; }
+.exam-answers .answers-table { --tw-ring-color: #e2e8f0; }
+.answers-table select { height: 40px; border: 1px solid #e2e8f0; border-radius: 16px; background: #f8fafc; color: #475569; font-weight: 700; padding: 0 14px; }
+.answers-table th { height: 54px; padding: 12px 18px; background: #fafcff; color: #8292a8; text-transform: uppercase; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.answers-table td { height: 76px; padding: 16px 18px; white-space: nowrap; }
+.answers-table th:first-child, .answers-table td:first-child { padding-left: 32px; }
+.answers-table th:last-child, .answers-table td:last-child { padding-right: 32px; }
+.answers-table tr { border-color: #f1f5f9; }
+.answers-table tr[data-submitted="true"] { color: #1e293b; }
+.answers-table tr[data-submitted="true"]:hover { background: #f8fafc; }
+.answers-table tr[data-submitted="false"] { background: #fcfdff; color: #7c8ca3; }
+.answers-table tr[data-overdue="true"] { background: #fff1f2; }
+.answers-table tr[data-overdue="true"]:hover { background: #ffe4e6; }
+.student-code { border: 1px solid #e2e8f0; border-radius: 5px; padding: 3px 9px; background: #f1f5f9; color: #475569; font-family: monospace; font-size: 13px; font-weight: 700; }
+.answers-table tr[data-submitted="false"] .student-code { color: #8292a8; }
+.answers-table td .text-muted-foreground { color: #64748b; }
+.answers-filter { border: 1px solid transparent; color: #475569; background: transparent; }
+.answers-filter:hover { background: #f8fafc; }
+.answers-filter[data-filter="not_started"] { color: #e11d48; }
+.answers-filter[aria-pressed="true"] { background: #0f172a; border-color: #0f172a; color: white; }

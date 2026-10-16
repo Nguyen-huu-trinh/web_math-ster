@@ -1,5 +1,5 @@
 'use client';
-import { Clapperboard, Sparkles } from "lucide-react";
+import { Clapperboard, FolderPlus, Sparkles } from "lucide-react";
 import { ResourceDialog } from "@/components/lesson-resources/resource-dialog";
 import { LessonSidebar } from "@/components/lessons/lesson-sidebar";
 import { DeleteResourceDialog } from "@/components/lesson-resources/delete-resource-dialog";
@@ -522,7 +522,7 @@ export default function LessonClientView({
               <LessonSidebar course={course} currentLessonId={lesson.id} embedded />
             ) : (
               <div>
-                {role === "TEACHER" && <Button variant="outline" className="m-3 mb-0 border-slate-700 bg-slate-800 text-xs" onClick={() => { setSelectedResource(null); setResourceDialogOpen(true); }}>Thêm tài liệu</Button>}
+                {role === "TEACHER" && <Button className="m-3 mb-0 h-10 gap-2 rounded-xl border border-amber-400 bg-amber-400 px-4 text-sm font-bold text-slate-950 shadow-sm shadow-amber-500/20 transition-colors hover:border-amber-300 hover:bg-amber-300 focus-visible:ring-amber-400/60" onClick={() => { setSelectedResource(null); setResourceDialogOpen(true); }}><FolderPlus className="size-5" />Thêm tài liệu</Button>}
           <div className="p-3">
             <h2 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
               Tài nguyên đi kèm bài {lessonIndex + 1}

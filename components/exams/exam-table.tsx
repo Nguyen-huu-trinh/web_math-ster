@@ -127,7 +127,7 @@ export function ExamTable({
 
                     <p className="mt-0.5 text-sm font-medium text-slate-400">
 
-                      {exam.description || `${exam.max_attempts == null ? "Không giới hạn" : exam.max_attempts} lượt làm • ${exam.exam_type === "FREE" ? "Đề tự do" : "Chuẩn THPT"}`}
+                      {exam.description }
 
                     </p>
 
@@ -169,26 +169,19 @@ export function ExamTable({
                 <TableCell align="right">
 
                   <div className="flex items-center justify-end gap-2">
-                    <Link href={`/exams/${exam.id}/answers`} aria-label={`Xem bài làm của ${exam.title}`} title="Xem bài làm" className="exam-quick-action bg-slate-100"><Users className="size-4" /></Link>
+                    <Link href={`/exams/${exam.id}/answers`} aria-label={`Xem bài làm của ${exam.title}: ${exam.submitted_count ?? 0} bài đã nộp`} title={`${exam.submitted_count ?? 0} bài đã nộp — Xem bài làm`} className="exam-quick-action exam-submissions-action bg-slate-100">
+                      <Users className="size-4 shrink-0" />
+                      <span className="text-xs font-bold tabular-nums">{exam.submitted_count ?? 0}</span>
+                    </Link>
                     <Link href={`/exams/${exam.id}/answer-key`} aria-label={`Đáp án của ${exam.title}`} title="Đáp án" className="exam-quick-action"><KeyRound className="size-4" /></Link>
                     <Link href={`/exams/${exam.id}`} aria-label={`Chi tiết ${exam.title}`} title="Chi tiết" className="exam-quick-action"><FileText className="size-4" /></Link>
                   <DropdownMenu>
 
-                    <DropdownMenuTrigger aria-label={`Thao tác khác cho ${exam.title}`} className="flex size-9 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100">
+                    <DropdownMenuTrigger aria-label={`Thao tác khác cho ${exam.title}`} className="flex size-9 items-center justify-center rounded-xl text-black hover:bg-slate-100">
                       <MoreVertical className="size-5" />
                     </DropdownMenuTrigger>
 
-                    <DropdownMenuContent align="end">
-
-                      <DropdownMenuItem
-                        onClick={() => {
-                            window.location.href = `/exams/${exam.id}`;
-                        }}
-                        >
-                        <FileText className="mr-2 h-4 w-4 shrink-0" />
-                        Chi tiết
-
-                        </DropdownMenuItem>
+                    <DropdownMenuContent align="end" className="w-56 [&_[role=menuitem]]:font-bold">
                         <DropdownMenuItem
                           onClick={() => copyExamLink(exam.id)}
                         >
@@ -208,25 +201,6 @@ export function ExamTable({
 
                         </DropdownMenuItem>
 
-                      <DropdownMenuItem
-                        onClick={() => {
-                            window.location.href =
-                            `/exams/${exam.id}/answer-key`;
-                        }}
-                        >
-                          <KeyRound className="mr-2 h-4 w-4 shrink-0" />
-                        Đáp án
-
-                        </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        window.location.href =
-                          `/exams/${exam.id}/answers`;
-                      }}
-                    >
-                      <Users className="mr-2 h-4 w-4" />
-                      Xem bài làm
-                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
                         if (exam.status === "LOCKED") {

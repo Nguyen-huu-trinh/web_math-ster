@@ -96,6 +96,7 @@ const enrolledStudentIds =
                     </Link>
 
                     <Button
+                        className="h-11 gap-2 rounded-xl border border-amber-400 bg-amber-400 px-5 font-bold text-slate-950 shadow-sm shadow-amber-500/20 hover:bg-amber-300"
                         onClick={() =>
                             setAddStudentOpen(true)
                         }

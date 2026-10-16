@@ -4,6 +4,7 @@ import { getStudentAvatarUrl as getAvatarUrl } from "@/lib/avatar";
 
 import { useMemo, useState } from "react";
 import { Check, Search, UserPlus } from "lucide-react";
+import { ManagementDialogHeader, managementDialogClass, managementFormClass, managementFooterClass, managementCancelClass, managementSaveClass } from "@/components/ui/management-dialog";
 
 import {
     Avatar,
@@ -16,10 +17,7 @@ import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogFooter,
-    DialogHeader,
-    DialogTitle,
 } from "@/components/ui/dialog";
 
 import { Input } from "@/components/ui/input";
@@ -166,21 +164,12 @@ export function AddStudentToCourseDialog({
             open={open}
             onOpenChange={handleOpenChange}
         >
-            <DialogContent className="sm:max-w-lg">
-                <DialogHeader>
-                    <DialogTitle>
-                        Thêm học sinh
-                    </DialogTitle>
+            <DialogContent className={managementDialogClass}>
+                <ManagementDialogHeader icon={UserPlus} title="Thêm Học Sinh" description="Chọn một hoặc nhiều học sinh để thêm vào khóa học này." />
 
-                    <DialogDescription>
-                        Chọn một hoặc nhiều học sinh để thêm
-                        vào khóa học này.
-                    </DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-4">
+                <div className={managementFormClass}>
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
 
                         <Input
                             value={search}
@@ -188,15 +177,16 @@ export function AddStudentToCourseDialog({
                                 setSearch(event.target.value)
                             }
                             placeholder="Tìm theo tên, mã học sinh hoặc email..."
-                            className="pl-9"
+                            aria-label="Tìm học sinh"
+                            className="pl-12 focus-visible:border-amber-400 focus-visible:ring-amber-400/25"
                         />
                     </div>
 
                     {availableStudents.length > 0 && (
                         <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-sm font-semibold text-slate-500">
                                 Đã chọn:{" "}
-                                <span className="font-medium text-foreground">
+                                <span className="font-bold text-slate-900">
                                     {selectedCount}
                                 </span>{" "}
                                 học sinh
@@ -206,6 +196,7 @@ export function AddStudentToCourseDialog({
                                 type="button"
                                 variant="ghost"
                                 size="sm"
+                                className="font-bold text-slate-900 hover:bg-amber-50"
                                 onClick={
                                     allVisibleSelected
                                         ? clearSelection
@@ -219,9 +210,9 @@ export function AddStudentToCourseDialog({
                         </div>
                     )}
 
-                    <div className="max-h-80 overflow-y-auto rounded-md border">
+                    <div className="max-h-80 overflow-y-auto rounded-2xl border border-slate-200">
                         {availableStudents.length === 0 ? (
-                            <div className="p-6 text-center text-sm text-muted-foreground">
+                            <div className="bg-slate-50/60 px-6 py-8 text-center text-sm font-medium text-slate-500">
                                 {search
                                     ? "Không tìm thấy học sinh phù hợp."
                                     : "Tất cả học sinh đã thuộc khóa học này."}
@@ -240,21 +231,22 @@ export function AddStudentToCourseDialog({
                                             type="button"
                                             className={[
                                                 "flex w-full items-center gap-3 p-3 text-left transition-colors",
-                                                "hover:bg-muted/50",
+                                                "hover:bg-amber-50/60",
                                                 selected
-                                                    ? "bg-muted"
+                                                    ? "bg-amber-50"
                                                     : "",
                                             ].join(" ")}
                                             onClick={() =>
                                                 toggleStudent(student.id)
                                             }
+                                            aria-pressed={selected}
                                         >
                                             <div
                                                 className={[
                                                     "flex h-5 w-5 shrink-0 items-center justify-center rounded border",
                                                     selected
-                                                        ? "bg-primary text-primary-foreground"
-                                                        : "bg-background",
+                                                        ? "border-slate-900 bg-slate-900 text-white"
+                                                        : "border-slate-300 bg-white",
                                                 ].join(" ")}
                                             >
                                                 {selected && (
@@ -281,7 +273,7 @@ export function AddStudentToCourseDialog({
                                             </Avatar>
 
                                             <div className="min-w-0 flex-1">
-                                                <div className="truncate font-medium">
+                                                <div className="truncate font-bold text-slate-800">
                                                     {
                                                         student.fullName
                                                     }
@@ -303,12 +295,11 @@ export function AddStudentToCourseDialog({
                             </div>
                         )}
                     </div>
-                </div>
-
-                <DialogFooter>
+                <DialogFooter className={managementFooterClass}>
                     <Button
                         type="button"
                         variant="outline"
+                        className={managementCancelClass}
                         onClick={() =>
                             handleOpenChange(false)
                         }
@@ -320,18 +311,20 @@ export function AddStudentToCourseDialog({
                     <Button
                         type="button"
                         onClick={() => void handleAdd()}
+                        className={managementSaveClass}
                         disabled={
                             selectedCount === 0 ||
                             addStudent.isPending
                         }
                     >
-                        <UserPlus />
+                        <UserPlus className="size-5 text-amber-400" />
 
                         {addStudent.isPending
                             ? "Đang thêm..."
                             : `Thêm ${selectedCount > 0 ? selectedCount : ""} học sinh`}
                     </Button>
                 </DialogFooter>
+                </div>
             </DialogContent>
         </Dialog>
     );

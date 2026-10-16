@@ -1,5 +1,7 @@
 "use client";
 
+import { ManagementDialogHeader, managementDialogClass, managementFormClass, managementFooterClass, managementCancelClass, managementSaveClass } from "@/components/ui/management-dialog";
+import { GraduationCap, Plus, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { CreateCourseSchema } from "@/validators/course.schema";
@@ -7,8 +9,6 @@ import { CreateCourseSchema } from "@/validators/course.schema";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
 
@@ -96,45 +96,38 @@ export function CourseDialog({
         }
       }}
     >
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className={managementDialogClass}>
 
-        <DialogHeader>
+        <ManagementDialogHeader icon={GraduationCap} title={course ? "Chỉnh Sửa Khóa Học" : "Tạo Khóa Học Mới"} description="Thiết lập thông tin khóa học cho học sinh" />
 
-          <DialogTitle>
-
-            {course
-              ? "Edit Course"
-              : "Create Course"}
-
-          </DialogTitle>
-
-        </DialogHeader>
-
+        <div className={managementFormClass}>
         <CourseForm
           value={form}
           onChange={setForm}
         />
 
-        <DialogFooter>
+        <DialogFooter className={managementFooterClass}>
 
           <Button
             variant="outline"
+              className={managementCancelClass}
             onClick={onClose}
             disabled={loading}
           >
-            Cancel
+            Hủy
           </Button>
 
           <Button
+            className={managementSaveClass}
             onClick={handleSubmit}
             disabled={loading}
           >
-            {loading
-              ? "Saving..."
-              : "Save"}
+            {course ? <Check className="size-5 text-amber-400" /> : <Plus className="size-5 text-amber-400" />}
+            {loading ? "Đang lưu…" : course ? "Lưu thay đổi" : "Tạo khóa học"}
           </Button>
 
         </DialogFooter>
+        </div>
 
       </DialogContent>
     </Dialog>

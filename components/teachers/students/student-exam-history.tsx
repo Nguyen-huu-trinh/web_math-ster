@@ -34,7 +34,16 @@ export function StudentExamHistory({ studentId, exams }: Props) {
 
     function formatDate(value: string | null) {
         if (!value) return "--";
-        return new Date(value).toLocaleString("vi-VN");
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "--";
+        const options = { timeZone: "Asia/Ho_Chi_Minh" };
+        return (
+            <time dateTime={value} className="whitespace-nowrap tabular-nums text-slate-600">
+                {date.toLocaleTimeString("vi-VN", { ...options, hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}
+                {" · "}
+                {date.toLocaleDateString("vi-VN", { ...options, day: "2-digit", month: "2-digit", year: "2-digit" })}
+            </time>
+        );
     }
 
     function formatAttemptDuration(
@@ -141,6 +150,15 @@ export function StudentExamHistory({ studentId, exams }: Props) {
             ) : (
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
+                        <colgroup>
+                            <col style={{ width: "32%" }} />
+                            <col style={{ width: "12%" }} />
+                            <col style={{ width: "11%" }} />
+                            <col style={{ width: "7%" }} />
+                            <col style={{ width: "10%" }} />
+                            <col style={{ width: "18%" }} />
+                            <col style={{ width: "10%" }} />
+                        </colgroup>
                         <thead className="border-b bg-muted/30">
                             <tr className="text-left">
                                 <th className="px-5 py-3 font-medium">Tên đề</th>
@@ -196,8 +214,8 @@ export function StudentExamHistory({ studentId, exams }: Props) {
                                                     Chưa đạt
                                                 </Badge>
                                             ) : (
-                                                <Badge variant="secondary" className="rounded-md border-amber-200 bg-amber-50 font-bold text-amber-700">
-                                                    Chưa làm
+                                                <Badge variant="secondary" className=" font-bold text-amber-700">
+                                                    --
                                                 </Badge>
                                             )}
                                         </td>

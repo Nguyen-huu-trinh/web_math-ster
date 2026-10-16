@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { ThumbnailUpload } from "./thumbnail-upload";
 export interface CourseFormValues {
   name: string;
   description: string;
@@ -38,7 +37,7 @@ export function CourseForm({
     <div className="space-y-5">
       <div className="space-y-2">
         <Label htmlFor="name">
-          Course Name
+          Tên khóa học <span className="text-rose-500">*</span>
         </Label>
 
         <Input
@@ -47,13 +46,13 @@ export function CourseForm({
           onChange={(e) =>
             update("name", e.target.value)
           }
-          placeholder="Enter course name..."
+          placeholder="VD: KHÓA S – NỀN TẢNG"
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="description">
-          Description
+          Mô tả
         </Label>
 
         <Textarea
@@ -63,7 +62,7 @@ export function CourseForm({
           onChange={(e) =>
             update("description", e.target.value)
           }
-          placeholder="Course description..."
+          placeholder="Nhập mô tả khóa học…"
         />
       </div>
 
@@ -81,21 +80,15 @@ export function CourseForm({
         <p className="text-sm text-muted-foreground">Số nhỏ hiển thị trước.</p>
       </div>
 
-      <ThumbnailUpload
-        value={value.thumbnail_url}
-        onChange={(url) =>
-          update("thumbnail_url", url)
-        }
-      />
 
-      <div className="flex items-center justify-between rounded-lg border p-3">
+      <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
         <div>
-          <p className="font-medium">
-            Active
+          <p className="font-bold text-slate-700">
+            Hiển thị khóa học
           </p>
 
           <p className="text-sm text-muted-foreground">
-            Students can see this course.
+            Học sinh có thể xem khóa học này.
           </p>
         </div>
 

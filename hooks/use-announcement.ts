@@ -21,6 +21,16 @@ export function useAnnouncement() {
 
 }
 
+export function useDeleteAnnouncement() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => announcementClientService.remove(id),
+        onSuccess() {
+            return queryClient.invalidateQueries({ queryKey: ["announcement"] });
+        },
+    });
+}
+
 export function useUpdateAnnouncement() {
 
     const queryClient =

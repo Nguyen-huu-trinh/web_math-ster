@@ -13,6 +13,9 @@ export interface Announcement {
 }
 
 class AnnouncementClientService {
+    async remove(id: string) {
+        return apiClient.delete("/api/announcement", { id });
+    }
 
     async get(): Promise<Announcement> {
 

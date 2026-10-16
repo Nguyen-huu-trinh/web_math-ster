@@ -512,7 +512,7 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
                           <span className="sr-only">Mở menu</span>
                         </DropdownMenuTrigger>
 
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="w-48 [&_[role=menuitem]]:font-bold">
                           <DropdownMenuItem
                             onClick={(e) => {
                               e.stopPropagation();

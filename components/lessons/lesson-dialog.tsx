@@ -1,13 +1,13 @@
 "use client";
 
+import { ManagementDialogHeader, managementDialogClass, managementFormClass, managementFooterClass, managementCancelClass, managementSaveClass } from "@/components/ui/management-dialog";
+import { BookPlus, Plus, Check } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
 
@@ -76,34 +76,31 @@ export function LessonDialog({
         }
       }}
     >
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {lesson ? "Edit Lesson" : "Create Lesson"}
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className={managementDialogClass}>
+        <ManagementDialogHeader icon={BookPlus} title={lesson ? "Chỉnh Sửa Bài Học" : "Tạo Bài Học Mới"} description="Thêm bài giảng vào chương học hiện tại" />
 
         <form
           onSubmit={handleSubmit(submit)}
-          className="space-y-5"
+          className={managementFormClass}
         >
           <div className="space-y-2">
             <Label htmlFor="title">
-              Lesson Title
+              Tên bài học <span className="text-rose-500">*</span>
             </Label>
 
             <Input
               id="title"
-              placeholder="Lesson title..."
+              placeholder="VD: Bài 1. Sự đồng biến, nghịch biến của hàm số…"
               {...register("title", {
-                required: "Lesson title is required",
+                required: "Vui lòng nhập tên bài học",
               })}
             />
           </div>
 
+          <div className="grid gap-4 sm:grid-cols-[1fr_2fr] sm:items-end">
           <div className="space-y-2">
             <Label htmlFor="order">
-              Order
+              Thứ tự
             </Label>
 
             <Input
@@ -117,32 +114,39 @@ export function LessonDialog({
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/60 px-4">
+            <span className="size-2.5 shrink-0 rounded-full bg-emerald-500" />
             <input
               id="active"
+              className="order-last ml-auto size-5 accent-slate-900"
               type="checkbox"
               {...register("is_active")}
             />
 
             <Label htmlFor="active">
-              Active
+              Hiển thị bài học (Active)
             </Label>
           </div>
 
-          <DialogFooter>
+          </div>
+
+          <DialogFooter className={managementFooterClass}>
             <Button
               type="button"
               variant="outline"
+              className={managementCancelClass}
               onClick={onClose}
             >
-              Cancel
+              Hủy
             </Button>
 
             <Button
               type="submit"
+              className={managementSaveClass}
               disabled={isSubmitting}
             >
-              {lesson ? "Update Lesson" : "Create Lesson"}
+              {lesson ? <Check className="size-5 text-amber-400" /> : <Plus className="size-5 text-amber-400" />}
+              {isSubmitting ? "Đang lưu…" : lesson ? "Lưu thay đổi" : "Tạo bài học"}
             </Button>
           </DialogFooter>
         </form>

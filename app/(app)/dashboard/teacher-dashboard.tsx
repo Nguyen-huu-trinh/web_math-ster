@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useOnlineCount } from "@/providers/presence-provider";
 import { useTeacherDashboard } from '@/hooks/use-dashboard';
 import { TeacherScheduleDialog } from "@/components/dashboard/teacher-schedule-dialog";
-import { useAnnouncement, useUpdateAnnouncement } from "@/hooks/use-announcement";
+import { useAnnouncement, useUpdateAnnouncement, useDeleteAnnouncement } from "@/hooks/use-announcement";
 import { useExamAlerts, type ExamAlert } from "@/hooks/use-exam-alerts";
 import { TopStudentsCard } from '@/components/dashboard/top-students-card';
 import { useProcessAttendance } from "@/hooks/use-process-attendance";
@@ -15,7 +15,7 @@ import { useCurrentAttendance } from "@/hooks/use-current-attendance";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Save, Bell, Check, CalendarDays, Minus } from "lucide-react";
+import { Save, Bell, Check, CalendarDays, Minus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLeaderboard } from '@/hooks/use-leaderboard';
 import { TeacherStatCardsGrid } from '@/components/dashboard/stat-card';
@@ -47,6 +47,7 @@ export default function TeacherDashboard() {
   const announcement = useAnnouncement();
   const queryClient = useQueryClient();
   const updateAnnouncement = useUpdateAnnouncement();
+  const deleteAnnouncement = useDeleteAnnouncement();
   const processAttendance = useProcessAttendance();
   const currentAttendance = useCurrentAttendance();
   const [showTeacherSchedule, setShowTeacherSchedule] = useState(false);
@@ -172,6 +173,7 @@ export default function TeacherDashboard() {
   }
 
   async function saveAnnouncement() {
+    if (updateAnnouncement.isPending || deleteAnnouncement.isPending) return;
     if (!announcement.data) return;
     try {
       await updateAnnouncement.mutateAsync({
@@ -182,6 +184,18 @@ export default function TeacherDashboard() {
       toast.success("Đã cập nhật thông báo");
     } catch {
       toast.error("Không thể cập nhật");
+    }
+  }
+
+  async function removeAnnouncement() {
+    if (!announcement.data || updateAnnouncement.isPending || deleteAnnouncement.isPending) return;
+    try {
+      await deleteAnnouncement.mutateAsync(announcement.data.id);
+      setTitle("");
+      setContent("");
+      toast.success("Đã xóa thông báo học sinh.");
+    } catch {
+      toast.error("Không thể xóa thông báo. Vui lòng thử lại.");
     }
   }
 
@@ -321,20 +335,33 @@ export default function TeacherDashboard() {
       </div>
 
       {/* THÔNG BÁO HỌC SINH */}
-      <div className="rounded-xl border border-amber-300 bg-amber-50 p-5 shadow-xs">
+      <div className="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 via-amber-50/70 to-yellow-50/50 p-5 shadow-sm shadow-amber-900/5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xl">📢</span>
-            <h3 className="font-semibold text-amber-900">Thông báo học sinh</h3>
+            <h3 className="font-bold text-amber-900">Thông báo học sinh</h3>
           </div>
+          <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-rose-200/80 bg-[#fff7e6] font-bold text-rose-600 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
+            onClick={removeAnnouncement}
+            disabled={updateAnnouncement.isPending || deleteAnnouncement.isPending || !announcement.data || !(announcement.data.title?.trim() || announcement.data.content?.trim())}
+          >
+            <Trash2 className="size-4" />
+            {deleteAnnouncement.isPending ? "Đang xóa…" : "Xóa"}
+          </Button>
           <Button
             size="sm"
             onClick={saveAnnouncement}
-            disabled={updateAnnouncement.isPending}
+            className="border border-amber-400 bg-amber-400 font-bold text-amber-950 hover:bg-amber-300"
+            disabled={updateAnnouncement.isPending || deleteAnnouncement.isPending}
           >
             <Save className="mr-2 h-4 w-4" />
             Lưu
           </Button>
+          </div>
         </div>
 
         <div className="mt-4 space-y-3">
@@ -342,14 +369,14 @@ export default function TeacherDashboard() {
             placeholder="Tiêu đề thông báo..."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="border-amber-200 bg-white"
+            className="border-amber-200/80 bg-[#fff7e6] text-slate-800 placeholder:text-amber-800/45 focus-visible:border-amber-400 focus-visible:ring-amber-400/20"
           />
           <Textarea
             rows={4}
             placeholder="Nhập nội dung thông báo gửi toàn bộ học sinh..."
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="border-amber-200 bg-white"
+            className="border-amber-200/80 bg-[#fff7e6] text-slate-800 placeholder:text-amber-800/45 focus-visible:border-amber-400 focus-visible:ring-amber-400/20"
           />
         </div>
       </div>

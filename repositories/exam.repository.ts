@@ -24,8 +24,10 @@ export class ExamRepository {
         courses(
           id,
           name
-        )
+        ),
+        submitted_attempts:exam_attempts(count)
       `)
+      .not("submitted_attempts.submitted_at", "is", null)
       .is("deleted_at", null)
       .order("created_at", {
         ascending: false,
@@ -33,7 +35,10 @@ export class ExamRepository {
 
     if (error) throw error;
 
-    return data;
+    return data?.map(({ submitted_attempts, ...exam }) => ({
+      ...exam,
+      submitted_count: submitted_attempts?.[0]?.count ?? 0,
+    }));
   }
 
   // =========================================================

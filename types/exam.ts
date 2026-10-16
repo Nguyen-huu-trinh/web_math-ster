@@ -28,6 +28,8 @@ export interface AnswerKey {
 export interface Exam {
   id: string;
 
+  submitted_count?: number;
+
   title: string;
 
   description: string | null;

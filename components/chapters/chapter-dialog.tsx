@@ -1,13 +1,13 @@
 "use client";
 
+import { ManagementDialogHeader, managementDialogClass, managementFormClass, managementFooterClass, managementCancelClass, managementSaveClass } from "@/components/ui/management-dialog";
+import { FolderPlus, Plus, Check } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
 
@@ -70,32 +70,23 @@ export function ChapterDialog({
         if (!v) onClose();
       }}
     >
-      <DialogContent>
+      <DialogContent className={managementDialogClass}>
 
-        <DialogHeader>
-
-          <DialogTitle>
-
-            {chapter
-              ? "Edit Chapter"
-              : "New Chapter"}
-
-          </DialogTitle>
-
-        </DialogHeader>
+        <ManagementDialogHeader icon={FolderPlus} title={chapter ? "Chỉnh Sửa Chương" : "Thêm Chương Mới"} description="Sắp xếp nội dung khóa học theo từng chương" />
 
         <form
           onSubmit={form.handleSubmit(submit)}
-          className="space-y-5"
+          className={managementFormClass}
         >
 
-          <div>
+          <div className="space-y-2">
 
             <Label>
-              Chapter title
+              Tên chương <span className="text-rose-500">*</span>
             </Label>
 
             <Input
+              placeholder="VD: Chương 1. Ứng dụng đạo hàm…"
               {...form.register("title", {
                 required: true,
               })}
@@ -103,16 +94,17 @@ export function ChapterDialog({
 
           </div>
 
-          <div>
+          <div className="space-y-2">
 
             <Label>
 
-              Order
+              Thứ tự
 
             </Label>
 
             <Input
               type="number"
+              min={1}
               {...form.register(
                 "order_index",
                 {
@@ -123,20 +115,24 @@ export function ChapterDialog({
 
           </div>
 
-          <DialogFooter>
+          <DialogFooter className={managementFooterClass}>
 
             <Button
               variant="outline"
+              className={managementCancelClass}
               type="button"
               onClick={onClose}
             >
-              Cancel
+              Hủy
             </Button>
 
             <Button
               type="submit"
+              disabled={form.formState.isSubmitting}
+              className={managementSaveClass}
             >
-              Save
+              {chapter ? <Check className="size-5 text-amber-400" /> : <Plus className="size-5 text-amber-400" />}
+              {form.formState.isSubmitting ? "Đang lưu…" : chapter ? "Lưu thay đổi" : "Thêm chương"}
             </Button>
 
           </DialogFooter>

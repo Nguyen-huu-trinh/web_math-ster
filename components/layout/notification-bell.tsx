@@ -11,6 +11,7 @@ import {
   CalendarCheck,
   Video,
   FileDown,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/popover";
 import { useNotifications } from "@/hooks/use-notifications";
 import { notificationLink } from "@/lib/notification-link";
+import { useAuth } from "@/providers/auth-provider";
 
 function relativeTime(value: string) {
   const seconds = Math.max(0, (Date.now() - new Date(value).getTime()) / 1000);
@@ -37,6 +39,27 @@ export function NotificationBell() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const feed = useNotifications();
+  const { profile } = useAuth();
+  const canDelete = profile?.role === "TEACHER";
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+
+  async function deleteNotification(id: string) {
+    setDeletingIds((current) => new Set(current).add(id));
+    try {
+      const response = await fetch(`/api/notifications/${id}`, { method: "DELETE" });
+      if (!response.ok && response.status !== 404) throw new Error("Delete failed");
+      await queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      toast.success("Đã xóa thông báo.");
+    } catch {
+      toast.error("Không thể xóa thông báo. Vui lòng thử lại.");
+    } finally {
+      setDeletingIds((current) => {
+        const next = new Set(current);
+        next.delete(id);
+        return next;
+      });
+    }
+  }
 
   return (
     <Popover
@@ -181,9 +204,9 @@ export function NotificationBell() {
               }
 
               return (
+                <div key={item.id} className="relative">
                 <button
                   type="button"
-                  key={item.id}
                   onClick={() => {
                     if (item.type === "ANNOUNCEMENT") {
                       void queryClient.invalidateQueries({
@@ -200,7 +223,7 @@ export function NotificationBell() {
                     setOpen(false);
                     router.push(notificationLink(item));
                   }}
-                  className={`flex w-full items-start gap-3.5 px-6 py-4 text-left transition-colors ${
+                  className={`flex w-full items-start gap-3.5 px-6 py-4 text-left transition-colors ${canDelete ? "pr-14" : ""} ${
                     !item.is_read
                       ? `${styles.unreadRowBg}`
                       : "bg-white hover:bg-slate-50/70"
@@ -263,6 +286,19 @@ export function NotificationBell() {
                     />
                   )}
                 </button>
+                {canDelete && (
+                  <button
+                    type="button"
+                    aria-label={`Xóa thông báo ${item.title}`}
+                    title="Xóa thông báo cho tất cả người dùng"
+                    disabled={deletingIds.has(item.id)}
+                    onClick={() => void deleteNotification(item.id)}
+                    className="absolute right-3 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-rose-100 hover:text-rose-600 focus-visible:outline-2 focus-visible:outline-rose-500 disabled:opacity-40"
+                  >
+                    <Trash2 className="size-4 stroke-[2.2]" />
+                  </button>
+                )}
+                </div>
               );
             })
           )}

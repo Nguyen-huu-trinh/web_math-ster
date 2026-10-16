@@ -151,7 +151,7 @@ export function TeacherStudentDetailPage({
                     <Button variant="outline" className={`rounded-2xl font-bold ${data.profile.isActive ? "border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100" : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"}`} disabled={accountBusy} onClick={toggleAccount}>{data.profile.isActive ? <Ban className="size-4" /> : <Unlock className="size-4" />}{disableStudent.isPending || enableStudent.isPending ? "Đang xử lý…" : data.profile.isActive ? "Khóa tài khoản" : "Mở khóa tài khoản"}</Button>
                 </div>
             </div>
-            <div className="grid items-start gap-6 xl:grid-cols-[minmax(300px,0.95fr)_minmax(0,2fr)]">
+            <div className="grid items-start gap-6 xl:grid-cols-[minmax(280px,0.75fr)_minmax(0,2.2fr)]">
                 <StudentProfileCard key={data.profile.id} profile={data.profile} />
                 <div className="min-w-0 space-y-6">
                     <StudentStatistics averageScore={data.statistics.averageScore} pendingExams={data.statistics.pendingExams} incompleteLessons={data.statistics.incompleteLessons} passedExercises={data.statistics.passedExercises} failedExercises={data.statistics.failedExercises} />

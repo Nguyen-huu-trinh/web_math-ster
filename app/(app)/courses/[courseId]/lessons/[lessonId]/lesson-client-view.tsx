@@ -35,7 +35,7 @@ import {
   useUpdateLessonContent,
 } from "@/hooks/use-lesson";
 
-function getYoutubeEmbedUrl(url?: string) {
+function getYoutubeEmbedUrl(url?: string, nativeFullscreen = false) {
   if (!url) return "";
   let videoId = "";
   if (url.includes("youtu.be/")) {
@@ -46,7 +46,7 @@ function getYoutubeEmbedUrl(url?: string) {
     videoId = url.split("/embed/")[1].split("?")[0];
   }
   if (videoId) {
-    return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&fs=0&color=red`;
+    return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&fs=${nativeFullscreen ? 1 : 0}&playsinline=${nativeFullscreen ? 0 : 1}&color=red`;
   }
   return url;
 }
@@ -78,6 +78,13 @@ export default function LessonClientView({
   const [lockedExamId, setLockedExamId] = useState<string | null>(null);
   const [sidePanel, setSidePanel] = useState<"outline" | "resources">("resources");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [useNativeVideoFullscreen, setUseNativeVideoFullscreen] = useState(false);
+
+  useEffect(() => {
+    // iPhone video fullscreen must originate inside the cross-origin player.
+    // A rotated fixed container cannot hide Safari/Chrome browser controls.
+    setUseNativeVideoFullscreen(/iPhone|iPod/i.test(navigator.userAgent));
+  }, []);
   const [isMobileFullscreen, setIsMobileFullscreen] = useState(false);
   const orientationLockedRef = useRef(false);
 
@@ -450,16 +457,16 @@ export default function LessonClientView({
                   />
 
                   <div
-                    className="absolute bottom-0 left-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
+                    className={`absolute bottom-0 left-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default ${useNativeVideoFullscreen ? "hidden" : ""}`}
                     onClick={(e) => e.stopPropagation()}
                   />
 
                   <div
-                    className="absolute bottom-0 right-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
+                    className={`absolute bottom-0 right-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default ${useNativeVideoFullscreen ? "hidden" : ""}`}
                     onClick={(e) => e.stopPropagation()}
                   />
 
-                  <button
+                  {!useNativeVideoFullscreen && <button
                     type="button"
                     onClick={toggleFullscreen}
                     className="absolute bottom-3 right-3 z-30 p-2 text-white bg-black/60 hover:bg-black/90 rounded-md transition-all pointer-events-auto"
@@ -471,7 +478,7 @@ export default function LessonClientView({
                     ) : (
                       <Maximize className="size-4" />
                     )}
-                  </button>
+                  </button>}
                   <div 
                     className="absolute bottom-[3px] left-0 right-0 h-[3px] bg-white/20 z-20 pointer-events-none backdrop-blur-[1px]"
                   />
@@ -480,11 +487,12 @@ export default function LessonClientView({
                     className="w-full h-full border-0 relative z-10"
                     src={
                       currentVideo?.file_links?.url
-                        ? getYoutubeEmbedUrl(currentVideo.file_links.url)
+                        ? getYoutubeEmbedUrl(currentVideo.file_links.url, useNativeVideoFullscreen)
                         : undefined
                     }
                     title={currentVideo?.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                    allowFullScreen
                   />
                 </>
               )

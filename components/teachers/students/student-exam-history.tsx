@@ -144,11 +144,11 @@ export function StudentExamHistory({ studentId, exams }: Props) {
                         <thead className="border-b bg-muted/30">
                             <tr className="text-left">
                                 <th className="px-5 py-3 font-medium">Tên đề</th>
-                                <th className="px-5 py-3 text-center font-medium">Loại đề</th>
-                                <th className="px-5 py-3 text-center font-medium">Trạng thái</th>
-                                <th className="px-5 py-3 text-center font-medium">Điểm</th>
-                                <th className="px-5 py-3 text-center font-medium">Thời gian làm bài</th>
-                                <th className="px-5 py-3 text-center font-medium">Thời điểm nộp bài</th>
+                                <th className="px-4 py-3 text-center font-medium">Loại đề</th>
+                                <th className="px-4 py-3 text-center font-medium">Trạng thái</th>
+                                <th className="px-2 py-1 text-center font-medium">Điểm</th>
+                                <th className="px-3 py-3 text-center font-medium">Thời gian</th>
+                                <th className="px-3 py-3 text-center font-medium">Thời điểm nộp</th>
                                 <th className="w-24 px-3 py-3 text-center font-medium">Thao tác</th>
                             </tr>
                         </thead>

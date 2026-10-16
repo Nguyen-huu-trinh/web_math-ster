@@ -457,12 +457,12 @@ export default function LessonClientView({
                   />
 
                   <div
-                    className={`absolute bottom-0 left-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default ${useNativeVideoFullscreen ? "hidden" : ""}`}
+                    className="absolute bottom-0 left-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
                     onClick={(e) => e.stopPropagation()}
                   />
 
                   <div
-                    className={`absolute bottom-0 right-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default ${useNativeVideoFullscreen ? "hidden" : ""}`}
+                    className="absolute bottom-0 right-0 w-80 h-16 z-20 bg-transparent pointer-events-auto cursor-default"
                     onClick={(e) => e.stopPropagation()}
                   />
 

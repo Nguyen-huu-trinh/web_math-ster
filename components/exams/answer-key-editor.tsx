@@ -1,198 +1,85 @@
 "use client";
 
-import { AnswerKey, QuestionConfig } from "@/types/exam";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import type { AnswerKey, ExamType, QuestionConfig } from "@/types/exam";
+import "./answer-key-editor.css";
 
 interface Props {
   answerKey: AnswerKey;
   questionConfig: QuestionConfig;
+  examType: ExamType;
   onChange: (value: AnswerKey) => void;
 }
 
-export function AnswerKeyEditor({
-  answerKey,
-  questionConfig,
-  onChange,
-}: Props) {
-  function updateMC(index: number, value: string) {
-    const next = [...answerKey.multipleChoice];
-    next[index] = value.toUpperCase();
+export function AnswerKeyEditor({ answerKey, questionConfig: config, examType, onChange }: Props) {
+  const secondStart = config.multipleChoice;
+  const thirdStart = secondStart + config.trueFalse;
+  const total = thirdStart + config.shortAnswer;
+  const freeScore = total ? Number((10 / total).toFixed(2)) : 0;
 
-    onChange({
-      ...answerKey,
-      multipleChoice: next,
-    });
-  }
-
-  function updateShort(index: number, value: string) {
-    const next = [...answerKey.shortAnswer];
-    next[index] = value;
-
-    onChange({
-      ...answerKey,
-      shortAnswer: next,
-    });
-  }
-
-  function updateTrueFalse(
-    question: number,
-    option: number,
-    value: string
-  ) {
-    const next = [...answerKey.trueFalse];
-
-    if (!next[question]) {
-      next[question] = ["", "", "", ""];
-    }
-
-    next[question][option] = value.toUpperCase();
-
-    onChange({
-      ...answerKey,
-      trueFalse: next,
-    });
+  function update(section: keyof AnswerKey, index: number, value: string, column?: number) {
+    const next: AnswerKey = {
+      multipleChoice: Array.from({ length: config.multipleChoice }, (_, i) => answerKey.multipleChoice[i] ?? ""),
+      trueFalse: Array.from({ length: config.trueFalse }, (_, i) => Array.from({ length: 4 }, (_, j) => answerKey.trueFalse[i]?.[j] ?? "")),
+      shortAnswer: Array.from({ length: config.shortAnswer }, (_, i) => answerKey.shortAnswer[i] ?? ""),
+    };
+    if (section === "trueFalse" && column !== undefined) next.trueFalse[index][column] = value;
+    else if (section !== "trueFalse") next[section][index] = value;
+    onChange(next);
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
+      {config.multipleChoice > 0 && <section className="answer-panel">
+        <div className="answer-section-heading"><h2>Phần I • Trắc nghiệm 4 lựa chọn (Câu 1 – {secondStart})</h2><span>{examType === "MOET" ? "0.25" : freeScore} điểm / câu</span></div>
 
-      {/* Multiple Choice */}
-
-      <Card>
-
-        <CardContent className="space-y-4 p-6">
-
-          <h3 className="font-semibold">
-            Phần I - Trắc nghiệm
-          </h3>
-
-          <div className="grid grid-cols-5 gap-4">
-
-            {Array.from({
-              length: questionConfig.multipleChoice,
-            }).map((_, index) => (
-
-              <div key={index}>
-
-                <Label>
-                  Câu {index + 1}
-                </Label>
-
-                <Input
-                  value={
-                    answerKey.multipleChoice[index] ?? ""
-                  }
-                  onChange={(e) =>
-                    updateMC(index, e.target.value)
-                  }
-                  placeholder="A"
-                />
-
-              </div>
-
-            ))}
-
-          </div>
-
-        </CardContent>
-
-      </Card>
-
-      {/* True False */}
-
-      <Card>
-
-        <CardContent className="space-y-6 p-6">
-
-          <h3 className="font-semibold">
-            Phần II - Đúng / Sai
-          </h3>
-
-          {Array.from({
-            length: questionConfig.trueFalse,
-          }).map((_, q) => (
-
-            <div key={q}>
-
-              <Label className="mb-3 block">
-                Câu {q + 1}
-              </Label>
-
-              <div className="grid grid-cols-4 gap-3">
-
-                {[0,1,2,3].map((option)=>(
-                  <Input
-                    key={option}
-                    placeholder={`Ý ${option+1}`}
-                    value={
-                      answerKey.trueFalse[q]?.[option] ?? ""
-                    }
-                    onChange={(e)=>
-                      updateTrueFalse(
-                        q,
-                        option,
-                        e.target.value
-                      )
-                    }
-                  />
+        <div className="columns-1 gap-4 sm:columns-2 lg:columns-4">
+          {Array.from({ length: secondStart }, (_, index) => (
+            <div key={index} className="answer-entry mb-3 break-inside-avoid">
+              <span className="shrink-0 font-extrabold text-slate-900">{index + 1}.</span>
+              <div className="flex gap-1.5" role="group" aria-label={`Đáp án câu ${index + 1}`}>
+                {["A", "B", "C", "D"].map((answer) => (
+                  <button key={answer} type="button" aria-label={`Câu ${index + 1}: ${answer}`} aria-pressed={answerKey.multipleChoice[index] === answer} onClick={() => update("multipleChoice", index, answer)} className={`flex size-8 items-center justify-center rounded-full border text-sm font-bold transition-colors ${answerKey.multipleChoice[index] === answer ? "border-slate-900 bg-slate-900 text-amber-400" : "border-slate-200 bg-white text-slate-500 hover:bg-slate-100"}`}>
+                    {answer}
+                  </button>
                 ))}
-
               </div>
-
             </div>
-
           ))}
+        </div>
+      </section>}
 
-        </CardContent>
+      {config.trueFalse > 0 && <section className="answer-panel">
+        <div className="answer-section-heading"><h2>Phần II • Trắc nghiệm đúng / sai (Câu {secondStart + 1} – {thirdStart})</h2><span>{examType === "MOET" ? "Thang điểm Bộ GD (0.1 – 0.25 – 0.5 – 1.0đ)" : `${freeScore} điểm / câu`}</span></div>
+        <p className="mb-4 text-sm leading-relaxed text-slate-500">Chọn Đ cho đúng, S cho sai.</p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: config.trueFalse }, (_, index) => (
+            <div key={index} className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+              <p className="mb-3 text-sm font-extrabold text-slate-900">Câu {secondStart + index + 1} <span className="float-right text-xs font-medium text-slate-500">4 mệnh đề</span></p>
+              {["a", "b", "c", "d"].map((label, column) => (
+                <div key={label} className="mb-2 flex items-center justify-between gap-3 text-sm font-bold">
+                  <span>{label})</span>
+                  <div className="flex gap-1.5" role="group" aria-label={`Câu ${secondStart + index + 1} ý ${label}`}>
+                    {["Đ", "S"].map((answer) => (
+                      <button key={answer} type="button" aria-label={`Câu ${secondStart + index + 1} ý ${label}: ${answer}`} aria-pressed={answerKey.trueFalse[index]?.[column] === answer} onClick={() => update("trueFalse", index, answer, column)} className={`flex size-8 items-center justify-center rounded-md border text-sm font-bold transition-colors ${answerKey.trueFalse[index]?.[column] === answer ? "border-slate-900 bg-slate-900 text-amber-400" : "border-slate-200 bg-white text-slate-500 hover:bg-slate-100"}`}>
+                        {answer}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </section>}
 
-      </Card>
-
-      {/* Short Answer */}
-
-      <Card>
-
-        <CardContent className="space-y-4 p-6">
-
-          <h3 className="font-semibold">
-            Phần III - Trả lời ngắn
-          </h3>
-
-          <div className="grid grid-cols-4 gap-4">
-
-            {Array.from({
-              length: questionConfig.shortAnswer,
-            }).map((_, index)=>(
-
-              <div key={index}>
-
-                <Label>
-                  Câu {index+1}
-                </Label>
-
-                <Input
-                  value={
-                    answerKey.shortAnswer[index] ?? ""
-                  }
-                  onChange={(e)=>
-                    updateShort(
-                      index,
-                      e.target.value
-                    )
-                  }
-                />
-
-              </div>
-
-            ))}
-
-          </div>
-
-        </CardContent>
-
-      </Card>
-
+      {config.shortAnswer > 0 && <section className="answer-panel">
+        <div className="answer-section-heading"><h2>Phần III • Trả lời ngắn (Câu {thirdStart + 1} – {thirdStart + config.shortAnswer})</h2><span>{examType === "MOET" ? "0.5" : freeScore} điểm / câu</span></div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: config.shortAnswer }, (_, index) => <label key={index} className="answer-entry"><div><p className="font-extrabold text-slate-900">Câu {thirdStart + index + 1}</p><p className="mt-1 text-xs font-medium text-slate-500">Tối đa 4 ký tự</p></div><Input aria-label={`Đáp án câu ${thirdStart + index + 1}`} placeholder="VD: -2.5" maxLength={4} autoComplete="off" value={answerKey.shortAnswer[index] ?? ""} onChange={(event) => { const value = event.target.value.replace(",", "."); if (/^-?\d*\.?\d*$/.test(value)) update("shortAnswer", index, value); }} className="w-28 text-center font-extrabold placeholder:font-normal placeholder:text-slate-400" /></label>)}
+        </div>
+      </section>}
+      {thirdStart + config.shortAnswer === 0 && <p className="answer-panel text-center text-slate-500">Chưa có câu hỏi. Quay lại cấu hình để thêm số câu.</p>}
     </div>
   );
 }

@@ -51,7 +51,7 @@ export default function ExamAnswerKeyPage() {
   if (examQuery.isLoading) {
     return (
       <div className="p-8">
-        Đang húc . . . 
+        Đang tải đáp án...
       </div>
     );
   }
@@ -82,25 +82,26 @@ export default function ExamAnswerKeyPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-6">
 
-      <Card>
+      <Card className="gap-0 rounded-[26px] border-slate-200 bg-white py-0 shadow-none">
 
-        <CardHeader>
+        <CardHeader className="px-6 py-5">
 
-          <CardTitle>
+          <CardTitle className="text-xl font-extrabold tracking-tight text-slate-900">
             Nhập đáp án
           </CardTitle>
 
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm font-semibold text-slate-500">
             {exam.title}
           </p>
 
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
 
           <AnswerKeyEditor
             answerKey={answerKey}
             questionConfig={exam.question_config}
+            examType={exam.exam_type}
             onChange={setAnswerKey}
           />
 
@@ -112,12 +113,14 @@ export default function ExamAnswerKeyPage() {
 
         <Button
           variant="outline"
+          className="h-10 rounded-full border-slate-200 bg-white px-5 font-extrabold text-slate-700 hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900"
           onClick={() => router.back()}
         >
           Hủy
         </Button>
 
         <Button
+          className="h-10 rounded-full border-amber-400 bg-amber-400 px-5 font-extrabold text-slate-900 hover:border-amber-500 hover:bg-amber-500"
           onClick={save}
           disabled={updateAnswerKey.isPending}
         >

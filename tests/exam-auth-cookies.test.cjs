@@ -15,20 +15,20 @@ test('middleware forwards rotated cookies to the handler and browser with cache 
       getAll: () => [...values.values()],
     };
   };
-  const request = { cookies: jar() };
+  const request = { cookies: jar(), nextUrl: { pathname: '/api/test' } };
   request.cookies.set('sb-auth-token', 'old');
   const scope = {
     exports: {}, Headers, process: { env: {} },
     require: name => name === 'next/server' ? {
       NextResponse: { next: ({ request }) => ({ request, headers: new Headers(), cookies: jar() }) },
     } : {
-      createServerClient: (_url, _key, { cookies }) => ({ auth: { getUser: async () => {
+      createServerClient: (_url, _key, { cookies }) => ({ auth: { getClaims: async () => {
         assert.equal(cookies.getAll()[0].value, 'old');
         cookies.setAll([{ name: 'sb-auth-token', value: 'new', options: { httpOnly: false, path: '/' } }], {
           'Cache-Control': 'private, no-store', Expires: '0', Pragma: 'no-cache',
         });
         cookies.setAll([{ name: 'sb-auth-token.1', value: 'chunk', options: { path: '/' } }], {});
-        return { data: { user: { id: 'student' } }, error: null };
+        return { data: { claims: { sub: 'student' } }, error: null };
       } } }),
     },
   };

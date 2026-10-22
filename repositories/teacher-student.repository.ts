@@ -638,7 +638,7 @@ async addToCourse(
         }
 
         return data;
-    }    
+    }
 
     // ==========================================
     // DISABLE
@@ -669,10 +669,7 @@ async addToCourse(
         return data;
     }
 async enable(studentId: string) {
-    console.log(
-        "[ENABLE REPOSITORY] studentId:",
-        studentId
-    );
+
 
     const supabase =
         await createClient();

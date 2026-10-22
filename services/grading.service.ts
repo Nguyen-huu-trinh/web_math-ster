@@ -23,6 +23,7 @@ export class GradingService {
     if (error) throw error;
 
     let totalScore = 0;
+    const details = [];
 
     for (const item of answers) {
       let earned = 0;
@@ -47,9 +48,7 @@ export class GradingService {
 
       totalScore += earned;
 
-      await supabase
-        .from("result_details")
-        .insert({
+      details.push({
           attempt_id: attemptId,
           question_id: item.question_id,
           score: earned,
@@ -57,13 +56,19 @@ export class GradingService {
         });
     }
 
-    await supabase
+    if (details.length) {
+      const { error: detailError } = await supabase.from("result_details").insert(details);
+      if (detailError) throw detailError;
+    }
+
+    const { error: attemptError } = await supabase
       .from("exam_attempts")
       .update({
         score: totalScore,
         graded_at: new Date().toISOString(),
       })
       .eq("id", attemptId);
+    if (attemptError) throw attemptError;
 
     return {
       score: totalScore,

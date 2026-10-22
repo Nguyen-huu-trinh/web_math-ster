@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/logging";
 import { NextResponse } from "next/server";
 
 import { ZodError } from "zod";
@@ -5,7 +6,7 @@ import { ZodError } from "zod";
 import { HttpError } from "./http-error";
 
 export function handleError(error: unknown) {
-  console.error(error);
+  logServerError(error);
 
   if (error instanceof HttpError) {
     return NextResponse.json(

@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 export class LeaderboardRepository {
 
   async getDashboardData() {
-    console.log("🔥 RUNNING getDashboardData IN REPOSITORY");
+
     const supabase = await createClient();
 
     // Dùng chung 1 instance supabase client cho các query song song
@@ -43,7 +43,7 @@ export class LeaderboardRepository {
     const needsHp = excellentData.some((s: any) => s.points === undefined && s.hp === undefined);
     if (needsHp && excellentData.length > 0) {
       const studentIds = excellentData.map((s: any) => s.student_id).filter(Boolean);
-      
+
       const { data: profilePoints } = await supabase
         .from("profiles")
         .select("id, points")

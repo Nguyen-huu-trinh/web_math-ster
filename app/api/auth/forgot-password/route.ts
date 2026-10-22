@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/logging";
 import { NextResponse } from "next/server";
 
 import {
@@ -37,10 +38,7 @@ export async function POST(
       );
     }
 
-    console.log(
-      "[FORGOT PASSWORD] INPUT:",
-      email
-    );
+
 
     // =====================================================
     // TÌM HỌC SINH
@@ -65,15 +63,9 @@ export async function POST(
       .is("deleted_at", null)
       .maybeSingle();
 
-    console.log(
-      "[FORGOT PASSWORD] PROFILE:",
-      profile
-    );
 
-    console.log(
-      "[FORGOT PASSWORD] ERROR:",
-      error
-    );
+
+
 
     if (error) {
       return NextResponse.json(
@@ -147,7 +139,7 @@ export async function POST(
       });
 
     if (insertError) {
-      console.error(
+      logServerError(
         "[FORGOT PASSWORD] INSERT OTP ERROR:",
         insertError
       );
@@ -172,10 +164,7 @@ export async function POST(
       otp,
     });
 
-    console.log(
-      "[FORGOT PASSWORD] OTP SENT:",
-      profile.personal_email
-    );
+
 
     return NextResponse.json({
       success: true,
@@ -184,7 +173,7 @@ export async function POST(
     });
 
   } catch (error) {
-    console.error(
+    logServerError(
       "[FORGOT PASSWORD] ERROR:",
       error
     );

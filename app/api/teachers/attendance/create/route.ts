@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/logging";
 import { NextResponse } from "next/server";
 
 import { UserRole } from "@/lib/auth/roles";
@@ -32,9 +33,7 @@ export async function POST(request: Request) {
         const supabase =
             await createClient();
 
-        console.log("[ATTENDANCE CREATE] BEFORE RPC", {
-    code,
-});
+
 
 const {
     data,
@@ -46,13 +45,10 @@ const {
     }
 );
 
-console.log("[ATTENDANCE CREATE] AFTER RPC", {
-    data,
-    error,
-});
+
 
         if (error) {
-            console.error(
+            logServerError(
                 "CREATE ATTENDANCE ERROR:",
                 error
             );
@@ -76,7 +72,7 @@ console.log("[ATTENDANCE CREATE] AFTER RPC", {
         });
 
     } catch (error) {
-        console.error(
+        logServerError(
             "ATTENDANCE CREATE API ERROR:",
             error
         );

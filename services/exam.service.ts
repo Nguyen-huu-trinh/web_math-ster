@@ -108,14 +108,7 @@ const attempts =
   await studentExamRepository
     .getSubmittedAttemptsForRegrade(id);
 
-console.log(
-  "[REGRADE DEBUG] attempts:",
-  {
-    examId: id,
-    count: attempts.length,
-    attempts,
-  }
-);
+
 
     // ========================================================
     // 3. KHÔNG CÓ BÀI ĐÃ NỘP
@@ -168,10 +161,7 @@ console.log(
           }
         )
     );
-    console.log(
-  "[REGRADE DEBUG] results:",
-  results
-);
+
 
     // ========================================================
     // 5. UPDATE ATTEMPTS + POINTS
@@ -179,83 +169,19 @@ console.log(
 
 
 
-    for (const result of results) {
-
-      // ------------------------------------------------------
-      // Update score + is_passed
-      // ------------------------------------------------------
-
- const {
-  data: updatedAttempt,
-  error: attemptError,
-} =
-  await adminClient
-    .from("exam_attempts")
-    .update({
-      score:
-        result.newScore,
-
-      is_passed:
-        result.newPassed,
-
-      updated_at:
-        new Date().toISOString(),
-    })
-    .eq(
-      "id",
-      result.attemptId
-    )
-    .select(
-      "id, score, is_passed"
-    )
-    .single();
-
-console.log(
-  "[REGRADE DEBUG] updated attempt:",
-  {
-    attemptId:
-      result.attemptId,
-
-    updatedAttempt,
-
-    error:
-      attemptError,
-  }
-);
-
-if (attemptError) {
-  throw attemptError;
-}
-
-      // ------------------------------------------------------
-      // Điều chỉnh points nếu pass/fail thay đổi
-      // ------------------------------------------------------
-
-      if (
-        result.pointCorrection !== 0
-      ) {
-      const {
-  error: pointsError,
-} =
-  await adminClient.rpc(
-    "adjust_student_points",
-    {
-      p_student_id:
-        result.studentId,
-
-      p_delta:
-        result.pointCorrection,
-    }
-  );
-
-if (pointsError) {
-  throw pointsError;
-}
-
-        if (pointsError) {
-          throw pointsError;
-        }
-      }
+    // One network request per 500 attempts; score and point correction commit
+    // together within each batch. The RPC rejects stale attempt snapshots.
+    for (let offset = 0; offset < results.length; offset += 500) {
+      const batch = results.slice(offset, offset + 500).map(result => ({
+        attempt_id: result.attemptId, student_id: result.studentId,
+        old_score: result.oldScore, new_score: result.newScore,
+        old_passed: result.oldPassed, new_passed: result.newPassed,
+        point_correction: result.pointCorrection,
+      }));
+      const { error } = await adminClient.rpc("apply_exam_regrades", {
+        p_exam_id: id, p_rows: batch,
+      });
+      if (error) throw error;
     }
 
     return exam;

@@ -8,22 +8,31 @@ export function useStarSync(deckId: string) {
   const pending = useRef(new Map<string, boolean>());
   const running = useRef<Promise<boolean> | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const failures = useRef(0);
+  const retryAt = useRef(0);
   const [state, setState] = useState<"saved" | "pending" | "saving" | "error">("saved");
 
   const flush = useCallback((): Promise<boolean> => {
     clearTimeout(timer.current);
     if (running.current) return running.current;
+    if (!navigator.onLine) return Promise.resolve(false);
+    const failed = () => {
+      retryAt.current = Date.now() + Math.min(300000, 10000 * 2 ** Math.min(failures.current++, 5));
+      setState("error");
+      return false;
+    };
     const work = async () => {
       while (pending.current.size) {
         const batch = Array.from(pending.current.entries()).slice(0, 200);
         setState("saving");
         try {
           const result = await updateCardStars(deckId, batch.map(([cardId, isStarred]) => ({ cardId, isStarred })));
-          if (!result.ok) { setState("error"); return false; }
+          if (!result.ok) return failed();
+          failures.current = 0; retryAt.current = 0;
           for (const [id, value] of batch) {
             if (pending.current.get(id) === value) pending.current.delete(id);
           }
-        } catch { setState("error"); return false; }
+        } catch { return failed(); }
       }
       setState("saved");
       return true;
@@ -40,7 +49,9 @@ export function useStarSync(deckId: string) {
   }, [flush]);
 
   useEffect(() => {
-    const interval = setInterval(() => { if (pending.current.size) void flush(); }, 10000);
+    const interval = setInterval(() => {
+      if (pending.current.size && Date.now() >= retryAt.current) void flush();
+    }, 10000);
     const onHidden = () => { if (document.visibilityState === "hidden") void flush(); };
     const onUnload = (event: BeforeUnloadEvent) => {
       if (pending.current.size) { event.preventDefault(); event.returnValue = ""; }

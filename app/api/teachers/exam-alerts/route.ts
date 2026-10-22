@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/logging";
 import { NextResponse } from "next/server";
 
 import { requireTeacher } from "@/lib/auth/teacher";
@@ -122,13 +123,7 @@ if (seenAlertsError) {
   throw seenAlertsError;
 }
 
-console.log(
-  "[TEACHER EXAM ALERT SEEN]",
-  {
-    count: seenAlerts?.length ?? 0,
-    error: seenAlertsError,
-  }
-);
+
     // =====================================================
     // 5. Tạo key để kiểm tra cảnh báo đã xem
     // =====================================================
@@ -323,7 +318,7 @@ console.log(
     });
 
   } catch (error) {
-    console.error(
+    logServerError(
       "[TEACHER EXAM ALERTS GET ERROR]",
       error
     );

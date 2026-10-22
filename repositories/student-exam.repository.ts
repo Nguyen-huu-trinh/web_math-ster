@@ -527,7 +527,7 @@ if (prerequisites && prerequisites.length > 0) {
   }
 }
 
-  
+
   // ===========================
   // Đếm số lần làm
   // ===========================
@@ -625,11 +625,7 @@ if (prerequisites && prerequisites.length > 0) {
   if (error) {
     throw error;
   }
-  console.log("[START EXAM] CREATED", {
-    examId,
-    studentId,
-    attemptId: attempt.id,
-});
+
   return attempt;
 }
 async getTeacherAttemptDetail(
@@ -782,14 +778,7 @@ async getAttemptDetail(
         },
     } = await supabase.auth.getUser();
 
-    console.log(
-        "[GET ATTEMPT DETAIL AUTH]",
-        {
-            authUserId: user?.id,
-            studentId,
-            attemptId,
-        }
-    );
+
 
     // ==========================
     // Attempt
@@ -805,18 +794,7 @@ async getAttemptDetail(
         .eq("student_id", studentId)
         .maybeSingle();
 
-    console.log(
-        "[GET ATTEMPT DETAIL RESULT]",
-        {
-            authUserId: user?.id,
-            studentId,
-            attemptId,
-            found: !!attempt,
-            attemptStudentId:
-                attempt?.student_id ?? null,
-            error: attemptError,
-        }
-    );
+
 
     if (attemptError) {
         throw attemptError;
@@ -829,7 +807,7 @@ async getAttemptDetail(
     }
 
 
- 
+
   // Exam
 
   const {

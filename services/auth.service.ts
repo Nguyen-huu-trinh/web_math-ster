@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 export interface LoginDto {
     email: string;
@@ -7,6 +8,7 @@ export interface LoginDto {
 
 class AuthService {
     private supabase = createClient();
+    private userRequest: Promise<User | null> | null = null;
 
     async login(data: LoginDto) {
         const {
@@ -107,12 +109,15 @@ class AuthService {
     }
 }
 
-    async getUser() {
-        const {
-            data: { user },
-        } = await this.supabase.auth.getUser();
-
-        return user;
+    getUser(): Promise<User | null> {
+        // Share only concurrent checks (e.g. Strict Mode mounts), never cache
+        // a completed identity check across users or requests.
+        if (!this.userRequest) {
+            this.userRequest = this.supabase.auth.getUser()
+                .then(({ data }) => data.user)
+                .finally(() => { this.userRequest = null; });
+        }
+        return this.userRequest;
     }
 
     async getSession() {

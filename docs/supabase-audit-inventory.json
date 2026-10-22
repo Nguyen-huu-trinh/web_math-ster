@@ -1,0 +1,791 @@
+{
+  "scannedFiles": 532,
+  "removedServerDebugLogs": 24,
+  "debugLogs": [
+    {
+      "file": "app\\(app)\\exams\\[id]\\answers\\page.tsx",
+      "line": 360,
+      "server": false,
+      "preview": "console.log(\r\n      \"[DELETE ATTEMPT SUCCESS]\",\r\n      data\r\n    )"
+    },
+    {
+      "file": "app\\(app)\\exams\\[id]\\page.tsx",
+      "line": 68,
+      "server": false,
+      "preview": "console.log(\"[EXAM PDF]\", {\r\n  examId: exam.id,\r\n  examFileUrl: exam.exam_file_url,\r\n})"
+    },
+    {
+      "file": "app\\(exam)\\student-exams\\[id]\\answer-sheet.tsx",
+      "line": 200,
+      "server": false,
+      "preview": "console.log(\r\n          \"[EXAM] TIME UP - AUTO SUBMIT\"\r\n        )"
+    },
+    {
+      "file": "app\\(exam)\\student-exams\\[id]\\answer-sheet.tsx",
+      "line": 486,
+      "server": false,
+      "preview": "console.log(\r\n      \"[EXAM] FORCE SUBMIT\"\r\n    )"
+    },
+    {
+      "file": "app\\(exam)\\student-exams\\[id]\\student-exam-layout.tsx",
+      "line": 131,
+      "server": false,
+      "preview": "console.log(\r\n      \"[EXAM] Screen Wake Lock enabled\"\r\n    )"
+    },
+    {
+      "file": "app\\(exam)\\student-exams\\[id]\\student-exam-layout.tsx",
+      "line": 265,
+      "server": false,
+      "preview": "console.log(\"[EXAM] SUBMIT SUCCESS\")"
+    },
+    {
+      "file": "app\\api\\auth\\forgot-password\\route.ts",
+      "line": 40,
+      "server": true,
+      "preview": "console.log(\r\n      \"[FORGOT PASSWORD] INPUT:\",\r\n      email\r\n    )"
+    },
+    {
+      "file": "app\\api\\auth\\forgot-password\\route.ts",
+      "line": 68,
+      "server": true,
+      "preview": "console.log(\r\n      \"[FORGOT PASSWORD] PROFILE:\",\r\n      profile\r\n    )"
+    },
+    {
+      "file": "app\\api\\auth\\forgot-password\\route.ts",
+      "line": 73,
+      "server": true,
+      "preview": "console.log(\r\n      \"[FORGOT PASSWORD] ERROR:\",\r\n      error\r\n    )"
+    },
+    {
+      "file": "app\\api\\auth\\forgot-password\\route.ts",
+      "line": 175,
+      "server": true,
+      "preview": "console.log(\r\n      \"[FORGOT PASSWORD] OTP SENT:\",\r\n      profile.personal_email\r\n    )"
+    },
+    {
+      "file": "app\\api\\teachers\\attendance\\create\\route.ts",
+      "line": 35,
+      "server": true,
+      "preview": "console.log(\"[ATTENDANCE CREATE] BEFORE RPC\", {\r\n    code,\r\n})"
+    },
+    {
+      "file": "app\\api\\teachers\\attendance\\create\\route.ts",
+      "line": 49,
+      "server": true,
+      "preview": "console.log(\"[ATTENDANCE CREATE] AFTER RPC\", {\r\n    data,\r\n    error,\r\n})"
+    },
+    {
+      "file": "app\\api\\teachers\\exam-alerts\\route.ts",
+      "line": 125,
+      "server": true,
+      "preview": "console.log(\r\n  \"[TEACHER EXAM ALERT SEEN]\",\r\n  {\r\n    count: seenAlerts?.length ?? 0,\r\n    error: seenAlertsError,\r\n  }\r\n)"
+    },
+    {
+      "file": "app\\api\\teachers\\students\\[studentId]\\enable\\route.ts",
+      "line": 25,
+      "server": true,
+      "preview": "console.log(\r\n            \"[ENABLE] studentId:\",\r\n            studentId\r\n        )"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\answer-sheet-new.tsx",
+      "line": 299,
+      "server": false,
+      "preview": "console.log(\r\n    \"[EXAM] SUBMIT SUCCESS\",\r\n    data\r\n  )"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\answer-sheet-new.tsx",
+      "line": 466,
+      "server": false,
+      "preview": "console.log(\r\n    \"[EXAM] TIMEOUT - AUTO SUBMIT\"\r\n  )"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\answer-sheet-new.tsx",
+      "line": 498,
+      "server": false,
+      "preview": "console.log(\r\n          \"[EXAM] FORCE SUBMIT\"\r\n        )"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\answer-sheet-new.tsx",
+      "line": 631,
+      "server": false,
+      "preview": "console.log(\r\n  \"[EXAM RESULT DEBUG]\",\r\n  {\r\n    result,\r\n    attemptScore: attempt?.score,\r\n    attemptIsPassed:\r\n      attempt?.is_passed,\r\n    resultPassed:\r"
+    },
+    {
+      "file": "components\\lesson-resources\\resource-card.tsx",
+      "line": 83,
+      "server": false,
+      "preview": "console.log(\r\n                \"[RESOURCE ACCESS]\",\r\n                {\r\n                    resourceId: resource.id,\r\n                    examId: resource.exam_i"
+    },
+    {
+      "file": "lib\\api\\course.ts",
+      "line": 8,
+      "server": false,
+      "preview": "console.log(\"STATUS =\", res.status)"
+    },
+    {
+      "file": "lib\\exam\\submit\\orchestrator.ts",
+      "line": 43,
+      "server": true,
+      "preview": "console.log(\n  \"[TIMEOUT DEBUG] CONTEXT\",\n  {\n    attemptId:\n      input.attemptId,\n\n    studentId:\n      input.studentId,\n\n    submittedAt:\n      context?.atte"
+    },
+    {
+      "file": "services\\exam.service.ts",
+      "line": 111,
+      "server": true,
+      "preview": "console.log(\r\n  \"[REGRADE DEBUG] attempts:\",\r\n  {\r\n    examId: id,\r\n    count: attempts.length,\r\n    attempts,\r\n  }\r\n)"
+    },
+    {
+      "file": "services\\exam.service.ts",
+      "line": 171,
+      "server": true,
+      "preview": "console.log(\r\n  \"[REGRADE DEBUG] results:\",\r\n  results\r\n)"
+    },
+    {
+      "file": "services\\exam.service.ts",
+      "line": 213,
+      "server": true,
+      "preview": "console.log(\r\n  \"[REGRADE DEBUG] updated attempt:\",\r\n  {\r\n    attemptId:\r\n      result.attemptId,\r\n\r\n    updatedAttempt,\r\n\r\n    error:\r\n      attemptError,\r\n  }"
+    },
+    {
+      "file": "repositories\\leaderboard.repository.ts",
+      "line": 6,
+      "server": true,
+      "preview": "console.log(\"🔥 RUNNING getDashboardData IN REPOSITORY\")"
+    },
+    {
+      "file": "repositories\\lesson-content.repository.ts",
+      "line": 61,
+      "server": true,
+      "preview": "console.log(\"CREATE RESOURCE\", values)"
+    },
+    {
+      "file": "repositories\\lesson-content.repository.ts",
+      "line": 79,
+      "server": true,
+      "preview": "console.log(\"FILE LINK CREATED\", fileLink)"
+    },
+    {
+      "file": "repositories\\lesson-content.repository.ts",
+      "line": 109,
+      "server": true,
+      "preview": "console.log(\"LESSON CONTENT CREATED\", data)"
+    },
+    {
+      "file": "repositories\\lesson-content.repository.ts",
+      "line": 118,
+      "server": true,
+      "preview": "console.log(\"UPDATE RESOURCE\", values)"
+    },
+    {
+      "file": "repositories\\lesson-content.repository.ts",
+      "line": 163,
+      "server": true,
+      "preview": "console.log(\"RESOURCE UPDATED\", data)"
+    },
+    {
+      "file": "repositories\\lesson-content.repository.ts",
+      "line": 169,
+      "server": true,
+      "preview": "console.log(\"DELETE RESOURCE\", id)"
+    },
+    {
+      "file": "repositories\\lesson-content.repository.ts",
+      "line": 198,
+      "server": true,
+      "preview": "console.log(\"RESOURCE DELETED\")"
+    },
+    {
+      "file": "repositories\\student-exam.repository.ts",
+      "line": 628,
+      "server": true,
+      "preview": "console.log(\"[START EXAM] CREATED\", {\r\n    examId,\r\n    studentId,\r\n    attemptId: attempt.id,\r\n})"
+    },
+    {
+      "file": "repositories\\student-exam.repository.ts",
+      "line": 785,
+      "server": true,
+      "preview": "console.log(\r\n        \"[GET ATTEMPT DETAIL AUTH]\",\r\n        {\r\n            authUserId: user?.id,\r\n            studentId,\r\n            attemptId,\r\n        }\r\n   "
+    },
+    {
+      "file": "repositories\\student-exam.repository.ts",
+      "line": 808,
+      "server": true,
+      "preview": "console.log(\r\n        \"[GET ATTEMPT DETAIL RESULT]\",\r\n        {\r\n            authUserId: user?.id,\r\n            studentId,\r\n            attemptId,\r\n            "
+    },
+    {
+      "file": "repositories\\teacher-student.repository.ts",
+      "line": 672,
+      "server": true,
+      "preview": "console.log(\r\n        \"[ENABLE REPOSITORY] studentId:\",\r\n        studentId\r\n    )"
+    }
+  ],
+  "effects": [
+    {
+      "file": "app\\(app)\\courses\\page.tsx",
+      "line": 62,
+      "kind": "useEffect",
+      "deps": "[queryCourseId]"
+    },
+    {
+      "file": "app\\(app)\\courses\\page.tsx",
+      "line": 73,
+      "kind": "useEffect",
+      "deps": "[filteredCourses, selectedCourseId]"
+    },
+    {
+      "file": "app\\(app)\\courses\\[courseId]\\lessons\\[lessonId]\\lesson-client-view.tsx",
+      "line": 83,
+      "kind": "useEffect",
+      "deps": "[]"
+    },
+    {
+      "file": "app\\(app)\\courses\\[courseId]\\lessons\\[lessonId]\\lesson-client-view.tsx",
+      "line": 111,
+      "kind": "useEffect",
+      "deps": "[]"
+    },
+    {
+      "file": "app\\(app)\\courses\\[courseId]\\lessons\\[lessonId]\\lesson-client-view.tsx",
+      "line": 127,
+      "kind": "useEffect",
+      "deps": "[isMobileFullscreen]"
+    },
+    {
+      "file": "app\\(app)\\courses\\[courseId]\\lessons\\[lessonId]\\lesson-client-view.tsx",
+      "line": 141,
+      "kind": "useEffect",
+      "deps": "[lesson]"
+    },
+    {
+      "file": "app\\(app)\\courses\\[courseId]\\lessons\\[lessonId]\\lesson-client-view.tsx",
+      "line": 146,
+      "kind": "useCallback",
+      "deps": "[role]"
+    },
+    {
+      "file": "app\\(app)\\courses\\[courseId]\\lessons\\[lessonId]\\lesson-client-view.tsx",
+      "line": 196,
+      "kind": "useEffect",
+      "deps": "[resources, checkResourceAccess]"
+    },
+    {
+      "file": "app\\(app)\\courses\\[courseId]\\lessons\\[lessonId]\\lesson-client-view.tsx",
+      "line": 217,
+      "kind": "useCallback",
+      "deps": "[isMobileFullscreen]"
+    },
+    {
+      "file": "app\\(app)\\dashboard\\student-dashboard.tsx",
+      "line": 93,
+      "kind": "useEffect",
+      "deps": "[dashboard?.profile?.points]"
+    },
+    {
+      "file": "app\\(app)\\dashboard\\student-dashboard.tsx",
+      "line": 99,
+      "kind": "useEffect",
+      "deps": "[dashboard?.profile?.learning_goal]"
+    },
+    {
+      "file": "app\\(app)\\dashboard\\teacher-dashboard.tsx",
+      "line": 62,
+      "kind": "useEffect",
+      "deps": "[announcement.data]"
+    },
+    {
+      "file": "app\\(app)\\exams\\create\\create-exam-wizard.tsx",
+      "line": 105,
+      "kind": "useEffect",
+      "deps": "[\r\n  mode,\r\n  initialData,\r\n  existingPrerequisites,\r\n]"
+    },
+    {
+      "file": "app\\(app)\\exams\\create\\steps\\question-config-step.tsx",
+      "line": 37,
+      "kind": "useEffect",
+      "deps": "[\r\n  isTHPT,\r\n  config.multipleChoice,\r\n  config.trueFalse,\r\n  config.shortAnswer,\r\n  onConfigChange,\r\n]"
+    },
+    {
+      "file": "app\\(app)\\exams\\[id]\\answer-key\\page.tsx",
+      "line": 39,
+      "kind": "useEffect",
+      "deps": "[examQuery.data]"
+    },
+    {
+      "file": "app\\(app)\\layout.tsx",
+      "line": 33,
+      "kind": "useEffect",
+      "deps": "[loading, user, router]"
+    },
+    {
+      "file": "app\\(app)\\profile\\page.tsx",
+      "line": 74,
+      "kind": "useEffect",
+      "deps": "[profile]"
+    },
+    {
+      "file": "app\\(app)\\settings\\page.tsx",
+      "line": 45,
+      "kind": "useEffect",
+      "deps": "[theme, setTheme]"
+    },
+    {
+      "file": "app\\(exam)\\student-exams\\[id]\\answer-sheet.tsx",
+      "line": 121,
+      "kind": "useEffect",
+      "deps": "[answers]"
+    },
+    {
+      "file": "app\\(exam)\\student-exams\\[id]\\answer-sheet.tsx",
+      "line": 132,
+      "kind": "useEffect",
+      "deps": "[remainingSeconds]"
+    },
+    {
+      "file": "app\\(exam)\\student-exams\\[id]\\answer-sheet.tsx",
+      "line": 190,
+      "kind": "useEffect",
+      "deps": "[review, result]"
+    },
+    {
+      "file": "app\\(exam)\\student-exams\\[id]\\answer-sheet.tsx",
+      "line": 481,
+      "kind": "useEffect",
+      "deps": null
+    },
+    {
+      "file": "app\\(exam)\\student-exams\\[id]\\answer-sheet.tsx",
+      "line": 484,
+      "kind": "useEffect",
+      "deps": "[]"
+    },
+    {
+      "file": "app\\(exam)\\student-exams\\[id]\\student-exam-layout.tsx",
+      "line": 106,
+      "kind": "useEffect",
+      "deps": "[review]"
+    },
+    {
+      "file": "app\\(exam)\\student-exams\\[id]\\student-exam-layout.tsx",
+      "line": 167,
+      "kind": "useEffect",
+      "deps": "[review, submitted]"
+    },
+    {
+      "file": "app\\(exam)\\student-exams\\[id]\\student-exam-layout.tsx",
+      "line": 203,
+      "kind": "useEffect",
+      "deps": "[\r\n  expiresAt,\r\n  review,\r\n  submitted,\r\n]"
+    },
+    {
+      "file": "app\\(exam)\\student-exams\\[id]\\student-exam-layout.tsx",
+      "line": 263,
+      "kind": "useEffect",
+      "deps": "[review]"
+    },
+    {
+      "file": "app\\(exam)\\student-exams\\[id]\\student-exam-layout.tsx",
+      "line": 306,
+      "kind": "useEffect",
+      "deps": "[]"
+    },
+    {
+      "file": "app\\change-password\\page.tsx",
+      "line": 18,
+      "kind": "useEffect",
+      "deps": "[loading, user, profile, router, submitting]"
+    },
+    {
+      "file": "app\\login\\page.tsx",
+      "line": 31,
+      "kind": "useEffect",
+      "deps": "[loading, user, profile, router]"
+    },
+    {
+      "file": "app\\page.tsx",
+      "line": 12,
+      "kind": "useEffect",
+      "deps": "[user, loading, router]"
+    },
+    {
+      "file": "components\\auth\\session-message-dialog.tsx",
+      "line": 22,
+      "kind": "useEffect",
+      "deps": "[]"
+    },
+    {
+      "file": "components\\chapters\\chapter-dialog.tsx",
+      "line": 48,
+      "kind": "useEffect",
+      "deps": "[chapter]"
+    },
+    {
+      "file": "components\\courses\\course-dialog.tsx",
+      "line": 55,
+      "kind": "useEffect",
+      "deps": "[course, open]"
+    },
+    {
+      "file": "components\\dashboard\\countdown-card.tsx",
+      "line": 127,
+      "kind": "useEffect",
+      "deps": "[]"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\answer-sheet-new.tsx",
+      "line": 328,
+      "kind": "useCallback",
+      "deps": "[\r\n        review,\r\n        submitted,\r\n        submit,\r\n        answersRef,\r\n      ]"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\answer-sheet-new.tsx",
+      "line": 412,
+      "kind": "useEffect",
+      "deps": "[\r\n  expiresAt,\r\n  review,\r\n  submitted,\r\n]"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\answer-sheet-new.tsx",
+      "line": 453,
+      "kind": "useEffect",
+      "deps": "[\r\n  timeLeft,\r\n  review,\r\n  submitted,\r\n  handleSubmit,\r\n]"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\answer-sheet-new.tsx",
+      "line": 486,
+      "kind": "useEffect",
+      "deps": "[\r\n    review,\r\n    handleSubmit,\r\n  ]"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\answer-sheet-new.tsx",
+      "line": 529,
+      "kind": "useCallback",
+      "deps": "[\r\n        exam?.id,\r\n        router,\r\n      ]"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\answer-sheet-new.tsx",
+      "line": 586,
+      "kind": "useCallback",
+      "deps": "[\r\n      returnUrl,\r\n      viewerRole,\r\n      exam?.id,\r\n      router,\r\n    ]"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\use-exam-answers.ts",
+      "line": 93,
+      "kind": "useEffect",
+      "deps": "[draftAttemptId, config.multipleChoice, config.trueFalse, config.shortAnswer]"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\use-exam-answers.ts",
+      "line": 104,
+      "kind": "useCallback",
+      "deps": "[draftAttemptId]"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\use-exam-answers.ts",
+      "line": 124,
+      "kind": "useCallback",
+      "deps": "[updateAnswers]"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\use-exam-answers.ts",
+      "line": 153,
+      "kind": "useCallback",
+      "deps": "[updateAnswers]"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\use-exam-answers.ts",
+      "line": 183,
+      "kind": "useCallback",
+      "deps": "[updateAnswers]"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\use-exam-submit.ts",
+      "line": 78,
+      "kind": "useCallback",
+      "deps": "[\r\n      attemptId,\r\n      queryClient,\r\n      onSuccess,\r\n      onError,\r\n    ]"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\use-marked-questions.ts",
+      "line": 18,
+      "kind": "useCallback",
+      "deps": "[]"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\use-marked-questions.ts",
+      "line": 39,
+      "kind": "useCallback",
+      "deps": "[]"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\use-marked-questions.ts",
+      "line": 46,
+      "kind": "useCallback",
+      "deps": "[markedQuestions]"
+    },
+    {
+      "file": "components\\exams\\upload-exam-file.tsx",
+      "line": 20,
+      "kind": "useCallback",
+      "deps": "[onChange, uploadExamFile]"
+    },
+    {
+      "file": "components\\exams\\use-fullscreen-grace.ts",
+      "line": 11,
+      "kind": "useEffect",
+      "deps": "[enabled, attemptId]"
+    },
+    {
+      "file": "components\\flashcards\\study-room.tsx",
+      "line": 66,
+      "kind": "useEffect",
+      "deps": null
+    },
+    {
+      "file": "components\\lesson-resources\\resource-dialog.tsx",
+      "line": 87,
+      "kind": "useEffect",
+      "deps": "[open, resource]"
+    },
+    {
+      "file": "components\\lessons\\lesson-dialog.tsx",
+      "line": 50,
+      "kind": "useEffect",
+      "deps": "[open, lesson, reset]"
+    },
+    {
+      "file": "components\\lessons\\lesson-sidebar.tsx",
+      "line": 79,
+      "kind": "useEffect",
+      "deps": "[currentChapter?.id]"
+    },
+    {
+      "file": "components\\student-rules\\rule-editor.tsx",
+      "line": 58,
+      "kind": "useEffect",
+      "deps": "[initialContent]"
+    },
+    {
+      "file": "components\\teachers\\students\\student-profile-card.tsx",
+      "line": 100,
+      "kind": "useEffect",
+      "deps": "[\r\n        profile.personalEmail,\r\n        profile.points,\r\n        profile.rewardMoney,\r\n        profile.created_at,\r\n    ]"
+    },
+    {
+      "file": "components\\tutoring\\calendar.tsx",
+      "line": 21,
+      "kind": "useEffect",
+      "deps": "[]"
+    },
+    {
+      "file": "components\\tutoring\\student-booking-dialog.tsx",
+      "line": 19,
+      "kind": "useEffect",
+      "deps": "[]"
+    },
+    {
+      "file": "components\\tutoring\\student-booking-dialog.tsx",
+      "line": 47,
+      "kind": "useEffect",
+      "deps": "[query.isError, query.errorUpdatedAt]"
+    },
+    {
+      "file": "components\\tutoring\\teacher-manager.tsx",
+      "line": 49,
+      "kind": "useEffect",
+      "deps": "[schedule.isError, schedule.errorUpdatedAt]"
+    },
+    {
+      "file": "components\\tutoring\\teacher-manager.tsx",
+      "line": 64,
+      "kind": "useEffect",
+      "deps": "[]"
+    },
+    {
+      "file": "components\\tutoring\\teacher-manager.tsx",
+      "line": 75,
+      "kind": "useEffect",
+      "deps": "[month]"
+    },
+    {
+      "file": "hooks\\exam\\use-countdown.ts",
+      "line": 17,
+      "kind": "useEffect",
+      "deps": "[initialSeconds]"
+    },
+    {
+      "file": "hooks\\exam\\use-countdown.ts",
+      "line": 21,
+      "kind": "useEffect",
+      "deps": "[enabled, onFinish]"
+    },
+    {
+      "file": "hooks\\use-idle-logout.ts",
+      "line": 13,
+      "kind": "useEffect",
+      "deps": "[enabled]"
+    },
+    {
+      "file": "lib\\flashcards\\use-star-sync.ts",
+      "line": 13,
+      "kind": "useCallback",
+      "deps": "[deckId]"
+    },
+    {
+      "file": "lib\\flashcards\\use-star-sync.ts",
+      "line": 35,
+      "kind": "useCallback",
+      "deps": "[flush]"
+    },
+    {
+      "file": "lib\\flashcards\\use-star-sync.ts",
+      "line": 42,
+      "kind": "useEffect",
+      "deps": "[flush]"
+    },
+    {
+      "file": "providers\\auth-provider.tsx",
+      "line": 97,
+      "kind": "useCallback",
+      "deps": "[\r\n                userId,\r\n                queryClient,\r\n            ]"
+    },
+    {
+      "file": "providers\\auth-provider.tsx",
+      "line": 169,
+      "kind": "useEffect",
+      "deps": "[\r\n    userId,\r\n    sessionId,\r\n    isLoginPage,\r\n    handleSessionInvalid,\r\n]"
+    },
+    {
+      "file": "providers\\auth-provider.tsx",
+      "line": 241,
+      "kind": "useEffect",
+      "deps": "[\r\n    userId,\r\n    sessionId,\r\n    isLoginPage,\r\n    profile?.role,\r\n]"
+    },
+    {
+      "file": "providers\\auth-provider.tsx",
+      "line": 325,
+      "kind": "useEffect",
+      "deps": "[\r\n    pathname,\r\n    userId,\r\n    sessionId,\r\n    isLoginPage,\r\n    profile?.role,\r\n]"
+    },
+    {
+      "file": "providers\\auth-provider.tsx",
+      "line": 462,
+      "kind": "useCallback",
+      "deps": "[\r\n                queryClient,\r\n            ]"
+    },
+    {
+      "file": "providers\\auth-provider.tsx",
+      "line": 516,
+      "kind": "useEffect",
+      "deps": "[refresh]"
+    },
+    {
+      "file": "providers\\presence-provider.tsx",
+      "line": 14,
+      "kind": "useEffect",
+      "deps": "[userId]"
+    },
+    {
+      "file": "providers\\theme-provider.tsx",
+      "line": 20,
+      "kind": "useEffect",
+      "deps": "[]"
+    },
+    {
+      "file": "providers\\theme-provider.tsx",
+      "line": 27,
+      "kind": "useEffect",
+      "deps": "[theme]"
+    },
+    {
+      "file": "providers\\theme-provider.tsx",
+      "line": 33,
+      "kind": "useCallback",
+      "deps": "[]"
+    },
+    {
+      "file": "providers\\theme-provider.tsx",
+      "line": 34,
+      "kind": "useCallback",
+      "deps": "[]"
+    }
+  ],
+  "intervals": [
+    {
+      "file": "app\\(exam)\\student-exams\\[id]\\answer-sheet.tsx",
+      "line": 195,
+      "delay": "1000"
+    },
+    {
+      "file": "app\\(exam)\\student-exams\\[id]\\student-exam-layout.tsx",
+      "line": 240,
+      "delay": "1000"
+    },
+    {
+      "file": "components\\dashboard\\countdown-card.tsx",
+      "line": 131,
+      "delay": "1000"
+    },
+    {
+      "file": "components\\exams\\answer-sheet\\answer-sheet-new.tsx",
+      "line": 433,
+      "delay": "1000"
+    },
+    {
+      "file": "components\\exams\\use-fullscreen-grace.ts",
+      "line": 55,
+      "delay": "250"
+    },
+    {
+      "file": "components\\tutoring\\calendar.tsx",
+      "line": 24,
+      "delay": "1000"
+    },
+    {
+      "file": "components\\tutoring\\student-booking-dialog.tsx",
+      "line": 20,
+      "delay": "1000"
+    },
+    {
+      "file": "hooks\\exam\\use-countdown.ts",
+      "line": 24,
+      "delay": "1000"
+    },
+    {
+      "file": "lib\\flashcards\\use-star-sync.ts",
+      "line": 43,
+      "delay": "10000"
+    }
+  ],
+  "subscriptions": [
+    {
+      "file": "providers\\auth-provider.tsx",
+      "line": 183,
+      "kind": "supabase\r\n            .channel"
+    },
+    {
+      "file": "providers\\auth-provider.tsx",
+      "line": 253,
+      "kind": "supabase.channel"
+    },
+    {
+      "file": "providers\\presence-provider.tsx",
+      "line": 20,
+      "kind": "supabase.channel"
+    }
+  ],
+  "queryLoops": [
+    {
+      "file": "lib\\flashcards\\use-star-sync.ts",
+      "line": 17,
+      "preview": "while (pending.current.size) {\n        const batch = Array.from(pending.current.entries()).slice(0, 200);\n        setState(\"saving\");\n        try {\n          const result = await updateCardStars(deckI"
+    },
+    {
+      "file": "services\\account.service.ts",
+      "line": 115,
+      "preview": "for (const student of students) {\r\n\r\n      try {\r\n\r\n        const email =\r\n          `${student.student_code}@mathster.edu.vn`;\r\n\r\n        const password =\r\n          \"123456789\";\r\n\r\n        //-------"
+    },
+    {
+      "file": "services\\exam.service.ts",
+      "line": 182,
+      "preview": "for (const result of results) {\r\n\r\n      // ------------------------------------------------------\r\n      // Update score + is_passed\r\n      // ------------------------------------------------------\r\n"
+    }
+  ]
+}

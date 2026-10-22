@@ -87,6 +87,7 @@ export function AuthProvider({
         user?.id;
 const lastSeenUpdateRef =
     useRef(0);
+    const invalidatingSessionRef = useRef(false);
 
     /*
      * ==========================================
@@ -96,6 +97,8 @@ const lastSeenUpdateRef =
     const handleSessionInvalid =
         useCallback(
             async (message?: string) => {
+                if (invalidatingSessionRef.current) return;
+                invalidatingSessionRef.current = true;
 
                 /*
                  * Lưu userId trước khi
@@ -229,82 +232,15 @@ useEffect(() => {
 
 /*
  * ==========================================
- * REALTIME PRESENCE
+ * REALTIME PRESENCE IS OWNED BY PresenceProvider
  * ==========================================
  *
  * Theo dõi học sinh đang kết nối.
  *
  * KHÔNG heartbeat.
- * Chỉ touch last_seen_at khi Presence
- * kết nối thành công.
+ * Activity tracking below throttles last_seen_at updates.
  */
-useEffect(() => {
-    if (
-        !userId ||
-        !sessionId ||
-        isLoginPage ||
-        profile?.role !== "STUDENT"
-    ) {
-        return;
-    }
 
-    const supabase = createClient();
-
-    const channel = supabase.channel(
-        "mathster-online-users",
-        {
-            config: {
-                presence: {
-                    key: userId,
-                },
-            },
-        }
-    );
-
-    channel.subscribe(async (status) => {
-        if (status !== "SUBSCRIBED") {
-            return;
-        }
-
-        /*
-         * Đánh dấu học sinh vừa hoạt động.
-         * Đây là 1 RPC khi kết nối Presence,
-         * KHÔNG phải heartbeat.
-         */
-        const { error } =
-            await supabase.rpc(
-                "touch_last_seen"
-            );
-
-        if (error) {
-            console.error(
-                "[PRESENCE] Không thể cập nhật last_seen_at:",
-                error
-            );
-        }
-
-        /*
-         * Đăng ký Presence.
-         */
-await channel.track({
-    user_id: userId,
-    online_at: new Date().toISOString(),
-});
-    });
-
-    return () => {
-        void channel.untrack();
-
-        void supabase.removeChannel(
-            channel
-        );
-    };
-}, [
-    userId,
-    sessionId,
-    isLoginPage,
-    profile?.role,
-]);
 
 /*
  * ==========================================
@@ -480,7 +416,7 @@ if (
                         currentUser
                     );
 
-                    await queryClient.invalidateQueries({
+                    if (queryClient.getQueryData(queryKeys.profile.detail(currentUser.id))) await queryClient.invalidateQueries({
                         queryKey:
                             queryKeys.profile.detail(
                                 currentUser.id
@@ -540,7 +476,9 @@ async function login(
         result.sessionId
     );
 
-    await refresh();
+    // signInWithPassword already returned a server-verified user.
+    setUser(result.user);
+    await queryClient.invalidateQueries({ queryKey: queryKeys.profile.detail(result.user.id) });
 }
 
 

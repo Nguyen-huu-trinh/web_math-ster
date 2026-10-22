@@ -41,13 +41,16 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  // Verify JWT locally with cached JWKS on asymmetric-key projects. API routes
+  // retain their own getUser/role checks for current account and permissions.
+  const { data, error: claimsError } = await supabase.auth.getClaims();
+  const userId = claimsError ? undefined : data?.claims.sub;
 
-  if (user && !request.nextUrl.pathname.startsWith("/api/")) {
+  if (userId && !request.nextUrl.pathname.startsWith("/api/")) {
     const { data: profile, error } = await supabase
       .from("profiles")
       .select("must_change_password")
-      .eq("id", user.id)
+      .eq("id", userId)
       .single();
 
     if (error) throw error;

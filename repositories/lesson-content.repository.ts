@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/logging";
 import { createClient } from "@/lib/supabase/client";
 
 export interface CreateLessonContentDto {
@@ -58,7 +59,7 @@ class LessonContentRepository {
 }
 
   async create(values: CreateLessonContentDto) {
-    console.log("CREATE RESOURCE", values);
+
 
     // 1. Create file link
     const { data: fileLink, error: fileError } = await this.supabase
@@ -72,11 +73,11 @@ class LessonContentRepository {
       .single();
 
     if (fileError) {
-      console.error("FILE LINK ERROR", fileError);
+      logServerError("FILE LINK ERROR", fileError);
       throw fileError;
     }
 
-    console.log("FILE LINK CREATED", fileLink);
+
 
     // 2. Create lesson content
     const { data, error } = await this.supabase
@@ -95,7 +96,7 @@ class LessonContentRepository {
       .single();
 
     if (error) {
-      console.error("LESSON CONTENT ERROR", error);
+      logServerError("LESSON CONTENT ERROR", error);
 
       // rollback
       await this.supabase
@@ -106,7 +107,7 @@ class LessonContentRepository {
       throw error;
     }
 
-    console.log("LESSON CONTENT CREATED", data);
+
 
     return data;
   }
@@ -115,7 +116,7 @@ class LessonContentRepository {
     id: string,
     values: UpdateLessonContentDto
   ) {
-    console.log("UPDATE RESOURCE", values);
+
 
     const { data: current, error: currentError } =
       await this.supabase
@@ -160,13 +161,13 @@ class LessonContentRepository {
 
     if (error) throw error;
 
-    console.log("RESOURCE UPDATED", data);
+
 
     return data;
   }
 
   async delete(id: string) {
-    console.log("DELETE RESOURCE", id);
+
 
     const { data: current, error: currentError } =
       await this.supabase
@@ -195,7 +196,7 @@ class LessonContentRepository {
 
     if (fileError) throw fileError;
 
-    console.log("RESOURCE DELETED");
+
   }
 }
 

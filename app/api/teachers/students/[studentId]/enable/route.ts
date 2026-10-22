@@ -22,10 +22,7 @@ export async function POST(
         const { studentId } =
             await params;
 
-        console.log(
-            "[ENABLE] studentId:",
-            studentId
-        );
+
 
         const result =
             await teacherStudentService.enable(

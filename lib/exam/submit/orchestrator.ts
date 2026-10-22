@@ -40,31 +40,7 @@ export async function submitExam(
       input.attemptId,
       input.studentId
     );
-console.log(
-  "[TIMEOUT DEBUG] CONTEXT",
-  {
-    attemptId:
-      input.attemptId,
 
-    studentId:
-      input.studentId,
-
-    submittedAt:
-      context?.attempt
-        ?.submitted_at,
-
-    score:
-      context?.attempt
-        ?.score,
-
-    isPassed:
-      context?.attempt
-        ?.is_passed,
-
-    reason:
-      input.reason,
-  }
-);
   if (!context) {
     throw new Error(
       "Không tìm thấy lượt làm bài."

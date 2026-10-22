@@ -342,6 +342,8 @@ export default function StudentDashboard() {
 
 {/* THÔNG BÁO VÀ HẠN NỘP BÀI THI CHUẨN DESIGN */}
       <DashboardAnnouncementCard
+        userId={profile?.id}
+        userId={profile?.id}
         announcement={announcement.data}
         periodicNotifications={periodicNotifications}
       />

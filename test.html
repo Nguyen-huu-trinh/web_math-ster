@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng Ký Dò Bài 1-1 Qua Zoom - Math-Ster LMS</title>
+
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=Space+Grotesk:wght@700;800;900&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS & Lucide Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-brand { font-family: 'Space Grotesk', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-[#f8fafc] text-slate-800 min-h-screen flex flex-col">
+
+  <!-- ================= 1. HEADER CHÍNH ================= -->
+  <header class="h-14 bg-[#0f172a] border-b border-slate-800 px-6 flex items-center justify-between shrink-0 sticky top-0 z-40">
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 font-black flex items-center justify-center text-xs">
+          MS
+        </div>
+        <span class="text-sm font-black text-white tracking-wide">MATH-STER <span class="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded ml-1">1-ON-1</span></span>
+      </div>
+    </div>
+
+    <!-- Thanh chuyển nhanh góc nhìn: Học sinh <-> Admin -->
+    <div class="flex items-center bg-slate-800/90 p-1 rounded-xl border border-slate-700 text-xs font-bold">
+      <button onclick="toggleRole('student')" id="btn-role-student" class="px-3.5 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black flex items-center gap-1.5 transition-all">
+        <i data-lucide="user" class="w-3.5 h-3.5"></i>
+        <span>Giao diện Học Sinh</span>
+      </button>
+      <button onclick="toggleRole('admin')" id="btn-role-admin" class="px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-white font-extrabold flex items-center gap-1.5 transition-all">
+        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+        <span>Giao diện Admin / Trợ Giảng</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= 2. WORKSPACE ================= -->
+  <main class="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6">
+
+    <!-- =========================================================================
+         PHẦN 1: GIAO DIỆN HỌC SINH (DANH SÁCH BẢNG DUY NHẤT - IDP IELTS STYLE)
+    ========================================================================== -->
+    <section id="student-view" class="space-y-5">
+      
+      <!-- Banner Hướng Dẫn Nhanh -->
+      <div class="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-amber-600">
+            <i data-lucide="video" class="w-3.5 h-3.5"></i>
+            <span>DÒ BÀI ĐỊNH KỲ QUA ZOOM (1 KÈM 1)</span>
+          </div>
+          <h1 class="text-2xl font-black text-slate-900 tracking-tight">Chọn Lịch Dò Bài Của Bạn</h1>
+          <p class="text-xs text-slate-400 font-medium">
+            Mỗi khung giờ chỉ dành riêng cho <b>1 học sinh</b>. Các ca đã có bạn đặt sẽ tự động ẩn khỏi danh sách.
+          </p>
+        </div>
+
+        <!-- Ca học sinh đã đăng ký (nếu có) -->
+        <div id="student-booked-card" class="hidden bg-emerald-50 border border-emerald-200/80 p-3.5 rounded-2xl flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+            <i data-lucide="calendar-check" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <div class="text-[10px] font-black uppercase text-emerald-800">Lịch của bạn:</div>
+            <div class="font-extrabold text-xs text-slate-900 mt-0.5" id="mySlotText">20:30 - 21:00 • Thứ 6 (24/10)</div>
+          </div>
+          <button onclick="cancelMyBooking()" class="text-[10px] font-black text-rose-600 hover:underline ml-2">Hủy</button>
+        </div>
+      </div>
+
+      <!-- BẢNG DANH SÁCH CÁC CA ĐANG CÒN TRỐNG -->
+      <div class="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
+        
+        <!-- Table Header -->
+        <div class="px-6 py-3.5 bg-slate-50/70 border-b border-slate-100 grid grid-cols-12 text-[10.5px] font-black text-slate-400 uppercase tracking-wider items-center">
+          <div class="col-span-4 sm:col-span-3">NGÀY DÒ BÀI</div>
+          <div class="col-span-4 sm:col-span-3">KHUNG GIỜ (ZOOM)</div>
+          <div class="col-span-4 sm:col-span-3 text-right">THAO TÁC</div>
+        </div>
+
+        <!-- Danh sách các ca trống (Render tự động) -->
+        <div id="student-slots-list" class="divide-y divide-slate-100 text-xs">
+          <!-- JS Render -->
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================================================================
+         PHẦN 2: GIAO DIỆN ADMIN (TẠO CA & QUẢN LÝ DANH SÁCH ĐÃ ĐẶT)
+    ========================================================================== -->
+    <section id="admin-view" class="hidden space-y-6">
+      
+      <!-- Header Admin -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div class="text-[11px] font-black uppercase tracking-wider text-amber-600">Quản Trị Lịch Hẹn</div>
+          <h1 class="text-2xl font-black text-slate-900 tracking-tight">Cấu Hình Ca Dò Bài 1-1</h1>
+          <p class="text-xs text-slate-500 mt-0.5">Mở ca kiểm tra kiến thức qua Zoom và quản lý danh sách học sinh đã đặt chỗ.</p>
+        </div>
+
+        <button onclick="openCreateSlotModal()" class="px-4 py-2.5 rounded-2xl bg-[#0f172a] hover:bg-slate-800 text-white font-black text-xs flex items-center gap-2 shadow-sm active:scale-95 transition-all self-start sm:self-auto">
+          <i data-lucide="plus" class="w-4 h-4 text-amber-400"></i>
+          <span>Thêm ngày &amp; khung giờ mới</span>
+        </button>
+      </div>
+
+      <!-- 3 Thẻ thống kê nhanh -->
+      <div class="grid grid-cols-3 gap-4">
+        <div class="bg-white p-4 rounded-3xl border border-slate-200/90 shadow-2xs space-y-1">
+          <div class="text-[11px] font-bold text-slate-400 uppercase">Tổng số ca đã mở</div>
+          <div class="font-brand font-black text-2xl text-slate-900" id="stat-total">8</div>
+        </div>
+        <div class="bg-white p-4 rounded-3xl border border-slate-200/90 shadow-2xs space-y-1">
+          <div class="text-[11px] font-bold text-slate-400 uppercase">Đã có học sinh đặt</div>
+          <div class="font-brand font-black text-2xl text-emerald-700" id="stat-booked">3</div>
+        </div>
+        <div class="bg-white p-4 rounded-3xl border border-slate-200/90 shadow-2xs space-y-1">
+          <div class="text-[11px] font-bold text-slate-400 uppercase">Ca còn trống</div>
+          <div class="font-brand font-black text-2xl text-amber-600" id="stat-available">5</div>
+        </div>
+      </div>
+
+      <!-- BẢNG TỔNG HỢP TẤT CẢ CÁC CA (DÀNH CHO ADMIN) -->
+      <div class="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
+        
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          <h2 class="text-sm font-black text-slate-900 uppercase tracking-tight">Danh Sách Ca Kiểm Tra</h2>
+          
+        </div>
+
+        <!-- Table Header -->
+        <div class="px-6 py-3 bg-slate-50/70 border-b border-slate-100 grid grid-cols-12 text-[10.5px] font-black text-slate-400 uppercase tracking-wider items-center">
+          <div class="col-span-3">NGÀY &amp; THỜI GIAN</div>
+          <div class="col-span-3">TRẠNG THÁI / HỌC SINH ĐẶT</div>
+          <div class="col-span-3 text-right">QUẢN TRỊ</div>
+        </div>
+
+        <!-- Danh sách tất cả các ca (Render tự động) -->
+        <div id="admin-slots-list" class="divide-y divide-slate-100 text-xs">
+          <!-- JS Render -->
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- =========================================================================
+       MODAL THÊM CA DÒ BÀI (DÀNH CHO ADMIN)
+  ========================================================================== -->
+  <div id="createSlotModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-4 bg-[#0f172a] text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center">
+            <i data-lucide="calendar-plus" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-black">Thêm Ca Dò Bài Mới</h3>
+            <p class="text-[10.5px] text-slate-400">Tạo lịch trống để học sinh tự vào chọn</p>
+          </div>
+        </div>
+        <button onclick="closeCreateSlotModal()" class="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 space-y-4 text-xs">
+        <div>
+          <label class="font-extrabold text-slate-700 block mb-1.5">Chọn ngày dò bài <span class="text-rose-500">*</span></label>
+          <input id="inputDate" type="date" value="2026-10-25" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 focus:outline-slate-900">
+        </div>
+
+        <!-- Chọn khung giờ mẫu nhanh (Vì 1 ngày chỉ có 1-2 ca) -->
+        <div>
+          <label class="font-extrabold text-slate-700 block mb-1.5">Chọn khung giờ mẫu nhanh</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="setTime('20:00', '20:30')" class="p-2 rounded-xl border border-slate-200 hover:border-slate-900 font-mono font-bold text-slate-700 text-center hover:bg-slate-50">
+              20:00 - 20:30
+            </button>
+            <button type="button" onclick="setTime('20:30', '21:00')" class="p-2 rounded-xl border border-slate-200 hover:border-slate-900 font-mono font-bold text-slate-700 text-center hover:bg-slate-50">
+              20:30 - 21:00
+            </button>
+            <button type="button" onclick="setTime('21:00', '21:30')" class="p-2 rounded-xl border border-slate-200 hover:border-slate-900 font-mono font-bold text-slate-700 text-center hover:bg-slate-50">
+              21:00 - 21:30
+            </button>
+            <button type="button" onclick="setTime('21:30', '22:00')" class="p-2 rounded-xl border border-slate-200 hover:border-slate-900 font-mono font-bold text-slate-700 text-center hover:bg-slate-50">
+              21:30 - 22:00
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-extrabold text-slate-700 block mb-1">Giờ bắt đầu</label>
+            <input id="inputStart" type="time" value="20:00" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono font-bold text-slate-900">
+          </div>
+          <div>
+            <label class="font-extrabold text-slate-700 block mb-1">Giờ kết thúc</label>
+            <input id="inputEnd" type="time" value="20:30" class="w-full px-3 py-2 rounded-xl border border-slate-200 font-mono font-bold text-slate-900">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+        <button onclick="closeCreateSlotModal()" class="px-4 py-2 rounded-xl border border-slate-200 bg-white font-bold text-xs">Hủy</button>
+        <button onclick="createNewSlot()" class="px-5 py-2 rounded-xl bg-[#0f172a] text-white font-black text-xs flex items-center gap-1.5 shadow-sm">
+          <i data-lucide="plus" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span>Thêm ca ngay</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
+  <script>
+    lucide.createIcons();
+
+    // DỮ LIỆU CÁC CA DÒ BÀI (SLOTS)
+    let slots = [
+      { id: 1, dateStr: 'Thứ Năm, 23/10/2026', time: '20:00 - 20:30',  zoom: 'https://zoom.us/j/8889998888', bookedBy: 'Trần Hải Yến (MS0001)' },
+      { id: 2, dateStr: 'Thứ Năm, 23/10/2026', time: '20:30 - 21:00',  zoom: 'https://zoom.us/j/8889998888', bookedBy: null },
+      { id: 3, dateStr: 'Thứ Sáu, 24/10/2026', time: '20:00 - 20:30',  zoom: 'https://zoom.us/j/8889998888', bookedBy: 'Vũ Tina Diễm (MS0004)' },
+      { id: 4, dateStr: 'Thứ Sáu, 24/10/2026', time: '20:30 - 21:00',  zoom: 'https://zoom.us/j/8889998888', bookedBy: null },
+      { id: 5, dateStr: 'Thứ Bảy, 25/10/2026', time: '19:30 - 20:00',  zoom: 'https://zoom.us/j/8889998888', bookedBy: null },
+      { id: 6, dateStr: 'Thứ Bảy, 25/10/2026', time: '20:00 - 20:30',  zoom: 'https://zoom.us/j/8889998888', bookedBy: null },
+      { id: 7, dateStr: 'Chủ Nhật, 26/10/2026', time: '20:00 - 20:30',  zoom: 'https://zoom.us/j/8889998888', bookedBy: 'Thái Khánh Băng (MS0002)' },
+      { id: 8, dateStr: 'Chủ Nhật, 26/10/2026', time: '20:30 - 21:00',  zoom: 'https://zoom.us/j/8889998888', bookedBy: null },
+    ];
+
+    let currentStudentBooking = null; // Lưu ca mà học sinh hiện tại đang chọn
+
+    // 1. RENDER BẢNG HỌC SINH (CHỈ HIỆN CÁC CA CHƯA CÓ NGƯỜI ĐẶT)
+    function renderStudentList() {
+      const container = document.getElementById('student-slots-list');
+      container.innerHTML = '';
+
+      // Lọc bỏ những ca đã có người đăng ký
+      const availableSlots = slots.filter(s => s.bookedBy === null);
+
+      if (availableSlots.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 text-center text-slate-400 space-y-2">
+            <i data-lucide="clock" class="w-8 h-8 mx-auto text-slate-300"></i>
+            <p class="font-bold">Hiện tại đã hết ca dò bài trống! Vui lòng quay lại sau khi thầy mở thêm lịch.</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      availableSlots.forEach(slot => {
+        container.innerHTML += `
+          <div class="px-6 py-4 grid grid-cols-12 items-center hover:bg-slate-50/70 transition-colors">
+            
+            <!-- Cột Ngày -->
+            <div class="col-span-4 sm:col-span-3">
+              <div class="font-extrabold text-slate-900 text-sm">${slot.dateStr}</div>
+              <span class="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded font-bold border border-amber-200/60">Chỉ 1 học sinh/ca</span>
+            </div>
+
+            <!-- Cột Giờ -->
+            <div class="col-span-4 sm:col-span-3">
+              <span class="font-mono font-black text-slate-800 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200 text-xs inline-flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-500"></i>
+                ${slot.time}
+              </span>
+            </div>
+
+            <!-- Cột Giáo viên -->
+            <div class="hidden sm:flex col-span-3 items-center gap-2">
+              <div class="w-6 h-6 rounded-full bg-slate-900 text-amber-400 text-[10px] font-black flex items-center justify-center">AH</div>
+              <span class="font-bold text-slate-700 text-xs">${slot.mentor}</span>
+            </div>
+
+            <!-- Cột Đăng Ký -->
+            <div class="col-span-4 sm:col-span-3 flex justify-end">
+              <button onclick="bookSlot(${slot.id})" class="px-4 py-2 rounded-xl bg-[#0f172a] hover:bg-slate-800 text-white font-black text-xs transition-all shadow-2xs active:scale-95 flex items-center gap-1.5">
+                <span>Chọn ca này</span>
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-amber-400"></i>
+              </button>
+            </div>
+
+          </div>
+        `;
+      });
+      lucide.createIcons();
+    }
+
+    // 2. RENDER BẢNG ADMIN (HIỆN HẾT TẤT CẢ CÁC CA ĐỂ QUẢN LÝ)
+    function renderAdminList() {
+      const container = document.getElementById('admin-slots-list');
+      container.innerHTML = '';
+
+      let bookedCount = 0;
+
+      slots.forEach(slot => {
+        const isBooked = slot.bookedBy !== null;
+        if (isBooked) bookedCount++;
+
+        container.innerHTML += `
+          <div class="px-6 py-4 grid grid-cols-12 items-center hover:bg-slate-50/70 transition-colors">
+            
+            <!-- Ngày & Giờ -->
+            <div class="col-span-3 space-y-1">
+              <div class="font-extrabold text-slate-900 text-sm">${slot.dateStr}</div>
+              <div class="font-mono font-bold text-amber-700 text-xs">${slot.time}</div>
+            </div>
+
+            <!-- Trạng thái & Học sinh -->
+            <div class="col-span-3">
+              ${isBooked ? `
+                <div class="space-y-0.5">
+                  <div class="font-black text-slate-800 text-xs mt-1 flex items-center gap-1">
+                    <i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i>
+                    ${slot.bookedBy}
+                  </div>
+                </div>
+              ` : `
+                <span class="px-2.5 py-1 rounded-md bg-slate-100 text-slate-500 text-[10.5px] font-bold">
+                  Ca trống (Đang mở)
+                </span>
+              `}
+            </div>
+
+           
+
+            <!-- Thao tác Admin -->
+            <div class="col-span-3 flex justify-end gap-1.5">
+              ${isBooked ? `
+                <button onclick="clearBooking(${slot.id})" title="Hủy người đặt để mở lại ca trống" class="px-2.5 py-1.5 rounded-xl border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-600 text-xs font-bold transition-all">
+                  Hủy đặt
+                </button>
+              ` : ''}
+              <button onclick="deleteSlot(${slot.id})" title="Xóa ca này" class="p-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-400 hover:text-rose-600 transition-all">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+          </div>
+        `;
+      });
+
+      // Cập nhật số liệu thống kê
+      document.getElementById('stat-total').innerText = slots.length;
+      document.getElementById('stat-booked').innerText = bookedCount;
+      document.getElementById('stat-available').innerText = slots.length - bookedCount;
+
+      lucide.createIcons();
+    }
+
+    // 3. THAO TÁC HỌC SINH ĐẶT CA
+    function bookSlot(id) {
+      const slot = slots.find(s => s.id === id);
+      if (!slot) return;
+
+      if (!confirm(`Bạn có chắc chắn muốn đăng ký ca dò bài: ${slot.time} - ${slot.dateStr}?`)) return;
+
+      // Giả lập học sinh hiện tại đang đăng nhập là Nguyễn Hữu Trình (MS0000)
+      slot.bookedBy = 'Nguyễn Hữu Trình (MS0000)';
+      currentStudentBooking = slot;
+
+      // Cập nhật thẻ lịch của tôi
+      document.getElementById('student-booked-card').classList.remove('hidden');
+      document.getElementById('mySlotText').innerText = `${slot.time} • ${slot.dateStr}`;
+
+      alert('🎉 Đăng ký ca dò bài thành công! Ca này đã được giữ riêng cho bạn.');
+      renderStudentList();
+      renderAdminList();
+    }
+
+    function cancelMyBooking() {
+      if (!confirm('Bạn có chắc muốn hủy ca đã đặt để chọn ca khác?')) return;
+      if (currentStudentBooking) {
+        currentStudentBooking.bookedBy = null;
+        currentStudentBooking = null;
+      }
+      document.getElementById('student-booked-card').classList.add('hidden');
+      renderStudentList();
+      renderAdminList();
+    }
+
+    // 4. THAO TÁC ADMIN
+    function clearBooking(id) {
+      const slot = slots.find(s => s.id === id);
+      if (slot && confirm(`Xác nhận hủy đặt ca của ${slot.bookedBy}? Ca này sẽ trở thành ca trống cho bạn khác chọn.`)) {
+        slot.bookedBy = null;
+        renderAdminList();
+        renderStudentList();
+      }
+    }
+
+    function deleteSlot(id) {
+      if (confirm('Bạn có chắc muốn xóa vĩnh viễn ca dò bài này khỏi lịch?')) {
+        slots = slots.filter(s => s.id !== id);
+        renderAdminList();
+        renderStudentList();
+      }
+    }
+
+    function openCreateSlotModal() {
+      document.getElementById('createSlotModal').classList.remove('hidden');
+    }
+
+    function closeCreateSlotModal() {
+      document.getElementById('createSlotModal').classList.add('hidden');
+    }
+
+    function setTime(start, end) {
+      document.getElementById('inputStart').value = start;
+      document.getElementById('inputEnd').value = end;
+    }
+
+    function createNewSlot() {
+      const dateVal = document.getElementById('inputDate').value;
+      const start = document.getElementById('inputStart').value;
+      const end = document.getElementById('inputEnd').value;
+      const zoom = document.getElementById('inputZoom').value;
+
+      if (!dateVal || !start || !end) {
+        alert('Vui lòng chọn đầy đủ ngày và giờ!');
+        return;
+      }
+
+      // Format ngày dạng đọc được
+      const d = new Date(dateVal);
+      const dayNames = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+      const dateStr = `${dayNames[d.getDay()]}, ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+
+      slots.push({
+        id: Date.now(),
+        dateStr: dateStr,
+        time: `${start} - ${end}`,
+        mentor: 'Thầy Anh Huy',
+        zoom: zoom,
+        bookedBy: null
+      });
+
+      closeCreateSlotModal();
+      renderAdminList();
+      renderStudentList();
+      alert('Đã thêm ca dò bài mới!');
+    }
+
+    // Chuyển đổi qua lại giữa màn hình Học Sinh & Admin
+    function toggleRole(role) {
+      const studentView = document.getElementById('student-view');
+      const adminView = document.getElementById('admin-view');
+      const btnStudent = document.getElementById('btn-role-student');
+      const btnAdmin = document.getElementById('btn-role-admin');
+
+      if (role === 'student') {
+        studentView.classList.remove('hidden');
+        adminView.classList.add('hidden');
+        btnStudent.className = 'px-3.5 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black flex items-center gap-1.5 transition-all';
+        btnAdmin.className = 'px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-white font-extrabold flex items-center gap-1.5 transition-all';
+      } else {
+        studentView.classList.add('hidden');
+        adminView.classList.remove('hidden');
+        btnAdmin.className = 'px-3.5 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black flex items-center gap-1.5 transition-all';
+        btnStudent.className = 'px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-white font-extrabold flex items-center gap-1.5 transition-all';
+      }
+    }
+
+    // Khởi tạo
+    renderStudentList();
+    renderAdminList();
+  </script>
+</body>
+</html>

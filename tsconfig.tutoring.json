@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "incremental": false },
+  "include": [
+    "next-env.d.ts",
+    "app/actions/tutoring.ts",
+    "app/(app)/tutoring/page.tsx",
+    "components/tutoring/**/*.tsx",
+    "types/tutoring.ts"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

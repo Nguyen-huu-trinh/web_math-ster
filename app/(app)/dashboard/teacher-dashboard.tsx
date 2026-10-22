@@ -1,6 +1,8 @@
 'use client'
 
 import Image from "next/image";
+import { TutoringManagementDialog } from "@/components/tutoring/teacher-manager";
+import { useAuth } from "@/providers/auth-provider";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -38,6 +40,7 @@ function greeting() {
 }
 
 export default function TeacherDashboard() {
+  const { user } = useAuth();
   const router = useRouter();
   const teacherDashboard = useTeacherDashboard();
   const onlineCount = useOnlineCount();
@@ -336,10 +339,11 @@ export default function TeacherDashboard() {
 
       {/* THÔNG BÁO HỌC SINH */}
       <div className="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 via-amber-50/70 to-yellow-50/50 p-5 shadow-sm shadow-amber-900/5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-xl">📢</span>
             <h3 className="font-bold text-amber-900">Thông báo học sinh</h3>
+            <TutoringManagementDialog userId={user?.id} />
           </div>
           <div className="flex items-center gap-2">
           <Button

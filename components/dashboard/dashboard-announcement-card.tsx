@@ -1,5 +1,6 @@
 "use client";
 import { StartExamDialog } from "@/components/exams/start-exam-dialog";
+import { StudentBookingDialog } from "@/components/tutoring/student-booking-dialog";
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -21,11 +22,13 @@ interface AnnouncementData {
 }
 
 interface Props {
+  userId?: string;
   announcement?: AnnouncementData | null;
   periodicNotifications: StudentExamItem[];
 }
 
 export function DashboardAnnouncementCard({
+  userId,
   announcement,
   periodicNotifications,
 }: Props) {
@@ -57,7 +60,7 @@ export function DashboardAnnouncementCard({
   ).length;
 
   // Nếu không có thông báo và cũng không có bài kiểm tra đến hạn -> Ẩn toàn bộ
-  if (!hasTeacherAnnouncement && availableNotifications.length === 0) {
+  if (!userId && !hasTeacherAnnouncement && availableNotifications.length === 0) {
     return null;
   }
 
@@ -118,7 +121,7 @@ export function DashboardAnnouncementCard({
       <div className="rounded-[24px] border border-slate-200/80 bg-white p-4 sm:p-5 shadow-2xs">
         {/* HEADER CỐ ĐỊNH: ICON CHUÔNG & TIÊU ĐỀ */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 text-white shadow-xs">
               <BellRing className="size-4.5 stroke-[2.2]" />
             </div>
@@ -126,6 +129,7 @@ export function DashboardAnnouncementCard({
             <h3 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 leading-none">
               Thông Báo Học Vụ Quan Trọng
             </h3>
+            {userId && <StudentBookingDialog key={userId} userId={userId} />}
           </div>
 
           {/* Badge đếm số bài quá hạn ở góc phải */}

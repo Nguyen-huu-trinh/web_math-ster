@@ -12,7 +12,7 @@ export async function mutateTutoringSlot(form: FormData): Promise<{ ok: boolean;
     const { data: { user }, error: authError } = await db.auth.getUser();
     if (authError || !user) return { ok: false, message: "Vui lòng đăng nhập lại." };
     let successMessage = "Đã cập nhật lịch dò bài.";
-    const operation = z.enum(["create", "toggle", "delete", "book", "cancel", "release", "import", "bulk"]).parse(form.get("operation"));
+    const operation = z.enum(["create", "toggle", "delete", "book", "cancel", "release", "import", "bulk", "lock_month"]).parse(form.get("operation"));
     if (operation === "book" || operation === "cancel") {
       const id = z.uuid().parse(form.get("id"));
       const { error } = await db.rpc(operation === "book" ? "book_tutoring_slot" : "cancel_tutoring_slot", { p_slot_id: id });
@@ -20,7 +20,11 @@ export async function mutateTutoringSlot(form: FormData): Promise<{ ok: boolean;
     } else {
       const { data: role, error: roleError } = await db.rpc("tutoring_actor_role");
       if (roleError || role !== "TEACHER") return { ok: false, message: "Chỉ giáo viên được quản lý ca." };
-      if (operation === "bulk") {
+      if (operation === "lock_month") {
+        const month = z.string().regex(/^[0-9]{4}-(0[1-9]|1[0-2])$/).parse(form.get("month"));
+        const { error } = await db.from("tutoring_slots").update({ is_active: false }).eq("month_key", month);
+        if (error) return { ok: false, message: "Không thể khóa các ca trong tháng. Vui lòng thử lại." };
+      } else if (operation === "bulk") {
         const action = z.enum(["delete", "lock", "release"]).parse(form.get("bulk_action"));
         const entries = z.array(z.object({ id: z.uuid(), student_id: z.uuid().nullable() })).min(1).max(500).parse(JSON.parse(String(form.get("selection"))));
         const ids = [...new Set(entries.map(entry => entry.id))];

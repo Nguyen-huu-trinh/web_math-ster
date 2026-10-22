@@ -10,7 +10,7 @@ const student = '22222222-2222-4222-8222-222222222222';
 function setup(role = 'TEACHER') {
   const calls = [];
   const query = {};
-  for (const name of ['delete','update','in','is','or']) query[name] = (...args) => { calls.push([name, ...args]); return query; };
+  for (const name of ['delete','update','in','is','or','eq']) query[name] = (...args) => { calls.push([name, ...args]); return query; };
   query.select = async () => ({ data: [{ id }], error: null });
   const db = {
     auth: { getUser: async () => ({ data: { user: { id } } }) },
@@ -29,12 +29,30 @@ function setup(role = 'TEACHER') {
   vm.runInNewContext(ts.transpileModule(readFileSync(new URL('../app/actions/tutoring.ts', import.meta.url), 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 }
   }).outputText, { exports, require: name => mocks[name] ?? require(name) });
-  return { calls, run: async (action, entries = [{ id, student_id: student }]) => {
+  return { calls, lockMonth: async month => {
+    const form = new FormData();
+    form.set('operation', 'lock_month'); form.set('month', month);
+    return exports.mutateTutoringSlot(form);
+  }, run: async (action, entries = [{ id, student_id: student }]) => {
     const form = new FormData();
     form.set('operation','bulk'); form.set('bulk_action',action); form.set('selection',JSON.stringify(entries));
     return exports.mutateTutoringSlot(form);
   } };
 }
+test('lock month updates all matching slots, preserves bookings and rejects students or invalid months', async () => {
+  const teacher = setup();
+  assert.equal((await teacher.lockMonth('2026-10')).ok, true);
+  const update = teacher.calls.find(call => call[0] === 'update')[1];
+  assert.equal(update.is_active, false);
+  assert.deepEqual(Object.keys(update), ['is_active']);
+  assert.deepEqual(teacher.calls.find(call => call[0] === 'eq'), ['eq', 'month_key', '2026-10']);
+  assert.equal(teacher.calls.some(call => call[0] === 'in'), false);
+  for (const [role, month] of [['STUDENT','2026-10'], ['TEACHER','2026-13'], ['TEACHER','invalid']]) {
+    const subject = setup(role);
+    assert.equal((await subject.lockMonth(month)).ok, false);
+    assert.equal(subject.calls.length, 0);
+  }
+});
 test('bulk delete and lock send one validated batch RPC', async () => {
   const deletion = setup();
   assert.equal((await deletion.run('delete')).ok, true);

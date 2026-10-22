@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarPlus, Download, Loader2, Plus, Trash2, Upload, UserRound } from "lucide-react";
+import { CalendarPlus, Download, Loader2, LockKeyhole, Plus, Trash2, Upload, UserRound } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { getTeacherTutoringSlots, mutateTutoringSlot } from "@/app/actions/tutoring";
 import { normalizeImportRows, tutoringBatch, type ImportRow } from "@/lib/tutoring/import";
 import type { TutoringSlot } from "@/types/tutoring";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { tutoringTemplateRows } from "@/lib/tutoring/template";
 
 const inputClass = "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-amber-500";
 const buttonBase = "inline-flex items-center justify-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-bold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 disabled:cursor-not-allowed disabled:opacity-50";
@@ -55,6 +56,7 @@ export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?
   const [importOpen, setImportOpen] = useState(false);
   const [rows, setRows] = useState<ImportRow[]>([]);
   const [reading, setReading] = useState(false);
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
   const [start, setStart] = useState("20:00");
   const [end, setEnd] = useState("20:30");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -119,6 +121,21 @@ export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?
     form.set("student_id", slot.student_id ?? ""); form.set("active", String(!slot.is_active));
     void mutate(form);
   }
+  async function downloadTemplate() {
+    setDownloadingTemplate(true);
+    try {
+      const XLSX = await import("xlsx");
+      const today = new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 10);
+      const sheet = XLSX.utils.aoa_to_sheet(tutoringTemplateRows(today));
+      sheet["!cols"] = [{ wch: 18 }, { wch: 16 }, { wch: 16 }, { wch: 40 }];
+      sheet["!autofilter"] = { ref: "A1:D13" };
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, sheet, "Ca do bai");
+      XLSX.writeFile(workbook, "mau-ca-do-bai.xlsx", { bookType: "xlsx", compression: true });
+    } catch {
+      toast.error("Không thể tải tệp mẫu. Vui lòng thử lại.", { id: "tutoring-result" });
+    } finally { setDownloadingTemplate(false); }
+  }
   async function readFile(file?: File) {
     setRows([]);
     if (!file) return;
@@ -149,7 +166,12 @@ export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?
       </div>
     </header>
     <div className="flex flex-wrap items-center gap-3"><label className="flex items-center gap-2 text-sm font-semibold">Tháng <input type="month" value={month} disabled={busy || loading} onChange={e => { if (/^\d{4}-(0[1-9]|1[0-2])$/.test(e.target.value)) setMonth(e.target.value); }} className={`${inputClass} w-auto`} /></label>
-      <button className={buttonClass} disabled={schedule.isFetching || busy} onClick={() => void load()}>{schedule.isFetching ? "Đang tải…" : "Tải lại"}</button></div>
+      <button className={buttonClass} disabled={schedule.isFetching || busy} onClick={() => void load()}>{schedule.isFetching ? "Đang tải…" : "Tải lại"}</button>
+      <button className={cn(buttonClass, "border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100")} disabled={busy || loading} onClick={() => {
+        const form = new FormData();
+        form.set("operation", "lock_month"); form.set("month", month);
+        void mutate(form);
+      }}><LockKeyhole className="size-4" />Khóa toàn bộ tháng</button></div>
     <div className="grid gap-4 sm:grid-cols-3">{[
       ["TỔNG SỐ CA ĐÃ MỞ", slots.length, "text-slate-900"], ["ĐÃ CÓ HỌC SINH ĐẶT", booked, "text-emerald-700"], ["CA CÒN TRỐNG", slots.filter(s => !s.is_booked && s.is_active).length, "text-amber-600"],
     ].map(([label, value, color]) => <div key={label} className="rounded-[28px] border border-slate-200 bg-white px-5 py-5"><p className="text-xs font-bold text-slate-400">{label}</p><p className={`mt-2 text-3xl font-bold ${color}`}>{loading ? "—" : value}</p></div>)}</div>
@@ -203,7 +225,7 @@ export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?
         <DialogTitle className="text-xl font-bold">Nhập ca dò bài từ Excel</DialogTitle>
         <DialogDescription>Đọc trang tính đầu tiên, tối đa 500 ca. Kiểm tra dữ liệu trước khi tạo hàng loạt.</DialogDescription>
         <p className="text-sm text-slate-600">Cột bắt buộc: <b>slot_date</b> (YYYY-MM-DD hoặc DD/MM/YYYY), <b>start_time</b> (HH:mm). Cột tùy chọn: <b>end_time</b>, <b>note</b>. Hỗ trợ ô ngày và giờ của Excel.</p>
-        <a download="mau-ca-do-bai.csv" href={'data:text/csv;charset=utf-8,' + encodeURIComponent('\uFEFFslot_date,start_time,end_time,note\r\n2026-10-25,20:00,20:30,\r\n2026-10-25,20:30,21:00,\r\n')} className={`${buttonClass} w-fit`}><Download className="size-4" />Tải mẫu mở bằng Excel</a>
+        <button type="button" disabled={downloadingTemplate} onClick={() => void downloadTemplate()} className={`${buttonClass} w-fit`}><Download className="size-4" />{downloadingTemplate ? "Đang tạo mẫu…" : "Tải mẫu Excel (.xlsx)"}</button>
         <input type="file" accept=".xlsx,.xls,.csv" aria-label="Chọn tệp Excel" disabled={reading || busy} onChange={e => void readFile(e.target.files?.[0])} className={`${inputClass} file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2`} />
         {reading && <p role="status">Đang đọc tệp…</p>}
         {!!rows.length && <><p className="font-semibold text-emerald-700">{rows.length} ca hợp lệ, sẵn sàng nhập.</p><div className="max-h-52 overflow-auto rounded-xl border"><table className="w-full text-left text-xs"><thead><tr>{["Ngày", "Bắt đầu", "Kết thúc", "Ghi chú"].map(h => <th className="p-2" key={h}>{h}</th>)}</tr></thead><tbody>{rows.map((r, i) => <tr className="border-t" key={i}><td className="p-2">{r.slot_date}</td><td className="p-2">{r.start_time}</td><td className="p-2">{r.end_time}</td><td className="max-w-48 break-words p-2">{r.note}</td></tr>)}</tbody></table></div></>}

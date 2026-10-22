@@ -144,6 +144,10 @@ export async function DELETE(
             error
         );
 
+        const status = typeof error === "object" && error !== null && "status" in error &&
+            typeof error.status === "number" && [400, 401, 403, 404].includes(error.status)
+            ? error.status : error instanceof Error && error.message === "Unauthorized" ? 401 : 500;
+
         return NextResponse.json(
             {
                 error:
@@ -152,7 +156,7 @@ export async function DELETE(
                         : "Không thể xóa học sinh.",
             },
             {
-                status: 500,
+                status,
             }
         );
     }

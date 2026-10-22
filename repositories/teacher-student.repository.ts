@@ -708,19 +708,8 @@ async enable(studentId: string) {
     async delete(
         studentId: string
     ) {
-        const supabase = await createClient();
-
-        const {
-            error,
-        } = await supabase
-            .from("profiles")
-            .delete()
-            .eq("id", studentId)
-            .eq("role", "STUDENT");
-
-        if (error) {
-            throw error;
-        }
+        const { deleteStudentAccount } = await import("@/services/delete-student-account");
+        await deleteStudentAccount(studentId);
     }
 
     // ==========================================

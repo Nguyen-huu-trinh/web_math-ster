@@ -20,7 +20,7 @@ Học sinh mở lịch từ nút **Đăng ký dò bài** cạnh **Thông Báo H�
 
 Lịch học sinh được cache trong bộ nhớ React Query theo ID tài khoản và tháng: dữ liệu mới trong 2 phút không tải lại khi mở lại; cache không sử dụng bị xóa sau 30 phút. Đổi tháng sử dụng cache riêng. Hết 2 phút, mở lại sẽ tải mới ở nền. Có nút cập nhật thủ công. Mọi lần đặt/hủy làm mất hiệu lực cache của tài khoản và tải lại tháng hiện tại, kể cả khi ca đã bị người khác đặt. Cache không tồn tại qua tải lại toàn bộ trang; database luôn kiểm tra lại tính hợp lệ của thao tác đặt/hủy.
 
-Chọn **Nhập Excel** và tải mẫu CSV mở được bằng Excel hoặc chọn tệp `.xlsx`, `.xls`, `.csv` tối đa 5 MB. Đọc trang tính đầu tiên, tối đa 500 ca; xem trước rồi bấm **Tạo … ca**.
+Chọn **Nhập Excel**, bấm **Tải mẫu Excel (.xlsx)** để tải `mau-ca-do-bai.xlsx`. Mẫu có 12 ca trong 3 ngày tiếp theo theo giờ Việt Nam, mỗi ngày 4 khung giờ từ 20:00 đến 22:00. Có thể sửa hoặc thêm dòng, rồi chọn tệp `.xlsx`, `.xls`, `.csv` tối đa 5 MB. Đọc trang tính đầu tiên, tối đa 500 ca; xem trước rồi bấm **Tạo … ca**.
 
 - `slot_date`: YYYY-MM-DD, DD/MM/YYYY hoặc ô ngày Excel (hệ 1900/1904).
 - `start_time`: HH:mm hoặc ô giờ Excel.

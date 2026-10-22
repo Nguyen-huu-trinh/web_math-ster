@@ -10,6 +10,17 @@ vm.runInNewContext(ts.transpileModule(readFileSync(new URL('../lib/tutoring/impo
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 }
 }).outputText, { exports, require });
 const { tutoringBatch, normalizeImportRows } = exports;
+test('Excel template contains twelve valid slots over the next three days', () => {
+  const template = {};
+  vm.runInNewContext(ts.transpileModule(readFileSync(new URL('../lib/tutoring/template.ts', import.meta.url), 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 }
+  }).outputText, { exports: template });
+  const rows = template.tutoringTemplateRows('2026-10-31');
+  assert.equal(rows.length, 13);
+  assert.equal(rows[1][0], '2026-11-01');
+  assert.equal(rows[12][0], '2026-11-03');
+  assert.equal(tutoringBatch.safeParse(normalizeImportRows(rows, () => null)).success, true);
+});
 test('single digit hours are padded and validated before ordering and duplicates', () => {
   const row = { slot_date: '2026-10-25', start_time: '1:00', end_time: '2:00', note: '' };
   const parsed = tutoringBatch.parse([row]);

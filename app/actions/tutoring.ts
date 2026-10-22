@@ -63,12 +63,15 @@ export async function mutateTutoringSlot(form: FormData): Promise<{ ok: boolean;
   }
 }
 
-export async function getTeacherTutoringSlots(month: string): Promise<{ slots: TutoringSlot[]; error?: string }> {
+export async function getTeacherTutoringSlots(month: string): Promise<{ slots: TutoringSlot[]; unbookedCount?: number; error?: string }> {
   const db = await createClient();
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return { slots: [], error: "Tháng không hợp lệ." };
-  const { data, error } = await db.rpc("teacher_tutoring_slots", { p_month: month });
-  if (error) return { slots: [], error: "Không thể tải lịch. Vui lòng thử lại." };
-  return { slots: (data ?? []) as TutoringSlot[] };
+  const [schedule, count] = await Promise.all([
+    db.rpc("teacher_tutoring_slots", { p_month: month }),
+    db.rpc("teacher_tutoring_unbooked_count", { p_month: month }),
+  ]);
+  if (schedule.error || count.error) return { slots: [], error: "Không thể tải lịch và thống kê. Vui lòng thử lại." };
+  return { slots: (schedule.data ?? []) as TutoringSlot[], unbookedCount: Number(count.data ?? 0) };
 }
 
 export async function getStudentTutoringSlots(month: string): Promise<TutoringSlot[]> {

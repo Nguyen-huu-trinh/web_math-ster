@@ -36,11 +36,11 @@ export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?
   const [month, setMonth] = useState(initialMonth ?? thisMonth);
   const queryClient = useQueryClient();
   const schedule = useQuery({
-    queryKey: ["teacher-tutoring-slots", userId, month],
+    queryKey: ["teacher-tutoring-slots", userId, month, "summary"],
     queryFn: async () => {
       const result = await getTeacherTutoringSlots(month);
       if (result.error) throw new Error(result.error);
-      return result.slots;
+      return { slots: result.slots, unbookedCount: result.unbookedCount ?? 0 };
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
@@ -49,7 +49,7 @@ export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?
   useEffect(() => {
     if (schedule.isError) toast.error("Không thể tải lịch. Vui lòng thử lại.", { id: "tutoring-result" });
   }, [schedule.isError, schedule.errorUpdatedAt]);
-  const slots = schedule.data ?? [];
+  const slots = schedule.data?.slots ?? [];
   const loading = schedule.isPending;
   const [busy, setBusy] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -172,8 +172,9 @@ export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?
         form.set("operation", "lock_month"); form.set("month", month);
         void mutate(form);
       }}><LockKeyhole className="size-4" />Khóa toàn bộ tháng</button></div>
-    <div className="grid gap-4 sm:grid-cols-3">{[
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[
       ["TỔNG SỐ CA ĐÃ MỞ", slots.length, "text-slate-900"], ["ĐÃ CÓ HỌC SINH ĐẶT", booked, "text-emerald-700"], ["CA CÒN TRỐNG", slots.filter(s => !s.is_booked && s.is_active).length, "text-amber-600"],
+      ["HỌC SINH CHƯA ĐĂNG KÝ", Math.max(0, (schedule.data?.unbookedCount ?? 0) - 2), "text-rose-600"],
     ].map(([label, value, color]) => <div key={label} className="rounded-[28px] border border-slate-200 bg-white px-5 py-5"><p className="text-xs font-bold text-slate-400">{label}</p><p className={`mt-2 text-3xl font-bold ${color}`}>{loading ? "—" : value}</p></div>)}</div>
     <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white">
       <h2 className="border-b border-slate-100 px-6 py-5 text-sm font-extrabold">DANH SÁCH CA KIỂM TRA</h2>

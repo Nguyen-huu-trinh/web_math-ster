@@ -41,6 +41,8 @@ Yêu cầu ban đầu kết thúc tại mục B. Các quy tắc về hủy trư�
 
 ## Chọn nhiều ca
 
+Card **HỌC SINH CHƯA ĐĂNG KÝ** đếm học sinh có `role = STUDENT`, đang hoạt động, chưa xóa mềm và chưa có ca trong tháng đang xem (kể cả ca đã khóa hoặc qua giờ vẫn tính là đã đăng ký). Áp dụng migration `202610220004_tutoring_unbooked_count.sql`; RPC thống kê chỉ cho giáo viên và có GRANT tường minh. Số đếm được cache cùng danh sách ca.
+
 Trong bảng giáo viên, nhấn giữ chuột trái trên nội dung dòng và kéo qua các dòng khác để chọn một dải ca. Kéo từ dòng đang chọn để bỏ chọn dải. Có checkbox từng dòng và checkbox chọn tối đa 500 ca. Không bắt thao tác kéo trên nút hoặc checkbox; thiết bị cảm ứng dùng checkbox.
 
 Thanh thao tác hỗ trợ **Khóa đã chọn**, **Hủy đặt đã chọn**, **Xóa ca trống đã chọn** và **Bỏ chọn**. Xóa bỏ qua ca đang có học sinh; hủy đặt đối chiếu mã học sinh khi chọn để không hủy nhầm đăng ký đã thay đổi. Mỗi thao tác chạy trong một RPC, báo số dòng đã xử lý và cập nhật cache. Áp dụng migration `202610220003_tutoring_bulk.sql` trước khi sử dụng; RPC có kiểm tra quyền giáo viên, RLS và GRANT tường minh.

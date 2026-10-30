@@ -73,36 +73,9 @@ function parseInlineFormatting(text: string): React.ReactNode[] {
 
     if (part.startsWith("**") && part.endsWith("**")) {
       const content = part.slice(2, -2);
-      if (/(?:https?:\/\/|www\.)/i.test(content)) {
-        return <strong key={index}>{parseInlineFormatting(content)}</strong>;
-      }
-      const isNegative =
-        content.includes("-") || content.toLowerCase().includes("kick");
-      const isPositive = content.includes("+");
-
-      if (isNegative) {
-        return (
-          <span
-            key={index}
-            className="mx-0.5 inline-flex items-center rounded-md bg-rose-100 px-1.5 py-0.2 text-xs font-black text-rose-600 dark:bg-rose-950/40 dark:text-rose-400"
-          >
-            {content}
-          </span>
-        );
-      }
-      if (isPositive) {
-        return (
-          <span
-            key={index}
-            className="mx-0.5 inline-flex items-center rounded-md bg-emerald-100 px-1.5 py-0.2 text-xs font-black text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-          >
-            {content}
-          </span>
-        );
-      }
       return (
-        <strong key={index} className="font-black text-slate-900 dark:text-white">
-          {content}
+        <strong key={index} className="font-bold text-red-600 underline underline-offset-4 dark:text-red-400 [&_*]:text-inherit [&_*]:decoration-inherit">
+          {/(?:https?:\/\/|www\.)/i.test(content) ? parseInlineFormatting(content) : content}
         </strong>
       );
     }
@@ -146,10 +119,13 @@ function FormattedRuleContent({ rawContent }: { rawContent: string }) {
     if (!rawContent) return [];
 
     let text = rawContent
+      // Giữ định dạng in đậm do trình soạn thảo tạo trước khi bỏ HTML.
+      .replace(/<(b|strong)\b[^>]*>([\s\S]*?)<\/\1>/gi,
+        (_, _tag, content) => `**${content}**`)
       // Giữ lại đích đến của link có nhãn trước khi loại bỏ HTML.
       .replace(/<a\b[^>]*\bhref\s*=\s*(["'])(https?:\/\/.*?)\1[^>]*>([\s\S]*?)<\/a>/gi,
         (_, _quote, href, label) => `[${label.replace(/<[^>]+>/g, "")}](${href})`)
-      .replace(/<\/p>/gi, "\n")
+      .replace(/<\/(?:p|div)>/gi, "\n")
       .replace(/<br\s*\/?>/gi, "\n")
       .replace(/<li[^>]*>/gi, "\n- ")
       .replace(/<\/li>/gi, "\n")
@@ -160,6 +136,14 @@ function FormattedRuleContent({ rawContent }: { rawContent: string }) {
     text = text.replace(/[\u2013\u2014\u2012\u2212]/g, "-");
     text = text.replace(/([^\n])\s*-\s+([A-Z0-9À-Ỹ])/gu, "$1\n- $2");
     text = text.replace(/([^\n])\s*(Đặc biệt:|Cảnh báo:|\[canhbao\])/gi, "$1\n$2");
+
+    // Đóng/mở lại dấu in đậm trên mỗi dòng để giữ định dạng khi tách nội dung.
+    let inBold = false;
+    text = text.split("\n").map((line) => {
+      const prefix = inBold ? "**" : "";
+      if ((line.match(/\*\*/g)?.length ?? 0) % 2 === 1) inBold = !inBold;
+      return prefix + line + (inBold ? "**" : "");
+    }).join("\n");
 
     const rawLines = text
       .split("\n")
@@ -213,7 +197,7 @@ function FormattedRuleContent({ rawContent }: { rawContent: string }) {
           );
         }
 
-        const contentText = line.replace(/^[-–—•*]\s*/, "").trim();
+        const contentText = line.replace(/^(?:[-–—•]\s*|\*\s+)/, "").trim();
 
         return (
           <div

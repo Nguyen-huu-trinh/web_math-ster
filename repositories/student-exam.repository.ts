@@ -152,6 +152,7 @@ async getMyExams(studentId: string) {
       duration: exam.duration_minutes,
       questionConfig: exam.question_config ?? null,
       inProgress: hasUnsubmittedAttempt,
+      hasSubmittedAttempt,
       courseId: exam.course_id,
       courseName: course?.name ?? "",
       maxAttempts: exam.max_attempts ?? 1,

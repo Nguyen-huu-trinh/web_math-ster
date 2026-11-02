@@ -32,6 +32,8 @@ export interface StudentExamItem {
 
   inProgress: boolean;
 
+  hasSubmittedAttempt: boolean;
+
   status:
     | "NOT_STARTED"
     | "PASSED"

@@ -8,7 +8,7 @@ import {
   BellRing,
   ArrowRight,
   AlertTriangle,
-  Flame,
+  ClipboardList,
   Pin,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -25,20 +25,26 @@ interface Props {
   userId?: string;
   announcement?: AnnouncementData | null;
   periodicNotifications: StudentExamItem[];
+  examsLoading?: boolean;
+  examsError?: boolean;
+  onRetryExams?: () => void;
 }
 
 export function DashboardAnnouncementCard({
   userId,
   announcement,
   periodicNotifications,
+  examsLoading = false,
+  examsError = false,
+  onRetryExams,
 }: Props) {
   const router = useRouter();
   const startExam = useStartExam();
-  // Filter creates a new array: sorting never mutates the parent's query data.
-  // Most overdue first, then today, then the nearest upcoming deadline.
-  const availableNotifications = periodicNotifications
-    .filter((exam) => exam.periodicDaysRemaining != null)
-    .sort((a, b) => a.periodicDaysRemaining! - b.periodicDaysRemaining!);
+  const availableNotifications = periodicNotifications.filter(
+    (exam) => exam.category === "PERIODIC" &&
+      !exam.hasSubmittedAttempt && exam.lastAttemptAt == null &&
+      (exam.canStart || exam.inProgress)
+  ).reverse();
 
   const [selectedExam, setSelectedExam] = useState<StudentExamItem | null>(null);
   const [isStarting, setIsStarting] = useState(false);
@@ -55,12 +61,7 @@ export function DashboardAnnouncementCard({
     (announcement?.content && announcement.content.trim() !== "")
   );
 
-  const overdueCount = availableNotifications.filter(
-    (exam) => (exam.periodicDaysRemaining ?? 0) < 0
-  ).length;
-
-  // Nếu không có thông báo và cũng không có bài kiểm tra đến hạn -> Ẩn toàn bộ
-  if (!userId && !hasTeacherAnnouncement && availableNotifications.length === 0) {
+  if (!userId && !hasTeacherAnnouncement && availableNotifications.length === 0 && !examsLoading && !examsError) {
     return null;
   }
 
@@ -132,13 +133,7 @@ export function DashboardAnnouncementCard({
             {userId && <StudentBookingDialog key={userId} userId={userId} />}
           </div>
 
-          {/* Badge đếm số bài quá hạn ở góc phải */}
-          {overdueCount > 0 && (
-            <div className="inline-flex items-center gap-1.5 self-start sm:self-center rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600 shadow-2xs">
-              <Flame className="size-3 fill-rose-500 text-rose-500" />
-              <span>{overdueCount} Bài Quá Hạn</span>
-            </div>
-          )}
+
         </div>
 
         {/* KHỐI THÔNG BÁO TỪ GIÁO VIÊN */}
@@ -166,20 +161,36 @@ export function DashboardAnnouncementCard({
           </div>
         )}
 
-        {/* DANH SÁCH BÀI THI QUÁ HẠN / SẮP HẾT HẠN (Đã giới hạn chiều cao hiển thị đúng 3 dòng) */}
+        {examsLoading && (
+          <p role="status" className="mt-3 text-sm text-slate-500">
+            Đang tải bài thi định kỳ chưa làm...
+          </p>
+        )}
+        {examsError && (
+          <div role="alert" className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">
+            <span>Không thể tải bài thi định kỳ. Vui lòng thử lại.</span>
+            <Button type="button" variant="outline" size="sm" onClick={onRetryExams} disabled={examsLoading}>
+              Thử lại
+            </Button>
+          </div>
+        )}
+
+        {/* DANH SÁCH BÀI THI ĐỊNH KỲ CHƯA NỘP (Đã giới hạn chiều cao hiển thị đúng 3 dòng) */}
         {availableNotifications.length > 0 && (
+          <>
+          <h4 className="mt-5 flex items-center gap-2.5 text-base font-bold tracking-tight text-slate-900 sm:text-lg">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-amber-200 bg-amber-50 text-amber-600">
+              <ClipboardList aria-hidden="true" className="size-5 stroke-[2.2]" />
+            </span>
+            <span>Bài kiểm tra định kì chưa làm</span>
+          </h4>
           <div
             role="region"
-            aria-label="Hạn nộp bài thi, ưu tiên bài quá hạn và hạn gần nhất"
+            aria-label="Bài thi định kỳ chưa nộp"
             tabIndex={0}
             className="mt-3 max-h-[10.5rem] divide-y divide-slate-100 overflow-y-auto overscroll-y-contain bg-white [scrollbar-gutter:stable] [scrollbar-width:thin] [scrollbar-color:#cbd5e1_#ffffff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500"
           >
             {availableNotifications.map((exam) => {
-              const days = exam.periodicDaysRemaining;
-              if (days === null || days === undefined) return null;
-
-              const isOverdue = days < 0;
-              const isToday = days === 0;
               const title = exam.title.trim();
               const trailingNumber = title.match(/\d+$/)?.[0];
               const examLabel = trailingNumber
@@ -193,11 +204,7 @@ export function DashboardAnnouncementCard({
                 >
                   <div className="flex min-w-0 items-center gap-3.5">
                     <div
-                      className={`flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl border px-2 text-sm font-bold tabular-nums ${
-                        isOverdue
-                          ? "border-rose-200 bg-rose-50 text-rose-600"
-                          : "border-amber-200 bg-amber-50 text-amber-700"
-                      }`}
+                      className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl border border-amber-200 bg-amber-50 px-2 text-sm font-bold tabular-nums text-amber-700"
                     >
                       {examLabel}
                     </div>
@@ -208,23 +215,7 @@ export function DashboardAnnouncementCard({
                           Bài thi {exam.title}
                         </span>
 
-                        {isOverdue ? (
-  <span className="rounded-md border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-600">
-    Quá hạn {Math.abs(days)} ngày
-  </span>
-) : isToday ? (
-  <span className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
-    Hết hạn hôm nay
-  </span>
-) : days === 1 ? (
-  <span className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
-    Hết hạn ngày mai
-  </span>
-) : (
-  <span className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
-    Còn {days} ngày
-  </span>
-)}
+
                       </div>
 
                       {exam.description && (
@@ -236,30 +227,20 @@ export function DashboardAnnouncementCard({
                   </div>
 
                   <div className="shrink-0 self-end sm:self-center">
-                    {isOverdue ? (
-                      <button
-                        type="button"
-                        onClick={() => handleExamActionClick(exam)}
-                        className="inline-flex min-h-9 items-center justify-center gap-2 rounded-xl bg-[#E91148] px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-rose-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500"
-                      >
-                        <span>Nộp bài bù ngay</span>
-                        <ArrowRight className="size-3.5 stroke-[2.2]" />
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleExamActionClick(exam)}
-                        className="inline-flex min-h-9 items-center justify-center gap-2 rounded-xl bg-[#101527] px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500"
-                      >
-                        <span>Vào làm bài ngay</span>
-                        <ArrowRight className="size-3.5 text-[#FBBF24]" />
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleExamActionClick(exam)}
+                      className="inline-flex min-h-9 items-center justify-center gap-2 rounded-xl bg-[#101527] px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500"
+                    >
+                      <span>{exam.inProgress ? "Tiếp tục làm bài" : "Vào làm bài ngay"}</span>
+                      <ArrowRight className="size-3.5 text-[#FBBF24]" />
+                    </button>
                   </div>
                 </div>
               );
             })}
           </div>
+          </>
         )}
       </div>
 

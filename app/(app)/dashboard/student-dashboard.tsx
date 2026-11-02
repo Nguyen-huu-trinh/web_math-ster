@@ -108,7 +108,9 @@ export default function StudentDashboard() {
   const periodicNotifications = (studentExams.data ?? []).filter(
     (exam) =>
       exam.category === "PERIODIC" &&
-      exam.periodicDaysRemaining !== null
+      !exam.hasSubmittedAttempt &&
+      exam.lastAttemptAt == null &&
+      (exam.canStart || exam.inProgress)
   );
 
   return (
@@ -248,9 +250,11 @@ export default function StudentDashboard() {
 {/* THÔNG BÁO VÀ HẠN NỘP BÀI THI CHUẨN DESIGN */}
       <DashboardAnnouncementCard
         userId={profile?.id}
-        userId={profile?.id}
         announcement={announcement.data}
         periodicNotifications={periodicNotifications}
+        examsLoading={studentExams.isPending || studentExams.isRefetching}
+        examsError={studentExams.isError}
+        onRetryExams={() => { void studentExams.refetch(); }}
       />
 
       {/* ĐẾM NGƯỢC NGÀY THI */}

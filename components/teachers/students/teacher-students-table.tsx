@@ -3,7 +3,7 @@
 import { getStudentAvatarUrl as getAvatarUrl } from "@/lib/avatar";
 
 import { useMemo, useState } from "react";
-import { MoreVertical, Zap, Eye, Ban, Trash2, UserCheck, UserX, Search } from "lucide-react";
+import { MoreVertical, Eye, Ban, Trash2, UserCheck, UserX, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEnableTeacherStudent } from "@/hooks/use-enable-teacher-student";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { useUpdateTeacherStudentFinancial } from "@/hooks/use-update-teacher-student-financial";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+
 import { useRemoveTeacherCourseStudent } from "@/hooks/use-remove-teacher-course-student";
 import {
   DropdownMenu,
@@ -24,7 +24,7 @@ import { TeacherStudentListItem } from "@/services/teacher-student-client.servic
 import { useDisableTeacherStudent } from "@/hooks/use-disable-teacher-student";
 import { useDeleteTeacherStudent } from "@/hooks/use-delete-teacher-student";
 
-type SortKey = "studentCode" | "points" | "rewardMoney" | "averageScore";
+type SortKey = "studentCode" | "rewardMoney" | "averageScore";
 type SortDirection = "asc" | "desc";
 
 interface Props {
@@ -34,10 +34,6 @@ interface Props {
 
 export function TeacherStudentsTable({ students, courseId }: Props) {
   const router = useRouter();
-  const maxPoints = useMemo(
-    () => students.reduce((highest, student) => Math.max(highest, student.points), 0),
-    [students]
-  );
 
   // State tìm kiếm & lọc
   const [searchTerm, setSearchTerm] = useState("");
@@ -55,14 +51,14 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
 
   const [editingCell, setEditingCell] = useState<{
     studentId: string;
-    field: "points" | "rewardMoney";
+    field: "rewardMoney";
   } | null>(null);
 
   const [editValue, setEditValue] = useState("");
 
   function startEditing(
     studentId: string,
-    field: "points" | "rewardMoney",
+    field: "rewardMoney",
     value: number
   ) {
     setEditingCell({ studentId, field });
@@ -82,9 +78,7 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
       await updateFinancial.mutateAsync({
         studentId: editingCell.studentId,
         values:
-          editingCell.field === "points"
-            ? { points: value }
-            : { rewardMoney: value },
+          { rewardMoney: value },
       });
 
       setEditingCell(null);
@@ -137,9 +131,7 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
           case "studentCode":
             comparison = a.studentCode.localeCompare(b.studentCode, "vi");
             break;
-          case "points":
-            comparison = a.points - b.points;
-            break;
+
           case "rewardMoney":
             comparison = a.rewardMoney - b.rewardMoney;
             break;
@@ -162,8 +154,6 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
       .map((part) => part[0]?.toUpperCase())
       .join("");
   }
-
-
 
   function handleDisable(student: TeacherStudentListItem) {
     if (!student.isActive) return;
@@ -236,8 +226,7 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
             <option value="default">Sắp xếp: Mặc định</option>
             <option value="studentCode:asc">Mã học sinh: Tăng dần</option>
             <option value="studentCode:desc">Mã học sinh: Giảm dần</option>
-            <option value="points:desc">Độ trâu: Cao → thấp</option>
-            <option value="points:asc">Độ trâu: Thấp → cao</option>
+
             <option value="rewardMoney:desc">Quỹ thưởng: Cao → thấp</option>
             <option value="rewardMoney:asc">Quỹ thưởng: Thấp → cao</option>
             <option value="averageScore:desc">ĐTB: Cao → thấp</option>
@@ -304,20 +293,7 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
                 </th>
                 <th className="px-5 py-3 font-medium">Họ tên</th>
                 <th className="px-5 py-3 font-medium">Mục tiêu</th>
-                <th className="px-5 py-3 text-right font-medium">
-                  <button
-                    type="button"
-                    className="ml-auto flex items-center gap-1 hover:text-foreground"
-                    onClick={() => handleSort("points")}
-                  >
-                    Độ trâu
-                    {sortKey === "points" && (
-                      <span className="text-xs">
-                        {sortDirection === "asc" ? "↑" : "↓"}
-                      </span>
-                    )}
-                  </button>
-                </th>
+
                 <th className="px-5 py-3 text-right font-medium">
                   <button
                     type="button"
@@ -353,7 +329,7 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
             <tbody>
               {filteredAndSortedStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <td colSpan={6} className="text-center py-8 text-muted-foreground">
                     Không tìm thấy học sinh phù hợp.
                   </td>
                 </tr>
@@ -361,7 +337,7 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
                 filteredAndSortedStudents.map((student) => (
                   <tr
                     key={student.id}
-                    data-low-hp={student.isActive && student.points < 50}
+
                     className="border-b last:border-0 cursor-pointer hover:bg-muted/30"
                     onClick={() =>
                       router.push(
@@ -402,46 +378,6 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
                       <span className="text-sm text-muted-foreground">
                         {student.learningGoal || "—"}
                       </span>
-                    </td>
-
-                    {/* Points */}
-                    <td className="px-5 py-4">
-                      {editingCell?.studentId === student.id &&
-                      editingCell.field === "points" ? (
-                        <div className="flex items-center justify-end gap-1">
-                          <input
-                            type="number"
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onClick={(e) => e.stopPropagation()}
-                            className="h-8 w-24 rounded-md border px-2 text-right text-sm"
-                            autoFocus
-                            disabled={updateFinancial.isPending}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") void saveEditing();
-                              if (e.key === "Escape") cancelEditing();
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              startEditing(
-                                student.id,
-                                "points",
-                                student.points
-                              );
-                            }}
-                            className="ml-auto block cursor-pointer rounded-md px-2 py-1 text-sm font-medium hover:bg-muted"
-                          >
-                            <span className={`flex items-center justify-end gap-1 ${student.isActive && student.points < 50 ? "text-rose-600" : "text-slate-700"}`}><Zap className="size-3.5 text-amber-500" />{student.points.toLocaleString("vi-VN")} <span className="text-[10px] font-bold text-slate-400">HP</span></span>
-                            <span aria-hidden="true" className="mt-1.5 ml-auto block h-1 w-24 overflow-hidden rounded-full bg-slate-100"><span className={`block h-full rounded-full ${student.points < 50 ? "bg-rose-500" : student.points < 500 ? "bg-amber-500" : "bg-emerald-500"}`} style={{ width: `${maxPoints > 0 ? Math.max(0, Math.min(100, student.points / maxPoints * 100)) : 0}%` }} /></span>
-                          </button>
-                        </div>
-                      )}
                     </td>
 
                     {/* Reward */}

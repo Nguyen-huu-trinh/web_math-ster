@@ -10,7 +10,6 @@ export interface TeacherStudentListItem {
     email: string;
     personalEmail: string | null;
     avatarUrl: string | null;
-    points: number;
     rewardMoney: number;
     averageScore: number;
     isActive: boolean;
@@ -25,7 +24,6 @@ export interface TeacherStudentDetail {
         email: string;
         personalEmail: string | null;
         avatarUrl: string | null;
-        points: number;
         rewardMoney: number;
         learningGoal: string | null;
         isActive: boolean;
@@ -80,7 +78,6 @@ export class TeacherStudentRepository {
                 email,
                 personal_email,
                 avatar_url,
-                points,
                 reward_money,
                 is_active,
                 learning_goal
@@ -127,9 +124,6 @@ export class TeacherStudentRepository {
             personalEmail:
                 student.personal_email,
             avatarUrl: student.avatar_url,
-            points: Number(
-                student.points ?? 0
-            ),
             rewardMoney: Number(
                 student.reward_money ?? 0
             ),
@@ -142,7 +136,6 @@ export class TeacherStudentRepository {
             learningGoal: student.learning_goal,
         }));
     }
-
 
     async getByCourse(courseId: string) {
     const supabase = await createClient();
@@ -180,7 +173,6 @@ export class TeacherStudentRepository {
             email,
             personal_email,
             avatar_url,
-            points,
             reward_money,
             is_active,
             learning_goal
@@ -228,9 +220,6 @@ export class TeacherStudentRepository {
         personalEmail:
             student.personal_email,
         avatarUrl: student.avatar_url,
-        points: Number(
-            student.points ?? 0
-        ),
         rewardMoney: Number(
             student.reward_money ?? 0
         ),
@@ -315,7 +304,6 @@ async addToCourse(
                 email,
                 personal_email,
                 avatar_url,
-                points,
                 reward_money,
                 is_active
             `)
@@ -476,9 +464,6 @@ async addToCourse(
                     profile.personal_email,
                 avatarUrl:
                     profile.avatar_url,
-                points: Number(
-                    profile.points ?? 0
-                ),
                 rewardMoney: Number(
                     profile.reward_money ?? 0
                 ),
@@ -550,13 +535,6 @@ async addToCourse(
         }
 
         if (
-            values.points !== undefined
-        ) {
-            updateData.points =
-                values.points;
-        }
-
-        if (
             values.rewardMoney !==
             undefined
         ) {
@@ -580,7 +558,6 @@ async addToCourse(
                 email,
                 personal_email,
                 avatar_url,
-                points,
                 reward_money,
                 is_active
             `)
@@ -596,7 +573,6 @@ async addToCourse(
     async updateFinancialInfo(
         studentId: string,
         values: {
-            points?: number;
             rewardMoney?: number;
         }
     ) {
@@ -607,13 +583,6 @@ async addToCourse(
             string,
             number
         > = {};
-
-        if (
-            values.points !== undefined
-        ) {
-            updateData.points =
-                values.points;
-        }
 
         if (
             values.rewardMoney !== undefined
@@ -669,7 +638,6 @@ async addToCourse(
         return data;
     }
 async enable(studentId: string) {
-
 
     const supabase =
         await createClient();

@@ -2,124 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 export class StudentExamRepository {
 
-async adjustStudentPoints(
-  examId: string,
-  studentId: string,
-  action: "increase" | "decrease"
-) {
-  const supabase = await createClient();
-
-  // =====================================================
-  // 1. LẤY THÔNG TIN ĐỀ
-  // =====================================================
-
-  const { data: exam, error: examError } =
-    await supabase
-      .from("exams")
-      .select(`
-        id,
-        category
-      `)
-      .eq("id", examId)
-      .is("deleted_at", null)
-      .single();
-
-  if (examError) {
-    throw examError;
-  }
-
-  if (!exam) {
-    throw new Error(
-      "Không tìm thấy đề thi."
-    );
-  }
-
-  // =====================================================
-  // 2. XÁC ĐỊNH MỨC ĐIỂM
-  // =====================================================
-
-  const delta =
-    exam.category === "ATTENDANCE"
-      ? 10
-      : exam.category === "PERIODIC"
-      ? 50
-      : 0;
-
-  if (delta === 0) {
-    throw new Error(
-      "Đề thi không thuộc loại được cộng/trừ điểm."
-    );
-  }
-
-  // =====================================================
-  // 3. LẤY PROFILE HỌC SINH
-  // =====================================================
-
-  const { data: profile, error: profileError } =
-    await supabase
-      .from("profiles")
-      .select(`
-        id,
-        points
-      `)
-      .eq("id", studentId)
-      .single();
-
-  if (profileError) {
-    throw profileError;
-  }
-
-  if (!profile) {
-    throw new Error(
-      "Không tìm thấy hồ sơ học sinh."
-    );
-  }
-
-  // =====================================================
-  // 4. TÍNH ĐIỂM MỚI
-  // =====================================================
-
-  const change =
-    action === "increase"
-      ? delta
-      : -delta;
-
-  // Preserve negative points so the database trigger can deactivate the account.
-  const newPoints = profile.points + change;
-
-  // =====================================================
-  // 5. UPDATE PROFILE
-  // =====================================================
-
-  const {
-    data: updatedProfile,
-    error: updateError,
-  } = await supabase
-    .from("profiles")
-    .update({
-      points: newPoints,
-    })
-    .eq("id", studentId)
-    .select(`
-      id,
-      points
-    `)
-    .single();
-
-  if (updateError) {
-    throw updateError;
-  }
-
-  return {
-    studentId,
-    oldPoints: profile.points,
-    newPoints: updatedProfile.points,
-    change,
-    category: exam.category,
-  };
-}
-
-
 async getMyExams(studentId: string) {
   const supabase = await createClient();
 
@@ -400,8 +282,6 @@ if (prerequisites && prerequisites.length > 0) {
       (item) => item.prerequisite_exam_id
     );
 
-
-
    // =====================================================
   // Kiểm tra trạng thái của TỪNG đề tiên quyết
   // =====================================================
@@ -526,7 +406,6 @@ if (prerequisites && prerequisites.length > 0) {
     throw error;
   }
 }
-
 
   // ===========================
   // Đếm số lần làm
@@ -760,7 +639,6 @@ async getPeriodicProgress(
   );
 }
 
-
 async getAttemptDetail(
     studentId: string,
     attemptId: string
@@ -778,8 +656,6 @@ async getAttemptDetail(
         },
     } = await supabase.auth.getUser();
 
-
-
     // ==========================
     // Attempt
     // ==========================
@@ -794,8 +670,6 @@ async getAttemptDetail(
         .eq("student_id", studentId)
         .maybeSingle();
 
-
-
     if (attemptError) {
         throw attemptError;
     }
@@ -805,8 +679,6 @@ async getAttemptDetail(
             `Không tìm thấy attempt ${attemptId} của student ${studentId}`
         );
     }
-
-
 
   // Exam
 
@@ -861,9 +733,6 @@ const remainingSeconds =
     duration - elapsed,
     0
   );
-
-
-
 
 return {
 
@@ -1070,33 +939,7 @@ const submittedAt =
         };
     }
 
-
-
-    // ==========================
-// CỘNG / TRỪ POINTS
-// ==========================
-// const pointDelta = passed ? 10 : -10;
-const pointDelta =
-    attempt.exams.category === "ATTENDANCE"
-        ? (passed ? 10 : -10)
-        : (passed ? 50 : -50);
-
-const { error: pointsError } = await supabase.rpc(
-    "adjust_student_points",
-    {
-        p_student_id: studentId,
-        p_delta: pointDelta,
-    }
-);
-
-if (pointsError) {
-    console.error(
-        "UPDATE STUDENT POINTS ERROR:",
-        pointsError
-    );
-
-    throw pointsError;
-}
+    //
     // ==========================
     // Submit thành công
     // ==========================
@@ -1231,7 +1074,6 @@ private gradeCustom(
   // Mỗi câu có trọng số bằng nhau
   const point = 10 / totalQuestions;
 
-
   // =====================================================
   // PART I — MULTIPLE CHOICE
   // =====================================================
@@ -1253,7 +1095,6 @@ private gradeCustom(
       score += point;
     }
   }
-
 
   // =====================================================
   // PART II — TRUE / FALSE
@@ -1315,7 +1156,6 @@ private gradeCustom(
     }
   }
 
-
   // =====================================================
   // PART III — SHORT ANSWER
   // =====================================================
@@ -1349,7 +1189,6 @@ private gradeCustom(
       score += point;
     }
   }
-
 
   return score;
 }

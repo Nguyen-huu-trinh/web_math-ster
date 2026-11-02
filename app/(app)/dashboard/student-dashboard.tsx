@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useStudentDashboard } from '@/hooks/use-dashboard';
 import { useLeaderboard } from '@/hooks/use-leaderboard';
 import { TopStudentsCard } from '@/components/dashboard/top-students-card';
-import { useQueryClient } from "@tanstack/react-query";
+
 import { StatCardsGrid } from '@/components/dashboard/stat-card';
 import { CountdownCard } from '@/components/dashboard/countdown-card';
 import { LeaderboardCard } from '@/components/dashboard/leaderboard-card';
@@ -18,12 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 
 import {
   Pencil,
@@ -31,9 +26,8 @@ import {
   X,
   Video,
   CalendarDays,
-  Zap,
 } from "lucide-react";
-import { useSubmitAttendance } from "@/hooks/use-submit-attendance";
+
 import { useUpdateLearningGoal } from "@/hooks/use-update-learning-goal";
 import { useStudentExams } from "@/hooks/use-student-exams";
 import { StudentScheduleCard } from "@/components/dashboard/student-schedule-card";
@@ -61,15 +55,12 @@ function greeting() {
 export default function StudentDashboard() {
   const { profile } = useAuth();
   const studentDashboard = useStudentDashboard();
-  const queryClient = useQueryClient();
 
   const updateLearningGoal = useUpdateLearningGoal();
-  const submitAttendance = useSubmitAttendance();
 
   const [editingGoal, setEditingGoal] = useState(false);
   const [goal, setGoal] = useState("");
-  const [attendanceCode, setAttendanceCode] = useState("");
-  const [displayPoints, setDisplayPoints] = useState<number | null>(null);
+
   const onlineCount = useOnlineCount();
   const [showSchedule, setShowSchedule] = useState(false);
   const leaderboard = useLeaderboard();
@@ -79,51 +70,11 @@ export default function StudentDashboard() {
   const dashboard = studentDashboard.data;
   const learningGoal = dashboard?.profile?.learning_goal ?? "";
 
-  const points =
-    displayPoints ??
-    dashboard?.profile?.points ??
-    profile?.points ??
-    0;
-
-  const topPoints = Number(leaderboard.data?.dotrau?.[0]?.points ?? 0);
-  const formPercent = topPoints > 0 && Number.isFinite(topPoints)
-    ? Math.min(100, Math.max(0, Math.round(Number(points) / topPoints * 100)))
-    : 0;
-
-  useEffect(() => {
-    if (dashboard?.profile?.points !== undefined) {
-      setDisplayPoints(dashboard.profile.points);
-    }
-  }, [dashboard?.profile?.points]);
-
   useEffect(() => {
     if (dashboard?.profile?.learning_goal !== undefined) {
       setGoal(dashboard.profile.learning_goal ?? "");
     }
   }, [dashboard?.profile?.learning_goal]);
-
-  async function handleSaveAttendance() {
-    if (submitAttendance.isPending) return;
-    const code = attendanceCode.trim();
-
-    if (!code) {
-      toast.error("Vui lòng nhập mã điểm danh");
-      return;
-    }
-
-    try {
-      const result = await submitAttendance.mutateAsync(code);
-      setDisplayPoints(points + Number(result.pointsAdded ?? 10));
-      setAttendanceCode("");
-      await studentDashboard.refetch();
-      toast.success("Điểm danh thành công! +10 điểm.");
-    } catch (error) {
-      console.error("SUBMIT ATTENDANCE ERROR:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Không thể điểm danh"
-      );
-    }
-  }
 
   async function handleSaveGoal() {
     const value = goal.trim();
@@ -149,7 +100,7 @@ export default function StudentDashboard() {
   ) {
     return (
       <div className="flex justify-center py-20 font-medium text-slate-500">
-        Đang húc . . . 
+        Đang húc . . .
       </div>
     );
   }
@@ -162,10 +113,10 @@ export default function StudentDashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* KHỐI HERO: Lời chào, Đang cày, Điểm danh */}
+      {/* KHỐI HERO: Lời chào và tình hình học tập */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-24">
         {/* KHỐI 1: Lời chào & Mục tiêu */}
-        <div className="col-span-2 rounded-2xl border border-slate-200/75 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900 lg:col-span-14">
+        <div className="col-span-2 rounded-2xl border border-slate-200/75 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900 lg:col-span-18">
           <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs font-bold tracking-wider uppercase">
@@ -292,52 +243,6 @@ export default function StudentDashboard() {
           </p>
         </div>
 
-        {/* KHỐI 3: Độ trâu / Mã điểm danh */}
-        <div className="col-span-1 flex min-w-0 flex-col justify-between rounded-[28px] border-2 border-slate-200/80 bg-white p-4 sm:p-5 lg:col-span-5 dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm font-extrabold uppercase tracking-wide text-slate-400 sm:text-base">Độ trâu</p>
-            <span className="inline-flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-base font-extrabold tabular-nums text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
-              <Zap aria-hidden="true" className="size-4 shrink-0 fill-amber-500 text-amber-500" />
-              {points} máu
-            </span>
-          </div>
-
-          <div className="my-5 space-y-2">
-            <div
-              role="progressbar"
-              aria-label="Phong độ so với học sinh đứng đầu bảng Độ trâu"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={formPercent}
-              className="h-2.5 overflow-hidden rounded-full border border-slate-200/80 bg-slate-100 p-0.5 dark:border-slate-700 dark:bg-slate-800"
-            >
-              <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-[width] duration-300 motion-reduce:transition-none" style={{ width: `${formPercent}%` }} />
-            </div>
-            <p className="text-right text-xs font-bold tabular-nums text-slate-400 sm:text-sm">Phong độ: {formPercent}%</p>
-          </div>
-
-          <form className="border-t border-slate-100 pt-3 dark:border-slate-800" onSubmit={(event) => { event.preventDefault(); void handleSaveAttendance(); }}>
-            <div className="flex min-w-0 items-center gap-1 rounded-2xl border-2 border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-800">
-            <Input
-              value={attendanceCode}
-              onChange={(e) => setAttendanceCode(e.target.value)}
-              aria-label="Mã điểm danh"
-              placeholder="Mã điểm danh…"
-              maxLength={100}
-              disabled={submitAttendance.isPending}
-              className="h-9 min-w-0 flex-1 rounded-xl border-0 bg-transparent px-2 text-xs font-bold shadow-none placeholder:text-slate-400 sm:text-sm dark:bg-transparent"
-            />
-            <Button
-              type="submit"
-              size="sm"
-              disabled={submitAttendance.isPending || !attendanceCode.trim()}
-              className="h-9 shrink-0 rounded-xl bg-[#101527] px-3 text-xs font-bold text-white hover:bg-slate-800 sm:text-sm"
-            >
-              {submitAttendance.isPending ? "..." : "Lưu"}
-            </Button>
-            </div>
-          </form>
-        </div>
       </div>
 
 {/* THÔNG BÁO VÀ HẠN NỘP BÀI THI CHUẨN DESIGN */}
@@ -371,8 +276,8 @@ export default function StudentDashboard() {
         />
       </div>
 
-      {/* 4 BẢNG XẾP HẠNG HỌC VIÊN */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 min-[1800px]:grid-cols-4">
+      {/* BẢNG XẾP HẠNG HỌC VIÊN */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* 1. TOP HỌC GIỎI (Bắt đầu từ Rank 4) */}
         <LeaderboardCard
           title="Top Học Giỏi"
@@ -391,16 +296,6 @@ export default function StudentDashboard() {
           badgeLabel="Đôn đốc"
           variant="warning"
           entries={leaderboard.data?.lowHomework ?? []}
-        />
-
-        {/* 3. TOP ĐỘ TRÂU */}
-        <LeaderboardCard
-          title="Top ĐỘ TRÂU"
-          icon="💪"
-          description="Bảng xếp hạng độ chăm chỉ cày bài tập"
-          badgeLabel="🐂 Trâu Nhất"
-          entries={leaderboard.data?.dotrau ?? []}
-          valueType="points"
         />
 
         {/* 4. THỢ SĂN TIỀN THƯỞNG */}
@@ -426,7 +321,7 @@ export default function StudentDashboard() {
       <Dialog open={showSchedule} onOpenChange={setShowSchedule}>
         <DialogContent className="sm:max-w-3xl w-full">
           <DialogHeader>
-            
+
           </DialogHeader>
           <div className="max-h-[75vh] overflow-y-auto pr-1">
             <StudentScheduleCard />

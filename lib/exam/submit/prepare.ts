@@ -43,7 +43,6 @@ export interface PreparedSubmit {
  * - gọi database
  * - chấm điểm
  * - update attempt
- * - update points
  */
 export function prepareSubmit(
   input: SubmitExamInput,

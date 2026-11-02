@@ -3,17 +3,7 @@ import { toast } from "sonner";
 import "./answers.css";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-  ArrowLeft,
-  Clock,
-  Users,
-  Trophy,
-  CheckCircle2,
-  XCircle,
-  Plus,
-  Minus,
-  Trash2,
-} from "lucide-react";
+import { ArrowLeft, Clock, Users, Trophy, CheckCircle2, XCircle, Trash2 } from "lucide-react";
 
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -85,7 +75,6 @@ function formatDuration(
     )
   );
 
-  
   const hours = Math.floor(
     seconds / 3600
   );
@@ -155,7 +144,6 @@ export default function ExamAnswersPage() {
     params.id as string;
 const queryClient = useQueryClient();
 
-
 const [sortBy, setSortBy] = useState<
   "student_code" | "score_desc" | "score_asc"
 >("student_code");
@@ -163,9 +151,6 @@ const [sortBy, setSortBy] = useState<
 const [statusFilter, setStatusFilter] = useState<
   "all" | "passed" | "failed" | "not_started"
 >("all");
-
-const [adjustingAttemptId, setAdjustingAttemptId] =
-  useState<string | null>(null);
 
 const [deletingAttemptId, setDeletingAttemptId] =
   useState<string | null>(null);
@@ -184,7 +169,6 @@ const examDurationDays =
   response?.examDurationDays ?? null;
 
 const category = response?.category ?? null;
-
 
 const examTitle =
   response?.examTitle ??
@@ -262,76 +246,6 @@ const sortedAttempts = useMemo(() => {
 
   return result;
 }, [filteredAttempts, sortBy]);
-
-async function adjustPoints(
-  studentId: string,
-  action: "increase" | "decrease"
-) {
-  try {
-    setAdjustingAttemptId(studentId);
-
-    const response = await fetch(
-      `/api/exams/${examId}/points`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          studentId,
-          action,
-        }),
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data?.message ||
-          "Không thể cập nhật điểm."
-      );
-    }
-
-    const oldPoints = Number(
-      data.oldPoints ?? 0
-    );
-
-    const newPoints = Number(
-      data.newPoints ?? 0
-    );
-
-    const amount = Math.abs(
-      Number(data.change ?? 0)
-    );
-
-    toast.success(
-      action === "increase"
-        ? `Đã cộng ${amount} điểm`
-        : `Đã trừ ${amount} điểm`,
-      {
-        description:
-          `Điểm: ${oldPoints} → ${newPoints}`,
-      }
-    );
-
-  } catch (error) {
-    console.error(
-      "[ADJUST POINTS ERROR]",
-      error
-    );
-
-    toast.error(
-      error instanceof Error
-        ? error.message
-        : "Không thể cập nhật điểm."
-    );
-
-  } finally {
-    setAdjustingAttemptId(null);
-  }
-}
-
 
 async function deleteAttempt(
   studentId: string,
@@ -559,12 +473,9 @@ async function deleteAttempt(
                       Họ tên
                     </TableHead>
 
-
                     <TableHead>
                       Điểm
                     </TableHead>
-
-
 
                     <TableHead>
                       Thời điểm nộp
@@ -642,8 +553,6 @@ async function deleteAttempt(
 
                         </TableCell>
 
-                        
-
                         <TableCell>
 
                           {formatDate(
@@ -708,49 +617,9 @@ async function deleteAttempt(
                               attempt.class_joined_at
                             )}
                           </span>
-                        </TableCell>                        
+                        </TableCell>
                         <TableCell>
                           <div className="flex justify-end gap-1">
-
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="outline"
-                            className="size-9 rounded-xl border-slate-200 bg-white p-0 text-slate-700 shadow-none hover:bg-slate-100"
-                            disabled={
-                              adjustingAttemptId === attempt.student_id
-                            }
-                            onClick={(e) => {
-                              e.stopPropagation();
-
-                              adjustPoints(
-                                attempt.student_id,
-                                "increase"
-                              );
-                            }}
-                          >
-                            <Plus className="size-3" />
-                          </Button>
-
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="outline"
-                            className="size-9 rounded-xl border-slate-200 bg-white p-0 text-slate-700 shadow-none hover:bg-slate-100"
-                            disabled={
-                              adjustingAttemptId === attempt.student_id
-                            }
-                            onClick={(e) => {
-                              e.stopPropagation();
-
-                              adjustPoints(
-                                attempt.student_id,
-                                "decrease"
-                              );
-                            }}
-                          >
-                            <Minus className="size-3" />
-                          </Button>
 
                           <Button
                             type="button"

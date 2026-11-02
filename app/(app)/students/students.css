@@ -15,7 +15,5 @@
 .students-management .students-table th { height: 48px; background: #fafcff; color: #8292a8; font-size: 12px; font-weight: 800; text-transform: uppercase; white-space: nowrap; }
 .students-management .students-table tr { border-color: #f1f5f9; }
 .students-management .students-table tbody tr:hover { background: #f8fafc; }
-.students-management .students-table tbody tr[data-low-hp="true"] { background: #fff1f2; }
-.students-management .students-table tbody tr[data-low-hp="true"]:hover { background: #ffe4e6; }
 .students-management .students-table td { height: 80px; }
 .student-list-code { border-radius: 5px; background: #f1f5f9; padding: 3px 7px; color: #64748b; font-family: monospace; font-size: 12px; font-weight: 700; }

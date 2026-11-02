@@ -33,20 +33,6 @@ export class StudentExamService {
     );
   }
 
-async adjustStudentPoints(
-  examId: string,
-  studentId: string,
-  action: "increase" | "decrease"
-) {
-  return studentExamRepository.adjustStudentPoints(
-    examId,
-    studentId,
-    action
-  );
-}
-
-
-
   async getTeacherExamSession(
   attemptId: string
 ) {

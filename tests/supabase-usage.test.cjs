@@ -85,7 +85,7 @@ test('regrade service sends bounded batches instead of requests per attempt', as
   });
   assert.equal(await examService.updateAnswerKey('exam', {}), exam);
   assert.deepEqual(batches.map(batch => batch.p_rows.length), [500, 500, 1]);
-  assert.equal(batches[0].p_rows[0].point_correction, 100);
+  assert.equal("point_correction" in batches[0].p_rows[0], false);
 });
 test('dirty star sync backs off failed automatic retries and stops offline requests', async () => {
   let now = 1000, online = true, calls = 0, interval, effect;
@@ -106,7 +106,7 @@ test('dirty star sync backs off failed automatic retries and stops offline reque
   now += 10000; interval(); assert.equal(calls, 2);
   online = false; now += 20000; interval(); await new Promise(setImmediate); assert.equal(calls, 2);
 });
-test('batch regrade commits score and HP together; stale retries roll back', async () => {
+test('batch regrade works after removing HP; stale retries roll back', async () => {
   const { PGlite } = require('@electric-sql/pglite');
   const db = new PGlite();
   const exam = '11111111-1111-4111-8111-111111111111';
@@ -125,17 +125,20 @@ test('batch regrade commits score and HP together; stale retries roll back', asy
       insert into profiles values ('${student}',10);
       insert into exam_attempts values ('${attempt}','${exam}','${student}',4,false,now());`);
     await db.exec(fs.readFileSync('supabase/migrations/202610220005_batch_exam_regrades.sql','utf8'));
-    const rows = JSON.stringify([{ attempt_id: attempt, student_id: student, old_score: 4, new_score: 8, old_passed: false, new_passed: true, point_correction: 100 }]);
+    await db.exec(fs.readFileSync('supabase/migrations/202611020001_remove_profile_points_and_code_attendance.sql','utf8'));
+    assert.equal((await db.query("select column_name from information_schema.columns where table_name='profiles' and column_name='points'")).rows.length, 0);
+    assert.equal((await db.query("select proname from pg_proc where proname='adjust_student_points'")).rows.length, 0);
+    const rows = JSON.stringify([{ attempt_id: attempt, student_id: student, old_score: 4, new_score: 8, old_passed: false, new_passed: true }]);
     await db.exec("select set_config('request.jwt.claim.role','authenticated',false); set role authenticated");
     await assert.rejects(db.query('select apply_exam_regrades($1,$2::jsonb)', [exam, rows]), /Service role required/);
     await db.exec("reset role; select set_config('request.jwt.claim.role','service_role',false); set role service_role");
     assert.equal((await db.query('select apply_exam_regrades($1,$2::jsonb) as count', [exam, rows])).rows[0].count, 1);
-    assert.equal((await db.query('select points from profiles')).rows[0].points, 110);
+    assert.equal((await db.query('select count(*)::int as count from profiles')).rows[0].count, 1);
     await assert.rejects(db.query('select apply_exam_regrades($1,$2::jsonb)', [exam, rows]), /Attempt changed/);
-    assert.equal((await db.query('select points from profiles')).rows[0].points, 110);
-    const duplicate = JSON.stringify(Array(2).fill({ attempt_id: attempt, student_id: student, old_score: 8, new_score: 9, old_passed: true, new_passed: true, point_correction: 5 }));
+    assert.equal((await db.query('select count(*)::int as count from profiles')).rows[0].count, 1);
+    const duplicate = JSON.stringify(Array(2).fill({ attempt_id: attempt, student_id: student, old_score: 8, new_score: 9, old_passed: true, new_passed: true }));
     await assert.rejects(db.query('select apply_exam_regrades($1,$2::jsonb)', [exam, duplicate]), /Attempt changed/);
     assert.equal(Number((await db.query('select score from exam_attempts')).rows[0].score), 8);
-    assert.equal((await db.query('select points from profiles')).rows[0].points, 110);
+    assert.equal((await db.query('select count(*)::int as count from profiles')).rows[0].count, 1);
   } finally { await db.close(); }
 });

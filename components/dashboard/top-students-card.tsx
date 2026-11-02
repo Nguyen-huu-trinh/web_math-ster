@@ -11,12 +11,10 @@ interface TopStudent {
   name?: string;
   avatarUrl?: string | null;
   avatar_url?: string | null;
-  points?: number;
   score?: number;
   value?: number;
   count?: number;
   quote?: string;
-  hp?: number;
 }
 
 interface TopStudentsCardProps {
@@ -57,19 +55,6 @@ function getScore(student: TopStudent): number {
 
 function getStudentCode(student: TopStudent, fallbackIndex: number) {
   return student.student_code ?? student.student_id ?? `MS-${String(fallbackIndex).padStart(4, "0")}`;
-}
-
-function getStudentHp(student: TopStudent) {
-  if (student.points !== undefined && student.points !== null) {
-    return Number(student.points);
-  }
-  if (student.hp !== undefined && student.hp !== null) {
-    return Number(student.hp);
-  }
-  if (student.value !== undefined && student.value !== null) {
-    return Number(student.value);
-  }
-  return 0;
 }
 
 function getInitials(name: string) {
@@ -151,7 +136,7 @@ export function TopStudentsCard({
 
       {/* GRID 2 CỘT */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 items-stretch">
-        
+
         {/* ========================================================
             CỘT TRÁI: TOP 1 - THỦ KHOA (lg:col-span-7)
         ========================================================= */}
@@ -164,16 +149,17 @@ export function TopStudentsCard({
             }}
           >
             <div className="flex items-start justify-between gap-4">
-              <div className="space-y-2">
+              <div className="min-w-0 space-y-2">
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-[#EAB308] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-950">
                   <span>👑</span>
                   <span>THỦ KHOA TOÁN MATH-STER</span>
                 </div>
-
-                {/* Tên Top 1: Nếu là giáo viên thì cho phép nhấp chuột */}
+                <p className="font-mono text-xs font-bold tracking-wide text-slate-400">
+                  {getStudentCode(first, 1)}
+                </p>
                 <h4
                   onClick={() => handleStudentClick(first)}
-                  className={`text-2xl sm:text-3xl font-extrabold text-[#F5B82E] tracking-tight transition-opacity ${
+                  className={`break-words text-2xl sm:text-3xl font-extrabold text-[#F5B82E] tracking-tight transition-opacity ${
                     isTeacher ? "cursor-pointer hover:underline hover:opacity-85" : ""
                   }`}
                   title={isTeacher ? "Xem trang cá nhân học sinh" : undefined}
@@ -181,8 +167,6 @@ export function TopStudentsCard({
                   {getName(first)}
                 </h4>
               </div>
-
-              {/* Avatar Top 1: Nếu là giáo viên thì cho phép nhấp chuột */}
               <div
                 onClick={() => handleStudentClick(first)}
                 className={`relative size-20 sm:size-24 shrink-0 overflow-hidden rounded-2xl border-2 border-[#F5B82E] bg-slate-800 p-0.5 shadow-md transition-transform ${
@@ -203,34 +187,16 @@ export function TopStudentsCard({
                 )}
               </div>
             </div>
-
-            {/* 3 Box chỉ số thống kê */}
-            <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="mt-6 grid grid-cols-2 gap-2 sm:gap-3">
               <div className="flex flex-col items-center justify-center rounded-xl bg-slate-900/80 border border-slate-800/80 py-2.5 px-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Điểm số
-                </span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Điểm số</span>
                 <span className="mt-0.5 text-base sm:text-lg font-black text-[#F5B82E]">
                   {getScore(first).toFixed(2)}
                 </span>
               </div>
-
               <div className="flex flex-col items-center justify-center rounded-xl bg-slate-900/80 border border-slate-800/80 py-2.5 px-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Độ trâu
-                </span>
-                <span className="mt-0.5 text-base sm:text-lg font-black text-white">
-                  {getStudentHp(first)} HP
-                </span>
-              </div>
-
-              <div className="flex flex-col items-center justify-center rounded-xl bg-slate-900/80 border border-slate-800/80 py-2.5 px-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Xếp hạng
-                </span>
-                <span className="mt-0.5 text-base sm:text-lg font-black text-emerald-400">
-                  #1 Khối
-                </span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Xếp hạng</span>
+                <span className="mt-0.5 text-base sm:text-lg font-black text-emerald-400">#1 Khối</span>
               </div>
             </div>
           </div>
@@ -240,7 +206,7 @@ export function TopStudentsCard({
             CỘT PHẢI: TOP 2 & TOP 3 (lg:col-span-5)
         ========================================================= */}
         <div className="flex flex-col justify-between gap-3 lg:col-span-5">
-          
+
           {/* TOP 2 */}
           {second && (
             <div className="flex items-center justify-between rounded-2xl border border-slate-800 bg-[#161B28]/90 p-4 shadow-sm hover:border-slate-700 transition-colors">
@@ -282,9 +248,7 @@ export function TopStudentsCard({
                   >
                     {getName(second)}
                   </h5>
-                  <p className="text-[11px] text-slate-500 font-medium">
-                    Độ trâu: {getStudentHp(second)} Máu
-                  </p>
+
                 </div>
               </div>
 
@@ -337,9 +301,7 @@ export function TopStudentsCard({
                   >
                     {getName(third)}
                   </h5>
-                  <p className="text-[11px] text-slate-500 font-medium">
-                    Độ trâu: {getStudentHp(third)} Máu
-                  </p>
+
                 </div>
               </div>
 

@@ -4,8 +4,6 @@ export interface StudentDashboard {
   profile: {
     full_name: string;
     learning_goal: string | null;
-    points: number;
-
   };
 
   totalCourses: number;
@@ -51,8 +49,6 @@ export interface LeaderboardStudent {
   avatar_url: string | null;
 
   count: number;
-
-  points?: number;
 }
 
 export interface RewardMoneyStudent {
@@ -60,13 +56,6 @@ export interface RewardMoneyStudent {
     student_code: string;
     full_name: string;
     reward_money: number;
-}
-
-export interface DoTrauStudent {
-    student_id: string;
-    student_code: string;
-    full_name: string;
-    points: number;
 }
 
 export interface DashboardLeaderboard {
@@ -83,8 +72,6 @@ export interface DashboardLeaderboard {
   excellent: LeaderboardStudent[];
 
   rewardMoney: RewardMoneyStudent[];
-
-  dotrau: DoTrauStudent[];
 }
 
 class DashboardClientService {
@@ -99,7 +86,6 @@ class DashboardClientService {
     "/api/dashboard/teacher"
   );
 }
-
 
 async getActiveStudentCount(): Promise<{
     activeStudents: number;
@@ -182,9 +168,7 @@ excellent: data.excellent.map((item: any) => ({
   full_name: item.full_name,
   avatar_url: item.avatar_url ?? null,
   count: Number(item.count),
-  points: Number(item.points ?? item.hp ?? 0),
 })),
-
 
     rewardMoney: data.rewardMoney.map(
         (item: any) => ({
@@ -195,17 +179,6 @@ excellent: data.excellent.map((item: any) => ({
                 Number(item.reward_money ?? 0),
         })
     ),
-
-    dotrau: data.dotrau.map(
-        (item: any) => ({
-            student_id: item.id,
-            student_code: item.student_code,
-            full_name: item.full_name,
-            points:
-                Number(item.points ?? 0),
-        })
-    ),
-
     };
   }
 }

@@ -12,7 +12,6 @@ import {
 import {
   LeaderboardStudent,
   RewardMoneyStudent,
-  DoTrauStudent,
 } from "@/services/dashboard-client.service";
 
 interface LeaderboardCardProps {
@@ -20,8 +19,8 @@ interface LeaderboardCardProps {
   description: string;
   badgeLabel?: string;
   icon?: string;
-  entries: LeaderboardStudent[] | RewardMoneyStudent[] | DoTrauStudent[];
-  valueType?: "count" | "money" | "points";
+  entries: LeaderboardStudent[] | RewardMoneyStudent[];
+  valueType?: "count" | "money";
   startRank?: number;
   variant?: "default" | "warning";
 }
@@ -47,8 +46,6 @@ export function LeaderboardCard({
     ? { rgb: "239, 68, 68", text: "text-red-700 dark:text-red-300" }
     : isTopExcellence
     ? { rgb: "59, 130, 246", text: "text-blue-800 dark:text-blue-300" }
-    : valueType === "points"
-    ? { rgb: "245, 158, 11", text: "text-amber-800 dark:text-amber-300" }
     : valueType === "money"
     ? { rgb: "16, 185, 129", text: "text-emerald-800 dark:text-emerald-300" }
     : null;
@@ -88,13 +85,11 @@ export function LeaderboardCard({
     return "bg-slate-100 text-slate-500 font-semibold dark:bg-slate-800 dark:text-slate-400";
   };
 
-  // 2. Phân loại màu cho Badge Giá trị (Điểm số / Máu / Tiền thưởng)
+  // 2. Phân loại màu cho Badge Giá trị (Điểm số / Tiền thưởng)
   const renderValueBadge = (student: any, rank: number) => {
     let text = "";
     if (valueType === "money") {
       text = `${Number((student as RewardMoneyStudent).reward_money ?? 0).toLocaleString("vi-VN")}đ`;
-    } else if (valueType === "points") {
-      text = `${Number((student as DoTrauStudent).points ?? 0)} Máu`;
     } else {
       text = Number((student as LeaderboardStudent).count ?? 0).toFixed(2);
     }
@@ -136,7 +131,7 @@ export function LeaderboardCard({
       );
     }
 
-    // Bảng Độ trâu (Máu)
+    // Nhóm thứ hạng đầu
     if (rank <= 3) {
       return (
         <span className="inline-flex min-w-[64px] items-center justify-center rounded-full border border-amber-300 bg-amber-50 px-3.5 py-1 font-mono text-xs font-black text-amber-700 shadow-2xs dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-400">

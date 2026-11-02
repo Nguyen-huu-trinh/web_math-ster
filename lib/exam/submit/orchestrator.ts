@@ -6,10 +6,6 @@ import {
   saveExamSubmit,
 } from "./save";
 
-import {
-  adjustExamPoints,
-} from "./points";
-
 import type {
   SubmitExamInput,
   SubmitExamResult,
@@ -53,7 +49,7 @@ export async function submitExam(
 
   /**
    * Nếu attempt đã submit trước đó,
-   * tuyệt đối không chấm lại và không cộng/trừ point.
+   * tuyệt đối không chấm lại.
    */
   if (context.attempt.submitted_at) {
     return {
@@ -239,33 +235,6 @@ export async function submitExam(
       reason,
     };
   }
-
-  // ==========================================================
-  // 10. UPDATE POINTS
-  // ==========================================================
-
-  /**
-   * CHỈ request thực sự update được
-   * exam_attempts mới chạy tới đây.
-   *
-   * Request thứ hai sẽ không chạy.
-   */
-  await adjustExamPoints({
-    studentId:
-      input.studentId,
-
-    examId:
-      context.examId,
-
-    category:
-      context.category,
-
-    passed:
-      engineResult.grading.passed,
-
-    attemptId:
-      input.attemptId,
-  });
 
   // ==========================================================
   // 11. RETURN

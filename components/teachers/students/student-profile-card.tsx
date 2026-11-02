@@ -17,7 +17,6 @@ import {
     AvatarImage,
 } from "@/components/ui/avatar";
 
-
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { JoinedDateSchema } from "@/validators/teacher-student.schema";
@@ -68,7 +67,6 @@ export function StudentProfileCard({
     const [editingField, setEditingField] =
     useState<
         "personalEmail" |
-        "points" |
         "rewardMoney" |
         "joinedDate" |
         null
@@ -76,11 +74,6 @@ export function StudentProfileCard({
     const [personalEmail, setPersonalEmail] =
         useState(
             profile.personalEmail ?? ""
-        );
-
-    const [points, setPoints] =
-        useState(
-            String(profile.points)
         );
 
     const [rewardMoney, setRewardMoney] =
@@ -102,17 +95,12 @@ export function StudentProfileCard({
             profile.personalEmail ?? ""
         );
 
-        setPoints(
-            String(profile.points)
-        );
-
         setRewardMoney(
             String(profile.rewardMoney)
         );
         setJoinedDate(getJoinedDateInput(profile.created_at));
     }, [
         profile.personalEmail,
-        profile.points,
         profile.rewardMoney,
         profile.created_at,
     ]);
@@ -130,16 +118,11 @@ export function StudentProfileCard({
             .join("");
     }
 
-
     function handleCancel() {
         if (updateStudent.isPending) return;
 
         setPersonalEmail(
             profile.personalEmail ?? ""
-        );
-
-        setPoints(
-            String(profile.points)
         );
 
         setRewardMoney(
@@ -185,30 +168,6 @@ export function StudentProfileCard({
         return;
     }
 
-    if (editingField === "points") {
-        const parsedPoints =
-            Number(points);
-
-        if (
-            !Number.isFinite(parsedPoints)
-        ) {
-            return;
-        }
-
-        updateStudent.mutate(
-            {
-                points: parsedPoints,
-            },
-            {
-                onSuccess: () => {
-                    setEditingField(null);
-                },
-            }
-        );
-
-        return;
-    }
-
     if (editingField === "rewardMoney") {
         const parsedRewardMoney =
             Number(rewardMoney);
@@ -233,8 +192,6 @@ export function StudentProfileCard({
         );
     }
 }
-
-
 
     return (
         <div className="space-y-6">
@@ -296,7 +253,6 @@ export function StudentProfileCard({
                                     }
                                 }}
                             />
-
 
                         </div>
                     ) : (
@@ -367,49 +323,8 @@ export function StudentProfileCard({
             </div>
           </section>
           <section className="student-finance-panel">
-            <h2 className="mb-5 flex items-center gap-2 text-sm font-extrabold uppercase text-amber-400"><Zap className="size-4" />Quản lý máu & học bổng</h2>
+            <h2 className="mb-5 flex items-center gap-2 text-sm font-extrabold uppercase text-amber-400"><Zap className="size-4" />Quản lý học bổng</h2>
             <div className="space-y-4">
-                {/* POINTS */}
-                <div className="space-y-2">
-                    <Label>
-                        Độ trâu hiện tại (HP)
-                    </Label>
-
-                    {editingField === "points" ? (
-                        <Input
-                            disabled={updateStudent.isPending}
-                            type="number"
-                            value={points}
-                            onChange={(e) =>
-                                setPoints(e.target.value)
-                            }
-                            autoFocus
-                            className="
-                                [appearance:textfield]
-                                [&::-webkit-inner-spin-button]:appearance-none
-                                [&::-webkit-outer-spin-button]:appearance-none
-                            "
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                    handleSave();
-                                }
-
-                                if (e.key === "Escape") {
-                                    handleCancel();
-                                }
-                            }}
-                        />
-                    ) : (
-                        <div
-                            className="cursor-pointer rounded-md border bg-muted/30 px-3 py-2 text-sm font-semibold hover:bg-muted/50"
-                            onClick={() =>
-                                setEditingField("points")
-                            }
-                        >
-                            {profile.points.toLocaleString("vi-VN")}
-                        </div>
-                    )}
-                </div>
 
                 {/* REWARD */}
                 <div className="space-y-2">

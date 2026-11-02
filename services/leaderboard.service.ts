@@ -32,9 +32,6 @@ export class LeaderboardService {
     return leaderboardRepository.rewardMoneyStudents();
   });
 
-  dotrauStudents = cache(() => {
-    return leaderboardRepository.doTrauStudents();
-  });
 }
 
 export const leaderboardService = new LeaderboardService();

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Play, Clock3, FileQuestion, RotateCcw, AlertCircle, ArrowRight, X, Zap } from "lucide-react";
+import { Play, Clock3, FileQuestion, RotateCcw, AlertCircle, ArrowRight, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { StudentExamItem } from "@/services/student-exam-client.service";
@@ -22,7 +22,6 @@ export function StartExamDialog({ exam, busy, onClose, onStart }: Props) {
   ].filter((part) => typeof part.count === "number" && Number.isInteger(part.count) && part.count > 0);
   const questionCount = parts.reduce((sum, part) => sum + (part.count ?? 0), 0);
   const remaining = Math.max(0, exam.maxAttempts - exam.attempts);
-  const rewardHp = exam.category === "PERIODIC" ? 50 : exam.category === "ATTENDANCE" ? 10 : null;
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open && !busy) onClose(); }}>
@@ -51,12 +50,7 @@ export function StartExamDialog({ exam, busy, onClose, onStart }: Props) {
                 <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">{parts.map((part) => part.label).join(" + ")}</p>
               </div>
             )}
-            {rewardHp !== null && (
-              <div className="min-w-0 rounded-2xl border border-emerald-200/80 bg-emerald-50/70 p-3.5">
-                <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-700"><Zap className="size-4 shrink-0" />Thưởng Độ Trâu</p>
-                <p className="text-sm font-extrabold text-emerald-800">+{rewardHp} HP ĐỘ TRÂU</p>
-              </div>
-            )}
+
             <div className="min-w-0 rounded-2xl border border-slate-100 bg-[#F8F8FC] p-3.5">
               <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-slate-400"><RotateCcw className="size-4 shrink-0" />Số lượt nộp</p>
               <p className="text-sm font-extrabold text-slate-900">{exam.maxAttempts === 1 ? "1 LẦN DUY NHẤT" : `CÒN ${remaining}/${exam.maxAttempts} LƯỢT`}</p>

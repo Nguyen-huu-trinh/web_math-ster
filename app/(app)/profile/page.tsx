@@ -11,14 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import {
-  Mail,
-  IdCard,
-  Zap,
-  KeyRound,
-  Eye,
-  EyeOff,
-} from 'lucide-react'
+import { Mail, IdCard, KeyRound, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useAuth } from '@/providers/auth-provider'
@@ -81,13 +74,6 @@ export default function ProfilePage() {
   if (!user || !profile) {
     return null;
   }
-
-  // Lấy chỉ số Độ trâu (HP) từ profile hoặc fallback
-  const studentHp =
-    (profile as any).hp ??
-    (profile as any).exp ??
-    (profile as any).points ??
-    1450;
 
   async function handleZoomUpdate() {
     const url = zoomLink.trim();
@@ -237,9 +223,7 @@ export default function ProfilePage() {
 
       {/* 2. LAYOUT MASTER-DETAIL: CỘT TRÁI 340px - CỘT PHẢI 1fr */}
       <div className="grid gap-6 lg:grid-cols-[340px_1fr] items-start">
-        {/* ========================================================
-            CỘT TRÁI: THẺ PROFILE & ĐỘ TRÂU (HP)
-        ======================================================== */}
+
         <div className="flex flex-col gap-4">
           <Card className="rounded-[28px] border border-slate-200/90 bg-white p-6 shadow-2xs">
             <CardContent className="flex flex-col items-center p-0 text-center">
@@ -282,27 +266,6 @@ export default function ProfilePage() {
                 </span>
               </div>
 
-              {/* KHỐI ĐỘ TRÂU (HP) CHUẨN MOCKUP */}
-              <div className="mt-6 flex w-full items-center justify-between rounded-2xl border border-amber-200/80 bg-amber-50/60 p-3.5 shadow-2xs">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-xs">
-                    <Zap className="size-5 fill-current" />
-                  </div>
-                  <div className="text-left">
-                    <div className="text-xs font-black uppercase tracking-tight text-slate-800">
-                      ĐỘ TRÂU (HP)
-                    </div>
-                    <div className="text-[11px] font-semibold text-amber-700">
-                      Tích lũy cày bài
-                    </div>
-                  </div>
-                </div>
-
-                <div className="font-mono text-base font-black text-amber-600">
-                  {studentHp.toLocaleString("vi-VN")}{" "}
-                  <span className="text-xs font-bold">HP</span>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>

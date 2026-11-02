@@ -1,5 +1,4 @@
 import { gradeExam } from "./grading";
-import { getExamPointDelta } from "./submit/points";
 
 import type {
   ExamAnswers,
@@ -58,8 +57,6 @@ export interface RegradeAttemptResult {
 
   newPassed: boolean;
 
-  pointCorrection: number;
-
   changed: boolean;
 }
 
@@ -98,33 +95,7 @@ export function regradeAttempt(
     grading.passed;
 
   // ==========================================================
-  // 2. TÍNH POINT CORRECTION
-  // ==========================================================
-
-  let pointCorrection = 0;
-
-  if (
-    input.oldPassed !== null &&
-    input.oldPassed !== newPassed
-  ) {
-    const oldDelta =
-      getExamPointDelta(
-        context.category,
-        input.oldPassed
-      );
-
-    const newDelta =
-      getExamPointDelta(
-        context.category,
-        newPassed
-      );
-
-    pointCorrection =
-      newDelta - oldDelta;
-  }
-
-  // ==========================================================
-  // 3. KẾT QUẢ
+  // 2. KẾT QUẢ
   // ==========================================================
 
   return {
@@ -143,8 +114,6 @@ export function regradeAttempt(
       input.oldPassed,
 
     newPassed,
-
-    pointCorrection,
 
     changed:
       input.oldScore !== newScore ||

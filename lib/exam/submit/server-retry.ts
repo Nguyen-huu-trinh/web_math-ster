@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 
 // Only use for idempotent operations such as the conditional attempt save.
-// Do not wrap adjust_student_points: its existing RPC is not idempotent.
 export async function withSubmitRetry<T>(
   operation: (client: Awaited<ReturnType<typeof createClient>>) => PromiseLike<T & {
     error: { message: string; code?: string } | null;

@@ -22,7 +22,6 @@ export function useUpdateTeacherStudentFinancial() {
         }: {
             studentId: string;
             values: {
-                points?: number;
                 rewardMoney?: number;
             };
         }) =>

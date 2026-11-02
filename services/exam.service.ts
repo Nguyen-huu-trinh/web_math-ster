@@ -108,8 +108,6 @@ const attempts =
   await studentExamRepository
     .getSubmittedAttemptsForRegrade(id);
 
-
-
     // ========================================================
     // 3. KHÔNG CÓ BÀI ĐÃ NỘP
     // ========================================================
@@ -162,12 +160,9 @@ const attempts =
         )
     );
 
-
     // ========================================================
-    // 5. UPDATE ATTEMPTS + POINTS
+    // 5. UPDATE ATTEMPTS
     // ========================================================
-
-
 
     // One network request per 500 attempts; score and point correction commit
     // together within each batch. The RPC rejects stale attempt snapshots.
@@ -176,7 +171,6 @@ const attempts =
         attempt_id: result.attemptId, student_id: result.studentId,
         old_score: result.oldScore, new_score: result.newScore,
         old_passed: result.oldPassed, new_passed: result.newPassed,
-        point_correction: result.pointCorrection,
       }));
       const { error } = await adminClient.rpc("apply_exam_regrades", {
         p_exam_id: id, p_rows: batch,

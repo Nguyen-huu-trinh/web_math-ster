@@ -52,7 +52,6 @@ export class TeacherStudentService {
     async updateFinancialInfo(
         studentId: string,
         values: {
-            points?: number;
             rewardMoney?: number;
         }
     ) {

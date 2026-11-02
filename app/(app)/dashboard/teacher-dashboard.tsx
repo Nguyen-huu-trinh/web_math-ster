@@ -12,12 +12,11 @@ import { TeacherScheduleDialog } from "@/components/dashboard/teacher-schedule-d
 import { useAnnouncement, useUpdateAnnouncement, useDeleteAnnouncement } from "@/hooks/use-announcement";
 import { useExamAlerts, type ExamAlert } from "@/hooks/use-exam-alerts";
 import { TopStudentsCard } from '@/components/dashboard/top-students-card';
-import { useProcessAttendance } from "@/hooks/use-process-attendance";
-import { useCurrentAttendance } from "@/hooks/use-current-attendance";
+
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Save, Bell, Check, CalendarDays, Minus, Trash2 } from "lucide-react";
+import { Save, Bell, Check, CalendarDays, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLeaderboard } from '@/hooks/use-leaderboard';
 import { TeacherStatCardsGrid } from '@/components/dashboard/stat-card';
@@ -45,17 +44,16 @@ export default function TeacherDashboard() {
   const teacherDashboard = useTeacherDashboard();
   const onlineCount = useOnlineCount();
   const [readingAlertId, setReadingAlertId] = useState<string | null>(null);
-  const [deductingAlertId, setDeductingAlertId] = useState<string | null>(null);
+
   const leaderboard = useLeaderboard();
   const announcement = useAnnouncement();
   const queryClient = useQueryClient();
   const updateAnnouncement = useUpdateAnnouncement();
   const deleteAnnouncement = useDeleteAnnouncement();
-  const processAttendance = useProcessAttendance();
-  const currentAttendance = useCurrentAttendance();
+
   const [showTeacherSchedule, setShowTeacherSchedule] = useState(false);
   const [title, setTitle] = useState("");
-  const [attendanceCode, setAttendanceCode] = useState("");
+
   const [content, setContent] = useState("");
   const examAlertsQuery = useExamAlerts();
 
@@ -102,79 +100,6 @@ export default function TeacherDashboard() {
     }
   }
 
- async function handleDeductPoints(alert: ExamAlert) {
-    if (!alert.studentId || !alert.examId) return;
-
-    const confirmed = window.confirm(
-      `Trừ điểm của học sinh "${alert.studentName}" vì quá hạn nộp bài?`
-    );
-    if (!confirmed) return;
-
-    try {
-      setDeductingAlertId(alert.id);
-
-      // 1. Gọi endpoint trừ điểm
-      const response = await fetch(`/api/exams/${alert.examId}/points`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          studentId: alert.studentId,
-          action: "decrease",
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data?.message || "Không thể cập nhật điểm.");
-      }
-
-      const oldPoints = Number(data.oldPoints ?? 0);
-      const newPoints = Number(data.newPoints ?? 0);
-      const amount = Math.abs(Number(data.change ?? 0));
-
-      toast.success(`Đã trừ ${amount} điểm`, {
-        description: `Điểm của ${alert.studentName}: ${oldPoints} → ${newPoints}`,
-      });
-
-      // 2. Tự động đánh dấu "Đã xem" để xóa cảnh báo này khỏi bảng
-      await handleReadExamAlert(alert);
-
-      // 3. Làm mới bảng xếp hạng học sinh
-      void queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
-    } catch (error) {
-      console.error("[ADJUST POINTS ERROR]", error);
-      toast.error(
-        error instanceof Error ? error.message : "Không thể cập nhật điểm."
-      );
-    } finally {
-      setDeductingAlertId(null);
-    }
-  }
-
-  async function handleProcessAttendance() {
-    if (processAttendance.isPending) return;
-    const code = attendanceCode.trim();
-    if (!code) {
-      toast.error("Vui lòng nhập mã điểm danh đúng.");
-      return;
-    }
-
-    try {
-      const result = await processAttendance.mutateAsync(code);
-      toast.success(`Đã tạo lượt điểm danh cho ${result.studentCount} học sinh`);
-      setAttendanceCode("");
-      await currentAttendance.refetch();
-    } catch (error) {
-      console.error("PROCESS ATTENDANCE ERROR:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Không thể xử lý điểm danh"
-      );
-    }
-  }
-
   async function saveAnnouncement() {
     if (updateAnnouncement.isPending || deleteAnnouncement.isPending) return;
     if (!announcement.data) return;
@@ -214,10 +139,10 @@ export default function TeacherDashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* KHỐI HERO: Lời chào, Đang cày, Điểm danh */}
+      {/* KHỐI HERO: Lời chào và tình hình học tập */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-24">
         {/* KHỐI 1: Lời chào & Hành động */}
-        <div className="col-span-2 rounded-2xl border border-slate-200/75 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900 lg:col-span-14">
+        <div className="col-span-2 rounded-2xl border border-slate-200/75 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900 lg:col-span-18">
           <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs font-bold tracking-wider uppercase">
@@ -292,49 +217,7 @@ export default function TeacherDashboard() {
         </div>
 
         {/* KHỐI 3: Điểm danh cho giáo viên */}
-        <div className="col-span-1 flex flex-col items-center justify-center rounded-xl border bg-card p-4 text-center shadow-xs lg:col-span-5">
-          <p className="text-base font-semibold tracking-wide text-foreground sm:text-xl">
-            Điểm danh
-          </p>
 
-          <div className="mt-2.5 flex w-full max-w-[200px] items-center justify-center gap-1.5">
-            <Input
-              value={attendanceCode}
-              onChange={(e) => setAttendanceCode(e.target.value)}
-              placeholder="Mã code"
-              maxLength={100}
-              disabled={processAttendance.isPending}
-              className="h-8 w-full text-center text-xs sm:h-9 sm:text-sm"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  if (processAttendance.isPending) return;
-                  void handleProcessAttendance();
-                }
-              }}
-            />
-            <Button
-              type="button"
-              size="sm"
-              disabled={processAttendance.isPending || !attendanceCode.trim()}
-              onClick={() => {
-                if (processAttendance.isPending) return;
-                void handleProcessAttendance();
-              }}
-              className="h-8 px-2.5 text-xs sm:h-9 sm:text-sm"
-            >
-              {processAttendance.isPending ? "..." : "Lưu"}
-            </Button>
-          </div>
-
-          {currentAttendance.data?.code && (
-            <div className="mt-2.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1 text-center">
-              <p className="font-mono text-xs font-bold tracking-widest text-primary">
-                {currentAttendance.data.code}
-              </p>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* THÔNG BÁO HỌC SINH */}
@@ -469,28 +352,6 @@ export default function TeacherDashboard() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        {/* NÚT TRỪ 50 ĐIỂM: Chỉ xuất hiện khi bài thi QUÁ HẠN */}
- {alert.type === "OVERDUE" && (
-  <Button
-    type="button"
-    variant="outline"
-    size="sm"
-    title="Trừ điểm vì quá hạn"
-    aria-label={`Trừ điểm của ${alert.studentName}`}
-    className="h-8 px-2 text-xs font-black text-rose-600 border-rose-200 bg-rose-50/70 hover:bg-rose-100 hover:text-rose-700 hover:border-rose-300 transition-all shadow-2xs"
-    disabled={
-      deductingAlertId === alert.id ||
-      readingAlertId === alert.id
-    }
-    onClick={(event) => {
-      event.stopPropagation();
-      void handleDeductPoints(alert);
-    }}
-  >
-    <Minus className="mr-0.5 h-3.5 w-3.5 stroke-[3]" />
-    {deductingAlertId === alert.id ? "Đang trừ..." : "Trừ điểm"}
-  </Button>
-)}
 
                         {/* NÚT ĐÃ XEM */}
                         <Button
@@ -499,8 +360,7 @@ export default function TeacherDashboard() {
                           size="sm"
                           className="h-8 px-2.5 text-xs font-bold"
                           disabled={
-                            readingAlertId === alert.id ||
-                            deductingAlertId === alert.id
+                            readingAlertId === alert.id
                           }
                           onClick={(event) => {
                             event.stopPropagation();
@@ -536,8 +396,8 @@ export default function TeacherDashboard() {
         entries={leaderboard.data?.excellent ?? []}
       />
 
-      {/* 4 BẢNG XẾP HẠNG HỌC VIÊN */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 min-[1800px]:grid-cols-4">
+      {/* BẢNG XẾP HẠNG HỌC VIÊN */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* 1. TOP HỌC GIỎI */}
         <LeaderboardCard
           title="Top Học Giỏi"
@@ -556,16 +416,6 @@ export default function TeacherDashboard() {
           badgeLabel="Đôn đốc"
           variant="warning"
           entries={leaderboard.data?.lowHomework ?? []}
-        />
-
-        {/* 3. TOP ĐỘ TRÂU */}
-        <LeaderboardCard
-          title="Top ĐỘ TRÂU"
-          icon="💪"
-          description="Bảng xếp hạng độ chăm chỉ cày bài tập"
-          badgeLabel="🐂 Trâu Nhất"
-          entries={leaderboard.data?.dotrau ?? []}
-          valueType="points"
         />
 
         {/* 4. THỢ SĂN TIỀN THƯỞNG */}

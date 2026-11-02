@@ -26,7 +26,7 @@ middleware hoặc API trả 401 trước truy vấn đều có thể không tạ
   Giữ các cache headers do SSR cung cấp và thêm matcher `/student-exams`.
   Route submit luôn trả private/no-store; Next.js Route Handler chuyển các cookie
   được đặt qua `cookies().set()` của helper server vào response.
-- Giữ nguyên logic cộng/trừ điểm và RPC `adjust_student_points` hiện có.
+- Nộp bài chỉ lưu kết quả chấm; không thay đổi HP của học sinh.
   RPC điểm không được tự retry vì chưa có khóa chống cộng/trừ trùng.
   Không trả success dựa trên việc so khớp chuỗi lỗi “already submitted”.
 

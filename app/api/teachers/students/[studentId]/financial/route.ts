@@ -25,31 +25,17 @@ export async function PATCH(
         const body =
             await request.json();
 
+        if (!body || typeof body !== "object" || Array.isArray(body) ||
+            Object.keys(body).some((key) => key !== "rewardMoney")) {
+            return NextResponse.json(
+                { error: "Dữ liệu cập nhật không hợp lệ." },
+                { status: 400 }
+            );
+        }
+
         const values: {
-            points?: number;
             rewardMoney?: number;
         } = {};
-
-        if (
-            body.points !== undefined
-        ) {
-            const points =
-                Number(body.points);
-
-            if (
-                !Number.isFinite(points)
-            ) {
-                return NextResponse.json(
-                    {
-                        error:
-                            "Points không hợp lệ.",
-                    },
-                    { status: 400 }
-                );
-            }
-
-            values.points = points;
-        }
 
         if (
             body.rewardMoney !== undefined

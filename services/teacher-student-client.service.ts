@@ -8,7 +8,6 @@ export interface TeacherStudentListItem {
     email: string;
     personalEmail: string | null;
     avatarUrl: string | null;
-    points: number;
     rewardMoney: number;
     averageScore: number;
     isActive: boolean;
@@ -42,7 +41,6 @@ export interface TeacherStudentDetail {
         email: string;
         personalEmail: string | null;
         avatarUrl: string | null;
-        points: number;
         rewardMoney: number;
         learningGoal: string | null;
         isActive: boolean;
@@ -96,8 +94,6 @@ addToCourse(courseId: string, studentIds: string[]) {
         );
     }
 
-    
-
     getById(id: string) {
         return apiClient.get<
             TeacherStudentDetail
@@ -144,7 +140,6 @@ addToCourse(courseId: string, studentIds: string[]) {
     updateFinancialInfo(
         studentId: string,
         values: {
-            points?: number;
             rewardMoney?: number;
         }
     ) {

@@ -29,9 +29,9 @@ function setup(role = 'TEACHER') {
   vm.runInNewContext(ts.transpileModule(readFileSync(new URL('../app/actions/tutoring.ts', import.meta.url), 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 }
   }).outputText, { exports, require: name => mocks[name] ?? require(name) });
-  return { calls, lockMonth: async month => {
+  return { calls, lockMonth: async (month, operation = 'lock_month') => {
     const form = new FormData();
-    form.set('operation', 'lock_month'); form.set('month', month);
+    form.set('operation', operation); form.set('month', month);
     return exports.mutateTutoringSlot(form);
   }, run: async (action, entries = [{ id, student_id: student }]) => {
     const form = new FormData();
@@ -50,6 +50,19 @@ test('lock month updates all matching slots, preserves bookings and rejects stud
   for (const [role, month] of [['STUDENT','2026-10'], ['TEACHER','2026-13'], ['TEACHER','invalid']]) {
     const subject = setup(role);
     assert.equal((await subject.lockMonth(month)).ok, false);
+    assert.equal(subject.calls.length, 0);
+  }
+});
+test('unlock month opens only the selected month and preserves bookings', async () => {
+  const teacher = setup();
+  assert.equal((await teacher.lockMonth('2026-11', 'unlock_month')).ok, true);
+  const update = teacher.calls.find(call => call[0] === 'update')[1];
+  assert.equal(update.is_active, true);
+  assert.deepEqual(Object.keys(update), ['is_active']);
+  assert.deepEqual(teacher.calls.find(call => call[0] === 'eq'), ['eq', 'month_key', '2026-11']);
+  for (const [role, month] of [['STUDENT', '2026-11'], [null, '2026-11'], ['TEACHER', '2026-13']]) {
+    const subject = setup(role);
+    assert.equal((await subject.lockMonth(month, 'unlock_month')).ok, false);
     assert.equal(subject.calls.length, 0);
   }
 });

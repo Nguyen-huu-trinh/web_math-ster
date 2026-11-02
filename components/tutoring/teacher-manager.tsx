@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarPlus, Download, Loader2, LockKeyhole, Plus, Trash2, Upload, UserRound } from "lucide-react";
+import { CalendarPlus, Download, Loader2, LockKeyhole, UnlockKeyhole, Plus, Trash2, Upload, UserRound } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { getTeacherTutoringSlots, getUnbookedTutoringStudents, mutateTutoringSlot } from "@/app/actions/tutoring";
 import { normalizeImportRows, tutoringBatch, type ImportRow } from "@/lib/tutoring/import";
@@ -51,6 +51,7 @@ export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?
     if (schedule.isError) toast.error("Không thể tải lịch. Vui lòng thử lại.", { id: "tutoring-result" });
   }, [schedule.isError, schedule.errorUpdatedAt]);
   const slots = schedule.data?.slots ?? [];
+  const allSlotsLocked = slots.length > 0 && slots.every(slot => !slot.is_active);
   const unbooked = useQuery({
     queryKey: ["teacher-tutoring-slots", userId, month, "unbooked"],
     queryFn: () => getUnbookedTutoringStudents(month),
@@ -178,11 +179,11 @@ export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?
     </header>
     <div className="flex flex-wrap items-center gap-3"><label className="flex items-center gap-2 text-sm font-semibold">Tháng <input type="month" value={month} disabled={busy || loading} onChange={e => { if (/^\d{4}-(0[1-9]|1[0-2])$/.test(e.target.value)) setMonth(e.target.value); }} className={`${inputClass} w-auto`} /></label>
       <button className={buttonClass} disabled={schedule.isFetching || busy} onClick={() => void load()}>{schedule.isFetching ? "Đang tải…" : "Tải lại"}</button>
-      <button className={cn(buttonClass, "border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100")} disabled={busy || loading} onClick={() => {
+      <button className={cn(buttonClass, allSlotsLocked ? "border-emerald-300 bg-emerald-50 text-emerald-900 hover:bg-emerald-100" : "border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100")} disabled={busy || schedule.isFetching || schedule.isError || !slots.length} onClick={() => {
         const form = new FormData();
-        form.set("operation", "lock_month"); form.set("month", month);
+        form.set("operation", allSlotsLocked ? "unlock_month" : "lock_month"); form.set("month", month);
         void mutate(form);
-      }}><LockKeyhole className="size-4" />Khóa toàn bộ tháng</button></div>
+      }}>{allSlotsLocked ? <UnlockKeyhole className="size-4" /> : <LockKeyhole className="size-4" />}{allSlotsLocked ? "Mở toàn bộ tháng" : "Khóa toàn bộ tháng"}</button></div>
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[
       ["TỔNG SỐ CA ĐÃ MỞ", slots.length, "text-slate-900"], ["ĐÃ CÓ HỌC SINH ĐẶT", booked, "text-emerald-700"], ["CA CÒN TRỐNG", slots.filter(s => !s.is_booked && s.is_active).length, "text-amber-600"],
       ["HỌC SINH CHƯA ĐĂNG KÝ", schedule.data?.unbookedCount ?? 0, "text-rose-600"],

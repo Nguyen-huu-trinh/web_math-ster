@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarPlus, Download, Loader2, LockKeyhole, Plus, Trash2, Upload, UserRound } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { getTeacherTutoringSlots, mutateTutoringSlot } from "@/app/actions/tutoring";
+import { getTeacherTutoringSlots, getUnbookedTutoringStudents, mutateTutoringSlot } from "@/app/actions/tutoring";
 import { normalizeImportRows, tutoringBatch, type ImportRow } from "@/lib/tutoring/import";
 import type { TutoringSlot } from "@/types/tutoring";
 import { cn } from "@/lib/utils";
@@ -34,6 +34,7 @@ export function TutoringManagementDialog({ userId }: { userId?: string }) {
 
 export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?: string; userId: string }) {
   const [month, setMonth] = useState(initialMonth ?? thisMonth);
+  const [unbookedOpen, setUnbookedOpen] = useState(false);
   const queryClient = useQueryClient();
   const schedule = useQuery({
     queryKey: ["teacher-tutoring-slots", userId, month, "summary"],
@@ -50,6 +51,13 @@ export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?
     if (schedule.isError) toast.error("Không thể tải lịch. Vui lòng thử lại.", { id: "tutoring-result" });
   }, [schedule.isError, schedule.errorUpdatedAt]);
   const slots = schedule.data?.slots ?? [];
+  const unbooked = useQuery({
+    queryKey: ["teacher-tutoring-slots", userId, month, "unbooked"],
+    queryFn: () => getUnbookedTutoringStudents(month),
+    enabled: unbookedOpen,
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+  });
   const loading = schedule.isPending;
   const [busy, setBusy] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -98,7 +106,10 @@ export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?
     void mutate(form);
   }
   async function load() {
-    await schedule.refetch();
+    await Promise.all([
+      schedule.refetch(),
+      queryClient.invalidateQueries({ queryKey: ["teacher-tutoring-slots", userId, month, "unbooked"] }),
+    ]);
   }
   async function mutate(form: FormData) {
     setBusy(true);
@@ -174,8 +185,18 @@ export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?
       }}><LockKeyhole className="size-4" />Khóa toàn bộ tháng</button></div>
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[
       ["TỔNG SỐ CA ĐÃ MỞ", slots.length, "text-slate-900"], ["ĐÃ CÓ HỌC SINH ĐẶT", booked, "text-emerald-700"], ["CA CÒN TRỐNG", slots.filter(s => !s.is_booked && s.is_active).length, "text-amber-600"],
-      ["HỌC SINH CHƯA ĐĂNG KÝ", Math.max(0, (schedule.data?.unbookedCount ?? 0) - 2), "text-rose-600"],
-    ].map(([label, value, color]) => <div key={label} className="rounded-[28px] border border-slate-200 bg-white px-5 py-5"><p className="text-xs font-bold text-slate-400">{label}</p><p className={`mt-2 text-3xl font-bold ${color}`}>{loading ? "—" : value}</p></div>)}</div>
+      ["HỌC SINH CHƯA ĐĂNG KÝ", schedule.data?.unbookedCount ?? 0, "text-rose-600"],
+    ].map(([label, value, color], index) => <div key={label} className="rounded-[28px] border border-slate-200 bg-white px-5 py-5"><p className="text-xs font-bold text-slate-400">{label}</p><div className="mt-2 flex items-center justify-between gap-3"><p className={`text-3xl font-bold ${color}`}>{loading ? "—" : value}</p>{index === 3 && <button type="button" onClick={() => setUnbookedOpen(true)} disabled={loading || schedule.isError} className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500 disabled:opacity-50"><UserRound className="size-3.5" />Xem danh sách</button>}</div></div>)}</div>
+    <Dialog open={unbookedOpen} onOpenChange={setUnbookedOpen}>
+      <DialogContent className="max-h-[85dvh] overflow-y-auto rounded-[28px] sm:max-w-lg">
+        <DialogTitle className="pr-6 text-lg font-extrabold text-slate-900">Học sinh chưa đăng ký</DialogTitle>
+        <DialogDescription>Tháng {month.slice(5)}/{month.slice(0, 4)}</DialogDescription>
+        {unbooked.isPending ? <p role="status" className="flex items-center justify-center gap-2 py-8 text-sm text-slate-500"><Loader2 className="size-4 animate-spin" />Đang tải danh sách…</p>
+          : unbooked.isError ? <div role="alert" className="space-y-3 py-4 text-sm text-rose-700"><p>Không thể tải danh sách. Vui lòng thử lại.</p><button type="button" disabled={unbooked.isFetching} className={buttonClass} onClick={() => void unbooked.refetch()}>Thử lại</button></div>
+          : unbooked.data.length === 0 ? <p className="py-8 text-center text-sm text-slate-500">Không có học sinh chưa đăng ký trong tháng này.</p>
+          : <div className="overflow-hidden rounded-2xl border border-slate-200"><table className="w-full text-left text-sm"><thead className="bg-slate-50 text-xs text-slate-500"><tr><th scope="col" className="px-4 py-3 font-bold">Mã số</th><th scope="col" className="px-4 py-3 font-bold">Họ và tên</th></tr></thead><tbody>{unbooked.data.map(student => <tr key={student.student_code} className="border-t border-slate-100"><td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-bold text-slate-500">{student.student_code}</td><td className="break-words px-4 py-3 font-semibold text-slate-800">{student.full_name}</td></tr>)}</tbody></table></div>}
+      </DialogContent>
+    </Dialog>
     <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white">
       <h2 className="border-b border-slate-100 px-6 py-5 text-sm font-extrabold">DANH SÁCH CA KIỂM TRA</h2>
       {chosen.length > 0 && <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 bg-slate-50/80 px-6 py-3">

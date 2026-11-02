@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { tutoringBatch, tutoringInput as slotInput } from "@/lib/tutoring/import";
-import type { TutoringSlot } from "@/types/tutoring";
+import type { TutoringSlot, UnbookedTutoringStudent } from "@/types/tutoring";
 
 export async function mutateTutoringSlot(form: FormData): Promise<{ ok: boolean; message: string }> {
   try {
@@ -72,6 +72,14 @@ export async function getTeacherTutoringSlots(month: string): Promise<{ slots: T
   ]);
   if (schedule.error || count.error) return { slots: [], error: "Không thể tải lịch và thống kê. Vui lòng thử lại." };
   return { slots: (schedule.data ?? []) as TutoringSlot[], unbookedCount: Number(count.data ?? 0) };
+}
+
+export async function getUnbookedTutoringStudents(month: string): Promise<UnbookedTutoringStudent[]> {
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) throw new Error("Tháng không hợp lệ.");
+  const db = await createClient();
+  const { data, error } = await db.rpc("teacher_tutoring_unbooked_students", { p_month: month });
+  if (error) throw new Error("Không thể tải danh sách học sinh chưa đăng ký. Vui lòng thử lại.");
+  return (data ?? []) as UnbookedTutoringStudent[];
 }
 
 export async function getStudentTutoringSlots(month: string): Promise<TutoringSlot[]> {

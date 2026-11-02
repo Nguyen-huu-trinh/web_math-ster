@@ -24,9 +24,12 @@ test('tutoring migration: grants, RLS, privacy, monthly limits and booking lifec
         ('${teacher}', 'TEACHER', 'Teacher'), ('${alice}', 'STUDENT', 'Alice'), ('${bob}', 'STUDENT', 'Bob');
     `);
     await db.exec(migration);
+    await db.exec(readFileSync(new URL('../supabase/migrations/202611020002_tutoring_cancellation_deadline.sql', import.meta.url), 'utf8'));
     await db.exec(readFileSync(new URL('../supabase/migrations/202610220002_tutoring_teacher_list.sql', import.meta.url), 'utf8'));
     await db.exec(readFileSync(new URL('../supabase/migrations/202610220003_tutoring_bulk.sql', import.meta.url), 'utf8'));
     await db.exec(readFileSync(new URL('../supabase/migrations/202610220004_tutoring_unbooked_count.sql', import.meta.url), 'utf8'));
+    await db.exec(readFileSync(new URL('../supabase/migrations/202611020003_tutoring_unbooked_students.sql', import.meta.url), 'utf8'));
+    await db.exec(`update profiles set student_code = case id when '${alice}' then 'MS001' when '${bob}' then 'MS002' else 'GV001' end`);
     const permissions = (await db.query(`select
       has_table_privilege('authenticated','public.tutoring_slots','SELECT,INSERT,UPDATE,DELETE') as table_access,
       has_function_privilege('service_role','public.book_tutoring_slot(uuid)','EXECUTE') as rpc_access`)).rows[0];
@@ -39,6 +42,10 @@ test('tutoring migration: grants, RLS, privacy, monthly limits and booking lifec
     };
     await actor(teacher);
     assert.equal(Number((await db.query("select teacher_tutoring_unbooked_count('2099-06') as count")).rows[0].count), 2);
+    assert.deepEqual((await db.query("select teacher_tutoring_unbooked_students('2099-06') as students")).rows[0].students, [
+      { student_code: 'MS001', full_name: 'Alice' }, { student_code: 'MS002', full_name: 'Bob' },
+    ]);
+    await assert.rejects(db.query("select teacher_tutoring_unbooked_students('2099-99')"), /Tháng không hợp lệ/);
     const { rows: slots } = await db.query(`insert into tutoring_slots(slot_date,start_time)
       values ('2099-06-01','10:00'),('2099-06-02','10:00'),('2099-07-01','10:00') returning id, month_key`);
     assert.equal(slots[0].month_key, '2099-06');
@@ -47,6 +54,7 @@ test('tutoring migration: grants, RLS, privacy, monthly limits and booking lifec
     await assert.rejects(db.exec("insert into tutoring_slots(slot_date,start_time) values ('2099-06-01','10:00')"), /unique/i);
     await assert.rejects(db.exec("insert into tutoring_slots(slot_date,start_time,end_time) values ('2099-06-03','10:00','09:00')"), /check/i);
     await actor(alice);
+    await assert.rejects(db.query("select teacher_tutoring_unbooked_students('2099-06')"), /Chỉ giáo viên/);
     await assert.rejects(db.query("select teacher_tutoring_unbooked_count('2099-06')"), /Chỉ giáo viên/);
     await assert.rejects(db.query("select bulk_tutoring_slots('lock', $1::jsonb)", [JSON.stringify([{ id: slots[0].id, student_id: null }])]), /Chỉ giáo viên/);
     await assert.rejects(db.query("select teacher_tutoring_slots('2099-06')"), /Chỉ giáo viên/);
@@ -70,6 +78,9 @@ test('tutoring migration: grants, RLS, privacy, monthly limits and booking lifec
     const teacherList = (await db.query("select * from list_tutoring_slots('2099-06')")).rows;
     assert.equal(teacherList[1].student_name, 'Alice');
     assert.equal(Number((await db.query("select teacher_tutoring_unbooked_count('2099-06') as count")).rows[0].count), 1);
+    assert.deepEqual((await db.query("select teacher_tutoring_unbooked_students('2099-06') as students")).rows[0].students, [
+      { student_code: 'MS002', full_name: 'Bob' },
+    ]);
     assert.equal(Number((await db.query("select teacher_tutoring_unbooked_count('2099-08') as count")).rows[0].count), 2);
     await db.exec('begin');
     const selection = JSON.stringify([{ id: slots[0].id, student_id: null }, { id: slots[1].id, student_id: alice }]);
@@ -96,11 +107,13 @@ test('tutoring migration: grants, RLS, privacy, monthly limits and booking lifec
     assert.equal((await db.query('select student_id from tutoring_slots where id = $1', [slots[1].id])).rows[0].student_id, null);
     await actor(teacher);
     assert.equal(Number((await db.query("select teacher_tutoring_unbooked_count('2099-08') as count")).rows[0].count), 0);
+    assert.deepEqual((await db.query("select teacher_tutoring_unbooked_students('2099-08') as students")).rows[0].students, []);
     await db.exec('reset role');
     await db.query('update profiles set is_active = true, deleted_at = now() where id = $1', [bob]);
     await actor(teacher);
     assert.equal(Number((await db.query("select teacher_tutoring_unbooked_count('2099-08') as count")).rows[0].count), 0);
     await db.exec('reset role; set role anon');
+    await assert.rejects(db.query("select teacher_tutoring_unbooked_students('2099-06')"), /permission denied/);
     await assert.rejects(db.query("select * from list_tutoring_slots('2099-06')"), /permission denied/);
     await assert.rejects(db.query('select * from tutoring_slots'), /permission denied/);
   } finally {

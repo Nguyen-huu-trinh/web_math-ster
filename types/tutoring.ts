@@ -1,3 +1,8 @@
+export type UnbookedTutoringStudent = {
+  student_code: string;
+  full_name: string;
+};
+
 export type TutoringSlot = {
   id: string;
   slot_date: string;

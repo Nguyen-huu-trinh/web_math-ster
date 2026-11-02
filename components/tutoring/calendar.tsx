@@ -6,6 +6,7 @@ import { mutateTutoringSlot } from "@/app/actions/tutoring";
 import type { TutoringSlot } from "@/types/tutoring";
 import { ArrowRight, Clock3, Video } from "lucide-react";
 import { toast } from "sonner";
+import { isTutoringCancellationLocked, TUTORING_CANCELLATION_MESSAGE } from "@/lib/tutoring/cancellation";
 
 const field = "rounded-md border bg-background px-3 py-2 text-sm";
 const button = "rounded-md border px-3 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed";
@@ -39,6 +40,10 @@ export function TutoringCalendar({ slots, month, teacher, userId, onMonthChange,
     });
   }
   function act(operation: string, slot: TutoringSlot) {
+    if (!teacher && operation === "cancel" && isTutoringCancellationLocked(slot)) {
+      toast.error(TUTORING_CANCELLATION_MESSAGE, { id: "tutoring-result" });
+      return;
+    }
     const form = new FormData();
     form.set("operation", operation); form.set("id", slot.id);
     form.set("active", String(!slot.is_active));

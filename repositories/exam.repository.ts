@@ -24,10 +24,8 @@ export class ExamRepository {
         courses(
           id,
           name
-        ),
-        submitted_attempts:exam_attempts(count)
+        )
       `)
-      .not("submitted_attempts.submitted_at", "is", null)
       .is("deleted_at", null)
       .order("created_at", {
         ascending: false,
@@ -35,9 +33,34 @@ export class ExamRepository {
 
     if (error) throw error;
 
-    return data?.map(({ submitted_attempts, ...exam }) => ({
+    if (!data?.length) return data;
+
+    // Count each student once per exam, even after multiple submissions.
+    // Read every page so Supabase's row limit cannot truncate the totals.
+    const studentsByExam = new Map<string, Set<string>>();
+    const pageSize = 1000;
+    for (let offset = 0; ; offset += pageSize) {
+      const { data: attempts, error: attemptsError } = await supabase
+        .from("exam_attempts")
+        .select("exam_id, student_id")
+        .in("exam_id", data.map((exam) => exam.id))
+        .not("submitted_at", "is", null)
+        .order("id", { ascending: true })
+        .range(offset, offset + pageSize - 1);
+
+      if (attemptsError) throw attemptsError;
+      for (const attempt of attempts ?? []) {
+        if (!attempt.student_id) continue;
+        const students = studentsByExam.get(attempt.exam_id) ?? new Set<string>();
+        students.add(attempt.student_id);
+        studentsByExam.set(attempt.exam_id, students);
+      }
+      if ((attempts?.length ?? 0) < pageSize) break;
+    }
+
+    return data.map((exam) => ({
       ...exam,
-      submitted_count: submitted_attempts?.[0]?.count ?? 0,
+      submitted_count: studentsByExam.get(exam.id)?.size ?? 0,
     }));
   }
 

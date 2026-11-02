@@ -28,6 +28,7 @@ export interface AnswerKey {
 export interface Exam {
   id: string;
 
+  /** Number of distinct students with at least one submitted attempt. */
   submitted_count?: number;
 
   title: string;

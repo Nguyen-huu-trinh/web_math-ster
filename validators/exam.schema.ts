@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { toDrivePreviewUrl } from "@/lib/exam/drive-preview-url";
 
 // ============================================================
 // EXAM TYPE
@@ -92,7 +93,7 @@ export const CreateExamSchema = z.object({
   // Exam file
   // ----------------------------------------------------------
 
-exam_file_url: z.string(),
+  exam_file_url: z.string().transform(toDrivePreviewUrl),
 
   // ----------------------------------------------------------
   // Exam type / category

@@ -169,7 +169,7 @@ export function ExamTable({
                 <TableCell align="right">
 
                   <div className="flex items-center justify-end gap-2">
-                    <Link href={`/exams/${exam.id}/answers`} aria-label={`Xem bài làm của ${exam.title}: ${exam.submitted_count ?? 0} bài đã nộp`} title={`${exam.submitted_count ?? 0} bài đã nộp — Xem bài làm`} className="exam-quick-action exam-submissions-action bg-slate-100">
+                    <Link href={`/exams/${exam.id}/answers`} aria-label={`Xem bài làm của ${exam.title}: ${exam.submitted_count ?? 0} học sinh đã nộp bài`} title={`${exam.submitted_count ?? 0} học sinh đã nộp bài — Xem bài làm`} className="exam-quick-action exam-submissions-action bg-slate-100">
                       <Users className="size-4 shrink-0" />
                       <span className="text-xs font-bold tabular-nums">{exam.submitted_count ?? 0}</span>
                     </Link>

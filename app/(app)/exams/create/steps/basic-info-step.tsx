@@ -3,6 +3,7 @@
 import { Dispatch, SetStateAction, useState, ReactNode } from "react";
 import { useCourses } from "@/hooks/use-courses";
 import { useExams } from "@/hooks/use-exams";
+import { toDrivePreviewUrl } from "@/lib/exam/drive-preview-url";
 import {
   Card,
   CardContent,
@@ -214,6 +215,10 @@ const toggleSelectAll = () => {
           <Input
             placeholder="https://drive.google.com/file/..."
             value={form.exam_file_url}
+            onBlur={() => setForm((previous) => ({
+              ...previous,
+              exam_file_url: toDrivePreviewUrl(previous.exam_file_url),
+            }))}
             onChange={(e) =>
               setForm({
                 ...form,

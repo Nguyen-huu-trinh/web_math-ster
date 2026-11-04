@@ -3,6 +3,7 @@
 import { getStudentAvatarUrl as getAvatarUrl } from "@/lib/avatar";
 
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { MoreVertical, Eye, Ban, Trash2, UserCheck, UserX, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEnableTeacherStudent } from "@/hooks/use-enable-teacher-student";
@@ -26,15 +27,11 @@ import { useDeleteTeacherStudent } from "@/hooks/use-delete-teacher-student";
 
 const submissionDateFormatter = new Intl.DateTimeFormat("vi-VN", {
   timeZone: "Asia/Ho_Chi_Minh",
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-  hourCycle: "h23",
+  day: "numeric",
+  month: "numeric",
 });
 
-type SortKey = "studentCode" | "rewardMoney" | "averageScore";
+type SortKey = "studentCode" | "rewardMoney" | "averageScore" | "lastSubmittedAt";
 type SortDirection = "asc" | "desc";
 
 interface Props {
@@ -112,6 +109,18 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
     setSortDirection("asc");
   }
 
+  async function copySubmissionReminder(submittedAt: string) {
+    const date = submissionDateFormatter.format(new Date(submittedAt));
+    try {
+      await navigator.clipboard.writeText(
+        `anh thấy ngày em học làm bài lần cuối là ngày ${date} em có vấn đề gì không hay sao mà lâu quá anh chưa thấy em làm tiếp`
+      );
+      toast.success("Đã sao chép lời nhắc.");
+    } catch {
+      toast.error("Không thể sao chép. Bạn hãy thử lại.");
+    }
+  }
+
   // Lọc và Sắp xếp danh sách học sinh
   const filteredAndSortedStudents = useMemo(() => {
     let result = [...students];
@@ -136,6 +145,12 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
     // 3. Sắp xếp
     if (sortKey) {
       result.sort((a, b) => {
+        // Keep students without submissions last in either direction.
+        if (sortKey === "lastSubmittedAt") {
+          if (!a.lastSubmittedAt && !b.lastSubmittedAt) return 0;
+          if (!a.lastSubmittedAt) return 1;
+          if (!b.lastSubmittedAt) return -1;
+        }
         let comparison = 0;
         switch (sortKey) {
           case "studentCode":
@@ -147,6 +162,9 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
             break;
           case "averageScore":
             comparison = a.averageScore - b.averageScore;
+            break;
+          case "lastSubmittedAt":
+            comparison = new Date(a.lastSubmittedAt!).getTime() - new Date(b.lastSubmittedAt!).getTime();
             break;
         }
         return sortDirection === "asc" ? comparison : -comparison;
@@ -241,6 +259,8 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
             <option value="rewardMoney:asc">Quỹ thưởng: Thấp → cao</option>
             <option value="averageScore:desc">ĐTB: Cao → thấp</option>
             <option value="averageScore:asc">ĐTB: Thấp → cao</option>
+            <option value="lastSubmittedAt:asc">Nộp bài cuối: Cũ → mới</option>
+            <option value="lastSubmittedAt:desc">Nộp bài cuối: Mới → cũ</option>
           </select>
           </div>
           {/* Bộ lọc dạng Pill Tabs */}
@@ -332,7 +352,18 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
                     )}
                   </button>
                 </th>
-                <th className="px-5 py-3 font-medium">Nộp bài cuối</th>
+                <th className="px-5 py-3 font-medium">
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 hover:text-foreground"
+                    onClick={() => handleSort("lastSubmittedAt")}
+                  >
+                    Nộp bài cuối
+                    {sortKey === "lastSubmittedAt" && (
+                      <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                    )}
+                  </button>
+                </th>
                 <th className="w-12 px-3 py-3">Thao tác</th>
               </tr>
             </thead>
@@ -449,9 +480,20 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
                     </td>
 
                     <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
-                      {student.lastSubmittedAt
-                        ? submissionDateFormatter.format(new Date(student.lastSubmittedAt))
-                        : "Chưa nộp bài"}
+                      {student.lastSubmittedAt ? (
+                        <button
+                          type="button"
+                          title="Sao chép lời nhắc làm bài"
+                          aria-label={`Sao chép lời nhắc làm bài cho ${student.fullName}`}
+                          className="rounded-md px-2 py-1 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void copySubmissionReminder(student.lastSubmittedAt!);
+                          }}
+                        >
+                          {submissionDateFormatter.format(new Date(student.lastSubmittedAt))}
+                        </button>
+                      ) : "Chưa nộp bài"}
                     </td>
 
                     {/* Actions */}

@@ -10,6 +10,7 @@ export interface TeacherStudentListItem {
     avatarUrl: string | null;
     rewardMoney: number;
     averageScore: number;
+    lastSubmittedAt: string | null;
     isActive: boolean;
     learningGoal: string | null;
 }

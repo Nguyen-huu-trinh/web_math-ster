@@ -12,6 +12,7 @@ export interface TeacherStudentListItem {
     avatarUrl: string | null;
     rewardMoney: number;
     averageScore: number;
+    lastSubmittedAt: string | null;
     isActive: boolean;
 }
 
@@ -100,7 +101,8 @@ export class TeacherStudentRepository {
             .from("v_student_dashboard")
             .select(`
                 student_id,
-                average_periodic_score
+                average_periodic_score,
+                last_submitted_at
             `);
 
         if (dashboardError) {
@@ -111,7 +113,7 @@ export class TeacherStudentRepository {
             (dashboardData ?? []).map(
                 (item) => [
                     item.student_id,
-                    item.average_periodic_score,
+                    item,
                 ]
             )
         );
@@ -130,8 +132,9 @@ export class TeacherStudentRepository {
             averageScore: Number(
                 dashboardMap.get(
                     student.id
-                ) ?? 0
+                )?.average_periodic_score ?? 0
             ),
+            lastSubmittedAt: dashboardMap.get(student.id)?.last_submitted_at ?? null,
             isActive: student.is_active,
             learningGoal: student.learning_goal,
         }));
@@ -195,7 +198,8 @@ export class TeacherStudentRepository {
         .from("v_student_dashboard")
         .select(`
             student_id,
-            average_periodic_score
+            average_periodic_score,
+            last_submitted_at
         `)
         .in("student_id", studentIds);
 
@@ -207,7 +211,7 @@ export class TeacherStudentRepository {
         (dashboardData ?? []).map(
             (item) => [
                 item.student_id,
-                item.average_periodic_score,
+                item,
             ]
         )
     );
@@ -226,8 +230,9 @@ export class TeacherStudentRepository {
         averageScore: Number(
             dashboardMap.get(
                 student.id
-            ) ?? 0
+            )?.average_periodic_score ?? 0
         ),
+        lastSubmittedAt: dashboardMap.get(student.id)?.last_submitted_at ?? null,
         isActive: student.is_active,
         learningGoal:
             student.learning_goal,

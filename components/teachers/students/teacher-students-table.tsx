@@ -24,6 +24,16 @@ import { TeacherStudentListItem } from "@/services/teacher-student-client.servic
 import { useDisableTeacherStudent } from "@/hooks/use-disable-teacher-student";
 import { useDeleteTeacherStudent } from "@/hooks/use-delete-teacher-student";
 
+const submissionDateFormatter = new Intl.DateTimeFormat("vi-VN", {
+  timeZone: "Asia/Ho_Chi_Minh",
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+
 type SortKey = "studentCode" | "rewardMoney" | "averageScore";
 type SortDirection = "asc" | "desc";
 
@@ -322,6 +332,7 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
                     )}
                   </button>
                 </th>
+                <th className="px-5 py-3 font-medium">Nộp bài cuối</th>
                 <th className="w-12 px-3 py-3">Thao tác</th>
               </tr>
             </thead>
@@ -329,7 +340,7 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
             <tbody>
               {filteredAndSortedStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <td colSpan={7} className="text-center py-8 text-muted-foreground">
                     Không tìm thấy học sinh phù hợp.
                   </td>
                 </tr>
@@ -435,6 +446,12 @@ const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">(
                           <Ban className="ml-1.5 h-3 w-3" />
                         )}
                       </Badge>
+                    </td>
+
+                    <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">
+                      {student.lastSubmittedAt
+                        ? submissionDateFormatter.format(new Date(student.lastSubmittedAt))
+                        : "Chưa nộp bài"}
                     </td>
 
                     {/* Actions */}

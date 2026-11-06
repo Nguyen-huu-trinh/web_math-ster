@@ -154,7 +154,7 @@ const removePrerequisite =
       category: "PERIODIC",
       exam_duration_days: null,
       duration_minutes: 90,
-      attendance_min_score: 9,
+      attendance_min_score: 7,
       show_answer: false,
       max_attempts: 20,
       start_at: null,

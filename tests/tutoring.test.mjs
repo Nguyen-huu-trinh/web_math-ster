@@ -29,6 +29,7 @@ test('tutoring migration: grants, RLS, privacy, monthly limits and booking lifec
     await db.exec(readFileSync(new URL('../supabase/migrations/202610220003_tutoring_bulk.sql', import.meta.url), 'utf8'));
     await db.exec(readFileSync(new URL('../supabase/migrations/202610220004_tutoring_unbooked_count.sql', import.meta.url), 'utf8'));
     await db.exec(readFileSync(new URL('../supabase/migrations/202611020003_tutoring_unbooked_students.sql', import.meta.url), 'utf8'));
+    await db.exec(readFileSync(new URL('../supabase/migrations/202611060001_tutoring_teacher_booking.sql', import.meta.url), 'utf8'));
     await db.exec(`update profiles set student_code = case id when '${alice}' then 'MS001' when '${bob}' then 'MS002' else 'GV001' end`);
     const permissions = (await db.query(`select
       has_table_privilege('authenticated','public.tutoring_slots','SELECT,INSERT,UPDATE,DELETE') as table_access,
@@ -41,6 +42,21 @@ test('tutoring migration: grants, RLS, privacy, monthly limits and booking lifec
       await db.exec('set role authenticated');
     };
     await actor(teacher);
+    const { rows: proxySlots } = await db.query(`insert into tutoring_slots(slot_date,start_time,is_active)
+      values ('2099-08-01','10:00',true),('2099-08-02','10:00',true),
+        ('2099-08-03','10:00',false),('2000-08-01','10:00',true) returning id`);
+    await db.query('select teacher_book_tutoring_slot($1, $2)', [proxySlots[0].id, 'MS001']);
+    assert.equal((await db.query('select student_id, booked_at from tutoring_slots where id = $1', [proxySlots[0].id])).rows[0].student_id, alice);
+    await assert.rejects(db.query('select teacher_book_tutoring_slot($1, $2)', [proxySlots[1].id, 'MS001']), /một ca trong tháng/);
+    await assert.rejects(db.query('select teacher_book_tutoring_slot($1, $2)', [proxySlots[0].id, 'MS002']), /Ca đã được đặt/);
+    for (const slot of proxySlots.slice(2)) {
+      await assert.rejects(db.query('select teacher_book_tutoring_slot($1, $2)', [slot.id, 'MS002']), /đã khóa hoặc đã qua giờ/);
+    }
+    await assert.rejects(db.query('select teacher_book_tutoring_slot($1, $2)', [proxySlots[1].id, 'MISSING']), /không tồn tại/);
+    await actor(bob);
+    await assert.rejects(db.query('select teacher_book_tutoring_slot($1, $2)', [proxySlots[1].id, 'MS002']), /Chỉ giáo viên/);
+    await actor(teacher);
+    await db.query('delete from tutoring_slots where id = any($1::uuid[])', [proxySlots.map(slot => slot.id)]);
     assert.equal(Number((await db.query("select teacher_tutoring_unbooked_count('2099-06') as count")).rows[0].count), 2);
     assert.deepEqual((await db.query("select teacher_tutoring_unbooked_students('2099-06') as students")).rows[0].students, [
       { student_code: 'MS001', full_name: 'Alice' }, { student_code: 'MS002', full_name: 'Bob' },

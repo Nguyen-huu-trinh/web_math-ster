@@ -11,8 +11,8 @@ export async function mutateTutoringSlot(form: FormData): Promise<{ ok: boolean;
     const db = await createClient();
     const { data: { user }, error: authError } = await db.auth.getUser();
     if (authError || !user) return { ok: false, message: "Vui lòng đăng nhập lại." };
-    let successMessage = "Đã cập nhật lịch dò bài.";
-    const operation = z.enum(["create", "toggle", "delete", "book", "cancel", "release", "import", "bulk", "lock_month", "unlock_month"]).parse(form.get("operation"));
+    let successMessage = "Đã cập nhật lịch bổ trợ.";
+    const operation = z.enum(["create", "toggle", "delete", "book", "cancel", "release", "import", "bulk", "lock_month", "unlock_month", "teacher_book"]).parse(form.get("operation"));
     if (operation === "book" || operation === "cancel") {
       const id = z.uuid().parse(form.get("id"));
       const { error } = await db.rpc(operation === "book" ? "book_tutoring_slot" : "cancel_tutoring_slot", { p_slot_id: id });
@@ -20,7 +20,13 @@ export async function mutateTutoringSlot(form: FormData): Promise<{ ok: boolean;
     } else {
       const { data: role, error: roleError } = await db.rpc("tutoring_actor_role");
       if (roleError || role !== "TEACHER") return { ok: false, message: "Chỉ giáo viên được quản lý ca." };
-      if (operation === "lock_month" || operation === "unlock_month") {
+      if (operation === "teacher_book") {
+        const id = z.uuid().parse(form.get("id"));
+        const studentCode = z.string().trim().min(1).parse(form.get("student_code"));
+        const { error } = await db.rpc("teacher_book_tutoring_slot", { p_slot_id: id, p_student_code: studentCode });
+        if (error) return { ok: false, message: error.code === "P0001" ? error.message : "Không thể đăng ký hộ học sinh. Vui lòng tải lại và thử lại." };
+        successMessage = "Đã đăng ký lịch bổ trợ cho học sinh.";
+      } else if (operation === "lock_month" || operation === "unlock_month") {
         const active = operation === "unlock_month";
         const month = z.string().regex(/^[0-9]{4}-(0[1-9]|1[0-2])$/).parse(form.get("month"));
         const { error } = await db.from("tutoring_slots").update({ is_active: active }).eq("month_key", month);
@@ -88,7 +94,7 @@ export async function getStudentTutoringSlots(month: string): Promise<TutoringSl
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) throw new Error("Tháng không hợp lệ.");
   const db = await createClient();
   const { data, error } = await db.rpc("list_tutoring_slots", { p_month: month });
-  if (error) throw new Error("Không thể tải lịch dò bài. Vui lòng thử lại.");
+  if (error) throw new Error("Không thể tải lịch bổ trợ. Vui lòng thử lại.");
   return (data ?? []) as TutoringSlot[];
 }
 

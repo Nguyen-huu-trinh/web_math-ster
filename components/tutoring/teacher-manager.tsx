@@ -22,11 +22,11 @@ export function TutoringManagementDialog({ userId }: { userId?: string }) {
   const [open, setOpen] = useState(false);
   return <Dialog open={open} onOpenChange={setOpen}>
     <button type="button" onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-white/80 px-3 py-1.5 text-xs font-bold text-amber-900 hover:bg-amber-100">
-      <CalendarPlus className="size-4" />Quản lý dò bài
+      <CalendarPlus className="size-4" />Quản lý bổ trợ
     </button>
     <DialogContent className="max-h-[94dvh] w-[calc(100%-1rem)] max-w-none overflow-y-auto rounded-[28px] bg-slate-50 p-4 sm:max-w-7xl sm:p-7">
-      <DialogTitle className="sr-only">Quản lý dò bài</DialogTitle>
-      <DialogDescription className="sr-only">Cấu hình lịch dò bài và quản lý học sinh đặt chỗ.</DialogDescription>
+      <DialogTitle className="sr-only">Quản lý bổ trợ</DialogTitle>
+      <DialogDescription className="sr-only">Cấu hình lịch bổ trợ và quản lý học sinh đặt chỗ.</DialogDescription>
       {open && userId && <TeacherTutoringManager userId={userId} />}
     </DialogContent>
   </Dialog>;
@@ -35,6 +35,7 @@ export function TutoringManagementDialog({ userId }: { userId?: string }) {
 export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?: string; userId: string }) {
   const [month, setMonth] = useState(initialMonth ?? thisMonth);
   const [unbookedOpen, setUnbookedOpen] = useState(false);
+  const [bookingSlotId, setBookingSlotId] = useState("");
   const queryClient = useQueryClient();
   const schedule = useQuery({
     queryKey: ["teacher-tutoring-slots", userId, month, "summary"],
@@ -69,21 +70,23 @@ export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?
   const [start, setStart] = useState("20:00");
   const [end, setEnd] = useState("20:30");
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const drag = useRef<{ anchor: number; base: Set<string>; add: boolean } | null>(null);
+  const drag = useRef<{ anchor: number; base: Set<string>; add: boolean; x: number; y: number; pointerId: number } | null>(null);
   useEffect(() => {
     const stop = () => { drag.current = null; };
-    window.addEventListener("pointerup", stop);
-    window.addEventListener("pointercancel", stop);
+    window.addEventListener("pointerup", stop, true);
+    window.addEventListener("pointercancel", stop, true);
     window.addEventListener("blur", stop);
     return () => {
-      window.removeEventListener("pointerup", stop);
-      window.removeEventListener("pointercancel", stop);
+      window.removeEventListener("pointerup", stop, true);
+      window.removeEventListener("pointercancel", stop, true);
       window.removeEventListener("blur", stop);
     };
   }, []);
-  useEffect(() => { setSelected(new Set()); drag.current = null; }, [month]);
+  useEffect(() => { setSelected(new Set()); setBookingSlotId(""); drag.current = null; }, [month]);
+  const bookingSlot = slots.find(slot => slot.id === bookingSlotId);
   const chosen = slots.filter(slot => selected.has(slot.id));
   function toggleSelected(id: string) {
+    drag.current = null;
     setSelected(previous => {
       const next = new Set(previous);
       if (next.has(id)) next.delete(id); else if (next.size < 500) next.add(id);
@@ -123,6 +126,7 @@ export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?
       }
       toast.success(form.get("operation") === "delete" || form.get("bulk_action") === "delete" ? "Đã xóa" : "Đã cập nhật", { id: "tutoring-result" }); setCreateOpen(false); setImportOpen(false); setRows([]);
       setSelected(new Set()); drag.current = null;
+      if (form.get("operation") === "teacher_book") { setBookingSlotId(""); setUnbookedOpen(false); }
       await queryClient.invalidateQueries({ queryKey: ["teacher-tutoring-slots", userId] });
     } catch { toast.error("Không thể cập nhật lịch. Vui lòng thử lại.", { id: "tutoring-result" }); }
     finally { setBusy(false); }
@@ -170,7 +174,7 @@ export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?
   return <section className="space-y-6 text-slate-900">
     <header className="flex flex-wrap items-center justify-between gap-4 pr-7">
       <div><p className="text-xs font-bold tracking-wider text-amber-600">QUẢN TRỊ LỊCH HẸN</p>
-        <h1 className="mt-1 text-2xl font-extrabold tracking-tight sm:text-3xl">Cấu Hình Ca Dò Bài 1-1</h1>
+        <h1 className="mt-1 text-2xl font-extrabold tracking-tight sm:text-3xl">Cấu Hình Ca bổ trợ 1-1</h1>
         <p className="mt-1 text-sm text-slate-500">Mở ca kiểm tra kiến thức qua Zoom và quản lý danh sách học sinh đã đặt chỗ.</p></div>
       <div className="flex flex-wrap gap-2">
         <button className={buttonClass} disabled={busy} onClick={() => { setRows([]); setImportOpen(true); }}><Upload className="size-4" />Nhập Excel</button>
@@ -187,15 +191,22 @@ export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[
       ["TỔNG SỐ CA ĐÃ MỞ", slots.length, "text-slate-900"], ["ĐÃ CÓ HỌC SINH ĐẶT", booked, "text-emerald-700"], ["CA CÒN TRỐNG", slots.filter(s => !s.is_booked && s.is_active).length, "text-amber-600"],
       ["HỌC SINH CHƯA ĐĂNG KÝ", schedule.data?.unbookedCount ?? 0, "text-rose-600"],
-    ].map(([label, value, color], index) => <div key={label} className="rounded-[28px] border border-slate-200 bg-white px-5 py-5"><p className="text-xs font-bold text-slate-400">{label}</p><div className="mt-2 flex items-center justify-between gap-3"><p className={`text-3xl font-bold ${color}`}>{loading ? "—" : value}</p>{index === 3 && <button type="button" onClick={() => setUnbookedOpen(true)} disabled={loading || schedule.isError} className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500 disabled:opacity-50"><UserRound className="size-3.5" />Xem danh sách</button>}</div></div>)}</div>
-    <Dialog open={unbookedOpen} onOpenChange={setUnbookedOpen}>
-      <DialogContent className="max-h-[85dvh] overflow-y-auto rounded-[28px] sm:max-w-lg">
+    ].map(([label, value, color], index) => <div key={label} className="rounded-[28px] border border-slate-200 bg-white px-5 py-5"><p className="text-xs font-bold text-slate-400">{label}</p><div className="mt-2 flex items-center justify-between gap-3"><p className={`text-3xl font-bold ${color}`}>{loading ? "—" : value}</p>{index === 3 && <button type="button" onClick={() => { setBookingSlotId(""); setUnbookedOpen(true); }} disabled={loading || schedule.isError} className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500 disabled:opacity-50"><UserRound className="size-3.5" />Xem danh sách</button>}</div></div>)}</div>
+    <Dialog open={unbookedOpen} onOpenChange={value => { if (!busy) { setUnbookedOpen(value); setBookingSlotId(""); } }}>
+      <DialogContent className="max-h-[85dvh] overflow-y-auto rounded-[28px] sm:max-w-2xl">
         <DialogTitle className="pr-6 text-lg font-extrabold text-slate-900">Học sinh chưa đăng ký</DialogTitle>
-        <DialogDescription>Tháng {month.slice(5)}/{month.slice(0, 4)}</DialogDescription>
+        <DialogDescription>{bookingSlot
+          ? `Đặt ca ${dateLabel(bookingSlot.slot_date)} · ${bookingSlot.start_time.slice(0, 5)}${bookingSlot.end_time ? ` - ${bookingSlot.end_time.slice(0, 5)}` : ""}. Chọn Đăng ký bên cạnh học sinh để đặt ca.`
+          : `Tháng ${month.slice(5)}/${month.slice(0, 4)}. Để đăng ký hộ, bấm Đặt tại ca trống trong danh sách ca kiểm tra.`}</DialogDescription>
         {unbooked.isPending ? <p role="status" className="flex items-center justify-center gap-2 py-8 text-sm text-slate-500"><Loader2 className="size-4 animate-spin" />Đang tải danh sách…</p>
           : unbooked.isError ? <div role="alert" className="space-y-3 py-4 text-sm text-rose-700"><p>Không thể tải danh sách. Vui lòng thử lại.</p><button type="button" disabled={unbooked.isFetching} className={buttonClass} onClick={() => void unbooked.refetch()}>Thử lại</button></div>
           : unbooked.data.length === 0 ? <p className="py-8 text-center text-sm text-slate-500">Không có học sinh chưa đăng ký trong tháng này.</p>
-          : <div className="overflow-hidden rounded-2xl border border-slate-200"><table className="w-full text-left text-sm"><thead className="bg-slate-50 text-xs text-slate-500"><tr><th scope="col" className="px-4 py-3 font-bold">Mã số</th><th scope="col" className="px-4 py-3 font-bold">Họ và tên</th></tr></thead><tbody>{unbooked.data.map(student => <tr key={student.student_code} className="border-t border-slate-100"><td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-bold text-slate-500">{student.student_code}</td><td className="break-words px-4 py-3 font-semibold text-slate-800">{student.full_name}</td></tr>)}</tbody></table></div>}
+          : <div className="overflow-hidden rounded-2xl border border-slate-200"><table className="w-full text-left text-sm"><thead className="bg-slate-50 text-xs text-slate-500"><tr><th scope="col" className="px-4 py-3 font-bold">Mã số</th><th scope="col" className="px-4 py-3 font-bold">Họ và tên</th>{bookingSlot && <th scope="col" className="px-4 py-3 text-right font-bold">Đăng ký</th>}</tr></thead><tbody>{unbooked.data.map(student => <tr key={student.student_code} className="border-t border-slate-100"><td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-bold text-slate-500">{student.student_code}</td><td className="break-words px-4 py-3 font-semibold text-slate-800">{student.full_name}</td>{bookingSlot && <td className="px-4 py-3 text-right"><button type="button" disabled={busy || unbooked.isFetching || !bookingSlot.is_active || bookingSlot.is_booked} className={buttonClass} onClick={() => {
+              if (busy) return;
+              const form = new FormData();
+              form.set("operation", "teacher_book"); form.set("id", bookingSlot.id); form.set("student_code", student.student_code);
+              void mutate(form);
+            }} aria-label={`Đăng ký ca cho ${student.full_name}`}><CalendarPlus className="size-4" />{busy ? "Đang đăng ký…" : "Đăng ký"}</button></td>}</tr>)}</tbody></table></div>}
       </DialogContent>
     </Dialog>
     <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white">
@@ -212,18 +223,26 @@ export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?
         <thead className="bg-slate-50 text-xs text-slate-400"><tr><th className="w-12 py-4 pl-6"><input type="checkbox" aria-label="Chọn tất cả ca trong tháng" disabled={busy || !slots.length} checked={!!slots.length && chosen.length === slots.length} ref={element => { if (element) element.indeterminate = chosen.length > 0 && chosen.length < slots.length; }} onChange={e => setSelected(e.target.checked ? new Set(slots.slice(0, 500).map(slot => slot.id)) : new Set())} className="size-4 accent-amber-500" /></th><th className="px-6 py-4">NGÀY & THỜI GIAN</th><th className="px-6 py-4">TRẠNG THÁI / HỌC SINH ĐẶT</th><th className="px-6 py-4 text-right">QUẢN TRỊ</th></tr></thead>
         <tbody>{slots.map((slot, index) => <tr key={slot.id} aria-selected={selected.has(slot.id)}
           onPointerDown={e => {
+            drag.current = null;
             if (busy || e.button !== 0 || e.pointerType !== "mouse" || (e.target as HTMLElement).closest("button,input,a,label")) return;
             e.preventDefault();
-            drag.current = { anchor: index, base: new Set(selected), add: !selected.has(slot.id) };
+            drag.current = { anchor: index, base: new Set(selected), add: !selected.has(slot.id), x: e.clientX, y: e.clientY, pointerId: e.pointerId };
             selectRange(index);
-          }} onPointerEnter={e => {
-            if (!busy && e.buttons === 1) selectRange(index); else drag.current = null;
+          }} onPointerMove={e => {
+            const current = drag.current;
+            if (!current) return;
+            if (busy || e.buttons !== 1 || e.pointerId !== current.pointerId) { drag.current = null; return; }
+            // Selecting the first row reveals the bulk toolbar and moves the table.
+            // Layout changes must not count as dragging into an adjacent row.
+            if (Math.hypot(e.clientX - current.x, e.clientY - current.y) < 6) return;
+            selectRange(index);
           }}
           className={cn("select-none border-t border-slate-100", selected.has(slot.id) ? "bg-amber-50 ring-1 ring-inset ring-amber-200" : "even:bg-slate-50/70")}>
           <td className="py-5 pl-6"><input type="checkbox" aria-label={`Chọn ca ${slot.slot_date} ${slot.start_time.slice(0, 5)}`} checked={selected.has(slot.id)} disabled={busy} onChange={() => toggleSelected(slot.id)} className="size-4 accent-amber-500" /></td>
           <td className="px-6 py-5"><p className="font-bold capitalize">{dateLabel(slot.slot_date)}</p><p className="mt-1 font-mono text-xs font-bold text-amber-700">{slot.start_time.slice(0, 5)}{slot.end_time && ` - ${slot.end_time.slice(0, 5)}`}</p>{slot.note && <p className="mt-1 max-w-xs break-words text-xs text-slate-500">{slot.note}</p>}</td>
           <td className="px-6 py-5">{slot.is_booked ? <p className="flex items-center gap-2 font-bold"><UserRound className="size-4 shrink-0 text-slate-400" />{slot.student_name || "Học sinh"}{slot.student_code && ` (${slot.student_code})`}</p> : <span className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-500">Ca trống ({slot.is_active ? "Đang mở" : "Đã khóa"})</span>}{slot.is_booked && !slot.is_active && <p className="mt-1 text-xs text-amber-700">Ca đã khóa</p>}</td>
           <td className="px-6 py-5"><div className="flex justify-end gap-2">{slot.is_booked && <button disabled={busy} className={buttonClass} onClick={() => act("release", slot)}>Hủy đặt</button>}
+            {!slot.is_booked && <button type="button" disabled={busy || !slot.is_active || new Date(`${slot.slot_date}T${slot.start_time}+07:00`).getTime() <= Date.now()} title={!slot.is_active ? "Mở khóa ca trước khi đặt" : "Đặt ca cho học sinh chưa đăng ký"} className={buttonClass} onClick={() => { setBookingSlotId(slot.id); setUnbookedOpen(true); }}>Đặt</button>}
             <button disabled={busy} className={buttonClass} onClick={() => act("toggle", slot)}>{slot.is_active ? "Khóa" : "Mở"}</button>
             <button aria-label="Xóa ca" title={slot.is_booked ? "Hủy đặt trước khi xóa ca" : "Xóa ca"} disabled={busy || slot.is_booked} className={`${buttonClass} px-2.5 text-slate-400`} onClick={() => act("delete", slot)}><Trash2 className="size-4" /></button>
           </div></td>
@@ -232,10 +251,10 @@ export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?
     </div>
     <Dialog open={createOpen} onOpenChange={value => { if (!busy) setCreateOpen(value); }}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto rounded-[28px] p-0 sm:max-w-xl">
-        <div className="flex gap-3 bg-slate-900 p-6 text-white"><CalendarPlus className="size-10 rounded-xl border border-amber-500/40 p-2 text-amber-400" /><div><DialogTitle className="text-lg font-extrabold">Thêm Ca Dò Bài Mới</DialogTitle><DialogDescription className="mt-1 text-slate-400">Tạo lịch trống để học sinh tự vào chọn</DialogDescription></div></div>
+        <div className="flex gap-3 bg-slate-900 p-6 text-white"><CalendarPlus className="size-10 rounded-xl border border-amber-500/40 p-2 text-amber-400" /><div><DialogTitle className="text-lg font-extrabold">Thêm Ca bổ trợ Mới</DialogTitle><DialogDescription className="mt-1 text-slate-400">Tạo lịch trống để học sinh tự vào chọn</DialogDescription></div></div>
         <form action={form => void mutate(form)} className="space-y-5 p-6">
           <input name="operation" type="hidden" value="create" />
-          <label className="grid gap-2 text-sm font-bold text-slate-600">Chọn ngày dò bài <input name="slot_date" type="date" required defaultValue={`${month}-01`} className={inputClass} /></label>
+          <label className="grid gap-2 text-sm font-bold text-slate-600">Chọn ngày bổ trợ <input name="slot_date" type="date" required defaultValue={`${month}-01`} className={inputClass} /></label>
           <div><p className="mb-2 text-sm font-bold text-slate-600">Chọn khung giờ mẫu nhanh</p><div className="grid grid-cols-2 gap-2">{[["20:00", "20:30"], ["20:30", "21:00"], ["21:00", "21:30"], ["21:30", "22:00"]].map(([a, b]) => <button type="button" key={a} aria-pressed={start === a && end === b} onClick={() => { setStart(a); setEnd(b); }} className={cn(buttonClass, "font-mono", start === a && end === b && "border-amber-400 bg-amber-50 text-amber-900 hover:bg-amber-100")}>{a} - {b}</button>)}</div></div>
           <div className="grid grid-cols-2 gap-3"><label className="grid gap-2 text-sm font-bold text-slate-600">Giờ bắt đầu<input name="start_time" type="time" required value={start} onChange={e => setStart(e.target.value)} className={inputClass} /></label><label className="grid gap-2 text-sm font-bold text-slate-600">Giờ kết thúc<input name="end_time" type="time" value={end} onChange={e => setEnd(e.target.value)} className={inputClass} /></label></div>
           <label className="grid gap-2 text-sm font-bold text-slate-600">Ghi chú (tùy chọn)<input name="note" maxLength={2000} className={inputClass} /></label>
@@ -245,7 +264,7 @@ export function TeacherTutoringManager({ initialMonth, userId }: { initialMonth?
     </Dialog>
     <Dialog open={importOpen} onOpenChange={value => { if (!busy && !reading) setImportOpen(value); }}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto rounded-[28px] sm:max-w-2xl">
-        <DialogTitle className="text-xl font-bold">Nhập ca dò bài từ Excel</DialogTitle>
+        <DialogTitle className="text-xl font-bold">Nhập ca bổ trợ từ Excel</DialogTitle>
         <DialogDescription>Đọc trang tính đầu tiên, tối đa 500 ca. Kiểm tra dữ liệu trước khi tạo hàng loạt.</DialogDescription>
         <p className="text-sm text-slate-600">Cột bắt buộc: <b>slot_date</b> (YYYY-MM-DD hoặc DD/MM/YYYY), <b>start_time</b> (HH:mm). Cột tùy chọn: <b>end_time</b>, <b>note</b>. Hỗ trợ ô ngày và giờ của Excel.</p>
         <button type="button" disabled={downloadingTemplate} onClick={() => void downloadTemplate()} className={`${buttonClass} w-fit`}><Download className="size-4" />{downloadingTemplate ? "Đang tạo mẫu…" : "Tải mẫu Excel (.xlsx)"}</button>

@@ -1,5 +1,5 @@
 export const TUTORING_CANCELLATION_MESSAGE =
-  "Không được hủy đăng ký khi còn 7 ngày hoặc ít hơn đến giờ dò bài.";
+  "Không được hủy đăng ký khi còn 7 ngày hoặc ít hơn đến giờ bổ trợ.";
 
 export function isTutoringCancellationLocked(
   slot: { slot_date: string; start_time: string },

@@ -56,9 +56,9 @@ export function TutoringCalendar({ slots, month, teacher, userId, onMonthChange,
     );
     return <section className="space-y-5 text-slate-900">
       <header className="rounded-[28px] border border-slate-200 bg-white px-5 py-6 sm:px-7">
-        <p className="flex items-center gap-2 text-xs font-bold tracking-wide text-amber-600"><Video className="size-4 shrink-0" />DÒ BÀI ĐỊNH KỲ QUA ZOOM (1 KÈM 1)</p>
-        <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">Chọn Lịch Dò Bài Của Bạn</h1>
-        <p className="mt-2 text-sm leading-relaxed text-slate-400">Mỗi khung giờ chỉ dành riêng cho <strong>1 học sinh</strong>. Các ca đã có bạn đặt sẽ tự động ẩn khỏi danh sách.</p>
+        <p className="flex items-center gap-2 text-xs font-bold tracking-wide text-amber-600"><Video className="size-4 shrink-0" />bổ trợ ĐỊNH KỲ QUA ZOOM (1 KÈM 1)</p>
+        <h1 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">Chọn Lịch bổ trợ Của Bạn</h1>
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">Mỗi khung giờ chỉ dành riêng cho <strong>1 học sinh</strong>.</p>
       </header>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <label className="flex items-center gap-2 text-sm font-semibold text-slate-600">Tháng
@@ -74,7 +74,7 @@ export function TutoringCalendar({ slots, month, teacher, userId, onMonthChange,
       <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white">
         <div className="overflow-x-auto"><table className="w-full min-w-[680px] text-left text-sm">
           <thead className="bg-slate-50 text-sm font-extrabold text-slate-600"><tr>
-            <th scope="col" className="px-5 py-4 sm:px-7">NGÀY DÒ BÀI</th>
+            <th scope="col" className="px-5 py-4 sm:px-7">NGÀY BỔ TRỢ</th>
             <th scope="col" className="px-5 py-4 sm:px-7">KHUNG GIỜ (ZOOM)</th>
             <th scope="col" className="px-5 py-4 sm:px-7">CÒN LẠI</th>
             <th scope="col" className="px-5 py-4 text-right sm:px-7">THAO TÁC</th>
@@ -95,13 +95,13 @@ export function TutoringCalendar({ slots, month, teacher, userId, onMonthChange,
             </tr>;
           })}</tbody>
         </table></div>
-        {!visibleSlots.length && <p className="px-5 py-10 text-center text-sm text-slate-500">Không có ca dò bài còn hạn trong tháng này.</p>}
+        {!visibleSlots.length && <p className="px-5 py-10 text-center text-sm text-slate-500">Không có ca bổ trợ còn hạn trong tháng này.</p>}
       </div>
     </section>;
   }
   return <div className="space-y-6">
     <div className="flex flex-wrap items-end justify-between gap-4">
-      <div><h1 className="text-2xl font-bold">Đăng ký thời gian dò bài</h1>
+      <div><h1 className="text-2xl font-bold">Đăng ký thời gian bổ trợ</h1>
         <p className="mt-2 text-sm text-muted-foreground">Mỗi học sinh được đăng ký tối đa một ca mỗi tháng. Giờ Việt Nam (UTC+7).</p></div>
       <label className="grid gap-1 text-sm">Tháng
         <input type="month" className={field} value={month} disabled={pending} onChange={e => {
@@ -114,7 +114,7 @@ export function TutoringCalendar({ slots, month, teacher, userId, onMonthChange,
     </div>
     {!teacher && mine && <p className="rounded-lg bg-primary/10 p-4">Bạn đã đăng ký ngày {mine.slot_date.split("-").reverse().join("/")} lúc {mine.start_time.slice(0, 5)}{!mine.is_active && " (ca đang bị khóa)"}.</p>}
     {teacher && <form action={submit} className="grid gap-4 rounded-xl border p-4 sm:grid-cols-2 lg:grid-cols-4">
-      <h2 className="font-semibold sm:col-span-2 lg:col-span-4">Tạo ca dò bài</h2>
+      <h2 className="font-semibold sm:col-span-2 lg:col-span-4">Tạo ca bổ trợ</h2>
       <input type="hidden" name="operation" value="create" />
       <label className="grid gap-1 text-sm">Ngày<input className={field} type="date" name="slot_date" required /></label>
       <label className="grid gap-1 text-sm">Bắt đầu<input className={field} type="time" name="start_time" required /></label>
@@ -123,7 +123,7 @@ export function TutoringCalendar({ slots, month, teacher, userId, onMonthChange,
       <button className={`${button} bg-primary text-primary-foreground`} disabled={pending}>Tạo ca</button>
     </form>}
     {pending && <p role="status" className="text-sm text-muted-foreground">Đang cập nhật…</p>}
-    {!slots.length ? <p className="rounded-xl border p-8 text-center text-muted-foreground">Chưa có ca dò bài trong tháng này.</p> :
+    {!slots.length ? <p className="rounded-xl border p-8 text-center text-muted-foreground">Chưa có ca bổ trợ trong tháng này.</p> :
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{slots.map(slot => {
         const own = slot.student_id === userId;
         const past = Date.parse(`${slot.slot_date}T${slot.start_time}+07:00`) <= Date.now();

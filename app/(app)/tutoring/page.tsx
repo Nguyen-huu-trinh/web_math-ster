@@ -4,7 +4,7 @@ import { TutoringCalendar } from "@/components/tutoring/calendar";
 import type { TutoringSlot } from "@/types/tutoring";
 import { TeacherTutoringManager } from "@/components/tutoring/teacher-manager";
 
-export const metadata = { title: "Đăng ký dò bài | Math-Ster" };
+export const metadata = { title: "Đăng ký bổ trợ | Math-Ster" };
 
 export default async function TutoringPage({ searchParams }: {
   searchParams: Promise<{ month?: string }>;
@@ -22,6 +22,6 @@ export default async function TutoringPage({ searchParams }: {
     ? requested : today.slice(0, 7);
   if (role === "TEACHER") return <TeacherTutoringManager userId={user.id} initialMonth={month} />;
   const { data, error } = await db.rpc("list_tutoring_slots", { p_month: month });
-  if (error) return <p role="alert">Không thể tải lịch dò bài. Vui lòng tải lại trang.</p>;
+  if (error) return <p role="alert">Không thể tải lịch bổ trợ. Vui lòng tải lại trang.</p>;
   return <TutoringCalendar slots={(data ?? []) as TutoringSlot[]} month={month} teacher={role === "TEACHER"} userId={user.id} />;
 }

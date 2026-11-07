@@ -1,6 +1,6 @@
 "use client";
 
-import { Dispatch, SetStateAction, useState, ReactNode } from "react";
+import { Dispatch, SetStateAction, useMemo, useState, ReactNode } from "react";
 import { useCourses } from "@/hooks/use-courses";
 import { useExams } from "@/hooks/use-exams";
 import { toDrivePreviewUrl } from "@/lib/exam/drive-preview-url";
@@ -49,6 +49,10 @@ export function BasicInfoStep({
   footer,
 }: Props) {
   const { courses, loading } = useCourses();
+  const courseItems = useMemo(
+    () => courses.map((course) => ({ value: course.id, label: course.name })),
+    [courses]
+  );
   const { data: exams = [], isLoading: examsLoading } = useExams();
 
   const [prerequisiteSearch, setPrerequisiteSearch] = useState("");
@@ -119,13 +123,12 @@ const toggleSelectAll = () => {
   <Label>KHÓA HỌC</Label>
 
   <Select
-    items={courses.map((course) => ({ value: course.id, label: course.name }))}
-    value={form.course_id || undefined}
+    items={courseItems}
+    value={form.course_id ?? null}
     onValueChange={(value) =>
-      setForm((prev) => ({
-        ...prev,
-        course_id: value,
-      }))
+      setForm((prev) =>
+        prev.course_id === value ? prev : { ...prev, course_id: value }
+      )
     }
   >
 

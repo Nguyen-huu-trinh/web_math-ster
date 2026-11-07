@@ -89,7 +89,7 @@ export function CreateExamWizard({
   setSelectedPrerequisiteIds,
 ] = useState<string[]>([]);
 
-const { data: existingPrerequisites = [] } =
+const { data: existingPrerequisites } =
   useExamPrerequisites(
     mode === "edit" && initialData
       ? initialData.id
@@ -105,7 +105,8 @@ const removePrerequisite =
   useEffect(() => {
   if (
     mode !== "edit" ||
-    !initialData
+    !initialData ||
+    !existingPrerequisites
   ) {
     return;
   }

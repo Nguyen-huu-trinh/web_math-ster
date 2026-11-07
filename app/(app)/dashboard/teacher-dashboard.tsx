@@ -1,6 +1,7 @@
 'use client'
 
 import Image from "next/image";
+import { TodayTutoringBookings } from "@/components/tutoring/today-bookings";
 import { TutoringManagementDialog } from "@/components/tutoring/teacher-manager";
 import { useAuth } from "@/providers/auth-provider";
 import { useEffect, useState } from "react";
@@ -252,6 +253,7 @@ export default function TeacherDashboard() {
         </div>
 
         <div className="mt-4 space-y-3">
+          <TodayTutoringBookings userId={user?.id} />
           <Input
             placeholder="Tiêu đề thông báo..."
             value={title}
